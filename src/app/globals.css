@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f5f8f6;
+  --foreground: #0c1512;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv11", "ss01";
+}
+
+::selection {
+  background: rgba(14, 158, 110, 0.22);
+}
+
+/* Branded scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(12, 21, 18, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(12, 21, 18, 0.3);
+  background-clip: content-box;
+}
+
+@layer components {
+  /* Monospace eyebrow label — a core MoolaHub brand signature */
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.22em];
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jade-500/60 focus-visible:ring-offset-2;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .bg-radial-jade {
+    background: radial-gradient(
+      60% 60% at 70% 20%,
+      rgba(14, 158, 110, 0.28) 0%,
+      rgba(14, 158, 110, 0) 70%
+    );
+  }
+}
