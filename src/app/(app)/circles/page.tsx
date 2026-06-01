@@ -43,7 +43,7 @@ export default function CirclesPage() {
         {active.map((circle) => {
           const filled = circle.members.filter((m) => m.state === "paid").length;
           return (
-            <Link key={circle.id} href={`/app/circles/${circle.id}`} className="group">
+            <Link key={circle.id} href={`/circles/${circle.id}`} className="group">
               <Card className="h-full p-6 transition-all group-hover:-translate-y-1 group-hover:shadow-card-hover">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">

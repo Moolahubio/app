@@ -57,11 +57,11 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button href="/get-started" size="lg">
+              <Button href="/login" size="lg">
                 Start saving
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button href="/app" size="lg" variant="secondary">
+              <Button href="/" size="lg" variant="secondary">
                 Explore the app
               </Button>
             </div>
@@ -195,7 +195,7 @@ export default function HomePage() {
             </ul>
 
             <div className="mt-8">
-              <Button href="/app/circles" variant="dark">
+              <Button href="/circles" variant="dark">
                 See how circles work
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -298,7 +298,7 @@ export default function HomePage() {
               earn while you wait.
             </p>
             <div className="mt-8">
-              <Button href="/app/goals" variant="dark">
+              <Button href="/goals" variant="dark">
                 Create a goal
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -321,7 +321,7 @@ export default function HomePage() {
                 first emergency fund to understanding on-chain yield.
               </p>
             </div>
-            <Button href="/app/learn" variant="secondary">
+            <Button href="/learn" variant="secondary">
               Browse all lessons
             </Button>
           </div>
@@ -330,7 +330,7 @@ export default function HomePage() {
             {lessons.map((lesson) => (
               <Link
                 key={lesson.slug}
-                href={`/app/learn/${lesson.slug}`}
+                href={`/learn/${lesson.slug}`}
                 className="group flex flex-col rounded-3xl border border-ink-900/[0.07] bg-mist p-6 transition-all hover:-translate-y-1 hover:bg-white hover:shadow-card-hover"
               >
                 <div className="flex items-center justify-between">
@@ -471,11 +471,11 @@ export default function HomePage() {
             needed — and start building toward what matters with your community.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button href="/get-started" size="lg">
+            <Button href="/login" size="lg">
               Create your account
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button href="/app" size="lg" variant="secondary">
+            <Button href="/" size="lg" variant="secondary">
               Explore the demo
             </Button>
           </div>

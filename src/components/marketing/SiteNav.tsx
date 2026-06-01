@@ -31,12 +31,12 @@ export function SiteNav() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/app"
+            href="/"
             className="hidden text-sm font-medium text-white/70 transition-colors hover:text-white sm:block"
           >
             Sign in
           </Link>
-          <Button href="/get-started" size="sm">
+          <Button href="/login" size="sm">
             Get started
           </Button>
         </div>

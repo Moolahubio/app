@@ -17,7 +17,7 @@ export default function NotFound() {
         left them.
       </p>
       <div className="mt-8 flex gap-3">
-        <Button href="/app">Go to dashboard</Button>
+        <Button href="/">Go to dashboard</Button>
         <Button href="/" variant="secondary">
           Back home
         </Button>

@@ -4,9 +4,9 @@ import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Button } from "@/components/ui";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
 
-export const metadata = { title: "Get started" };
+export const metadata = { title: "Sign in" };
 
-export default function GetStartedPage() {
+export default function LoginPage() {
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       {/* ---------------------------------------------------- brand panel */}
@@ -81,7 +81,7 @@ export default function GetStartedPage() {
               </div>
             </label>
 
-            <Button href="/app" size="lg" className="w-full">
+            <Button href="/" size="lg" className="w-full">
               Continue <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
@@ -98,7 +98,7 @@ export default function GetStartedPage() {
             {["Google", "Apple"].map((provider) => (
               <Link
                 key={provider}
-                href="/app"
+                href="/"
                 className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-ink-900/10 bg-white text-sm font-semibold text-ink-700 transition-colors hover:bg-white hover:shadow-card focus-ring"
               >
                 {provider}
@@ -115,7 +115,7 @@ export default function GetStartedPage() {
           <p className="mt-6 flex items-center justify-center gap-2 text-sm text-ink-500">
             <MoolaMark className="h-5 w-5" />
             Already have an account?{" "}
-            <Link href="/app" className="font-semibold text-jade-600 hover:text-jade-700">
+            <Link href="/" className="font-semibold text-jade-600 hover:text-jade-700">
               Sign in
             </Link>
           </p>

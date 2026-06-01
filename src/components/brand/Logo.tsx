@@ -3,9 +3,12 @@ import { cn } from "@/lib/utils";
 type Tone = "ink" | "light";
 
 /**
- * MoolaHub mark — an open savings ring, an ascending "M" (a rising chart),
- * and a north-east goal star. Recreated as SVG so it stays crisp at any size
- * and themes cleanly across light (jade) and dark (white + jade star) surfaces.
+ * MoolaHub mark — the exact brand geometry from the official assets:
+ * an open savings ring (two arcs), an ascending "M" / rising chart, and a
+ * north-east goal star. Pure SVG so it stays crisp and themes cleanly.
+ *
+ *  - tone="ink"  (light surfaces): jade ring + M, jade star
+ *  - tone="light" (dark surfaces): white ring + M, jade star (matches the app icon)
  */
 export function MoolaMark({
   className,
@@ -16,38 +19,40 @@ export function MoolaMark({
   tone?: Tone;
   title?: string;
 }) {
-  const ringColor = tone === "light" ? "#FFFFFF" : "#0E9E6E";
+  const ring = tone === "light" ? "#FFFFFF" : "#0E9E6E";
   const star = "#0E9E6E";
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="30 30 150 150"
       className={className}
       role="img"
       aria-label={title}
       fill="none"
     >
-      {/* Open savings ring (two arcs, rounded caps) */}
-      <circle
-        cx="50"
-        cy="50"
-        r="38"
-        stroke={ringColor}
-        strokeWidth="8.5"
-        strokeLinecap="round"
-        strokeDasharray="150 16 60 12"
-        transform="rotate(60 50 50)"
-      />
-      {/* Ascending M / rising chart */}
+      {/* open savings ring — two arcs */}
       <path
-        d="M30 65 L41 49 L50 57 L67 33"
-        stroke={ringColor}
-        strokeWidth="8.5"
+        d="M 56.786 173.384 A 72 72 0 0 1 122.972 46.243"
+        stroke={ring}
+        strokeWidth="12"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 154.249 70.679 A 72 72 0 0 1 135.214 173.384"
+        stroke={ring}
+        strokeWidth="12"
+        strokeLinecap="round"
+      />
+      {/* ascending M / rising chart */}
+      <path
+        d="M 52 151 L 78 113 L 99 133 L 123 82 L 142 116"
+        stroke={ring}
+        strokeWidth="12"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Goal star (north-east) */}
+      {/* goal star (north-east) */}
       <path
-        d="M74 11 L77.6 20.4 L87 24 L77.6 27.6 L74 37 L70.4 27.6 L61 24 L70.4 20.4 Z"
+        d="M 156.328 56.263 L 144.174 60.110 L 140.328 72.263 L 136.481 60.110 L 124.328 56.263 L 136.481 52.417 L 140.328 40.263 L 144.174 52.417 Z"
         fill={star}
       />
     </svg>
@@ -55,33 +60,30 @@ export function MoolaMark({
 }
 
 /**
- * Full horizontal lockup: mark + "MoolaHub" wordmark
- * ("Moola" in the foreground tone, "Hub" in jade).
+ * Full horizontal lockup — the official "MoolaHub" wordmark SVG.
+ * Uses the dark-variant artwork (white "Moola") on dark surfaces.
  */
 export function Logo({
   className,
   tone = "ink",
-  showWordmark = true,
   markClassName,
 }: {
   className?: string;
   tone?: Tone;
-  showWordmark?: boolean;
+  /** kept for API compatibility with prior callers */
   markClassName?: string;
+  showWordmark?: boolean;
 }) {
+  const src =
+    tone === "light"
+      ? "/brand/moolahub_logo_horizontal_dark.svg"
+      : "/brand/moolahub_logo_horizontal.svg";
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <MoolaMark tone={tone} className={cn("h-8 w-8 shrink-0", markClassName)} />
-      {showWordmark && (
-        <span
-          className={cn(
-            "font-display text-2xl font-extrabold tracking-tight",
-            tone === "light" ? "text-white" : "text-ink-900",
-          )}
-        >
-          Moola<span className="text-jade-500">Hub</span>
-        </span>
-      )}
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt="MoolaHub"
+      className={cn("w-auto shrink-0 object-contain", markClassName ?? "h-9", className)}
+    />
   );
 }

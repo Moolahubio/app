@@ -52,7 +52,7 @@ export default function GoalsPage() {
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {goals.map((g) => (
-          <Link key={g.id} href={`/app/goals/${g.id}`} className="group">
+          <Link key={g.id} href={`/goals/${g.id}`} className="group">
             <Card className="h-full p-6 transition-all group-hover:-translate-y-1 group-hover:shadow-card-hover">
               <div className="flex items-start justify-between">
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mist text-2xl">

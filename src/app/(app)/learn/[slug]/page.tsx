@@ -23,7 +23,7 @@ export default async function LessonPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <BackLink href="/app/learn" label="All lessons" />
+      <BackLink href="/learn" label="All lessons" />
 
       <article>
         <div className="flex items-center gap-3">
@@ -76,7 +76,7 @@ export default async function LessonPage({
           </Button>
           {next && (
             <Link
-              href={`/app/learn/${next.slug}`}
+              href={`/learn/${next.slug}`}
               className="group inline-flex items-center gap-2 text-sm font-medium text-ink-600 hover:text-ink-900"
             >
               <span className="text-right">

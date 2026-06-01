@@ -27,15 +27,20 @@ Jade and ink ship as full 50–900 scales for hover/active/border states.
 
 ### Logo
 
-The mark is an **open savings ring** + an **ascending "M" / rising chart** + a
-**north-east goal star** ("start low, grow up"). It's pure SVG so it stays crisp
-and themes cleanly:
+The **official assets** live in `public/brand/`
+(`moolahub_logo_horizontal.svg`, `…_horizontal_dark.svg`,
+`moolahub_app_icon.png`). Use `src/components/brand/Logo.tsx`:
 
-- On **light** surfaces: jade ring + M, jade star (`tone="ink"`).
-- On **dark** surfaces: white ring + M, jade star (`tone="light"`).
+- `Logo` renders the official horizontal wordmark lockup — pass `tone="light"`
+  on dark surfaces (white "Moola") and the default `tone="ink"` on light ones.
+- `MoolaMark` is an inline SVG recreation of the mark (exact brand geometry:
+  **open savings ring** + **ascending "M" / rising chart** + **north-east goal
+  star**) for icon-only spots. It themes cleanly: jade on light surfaces;
+  white ring + M with a jade star on dark (`tone="light"`), matching the app
+  icon.
 
 Wordmark: **Moola** in the foreground tone, **Hub** in jade. Always one word,
-camel-cased: `MoolaHub`.
+camel-cased: `MoolaHub`. Don't recreate the wordmark in HTML — use the asset.
 
 ### Type
 

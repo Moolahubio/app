@@ -17,15 +17,15 @@ import { currentUser, wallet, reminders } from "@/lib/data";
 import { formatMoney, cn } from "@/lib/utils";
 
 const nav = [
-  { label: "Home", href: "/app", icon: LayoutDashboard },
-  { label: "Circles", href: "/app/circles", icon: Users },
-  { label: "Goals", href: "/app/goals", icon: Target },
-  { label: "Learn", href: "/app/learn", icon: GraduationCap },
-  { label: "Activity", href: "/app/activity", icon: Receipt },
+  { label: "Home", href: "/", icon: LayoutDashboard },
+  { label: "Circles", href: "/circles", icon: Users },
+  { label: "Goals", href: "/goals", icon: Target },
+  { label: "Learn", href: "/learn", icon: GraduationCap },
+  { label: "Activity", href: "/activity", icon: Receipt },
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === "/app") return pathname === "/app";
+  if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
 }
 
@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <Link
-          href="/app/profile"
+          href="/profile"
           className="mt-4 flex items-center gap-3 rounded-2xl px-2 py-2 transition-colors hover:bg-ink-900/[0.04]"
         >
           <Avatar name={currentUser.name} tone="jade" />
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* topbar */}
         <header className="sticky top-0 z-30 border-b border-ink-900/[0.07] bg-mist/80 backdrop-blur">
           <div className="flex h-16 items-center justify-between gap-4 px-5 lg:px-8">
-            <Link href="/app" className="lg:hidden">
+            <Link href="/" className="lg:hidden">
               <MoolaMark className="h-8 w-8" />
             </Link>
 
@@ -110,7 +110,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Bell className="h-5 w-5" />
                 <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-jade-500 ring-2 ring-white" />
               </button>
-              <Button href="/app/goals" size="sm" className="hidden sm:inline-flex">
+              <Button href="/goals" size="sm" className="hidden sm:inline-flex">
                 <Plus className="h-4 w-4" /> New goal
               </Button>
             </div>

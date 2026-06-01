@@ -142,13 +142,13 @@ export default function DashboardPage() {
               <IconChip tone="jade"><Target className="h-5 w-5" /></IconChip>
               <h2 className="font-display text-lg font-bold text-ink-900">Your goals</h2>
             </div>
-            <Link href="/app/goals" className="text-ink-300 transition-colors hover:text-ink-600">
+            <Link href="/goals" className="text-ink-300 transition-colors hover:text-ink-600">
               <ChevronRight className="h-5 w-5" />
             </Link>
           </div>
           <div className="mt-5 space-y-4">
             {goals.map((g) => (
-              <Link key={g.id} href={`/app/goals/${g.id}`} className="block">
+              <Link key={g.id} href={`/goals/${g.id}`} className="block">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-ink-800">
                     {g.emoji} {g.name}
@@ -168,11 +168,11 @@ export default function DashboardPage() {
               <IconChip tone="jade"><Users className="h-5 w-5" /></IconChip>
               <h2 className="font-display text-lg font-bold text-ink-900">Active circle</h2>
             </div>
-            <Link href="/app/circles" className="text-ink-300 transition-colors hover:text-ink-600">
+            <Link href="/circles" className="text-ink-300 transition-colors hover:text-ink-600">
               <ChevronRight className="h-5 w-5" />
             </Link>
           </div>
-          <Link href={`/app/circles/${activeCircle.id}`} className="mt-5 block">
+          <Link href={`/circles/${activeCircle.id}`} className="mt-5 block">
             <p className="font-semibold text-ink-900">{activeCircle.name}</p>
             <p className="text-sm text-ink-500">
               Round {activeCircle.currentRound} of {activeCircle.totalRounds} · {activeCircle.frequency}
@@ -200,7 +200,7 @@ export default function DashboardPage() {
               {nextLesson.minutes} min · {nextLesson.level}
             </p>
           </div>
-          <Button href={`/app/learn/${nextLesson.slug}`} variant="secondary" size="sm" className="mt-5 w-full">
+          <Button href={`/learn/${nextLesson.slug}`} variant="secondary" size="sm" className="mt-5 w-full">
             Start lesson
           </Button>
         </Card>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold text-ink-900">Recent activity</h2>
-          <Link href="/app/activity" className="text-sm font-medium text-jade-600 hover:text-jade-700">
+          <Link href="/activity" className="text-sm font-medium text-jade-600 hover:text-jade-700">
             View all
           </Link>
         </div>

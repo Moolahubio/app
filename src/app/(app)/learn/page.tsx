@@ -41,7 +41,7 @@ export default function LearnPage() {
       </Card>
 
       {/* featured */}
-      <Link href={`/app/learn/${featured.slug}`} className="group block">
+      <Link href={`/learn/${featured.slug}`} className="group block">
         <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-8 text-white transition-all group-hover:shadow-card-hover">
           <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:32px_32px] [mask-image:radial-gradient(70%_80%_at_90%_0%,black,transparent)]" />
           <div className="absolute -right-8 -top-12 -z-10 h-56 w-56 rounded-full bg-jade-500/20 blur-[90px]" />
@@ -62,7 +62,7 @@ export default function LearnPage() {
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {rest.map((lesson) => (
-          <Link key={lesson.slug} href={`/app/learn/${lesson.slug}`} className="group">
+          <Link key={lesson.slug} href={`/learn/${lesson.slug}`} className="group">
             <Card className="flex h-full flex-col p-6 transition-all group-hover:-translate-y-1 group-hover:shadow-card-hover">
               <div className="flex items-center justify-between">
                 <span className="text-3xl">{lesson.emoji}</span>
