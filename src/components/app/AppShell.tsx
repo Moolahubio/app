@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Avatar, Button } from "@/components/ui";
-import { currentUser, wallet, reminders } from "@/lib/data";
 import { formatMoney, cn } from "@/lib/utils";
 
 const nav = [
@@ -29,8 +28,21 @@ function isActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export type ShellProps = {
+  user: { name: string; kycStatus: string };
+  balanceCents: number;
+  reminder: { title: string; amountCents: number; dueDate: string } | null;
+  children: React.ReactNode;
+};
+
+export function AppShell({ user, balanceCents, reminder, children }: ShellProps) {
   const pathname = usePathname();
+  const kycLabel =
+    user.kycStatus === "verified"
+      ? "Verified · KYC"
+      : user.kycStatus === "pending"
+        ? "KYC pending"
+        : "KYC required";
 
   return (
     <div className="min-h-screen bg-mist">
@@ -62,24 +74,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* upcoming reminder card */}
-        <div className="rounded-2xl bg-ink-950 p-4 text-white">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-            Next due
-          </p>
-          <p className="mt-1 text-sm font-semibold">{reminders[0].title}</p>
-          <p className="text-xs text-white/55">
-            {formatMoney(reminders[0].amountCents)} · Jun 5
-          </p>
-        </div>
+        {reminder && (
+          <div className="rounded-2xl bg-ink-950 p-4 text-white">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+              Next due
+            </p>
+            <p className="mt-1 text-sm font-semibold">{reminder.title}</p>
+            <p className="text-xs text-white/55">
+              {formatMoney(reminder.amountCents)} ·{" "}
+              {new Date(reminder.dueDate).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+        )}
 
         <Link
           href="/profile"
           className="mt-4 flex items-center gap-3 rounded-2xl px-2 py-2 transition-colors hover:bg-ink-900/[0.04]"
         >
-          <Avatar name={currentUser.name} tone="jade" />
+          <Avatar name={user.name} tone="jade" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-ink-900">{currentUser.name}</p>
-            <p className="truncate text-xs text-ink-400">Verified · KYC</p>
+            <p className="truncate text-sm font-semibold text-ink-900">{user.name}</p>
+            <p className="truncate text-xs text-ink-400">{kycLabel}</p>
           </div>
         </Link>
       </aside>
@@ -97,9 +115,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400">
                 Balance
               </span>
-              <span className="text-sm font-bold text-ink-900">
-                {formatMoney(wallet.balanceCents)}
-              </span>
+              <span className="text-sm font-bold text-ink-900">{formatMoney(balanceCents)}</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -108,9 +124,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label="Reminders"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-jade-500 ring-2 ring-white" />
+                {reminder && (
+                  <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-jade-500 ring-2 ring-white" />
+                )}
               </button>
-              <Button href="/goals" size="sm" className="hidden sm:inline-flex">
+              <Button href="/goals/new" size="sm" className="hidden sm:inline-flex">
                 <Plus className="h-4 w-4" /> New goal
               </Button>
             </div>

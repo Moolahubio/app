@@ -18,7 +18,7 @@ import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
 import { MoolaMark } from "@/components/brand/Logo";
 import { Button, Eyebrow, Badge } from "@/components/ui";
-import { lessons } from "@/lib/data";
+import { lessons } from "@/lib/content/lessons";
 
 export default function HomePage() {
   return (

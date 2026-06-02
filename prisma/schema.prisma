@@ -1,0 +1,187 @@
+// MoolaHub — data model
+// Money is ALWAYS integer cents (1/100 USDC). Balances are DERIVED from a
+// double-entry ledger (LedgerAccount + Transaction + Posting), never stored
+// as a mutable column — the ledger is the source of truth, mirroring the
+// on-chain record.
+//
+// Dev uses SQLite; production swaps `provider = "postgresql"` (see README).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  kycStatus    String   @default("unstarted") // unstarted | pending | verified
+  createdAt    DateTime @default(now())
+
+  wallet         Wallet?
+  sessions       Session[]
+  goals          Goal[]
+  memberships    CircleMember[]
+  contributions  Contribution[]
+  lessonProgress LessonProgress[]
+  ledgerAccounts LedgerAccount[]
+  createdCircles Circle[]         @relation("CircleCreator")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Non-custodial in production (Privy embedded wallet). Here, the testnet
+// secret is encrypted at rest (AES-256-GCM) as a stand-in for that signer.
+model Wallet {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stellarPublicKey String   @unique
+  stellarSecretEnc String // encrypted; never returned to the client
+  fundedAt         DateTime? // set once the account is created on-chain (friendbot)
+  trustlineAt      DateTime? // set once the USDC trustline is established
+  createdAt        DateTime @default(now())
+}
+
+// ---- Double-entry ledger -------------------------------------------------
+
+model LedgerAccount {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g. "wallet:<userId>", "goal:<goalId>", "pool:<circleId>", "external", "yield", "fees"
+  kind      String // available | goal | pool | external | yield | fees
+  label     String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId    String?
+  circleId  String?
+  createdAt DateTime @default(now())
+
+  postings Posting[]
+
+  @@index([userId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  type        String // deposit | withdrawal | contribution | payout | goal_allocate | goal_release | yield
+  description String
+  userId      String? // the acting/affected user (for feeds)
+  // On-chain linkage
+  txHash         String?
+  onchainStatus  String  @default("none") // none | queued | submitted | confirmed | failed
+  onchainXdr     String? // signed envelope, queued when Horizon is unreachable
+  createdAt   DateTime @default(now())
+
+  postings Posting[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Posting {
+  id            String        @id @default(cuid())
+  transactionId String
+  transaction   Transaction   @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  accountId     String
+  account       LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amountCents   Int // signed; the sum of all postings in a transaction is 0
+
+  @@index([accountId])
+  @@index([transactionId])
+}
+
+// ---- Goals ---------------------------------------------------------------
+
+model Goal {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  emoji        String   @default("🎯")
+  targetCents  Int
+  deadline     DateTime
+  autoSaveCents Int? // weekly auto-save; null = off
+  color        String   @default("jade") // jade | amber | sky
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---- Susu circles --------------------------------------------------------
+
+model Circle {
+  id               String   @id @default(cuid())
+  name             String
+  status           String   @default("forming") // forming | active | completed
+  contributionCents Int
+  frequency        String // weekly | biweekly | monthly
+  totalRounds      Int
+  currentRound     Int      @default(0)
+  startDate        DateTime
+  contractAddress  String? // Soroban contract id once deployed
+  createdById      String
+  createdBy        User     @relation("CircleCreator", fields: [createdById], references: [id])
+  createdAt        DateTime @default(now())
+
+  members       CircleMember[]
+  contributions Contribution[]
+}
+
+model CircleMember {
+  id         String   @id @default(cuid())
+  circleId   String
+  circle     Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  position   Int
+  payoutRound Int // which round this member receives the pot
+  paidOut    Boolean  @default(false)
+  joinedAt   DateTime @default(now())
+
+  @@unique([circleId, userId])
+  @@unique([circleId, position])
+  @@index([userId])
+}
+
+model Contribution {
+  id         String   @id @default(cuid())
+  circleId   String
+  circle     Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  round      Int
+  amountCents Int
+  txHash     String?
+  status     String   @default("confirmed") // pending | confirmed
+  createdAt  DateTime @default(now())
+
+  @@index([circleId])
+  @@index([userId])
+}
+
+// ---- Education -----------------------------------------------------------
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug        String
+  completedAt DateTime @default(now())
+
+  @@unique([userId, slug])
+  @@index([userId])
+}

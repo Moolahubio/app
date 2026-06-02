@@ -7,14 +7,13 @@ import {
   CalendarClock,
   Crown,
 } from "lucide-react";
-import { Card, Button, Badge, Avatar, ProgressBar } from "@/components/ui";
+import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
 import { BackLink, TxTag } from "@/components/app/bits";
-import { circles } from "@/lib/data";
+import { ActionButton } from "@/components/app/forms";
+import { requireUser } from "@/lib/server/auth";
+import { getCircleDetail } from "@/lib/server/circles";
+import { contributeAction } from "@/app/(app)/actions";
 import { formatMoney, cn, truncateAddress } from "@/lib/utils";
-
-export function generateStaticParams() {
-  return circles.map((c) => ({ id: c.id }));
-}
 
 export default async function CircleDetailPage({
   params,
@@ -22,10 +21,9 @@ export default async function CircleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const circle = circles.find((c) => c.id === id);
+  const user = await requireUser();
+  const circle = await getCircleDetail(user.id, id);
   if (!circle) notFound();
-
-  const myPosition = circle.members.find((m) => m.isYou);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -44,12 +42,12 @@ export default async function CircleDetailPage({
             <div>
               <h1 className="font-display text-2xl font-bold">{circle.name}</h1>
               <p className="text-sm capitalize text-white/55">
-                {circle.frequency} · {circle.members.length} members · Round{" "}
+                {circle.frequency} · {circle.memberCount} members · Round{" "}
                 {circle.currentRound} of {circle.totalRounds}
               </p>
             </div>
           </div>
-          <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20 capitalize">
+          <Badge tone="jade" className="bg-jade-500/15 capitalize text-jade-300 ring-jade-400/20">
             {circle.status}
           </Badge>
         </div>
@@ -58,8 +56,14 @@ export default async function CircleDetailPage({
           {[
             { label: "Per round", value: formatMoney(circle.contributionCents) },
             { label: "Pot payout", value: formatMoney(circle.potCents) },
-            { label: "Your position", value: myPosition ? `#${myPosition.position}` : "—" },
-            { label: "Next due", value: new Date(circle.nextContributionDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) },
+            { label: "Your position", value: circle.myPosition ? `#${circle.myPosition}` : "—" },
+            {
+              label: "Next due",
+              value: circle.nextContributionDate.toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              }),
+            },
           ].map((s) => (
             <div key={s.label}>
               <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/45">
@@ -70,15 +74,29 @@ export default async function CircleDetailPage({
           ))}
         </div>
 
-        {circle.status === "active" && (
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button size="sm">Contribute {formatMoney(circle.contributionCents)}</Button>
+        <div className="mt-6 flex flex-wrap items-center gap-4">
+          {circle.canContribute ? (
+            <ActionButton
+              action={contributeAction}
+              hidden={{ circleId: circle.id }}
+              label={`Contribute ${formatMoney(circle.contributionCents)}`}
+              pendingLabel="Submitting…"
+              size="sm"
+            />
+          ) : circle.status === "active" ? (
+            <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Contributed this round
+            </Badge>
+          ) : (
+            <Badge tone="amber">Circle is still forming</Badge>
+          )}
+          {circle.contractAddress && (
             <span className="inline-flex items-center gap-1.5 font-mono text-xs text-white/50">
               <ShieldCheck className="h-4 w-4 text-jade-400" />
               Contract {truncateAddress(circle.contractAddress, 6, 4)}
             </span>
-          </div>
-        )}
+          )}
+        </div>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-5">
@@ -101,9 +119,7 @@ export default async function CircleDetailPage({
                   key={m.position}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                    current
-                      ? "border-jade-500/30 bg-jade-50"
-                      : "border-ink-900/[0.06] bg-white",
+                    current ? "border-jade-500/30 bg-jade-50" : "border-ink-900/[0.06] bg-white",
                   )}
                 >
                   <span className="font-mono text-xs text-ink-400">{m.position}</span>
@@ -121,7 +137,7 @@ export default async function CircleDetailPage({
                     </p>
                     <p className="text-xs text-ink-500">
                       {done ? "Received pot" : current ? "Receiving now" : "Upcoming"} ·{" "}
-                      {new Date(m.payoutDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      {m.payoutDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </p>
                   </div>
                   {current && <Badge tone="jade">Current</Badge>}
@@ -136,7 +152,7 @@ export default async function CircleDetailPage({
           <Card className="p-6">
             <h2 className="font-display text-lg font-bold text-ink-900">Round progress</h2>
             <p className="mt-3 text-sm text-ink-500">
-              {circle.currentRound} of {circle.totalRounds} rounds complete
+              {circle.currentRound} of {circle.totalRounds} rounds
             </p>
             <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
           </Card>
@@ -161,14 +177,18 @@ export default async function CircleDetailPage({
                         Round {h.round} · {formatMoney(h.amountCents)}
                       </p>
                       <p className="text-xs text-ink-500">
-                        {new Date(h.date).toLocaleDateString("en-US", {
+                        {h.createdAt.toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                         })}
                       </p>
                     </div>
-                    <TxTag hash={h.txHash} confirmed={h.status === "confirmed"} />
+                    {h.txHash ? (
+                      <TxTag hash={h.txHash} confirmed={h.status === "confirmed"} />
+                    ) : (
+                      <Badge tone="neutral">off-chain</Badge>
+                    )}
                   </li>
                 ))}
               </ul>

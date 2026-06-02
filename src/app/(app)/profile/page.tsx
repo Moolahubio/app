@@ -1,6 +1,5 @@
 import {
   ShieldCheck,
-  Copy,
   Wallet,
   Bell,
   Globe,
@@ -8,10 +7,14 @@ import {
   ChevronRight,
   BadgeCheck,
   TrendingUp,
+  AlertCircle,
 } from "lucide-react";
-import { Card, Badge, Avatar, Eyebrow } from "@/components/ui";
+import { Card, Badge, Avatar, Button, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
-import { currentUser, wallet } from "@/lib/data";
+import { CopyButton } from "@/components/app/forms";
+import { requireUser } from "@/lib/server/auth";
+import { userBalances } from "@/lib/server/ledger";
+import { logoutAction, verifyKycAction } from "@/app/(app)/actions";
 import { formatMoney, truncateAddress } from "@/lib/utils";
 
 const settings = [
@@ -21,7 +24,12 @@ const settings = [
   { icon: ShieldCheck, label: "Security & recovery", detail: "Passkey enabled" },
 ];
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+  const user = await requireUser();
+  const balances = await userBalances(user.id);
+  const verified = user.kycStatus === "verified";
+  const address = user.wallet?.stellarPublicKey ?? "Not provisioned";
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <PageHeader eyebrow="Profile" title="Account & settings" />
@@ -32,15 +40,21 @@ export default function ProfilePage() {
         <div className="absolute -right-10 -top-16 -z-10 h-56 w-56 rounded-full bg-jade-500/20 blur-[90px]" />
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Avatar name={currentUser.name} tone="jade" className="h-16 w-16 text-lg" />
+            <Avatar name={user.name} tone="jade" className="h-16 w-16 text-lg" />
             <div>
-              <h2 className="font-display text-xl font-bold">{currentUser.name}</h2>
-              <p className="text-sm text-white/55">{currentUser.email}</p>
+              <h2 className="font-display text-xl font-bold">{user.name}</h2>
+              <p className="text-sm text-white/55">{user.email}</p>
             </div>
           </div>
-          <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-            <BadgeCheck className="h-3.5 w-3.5" /> KYC Verified
-          </Badge>
+          {verified ? (
+            <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
+              <BadgeCheck className="h-3.5 w-3.5" /> KYC Verified
+            </Badge>
+          ) : (
+            <Badge tone="amber">
+              <AlertCircle className="h-3.5 w-3.5" /> KYC required
+            </Badge>
+          )}
         </div>
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -52,21 +66,34 @@ export default function ProfilePage() {
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
             <code className="truncate font-mono text-sm text-white/80">
-              {truncateAddress(currentUser.walletAddress, 8, 8)}
+              {truncateAddress(address, 8, 8)}
             </code>
-            <button className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/15 focus-ring">
-              <Copy className="h-3.5 w-3.5" /> Copy
-            </button>
+            <CopyButton value={address} />
           </div>
         </div>
       </Card>
+
+      {/* KYC banner if not verified */}
+      {!verified && (
+        <Card className="flex flex-wrap items-center justify-between gap-4 border-amber-500/20 bg-amber-50/60 p-5">
+          <p className="text-sm text-ink-700">
+            <span className="font-semibold text-ink-900">Verify your identity</span> to deposit
+            local currency. The crypto rail stays available without KYC.
+          </p>
+          <form action={verifyKycAction}>
+            <Button type="submit" size="sm">
+              Complete verification
+            </Button>
+          </form>
+        </Card>
+      )}
 
       {/* balance snapshot */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">Balance</p>
           <p className="mt-1 font-display text-2xl font-bold text-ink-900">
-            {formatMoney(wallet.balanceCents)}
+            {formatMoney(balances.totalCents)}
           </p>
         </Card>
         <Card className="p-5">
@@ -74,7 +101,7 @@ export default function ProfilePage() {
             Yield earned
           </p>
           <p className="mt-1 font-display text-2xl font-bold text-jade-600">
-            {formatMoney(wallet.yieldEarnedCents)}
+            {formatMoney(balances.yieldEarnedCents)}
           </p>
         </Card>
         <Card className="p-5">
@@ -82,10 +109,7 @@ export default function ProfilePage() {
             Member since
           </p>
           <p className="mt-1 font-display text-2xl font-bold text-ink-900">
-            {new Date(currentUser.memberSince).toLocaleDateString("en-US", {
-              month: "short",
-              year: "numeric",
-            })}
+            {user.createdAt.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
           </p>
         </Card>
       </div>
@@ -109,9 +133,14 @@ export default function ProfilePage() {
         ))}
       </Card>
 
-      <button className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-900/[0.08] bg-white py-3.5 text-sm font-semibold text-ink-600 transition-colors hover:text-ink-900 focus-ring">
-        <LogOut className="h-4 w-4" /> Sign out
-      </button>
+      <form action={logoutAction}>
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-900/[0.08] bg-white py-3.5 text-sm font-semibold text-ink-600 transition-colors hover:text-ink-900 focus-ring"
+        >
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      </form>
 
       <Eyebrow className="pt-2 text-center text-ink-300">Save Now · Grow Together</Eyebrow>
     </div>

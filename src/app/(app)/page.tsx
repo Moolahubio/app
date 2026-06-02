@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Plus,
   ArrowUpRight,
   ArrowDownLeft,
   Sparkles,
@@ -13,31 +12,41 @@ import {
 } from "lucide-react";
 import { Card, Button, Badge, ProgressBar, IconChip, Eyebrow } from "@/components/ui";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
-import {
-  wallet,
-  goals,
-  circles,
-  activity,
-  reminders,
-  lessons,
-  currentUser,
-} from "@/lib/data";
+import { requireUser } from "@/lib/server/auth";
+import { userBalances, userActivity } from "@/lib/server/ledger";
+import { listGoals } from "@/lib/server/goals";
+import { listCirclesForUser } from "@/lib/server/circles";
+import { getReminders } from "@/lib/server/reminders";
+import { getLessonsForUser } from "@/lib/server/learn";
 import { formatMoney, pct, timeAgo } from "@/lib/utils";
 
-const activityIcon = {
+const YIELD_APY = 0.041;
+
+const activityIcon: Record<string, typeof ArrowDownLeft> = {
   deposit: ArrowDownLeft,
   payout: ArrowDownLeft,
   yield: Sparkles,
   contribution: ArrowUpRight,
-  goal: Target,
+  goal_allocate: Target,
+  goal_release: Target,
   withdrawal: ArrowUpRight,
-} as const;
+};
 
-export default function DashboardPage() {
-  const firstName = currentUser.name.split(" ")[0];
-  const availableCents = wallet.balanceCents - wallet.allocatedCents;
-  const activeCircle = circles.find((c) => c.status === "active")!;
-  const nextLesson = lessons.find((l) => !l.completed)!;
+export default async function DashboardPage() {
+  const user = await requireUser();
+  const firstName = user.name.split(" ")[0];
+
+  const [balances, goals, circles, activity, reminders, lessons] = await Promise.all([
+    userBalances(user.id),
+    listGoals(user.id),
+    listCirclesForUser(user.id),
+    userActivity(user.id, 5),
+    getReminders(user.id),
+    getLessonsForUser(user.id),
+  ]);
+
+  const activeCircle = circles.find((c) => c.status === "active");
+  const nextLesson = lessons.find((l) => !l.completed) ?? lessons[0];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -60,34 +69,38 @@ export default function DashboardPage() {
                 Total balance
               </p>
               <p className="mt-1.5 font-display text-4xl font-bold sm:text-5xl">
-                {formatMoney(wallet.balanceCents)}
+                {formatMoney(balances.totalCents)}
               </p>
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/55">
                 <span>
                   Available{" "}
-                  <span className="font-semibold text-white">{formatMoney(availableCents)}</span>
+                  <span className="font-semibold text-white">
+                    {formatMoney(balances.availableCents)}
+                  </span>
                 </span>
                 <span>
                   In goals{" "}
                   <span className="font-semibold text-white">
-                    {formatMoney(wallet.allocatedCents)}
+                    {formatMoney(balances.allocatedCents)}
                   </span>
                 </span>
               </div>
             </div>
             <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-              <TrendingUp className="h-3.5 w-3.5" /> +{(wallet.yieldApy * 100).toFixed(1)}% APY
+              <TrendingUp className="h-3.5 w-3.5" /> +{(YIELD_APY * 100).toFixed(1)}% APY
             </Badge>
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button size="sm">
-              <Plus className="h-4 w-4" /> Add money
+            <Button href="/wallet" size="sm">
+              Add money
             </Button>
-            <Button size="sm" variant="secondary" className="bg-white/10 text-white border-white/15 hover:bg-white/15">
-              <ArrowUpRight className="h-4 w-4" /> Send
-            </Button>
-            <Button size="sm" variant="secondary" className="bg-white/10 text-white border-white/15 hover:bg-white/15">
+            <Button
+              href="/wallet"
+              size="sm"
+              variant="secondary"
+              className="border-white/15 bg-white/10 text-white hover:bg-white/15"
+            >
               Withdraw
             </Button>
           </div>
@@ -95,7 +108,9 @@ export default function DashboardPage() {
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-center justify-between text-xs text-white/50">
               <span className="font-mono uppercase tracking-[0.15em]">Growth · 6 months</span>
-              <span className="text-jade-400">+{formatMoney(wallet.yieldEarnedCents, { sign: true })} earned</span>
+              <span className="text-jade-400">
+                +{formatMoney(balances.yieldEarnedCents, { sign: true })} earned
+              </span>
             </div>
             <AscendingChart className="mt-1 max-h-28" />
           </div>
@@ -110,7 +125,12 @@ export default function DashboardPage() {
             </IconChip>
           </div>
           <ul className="mt-4 flex-1 space-y-3">
-            {reminders.map((r) => (
+            {reminders.length === 0 && (
+              <li className="rounded-2xl border border-dashed border-ink-900/10 px-4 py-6 text-center text-sm text-ink-400">
+                You&apos;re all caught up.
+              </li>
+            )}
+            {reminders.slice(0, 3).map((r) => (
               <li
                 key={r.id}
                 className="flex items-center justify-between rounded-2xl border border-ink-900/[0.06] bg-mist px-4 py-3"
@@ -124,7 +144,7 @@ export default function DashboardPage() {
                     {formatMoney(r.amountCents, { compact: true })}
                   </p>
                   <p className="font-mono text-[10px] uppercase tracking-wide text-jade-600">
-                    {new Date(r.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    {r.dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                   </p>
                 </div>
               </li>
@@ -135,11 +155,12 @@ export default function DashboardPage() {
 
       {/* ----------------------------------------- Goals + Circle + Learn */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* goals */}
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <IconChip tone="jade"><Target className="h-5 w-5" /></IconChip>
+              <IconChip tone="jade">
+                <Target className="h-5 w-5" />
+              </IconChip>
               <h2 className="font-display text-lg font-bold text-ink-900">Your goals</h2>
             </div>
             <Link href="/goals" className="text-ink-300 transition-colors hover:text-ink-600">
@@ -147,6 +168,9 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="mt-5 space-y-4">
+            {goals.length === 0 && (
+              <p className="text-sm text-ink-400">No goals yet — create your first one.</p>
+            )}
             {goals.map((g) => (
               <Link key={g.id} href={`/goals/${g.id}`} className="block">
                 <div className="flex items-center justify-between text-sm">
@@ -161,36 +185,43 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        {/* active circle */}
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <IconChip tone="jade"><Users className="h-5 w-5" /></IconChip>
+              <IconChip tone="jade">
+                <Users className="h-5 w-5" />
+              </IconChip>
               <h2 className="font-display text-lg font-bold text-ink-900">Active circle</h2>
             </div>
             <Link href="/circles" className="text-ink-300 transition-colors hover:text-ink-600">
               <ChevronRight className="h-5 w-5" />
             </Link>
           </div>
-          <Link href={`/circles/${activeCircle.id}`} className="mt-5 block">
-            <p className="font-semibold text-ink-900">{activeCircle.name}</p>
-            <p className="text-sm text-ink-500">
-              Round {activeCircle.currentRound} of {activeCircle.totalRounds} · {activeCircle.frequency}
-            </p>
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-mist px-4 py-3">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">Pot</p>
-                <p className="font-semibold text-ink-900">{formatMoney(activeCircle.potCents)}</p>
+          {activeCircle ? (
+            <Link href={`/circles/${activeCircle.id}`} className="mt-5 block">
+              <p className="font-semibold text-ink-900">{activeCircle.name}</p>
+              <p className="text-sm capitalize text-ink-500">
+                Round {activeCircle.currentRound} of {activeCircle.totalRounds} ·{" "}
+                {activeCircle.frequency}
+              </p>
+              <div className="mt-4 flex items-center justify-between rounded-2xl bg-mist px-4 py-3">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">Pot</p>
+                  <p className="font-semibold text-ink-900">{formatMoney(activeCircle.potCents)}</p>
+                </div>
+                <Badge tone="jade">{activeCircle.memberCount} members</Badge>
               </div>
-              <Badge tone="jade">Your turn · Jun 5</Badge>
-            </div>
-          </Link>
+            </Link>
+          ) : (
+            <p className="mt-5 text-sm text-ink-400">No active circles yet.</p>
+          )}
         </Card>
 
-        {/* continue learning */}
         <Card className="flex flex-col p-6">
           <div className="flex items-center gap-3">
-            <IconChip tone="amber"><GraduationCap className="h-5 w-5" /></IconChip>
+            <IconChip tone="amber">
+              <GraduationCap className="h-5 w-5" />
+            </IconChip>
             <h2 className="font-display text-lg font-bold text-ink-900">Keep learning</h2>
           </div>
           <div className="mt-5 flex-1">
@@ -200,8 +231,13 @@ export default function DashboardPage() {
               {nextLesson.minutes} min · {nextLesson.level}
             </p>
           </div>
-          <Button href={`/learn/${nextLesson.slug}`} variant="secondary" size="sm" className="mt-5 w-full">
-            Start lesson
+          <Button
+            href={`/learn/${nextLesson.slug}`}
+            variant="secondary"
+            size="sm"
+            className="mt-5 w-full"
+          >
+            {nextLesson.completed ? "Review lesson" : "Start lesson"}
           </Button>
         </Card>
       </div>
@@ -215,8 +251,11 @@ export default function DashboardPage() {
           </Link>
         </div>
         <ul className="mt-4 divide-y divide-ink-900/[0.06]">
-          {activity.slice(0, 5).map((item) => {
-            const Icon = activityIcon[item.type];
+          {activity.length === 0 && (
+            <li className="py-6 text-center text-sm text-ink-400">No activity yet.</li>
+          )}
+          {activity.map((item) => {
+            const Icon = activityIcon[item.type] ?? ArrowUpRight;
             const positive = item.amountCents > 0;
             return (
               <li key={item.id} className="flex items-center gap-4 py-3">
@@ -224,12 +263,14 @@ export default function DashboardPage() {
                   <Icon className="h-5 w-5" />
                 </IconChip>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-ink-900">{item.title}</p>
+                  <p className="truncate text-sm font-semibold text-ink-900">{item.description}</p>
                   <p className="truncate text-xs text-ink-500">
-                    {item.subtitle} · {timeAgo(item.date)}
+                    {timeAgo(item.createdAt.toISOString())}
                   </p>
                 </div>
-                <p className={`text-sm font-semibold ${positive ? "text-jade-600" : "text-ink-900"}`}>
+                <p
+                  className={`text-sm font-semibold ${positive ? "text-jade-600" : "text-ink-900"}`}
+                >
                   {formatMoney(item.amountCents, { sign: true })}
                 </p>
               </li>

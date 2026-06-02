@@ -5,74 +5,90 @@
 > Stellar. Hit your goals, save with trusted Susu circles, learn as you go —
 > and verify every contribution on-chain.
 
-This repo is the **product app** that serves `app.moolahub.io`. The marketing
-site lives separately at [moolahub.io](https://moolahub.io). Built with
-**Next.js (App Router)**, **TypeScript**, and **Tailwind CSS**.
+A real full-stack app — **Next.js (App Router) · TypeScript · Tailwind ·
+Prisma · Stellar SDK**. Session auth, a double-entry money ledger, and real
+on-chain (testnet) settlement.
 
-## Getting started
+## Quick start
 
 ```bash
-npm install
-npm run dev       # http://localhost:3000
-npm run build     # production build
-npm run start     # serve the production build
+npm install                 # also runs `prisma generate`
+cp .env.example .env        # then fill APP_ENCRYPTION_KEY / SESSION_SECRET
+#   openssl rand -hex 32    # to generate each key
+npm run db:push             # create the database (SQLite in dev)
+npm run db:seed             # seed demo data
+npm run dev                 # http://localhost:3000
 ```
 
-## Routes
+**Demo login:** `ama@moolahub.io` / `moolahub`
 
-The product is served at the **root** so URLs map cleanly onto the app
-subdomain (e.g. `app.moolahub.io/circles`).
+## Scripts
 
-| Route | Screen |
+| Script | What it does |
 | --- | --- |
-| `/` | Dashboard — balance, growth, reminders, goals, active circle, learning, activity |
-| `/circles` · `/circles/[id]` | Susu circles list + detail (payout schedule, members, contribution history with on-chain proof) |
-| `/goals` · `/goals/[id]` | Savings goals list + detail (progress ring, auto-save, projection) |
-| `/learn` · `/learn/[slug]` | Financial-empowerment lessons |
-| `/activity` | Transaction ledger + payment reminders |
-| `/profile` | Account, KYC status, non-custodial wallet, settings |
-| `/login` | Sign in / create account (app entry for logged-out users) |
-| `/preview` | A proposed marketing landing — reference for the moolahub.io upgrade (see `LANDING_UPGRADE_PLAN.md`) |
+| `npm run dev` / `build` / `start` | Next.js dev / production build / serve |
+| `npm run db:push` | Sync the Prisma schema to the database |
+| `npm run db:seed` | Seed a realistic, ledger-consistent dataset |
+| `npm run db:reset` | Force-reset + reseed |
+| `npm run stellar:init` | Bootstrap the testnet USDC issuer/distributor (needs network) |
 
-## Project structure
+## Architecture
 
 ```
-public/
-├── brand/               # official MoolaHub logo assets (horizontal light/dark, app icon)
-└── partners/            # Privy · Yellowcard · Stellar marks
 src/
 ├── app/
-│   ├── (app)/           # authenticated product (AppShell layout) — served at /
-│   │   ├── page.tsx     #   dashboard
+│   ├── (app)/              # authenticated product — served at the root (AppShell layout)
+│   │   ├── page.tsx        #   dashboard
+│   │   ├── wallet/         #   deposit / withdraw
 │   │   ├── circles/ goals/ learn/ activity/ profile/
-│   │   └── layout.tsx   #   AppShell (sidebar + topbar + mobile nav)
-│   ├── login/           # sign in / create account
-│   ├── preview/         # proposed marketing landing (reference)
-│   ├── icon.png         # favicon (the MoolaHub app icon)
-│   └── layout.tsx, globals.css, not-found.tsx
-├── components/
-│   ├── brand/Logo.tsx   # official wordmark lockup + inline SVG mark (themeable)
-│   ├── marketing/       # landing sections (nav, footer, ascending-chart motif)
-│   ├── app/             # app shell + shared app bits
-│   └── ui.tsx           # design-system primitives (Button, Card, Badge, …)
+│   │   └── actions.ts      #   server actions (deposit, contribute, allocate, …)
+│   ├── login/              # sign in / create account (+ auth server actions)
+│   └── preview/            # proposed marketing landing (reference for moolahub.io)
+├── components/             # brand, ui primitives, app shell, client forms
 └── lib/
-    ├── data.ts          # demo domain data
-    └── utils.ts         # money/format helpers
+    ├── db.ts               # Prisma client
+    ├── content/lessons.ts  # static lesson curriculum
+    └── server/             # server-only domain layer
+        ├── auth.ts         #   bcrypt + DB-backed sessions (Privy-ready seam)
+        ├── crypto.ts       #   AES-256-GCM for secrets at rest
+        ├── ledger.ts       #   double-entry ledger (balances are derived)
+        ├── stellar.ts      #   real Stellar SDK integration (testnet)
+        ├── wallet.ts       #   per-user Stellar wallet provisioning
+        ├── deposits.ts circles.ts goals.ts reminders.ts learn.ts
+prisma/schema.prisma        # data model (SQLite dev → Postgres prod)
 ```
+
+**Money** is always integer **cents** (1/100 USDC). Balances are never stored —
+they're derived from a double-entry ledger (`LedgerAccount` + `Transaction` +
+`Posting`), mirroring the on-chain record.
+
+**Auth** is session-based (bcrypt + httpOnly cookies) behind a thin seam, so
+swapping in **Privy** later only touches `lib/server/auth.ts`.
+
+## On-chain (Stellar)
+
+Keypair generation and transaction signing are real and run offline. **Funding
+(friendbot) and submission (Horizon) require network egress** — where it's
+unavailable the signed transaction is recorded with its real hash and queued
+for broadcast (`onchainStatus: "queued"`). To go live on testnet:
+
+```bash
+npm run stellar:init        # prints issuer/distributor env vars
+# paste them into .env, then deposits/contributions settle on-chain
+```
+
+Mainnet with pooled Susu funds stays **audit-gated** and is intentionally not
+wired.
+
+## Deploying (Postgres)
+
+The data layer is portable. For production, switch the datasource in
+`prisma/schema.prisma` to `provider = "postgresql"`, point `DATABASE_URL` at
+your Postgres instance, then `prisma migrate deploy`. Set `APP_ENCRYPTION_KEY`,
+`SESSION_SECRET`, and the `STELLAR_*` vars as secrets. Runs on any Node host
+(Render, Fly, Railway, self-host).
 
 ## Brand
 
-The brand system (palette, logo, voice) is documented in
-[`CLAUDE.md`](./CLAUDE.md). The **official logo assets** live in `public/brand/`
-and the wordmark/mark are wired through `src/components/brand/Logo.tsx`.
-
-- **Palette** — Jade `#0E9E6E` · Ink `#0C1512` · Paper `#FFFFFF`
-- **Tagline** — *Save Now. Grow Together.*
-- **Type** — Poppins (display) · Inter (body) · IBM Plex Mono (eyebrow labels)
-
-## Notes
-
-This build is the **UI layer**. The data in `src/lib/data.ts` is illustrative;
-integrations (Privy wallets, Yellowcard fiat on/off-ramp, Blend yield, Soroban
-Susu contracts) wire in behind these screens. Money is handled as **integer
-cents** throughout — see `CLAUDE.md`.
+Palette Jade `#0E9E6E` · Ink `#0C1512` · Paper `#FFFFFF`. Official logo assets
+in `public/brand/`. Full conventions in [`CLAUDE.md`](./CLAUDE.md).

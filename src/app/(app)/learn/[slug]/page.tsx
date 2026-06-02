@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Clock, Lightbulb, ArrowRight } from "lucide-react";
-import { Card, Button, Badge } from "@/components/ui";
+import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
-import { lessons } from "@/lib/data";
-
-export function generateStaticParams() {
-  return lessons.map((l) => ({ slug: l.slug }));
-}
+import { ActionButton } from "@/components/app/forms";
+import { requireUser } from "@/lib/server/auth";
+import { getLessonForUser } from "@/lib/server/learn";
+import { lessons } from "@/lib/content/lessons";
+import { completeLessonAction } from "@/app/(app)/actions";
 
 export default async function LessonPage({
   params,
@@ -15,7 +15,8 @@ export default async function LessonPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const lesson = lessons.find((l) => l.slug === slug);
+  const user = await requireUser();
+  const lesson = await getLessonForUser(user.id, slug);
   if (!lesson) notFound();
 
   const index = lessons.findIndex((l) => l.slug === slug);
@@ -34,6 +35,11 @@ export default async function LessonPage({
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-ink-400">
             {lesson.category}
           </span>
+          {lesson.completed && (
+            <Badge tone="jade">
+              <CheckCircle2 className="h-3 w-3" /> Completed
+            </Badge>
+          )}
         </div>
 
         <div className="mt-5 flex items-start gap-4">
@@ -53,7 +59,6 @@ export default async function LessonPage({
           ))}
         </div>
 
-        {/* takeaways */}
         <Card className="mt-10 border-jade-500/15 bg-jade-50/50 p-6">
           <div className="flex items-center gap-2 text-jade-700">
             <Lightbulb className="h-5 w-5" />
@@ -70,10 +75,18 @@ export default async function LessonPage({
         </Card>
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-          <Button variant="primary">
-            <CheckCircle2 className="h-4 w-4" />
-            {lesson.completed ? "Completed" : "Mark complete"}
-          </Button>
+          {lesson.completed ? (
+            <Badge tone="jade" className="px-4 py-2">
+              <CheckCircle2 className="h-4 w-4" /> Lesson completed
+            </Badge>
+          ) : (
+            <ActionButton
+              action={completeLessonAction}
+              hidden={{ slug: lesson.slug }}
+              label="Mark complete"
+              pendingLabel="Saving…"
+            />
+          )}
           {next && (
             <Link
               href={`/learn/${next.slug}`}

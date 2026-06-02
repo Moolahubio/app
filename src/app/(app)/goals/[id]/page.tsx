@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
-import { Plus, Repeat, Calendar, Target, Sparkles, Minus } from "lucide-react";
-import { Card, Button, Badge } from "@/components/ui";
+import { Repeat, Calendar, Target, Sparkles } from "lucide-react";
+import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
-import { goals } from "@/lib/data";
+import { AmountForm } from "@/components/app/forms";
+import { requireUser } from "@/lib/server/auth";
+import { getGoal } from "@/lib/server/goals";
+import { allocateGoalAction, releaseGoalAction } from "@/app/(app)/actions";
 import { formatMoney, pct } from "@/lib/utils";
-
-export function generateStaticParams() {
-  return goals.map((g) => ({ id: g.id }));
-}
 
 export default async function GoalDetailPage({
   params,
@@ -15,14 +14,13 @@ export default async function GoalDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const goal = goals.find((g) => g.id === id);
+  const user = await requireUser();
+  const goal = await getGoal(user.id, id);
   if (!goal) notFound();
 
-  const remaining = goal.targetCents - goal.savedCents;
+  const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
-  const weeksLeft = goal.autoSaveCents
-    ? Math.ceil(remaining / goal.autoSaveCents)
-    : null;
+  const weeksLeft = goal.autoSaveCents ? Math.ceil(remaining / goal.autoSaveCents) : null;
   const circumference = 2 * Math.PI * 52;
 
   return (
@@ -70,23 +68,22 @@ export default async function GoalDetailPage({
             <p className="mt-1 text-sm text-ink-500">
               Move funds from your available balance into this allocation.
             </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[1000, 2500, 5000].map((amt) => (
-                <button
-                  key={amt}
-                  className="rounded-full border border-ink-900/10 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition-colors hover:border-jade-500/40 hover:text-jade-700 focus-ring"
-                >
-                  +{formatMoney(amt, { compact: true })}
-                </button>
-              ))}
+            <div className="mt-4">
+              <AmountForm
+                action={allocateGoalAction}
+                hidden={{ goalId: goal.id }}
+                presets={[1000, 2500, 5000]}
+                submitLabel="Add funds"
+              />
             </div>
-            <div className="mt-4 flex gap-3">
-              <Button className="flex-1">
-                <Plus className="h-4 w-4" /> Add funds
-              </Button>
-              <Button variant="secondary">
-                <Minus className="h-4 w-4" /> Withdraw
-              </Button>
+            <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
+              <p className="mb-3 text-sm font-medium text-ink-700">Withdraw from this goal</p>
+              <AmountForm
+                action={releaseGoalAction}
+                hidden={{ goalId: goal.id }}
+                submitLabel="Withdraw to available"
+                variant="secondary"
+              />
             </div>
           </Card>
 
@@ -106,7 +103,7 @@ export default async function GoalDetailPage({
                 <p className="font-mono text-[10px] uppercase tracking-[0.15em]">Target date</p>
               </div>
               <p className="mt-1.5 font-display text-xl font-bold text-ink-900">
-                {new Date(goal.deadline).toLocaleDateString("en-US", {
+                {goal.deadline.toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -129,17 +126,11 @@ export default async function GoalDetailPage({
                 </p>
               </div>
             </div>
-            {goal.autoSaveCents ? (
-              <Badge tone="jade">On</Badge>
-            ) : (
-              <Button variant="secondary" size="sm">
-                Set up
-              </Button>
-            )}
+            {goal.autoSaveCents ? <Badge tone="jade">On</Badge> : <Badge tone="neutral">Off</Badge>}
           </Card>
 
-          {weeksLeft !== null && (
-            <p className="flex items-center justify-center gap-2 text-sm text-ink-500">
+          {weeksLeft !== null && remaining > 0 && (
+            <p className="flex items-center justify-center gap-2 text-center text-sm text-ink-500">
               <Sparkles className="h-4 w-4 text-jade-500" />
               At {formatMoney(goal.autoSaveCents!)} per week, you&apos;ll reach this goal in about{" "}
               <span className="font-semibold text-ink-900">{weeksLeft} weeks</span>.

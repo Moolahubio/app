@@ -2,9 +2,12 @@ import Link from "next/link";
 import { CheckCircle2, Clock, GraduationCap, ArrowRight } from "lucide-react";
 import { Card, Badge, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
-import { lessons } from "@/lib/data";
+import { requireUser } from "@/lib/server/auth";
+import { getLessonsForUser } from "@/lib/server/learn";
 
-export default function LearnPage() {
+export default async function LearnPage() {
+  const user = await requireUser();
+  const lessons = await getLessonsForUser(user.id);
   const completed = lessons.filter((l) => l.completed).length;
   const featured = lessons[0];
   const rest = lessons.slice(1);
@@ -17,7 +20,6 @@ export default function LearnPage() {
         description="Short, practical lessons to build confidence with your money — and make the most of MoolaHub."
       />
 
-      {/* progress strip */}
       <Card className="flex flex-wrap items-center justify-between gap-4 p-5">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-jade-50 text-jade-600">
@@ -40,12 +42,11 @@ export default function LearnPage() {
         </div>
       </Card>
 
-      {/* featured */}
       <Link href={`/learn/${featured.slug}`} className="group block">
         <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-8 text-white transition-all group-hover:shadow-card-hover">
           <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:32px_32px] [mask-image:radial-gradient(70%_80%_at_90%_0%,black,transparent)]" />
           <div className="absolute -right-8 -top-12 -z-10 h-56 w-56 rounded-full bg-jade-500/20 blur-[90px]" />
-          <Eyebrow tone="light">Start here</Eyebrow>
+          <Eyebrow tone="light">{featured.completed ? "Revisit" : "Start here"}</Eyebrow>
           <div className="mt-4 flex items-start gap-5">
             <span className="text-5xl">{featured.emoji}</span>
             <div>
