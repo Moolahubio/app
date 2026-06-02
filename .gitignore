@@ -37,3 +37,6 @@ next-env.d.ts
 # any sqlite db
 **/*.db
 **/*.db-journal
+
+# Claude agent worktrees (transient)
+/.claude/
