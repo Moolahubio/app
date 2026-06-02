@@ -42,7 +42,7 @@ export default async function CirclesPage() {
         <p className="text-sm text-ink-700">
           <span className="font-semibold text-ink-900">How a Susu works:</span> everyone
           contributes a fixed amount each round, and one member receives the full pot. By the
-          end, everyone has paid in equally and received one payout — all verifiable on Stellar.
+          end, everyone has paid in equally and received one payout — all verifiable on Base.
         </p>
       </Card>
 
