@@ -4,14 +4,14 @@
 // as a mutable column — the ledger is the source of truth, mirroring the
 // on-chain record.
 //
-// Dev uses SQLite; production swaps `provider = "postgresql"` (see README).
+// PostgreSQL in all environments (docker-compose provides a local instance).
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -139,6 +139,20 @@ model Circle {
 
   members       CircleMember[]
   contributions Contribution[]
+  invites       CircleInvite[]
+}
+
+model CircleInvite {
+  id          String   @id @default(cuid())
+  circleId    String
+  circle      Circle   @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  email       String
+  invitedById String
+  status      String   @default("pending") // pending | accepted | declined
+  createdAt   DateTime @default(now())
+
+  @@unique([circleId, email])
+  @@index([email])
 }
 
 model CircleMember {

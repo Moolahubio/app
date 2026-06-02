@@ -34,28 +34,15 @@ export default function NewCirclePage() {
             />
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Contribution per round (USDC)">
-              <input
-                name="contribution"
-                inputMode="decimal"
-                placeholder="50.00"
-                required
-                className="h-12 w-full rounded-2xl border border-ink-900/10 bg-white px-4 text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
-              />
-            </Field>
-            <Field label="Rounds (members)">
-              <input
-                name="totalRounds"
-                type="number"
-                min={2}
-                max={24}
-                defaultValue={6}
-                required
-                className="h-12 w-full rounded-2xl border border-ink-900/10 bg-white px-4 text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
-              />
-            </Field>
-          </div>
+          <Field label="Contribution per round (USDC)">
+            <input
+              name="contribution"
+              inputMode="decimal"
+              placeholder="50.00"
+              required
+              className="h-12 w-full rounded-2xl border border-ink-900/10 bg-white px-4 text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
+            />
+          </Field>
 
           <Field label="Frequency">
             <select

@@ -1,0 +1,47 @@
+# Local / single-host production-like stack: Postgres + the MoolaHub app.
+#
+#   APP_ENCRYPTION_KEY=$(openssl rand -hex 32) SESSION_SECRET=$(openssl rand -hex 32) \
+#     docker compose up --build
+#   docker compose exec app npm run db:seed      # one-time demo data
+#
+# App: http://localhost:3000   (demo login: ama@moolahub.io / moolahub)
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: moolahub
+      POSTGRES_PASSWORD: moolahub
+      POSTGRES_DB: moolahub
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moolahub -d moolahub"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://moolahub:moolahub@db:5432/moolahub?schema=public
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?set APP_ENCRYPTION_KEY (openssl rand -hex 32)}
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET (openssl rand -hex 32)}
+      STELLAR_NETWORK: testnet
+      STELLAR_HORIZON_URL: https://horizon-testnet.stellar.org
+      STELLAR_USDC_ISSUER_PUBLIC: ${STELLAR_USDC_ISSUER_PUBLIC:-}
+      STELLAR_USDC_ISSUER_SECRET: ${STELLAR_USDC_ISSUER_SECRET:-}
+      STELLAR_DISTRIBUTOR_PUBLIC: ${STELLAR_DISTRIBUTOR_PUBLIC:-}
+      STELLAR_DISTRIBUTOR_SECRET: ${STELLAR_DISTRIBUTOR_SECRET:-}
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

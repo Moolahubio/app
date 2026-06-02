@@ -11,11 +11,26 @@ on-chain (testnet) settlement.
 
 ## Quick start
 
+The app uses **PostgreSQL**. Easiest path is Docker:
+
+```bash
+# 1) secrets
+export APP_ENCRYPTION_KEY=$(openssl rand -hex 32)
+export SESSION_SECRET=$(openssl rand -hex 32)
+
+# 2) bring up Postgres + the app, then seed demo data
+docker compose up --build -d
+docker compose exec app npm run db:seed
+
+# → http://localhost:3000
+```
+
+Or run it locally against your own Postgres:
+
 ```bash
 npm install                 # also runs `prisma generate`
-cp .env.example .env        # then fill APP_ENCRYPTION_KEY / SESSION_SECRET
-#   openssl rand -hex 32    # to generate each key
-npm run db:push             # create the database (SQLite in dev)
+cp .env.example .env        # set DATABASE_URL + APP_ENCRYPTION_KEY + SESSION_SECRET
+npm run db:migrate          # apply migrations (prod) — or `npm run db:push` for quick dev
 npm run db:seed             # seed demo data
 npm run dev                 # http://localhost:3000
 ```
@@ -55,7 +70,7 @@ src/
         ├── stellar.ts      #   real Stellar SDK integration (testnet)
         ├── wallet.ts       #   per-user Stellar wallet provisioning
         ├── deposits.ts circles.ts goals.ts reminders.ts learn.ts
-prisma/schema.prisma        # data model (SQLite dev → Postgres prod)
+prisma/schema.prisma        # data model (PostgreSQL) + prisma/migrations/
 ```
 
 **Money** is always integer **cents** (1/100 USDC). Balances are never stored —
@@ -80,13 +95,20 @@ npm run stellar:init        # prints issuer/distributor env vars
 Mainnet with pooled Susu funds stays **audit-gated** and is intentionally not
 wired.
 
-## Deploying (Postgres)
+## Deploying
 
-The data layer is portable. For production, switch the datasource in
-`prisma/schema.prisma` to `provider = "postgresql"`, point `DATABASE_URL` at
-your Postgres instance, then `prisma migrate deploy`. Set `APP_ENCRYPTION_KEY`,
-`SESSION_SECRET`, and the `STELLAR_*` vars as secrets. Runs on any Node host
-(Render, Fly, Railway, self-host).
+The app ships with a **Dockerfile** and **docker-compose.yml** (app + Postgres).
+The container runs `prisma migrate deploy` on boot, then serves on `:3000`.
+
+```bash
+APP_ENCRYPTION_KEY=… SESSION_SECRET=… docker compose up --build
+docker compose exec app npm run db:seed   # one-time, optional demo data
+```
+
+For a managed host (Render / Fly / Railway / self-host): build the image, point
+`DATABASE_URL` at your Postgres, and set `APP_ENCRYPTION_KEY`, `SESSION_SECRET`,
+and the `STELLAR_*` vars as secrets. Migrations live in `prisma/migrations/`.
+Run `npm run stellar:init` once to populate the testnet Stellar vars.
 
 ## Brand
 

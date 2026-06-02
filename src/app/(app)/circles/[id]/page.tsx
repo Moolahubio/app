@@ -9,10 +9,11 @@ import {
 } from "lucide-react";
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
 import { BackLink, TxTag } from "@/components/app/bits";
-import { ActionButton } from "@/components/app/forms";
+import { Mail, UserPlus, Rocket } from "lucide-react";
+import { ActionButton, InviteForm } from "@/components/app/forms";
 import { requireUser } from "@/lib/server/auth";
 import { getCircleDetail } from "@/lib/server/circles";
-import { contributeAction } from "@/app/(app)/actions";
+import { contributeAction, startCircleAction } from "@/app/(app)/actions";
 import { formatMoney, cn, truncateAddress } from "@/lib/utils";
 
 export default async function CircleDetailPage({
@@ -42,8 +43,10 @@ export default async function CircleDetailPage({
             <div>
               <h1 className="font-display text-2xl font-bold">{circle.name}</h1>
               <p className="text-sm capitalize text-white/55">
-                {circle.frequency} · {circle.memberCount} members · Round{" "}
-                {circle.currentRound} of {circle.totalRounds}
+                {circle.frequency} · {circle.memberCount} members
+                {circle.status === "forming"
+                  ? " · forming"
+                  : ` · Round ${circle.currentRound} of ${circle.totalRounds}`}
               </p>
             </div>
           </div>
@@ -98,6 +101,66 @@ export default async function CircleDetailPage({
           )}
         </div>
       </Card>
+
+      {/* ------------------------------------------------- forming controls */}
+      {circle.status === "forming" && (circle.canInvite || circle.pendingInvites.length > 0) && (
+        <Card className="p-6">
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-jade-600" />
+            <h2 className="font-display text-lg font-bold text-ink-900">Build your circle</h2>
+          </div>
+          <p className="mt-1 text-sm text-ink-500">
+            Invite people by email. Rounds equal members — everyone gets exactly one payout. Start
+            the circle once everyone&apos;s in.
+          </p>
+
+          {circle.canInvite && (
+            <div className="mt-4 max-w-md">
+              <InviteForm circleId={circle.id} />
+            </div>
+          )}
+
+          {circle.pendingInvites.length > 0 && (
+            <div className="mt-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400">
+                Pending invitations
+              </p>
+              <ul className="mt-2 space-y-2">
+                {circle.pendingInvites.map((inv) => (
+                  <li
+                    key={inv.id}
+                    className="flex items-center gap-2 rounded-2xl border border-ink-900/[0.06] bg-mist px-4 py-2.5"
+                  >
+                    <Mail className="h-4 w-4 text-ink-400" />
+                    <span className="text-sm text-ink-700">{inv.email}</span>
+                    <Badge tone="amber" className="ml-auto">
+                      Pending
+                    </Badge>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {circle.isCreator && (
+            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-ink-900/[0.06] pt-5">
+              {circle.canStart ? (
+                <ActionButton
+                  action={startCircleAction}
+                  hidden={{ circleId: circle.id }}
+                  label="Start circle"
+                  pendingLabel="Starting…"
+                />
+              ) : (
+                <p className="inline-flex items-center gap-2 text-sm text-ink-500">
+                  <Rocket className="h-4 w-4 text-ink-400" />
+                  Invite at least one more member to start.
+                </p>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* ------------------------------------------------ payout schedule */}

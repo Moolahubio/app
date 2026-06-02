@@ -6,7 +6,13 @@ import { db } from "@/lib/db";
 import { requireUser, destroySession } from "@/lib/server/auth";
 import { deposit, withdraw } from "@/lib/server/deposits";
 import { createGoal, allocateToGoal, releaseFromGoal } from "@/lib/server/goals";
-import { contribute } from "@/lib/server/circles";
+import {
+  contribute,
+  inviteToCircle,
+  acceptInvite,
+  declineInvite,
+  startCircle,
+} from "@/lib/server/circles";
 
 export type ActionState = { ok?: boolean; error?: string };
 
@@ -122,16 +128,16 @@ export async function createCircleAction(_prev: ActionState, formData: FormData)
     const name = String(formData.get("name") ?? "").trim();
     if (!name) throw new Error("Give your circle a name.");
     const frequency = String(formData.get("frequency") ?? "monthly");
-    const totalRounds = Math.max(2, Math.min(24, Number(formData.get("totalRounds") ?? 6)));
     const start = new Date();
     start.setDate(start.getDate() + 7);
+    // Rounds == members; starts at 1 (just the creator) and grows as people join.
     const circle = await db.circle.create({
       data: {
         name,
         status: "forming",
         contributionCents: toCents(formData.get("contribution")),
         frequency,
-        totalRounds,
+        totalRounds: 1,
         currentRound: 0,
         startDate: start,
         createdById: user.id,
@@ -144,6 +150,55 @@ export async function createCircleAction(_prev: ActionState, formData: FormData)
   }
   revalidatePath("/circles");
   redirect(`/circles/${circleId}`);
+}
+
+export async function inviteMemberAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const circleId = String(formData.get("circleId") ?? "");
+  try {
+    await inviteToCircle(user.id, circleId, String(formData.get("email") ?? ""));
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath(`/circles/${circleId}`);
+  return { ok: true };
+}
+
+export async function acceptInviteAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const inviteId = String(formData.get("inviteId") ?? "");
+  try {
+    await acceptInvite(user.id, user.email, inviteId);
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath("/circles");
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function declineInviteAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  try {
+    await declineInvite(user.email, String(formData.get("inviteId") ?? ""));
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath("/circles");
+  return { ok: true };
+}
+
+export async function startCircleAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const circleId = String(formData.get("circleId") ?? "");
+  try {
+    await startCircle(user.id, circleId);
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath(`/circles/${circleId}`);
+  revalidatePath("/circles");
+  return { ok: true };
 }
 
 export async function completeLessonAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

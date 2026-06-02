@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { Plus, Users, ArrowRight, ShieldCheck } from "lucide-react";
+import { Plus, Users, ArrowRight, ShieldCheck, Inbox } from "lucide-react";
 import { Card, Button, Badge, ProgressBar, Avatar, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
+import { ActionButton } from "@/components/app/forms";
 import { requireUser } from "@/lib/server/auth";
-import { listCirclesForUser } from "@/lib/server/circles";
+import { listCirclesForUser, listInvitesForUser } from "@/lib/server/circles";
+import { acceptInviteAction, declineInviteAction } from "@/app/(app)/actions";
 import { formatMoney } from "@/lib/utils";
 
 const statusTone = {
@@ -14,7 +16,10 @@ const statusTone = {
 
 export default async function CirclesPage() {
   const user = await requireUser();
-  const circles = await listCirclesForUser(user.id);
+  const [circles, invites] = await Promise.all([
+    listCirclesForUser(user.id),
+    listInvitesForUser(user.email),
+  ]);
   const visible = circles.filter((c) => c.status !== "completed");
 
   return (
@@ -40,6 +45,50 @@ export default async function CirclesPage() {
           end, everyone has paid in equally and received one payout — all verifiable on Stellar.
         </p>
       </Card>
+
+      {invites.length > 0 && (
+        <Card className="border-jade-500/20 bg-jade-50/50 p-6">
+          <div className="flex items-center gap-2">
+            <Inbox className="h-5 w-5 text-jade-600" />
+            <h2 className="font-display text-lg font-bold text-ink-900">
+              Invitations ({invites.length})
+            </h2>
+          </div>
+          <ul className="mt-4 space-y-3">
+            {invites.map((inv) => (
+              <li
+                key={inv.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink-900/[0.06] bg-white p-4"
+              >
+                <div>
+                  <p className="font-semibold text-ink-900">{inv.circleName}</p>
+                  <p className="text-xs text-ink-500">
+                    {inv.invitedBy} invited you · {formatMoney(inv.contributionCents)}/{inv.frequency} ·{" "}
+                    {inv.memberCount} members
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ActionButton
+                    action={acceptInviteAction}
+                    hidden={{ inviteId: inv.id }}
+                    label="Accept"
+                    pendingLabel="…"
+                    size="sm"
+                  />
+                  <ActionButton
+                    action={declineInviteAction}
+                    hidden={{ inviteId: inv.id }}
+                    label="Decline"
+                    pendingLabel="…"
+                    size="sm"
+                    variant="secondary"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <div className="grid gap-5 md:grid-cols-2">
         {visible.map((circle) => (

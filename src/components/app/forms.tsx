@@ -4,9 +4,41 @@ import { useActionState, useState } from "react";
 import { CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui";
 import { formatMoney, cn } from "@/lib/utils";
-import type { ActionState } from "@/app/(app)/actions";
+import { inviteMemberAction, type ActionState } from "@/app/(app)/actions";
 
 type Action = (prev: ActionState, fd: FormData) => Promise<ActionState>;
+
+/** Invite a member to a forming circle by email. */
+export function InviteForm({ circleId }: { circleId: string }) {
+  const [state, formAction, pending] = useActionState(inviteMemberAction, {});
+  return (
+    <form action={formAction} className="space-y-2">
+      <input type="hidden" name="circleId" value={circleId} />
+      <div className="flex gap-2">
+        <input
+          name="email"
+          type="email"
+          placeholder="friend@email.com"
+          required
+          className="h-11 w-full rounded-2xl border border-ink-900/10 bg-white px-4 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
+        />
+        <Button type="submit" disabled={pending} size="sm">
+          {pending ? "…" : "Invite"}
+        </Button>
+      </div>
+      {state.error && (
+        <p className="flex items-center gap-1.5 text-sm text-red-600">
+          <AlertCircle className="h-4 w-4" /> {state.error}
+        </p>
+      )}
+      {state.ok && (
+        <p className="flex items-center gap-1.5 text-sm text-jade-600">
+          <CheckCircle2 className="h-4 w-4" /> Invitation sent.
+        </p>
+      )}
+    </form>
+  );
+}
 
 /** Copy text to the clipboard with a brief confirmation. */
 export function CopyButton({ value, className }: { value: string; className?: string }) {

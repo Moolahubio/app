@@ -51,12 +51,14 @@ export async function getCircleDetail(userId: string, circleId: string) {
     include: {
       members: { include: { user: true }, orderBy: { position: "asc" } },
       contributions: { where: { userId }, orderBy: { round: "asc" } },
+      invites: { where: { status: "pending" }, orderBy: { createdAt: "asc" } },
     },
   });
   if (!c) return null;
   const memberCount = c.members.length;
   const me = c.members.find((m) => m.userId === userId);
   const contributedThisRound = c.contributions.some((x) => x.round === c.currentRound);
+  const isCreator = c.createdById === userId;
 
   return {
     id: c.id,
@@ -72,6 +74,10 @@ export async function getCircleDetail(userId: string, circleId: string) {
     nextContributionDate: addInterval(c.startDate, c.frequency, Math.max(0, c.currentRound - 1)),
     myPosition: me?.position ?? null,
     contributedThisRound,
+    isCreator,
+    canInvite: isCreator && c.status === "forming",
+    canStart: isCreator && c.status === "forming" && memberCount >= 2,
+    pendingInvites: c.invites.map((i) => ({ id: i.id, email: i.email })),
     canContribute: c.status === "active" && !contributedThisRound && !!me,
     members: c.members.map((m) => ({
       name: m.user.name,
@@ -199,5 +205,92 @@ async function maybeProcessPayout(circleId: string, round: number) {
       nextRound > circle.totalRounds
         ? { status: "completed", currentRound: circle.totalRounds }
         : { currentRound: nextRound },
+  });
+}
+
+// ---- Invitations ---------------------------------------------------------
+
+export async function inviteToCircle(userId: string, circleId: string, emailRaw: string) {
+  const email = emailRaw.trim().toLowerCase();
+  if (!email || !email.includes("@")) throw new Error("Enter a valid email address.");
+  const circle = await db.circle.findFirst({
+    where: { id: circleId, createdById: userId },
+    include: { members: { include: { user: true } } },
+  });
+  if (!circle) throw new Error("Only the circle creator can invite members.");
+  if (circle.status !== "forming") throw new Error("This circle has already started.");
+  if (circle.members.some((m) => m.user.email === email)) {
+    throw new Error("That person is already a member.");
+  }
+  await db.circleInvite.upsert({
+    where: { circleId_email: { circleId, email } },
+    update: { status: "pending" },
+    create: { circleId, email, invitedById: userId },
+  });
+}
+
+export async function listInvitesForUser(email: string) {
+  const invites = await db.circleInvite.findMany({
+    where: { email: email.toLowerCase(), status: "pending" },
+    include: { circle: { include: { members: true, createdBy: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+  return invites.map((i) => ({
+    id: i.id,
+    circleId: i.circleId,
+    circleName: i.circle.name,
+    contributionCents: i.circle.contributionCents,
+    frequency: i.circle.frequency,
+    memberCount: i.circle.members.length,
+    invitedBy: i.circle.createdBy.name,
+  }));
+}
+
+export async function acceptInvite(userId: string, userEmail: string, inviteId: string) {
+  const invite = await db.circleInvite.findUnique({
+    where: { id: inviteId },
+    include: { circle: { include: { members: true } } },
+  });
+  if (!invite || invite.status !== "pending") throw new Error("Invitation not found.");
+  if (invite.email !== userEmail.toLowerCase()) throw new Error("This invitation isn't for you.");
+  if (invite.circle.status !== "forming") throw new Error("This circle has already started.");
+  if (invite.circle.members.some((m) => m.userId === userId)) {
+    await db.circleInvite.update({ where: { id: inviteId }, data: { status: "accepted" } });
+    return invite.circleId;
+  }
+  const nextPos = invite.circle.members.length + 1;
+  await db.$transaction([
+    db.circleMember.create({
+      data: { circleId: invite.circleId, userId, position: nextPos, payoutRound: nextPos },
+    }),
+    db.circle.update({ where: { id: invite.circleId }, data: { totalRounds: nextPos } }),
+    db.circleInvite.update({ where: { id: inviteId }, data: { status: "accepted" } }),
+  ]);
+  return invite.circleId;
+}
+
+export async function declineInvite(userEmail: string, inviteId: string) {
+  const invite = await db.circleInvite.findUnique({ where: { id: inviteId } });
+  if (!invite || invite.email !== userEmail.toLowerCase()) throw new Error("Invitation not found.");
+  await db.circleInvite.update({ where: { id: inviteId }, data: { status: "declined" } });
+}
+
+/** Creator locks the rotation and activates the circle (rounds = members). */
+export async function startCircle(userId: string, circleId: string) {
+  const circle = await db.circle.findFirst({
+    where: { id: circleId, createdById: userId },
+    include: { members: true },
+  });
+  if (!circle) throw new Error("Only the creator can start this circle.");
+  if (circle.status !== "forming") throw new Error("This circle has already started.");
+  if (circle.members.length < 2) throw new Error("Invite at least one more member first.");
+  await db.circle.update({
+    where: { id: circleId },
+    data: {
+      status: "active",
+      currentRound: 1,
+      totalRounds: circle.members.length,
+      startDate: new Date(),
+    },
   });
 }
