@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   // Keep heavy server-only SDKs out of the bundler.
-  serverExternalPackages: ["@prisma/client", "bcryptjs"],
+  serverExternalPackages: ["@prisma/client", "bcryptjs", "@coinbase/cdp-sdk"],
   webpack: (config) => {
     // wagmi's connectors barrel pulls in an unused "tempo" connector that
     // references a bare `accounts` specifier; we only use coinbaseWallet, so

@@ -1,14 +1,16 @@
-import { ArrowDownLeft, ArrowUpRight, Wallet, ShieldCheck, Sparkles, RefreshCw, Clock } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Wallet, ShieldCheck, Sparkles, RefreshCw, Clock, CreditCard } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
 import { BaseWalletActions } from "@/components/base/BaseWalletActions";
+import { BuyUsdcButton } from "@/components/base/BuyUsdcButton";
 import { requireUser } from "@/lib/server/auth";
 import { userBalances } from "@/lib/server/ledger";
 import { depositAction, syncDepositsAction } from "@/app/(app)/actions";
 import { formatMoney } from "@/lib/utils";
 
 const NETWORK = process.env.BASE_NETWORK === "mainnet" ? "Base" : "Base Sepolia";
+const ONRAMP = process.env.NEXT_PUBLIC_ONRAMP === "true";
 
 export default async function WalletPage() {
   const user = await requireUser();
@@ -86,6 +88,18 @@ export default async function WalletPage() {
               className="w-full [&>button]:w-full"
             />
           </div>
+
+          {ONRAMP && (
+            <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
+              <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-ink-700">
+                <CreditCard className="h-4 w-4 text-jade-500" /> Buy with card
+              </p>
+              <p className="mb-3 text-xs text-ink-500">
+                Purchase USDC with a card or bank — it lands in your wallet.
+              </p>
+              <BuyUsdcButton presetFiatAmount={25} />
+            </div>
+          )}
 
           <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
             <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-ink-700">

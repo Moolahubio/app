@@ -19,6 +19,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.51.0",
     "@prisma/client": "^6.19.3",
     "@privy-io/react-auth": "^3.28.0",
     "@privy-io/server-auth": "^1.32.5",
