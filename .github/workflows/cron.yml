@@ -1,0 +1,22 @@
+name: Scheduled jobs
+
+# Runs the MoolaHub scheduler (weekly goal auto-saves + contribution reminders).
+# Configure repo secrets: APP_URL (e.g. https://app.moolahub.io) and CRON_SECRET.
+# (Alternatively use Vercel Cron or any external pinger against /api/cron.)
+
+on:
+  schedule:
+    - cron: "0 8 * * *" # daily at 08:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger /api/cron
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ] || [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "APP_URL / CRON_SECRET secrets not set — skipping."; exit 0
+          fi
+          curl -fsS -X POST "${{ secrets.APP_URL }}/api/cron" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

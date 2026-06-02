@@ -132,6 +132,7 @@ model Goal {
   targetCents  Int
   deadline     DateTime
   autoSaveCents Int? // weekly auto-save; null = off
+  lastAutoSaveAt DateTime? // last time the weekly auto-save ran
   color        String   @default("jade") // jade | amber | sky
   createdAt    DateTime @default(now())
 
@@ -181,6 +182,7 @@ model CircleMember {
   position   Int
   payoutRound Int // which round this member receives the pot
   paidOut    Boolean  @default(false)
+  remindedRound Int   @default(0) // highest round we've already reminded this member about
   joinedAt   DateTime @default(now())
 
   @@unique([circleId, userId])
