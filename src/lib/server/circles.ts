@@ -5,6 +5,7 @@ import { onchainEnabled, sendPayment } from "./stellar";
 import { getSigningSecret } from "./wallet";
 import { toMeta } from "./deposits";
 import { sendEmail, brandedEmail, appUrl } from "./email";
+import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "@/lib/utils";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
@@ -159,6 +160,13 @@ export async function contribute(userId: string, circleId: string) {
     },
   });
 
+  await notify(userId, {
+    type: "contribution",
+    title: `Contributed to ${circle.name}`,
+    body: `You paid ${formatMoney(circle.contributionCents)} for round ${round}.`,
+    link: `/circles/${circleId}`,
+  });
+
   await maybeProcessPayout(circleId, round);
   return txn;
 }
@@ -197,6 +205,12 @@ async function maybeProcessPayout(circleId: string, round: number) {
       onchain: meta,
     });
     await db.circleMember.update({ where: { id: recipient.id }, data: { paidOut: true } });
+    await notify(recipient.userId, {
+      type: "payout",
+      title: "You received the pot! 🎉",
+      body: `${formatMoney(potCents)} from "${circle.name}" landed in your wallet.`,
+      link: `/circles/${circleId}`,
+    });
   }
 
   // Advance the round (or complete the circle).
@@ -243,6 +257,16 @@ export async function inviteToCircle(userId: string, circleId: string, emailRaw:
     }),
     text: `${inviter} invited you to join "${circle.name}" on MoolaHub. Visit ${appUrl("/circles")} to accept.`,
   });
+
+  const invitedUser = await db.user.findUnique({ where: { email } });
+  if (invitedUser) {
+    await notify(invitedUser.id, {
+      type: "invite",
+      title: "Circle invitation",
+      body: `${inviter} invited you to join "${circle.name}".`,
+      link: "/circles",
+    });
+  }
 }
 
 export async function listInvitesForUser(email: string) {
@@ -282,6 +306,13 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
     db.circle.update({ where: { id: invite.circleId }, data: { totalRounds: nextPos } }),
     db.circleInvite.update({ where: { id: inviteId }, data: { status: "accepted" } }),
   ]);
+  const accepter = await db.user.findUnique({ where: { id: userId }, select: { name: true } });
+  await notify(invite.circle.createdById, {
+    type: "invite_accepted",
+    title: "New circle member",
+    body: `${accepter?.name ?? "Someone"} joined "${invite.circle.name}".`,
+    link: `/circles/${invite.circleId}`,
+  });
   return invite.circleId;
 }
 
@@ -308,5 +339,12 @@ export async function startCircle(userId: string, circleId: string) {
       totalRounds: circle.members.length,
       startDate: new Date(),
     },
+  });
+  const others = circle.members.map((m) => m.userId).filter((id) => id !== userId);
+  await notifyMany(others, {
+    type: "circle_started",
+    title: "Circle started",
+    body: `"${circle.name}" is now active — round 1 has begun.`,
+    link: `/circles/${circleId}`,
   });
 }

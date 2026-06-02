@@ -2,6 +2,8 @@ import "server-only";
 import { db } from "@/lib/db";
 import { acct, transfer } from "./ledger";
 import { onchainEnabled, sendPayment, type OnchainResult } from "./stellar";
+import { notify } from "./notifications";
+import { formatMoney } from "@/lib/utils";
 
 /**
  * Fiat on-ramp (Yellowcard, in production). KYC is required for local-currency
@@ -26,7 +28,7 @@ export async function deposit(userId: string, amountCents: number) {
     });
   }
 
-  return transfer({
+  const txn = await transfer({
     type: "deposit",
     description: "Deposit via Yellowcard",
     userId,
@@ -35,6 +37,13 @@ export async function deposit(userId: string, amountCents: number) {
     amountCents,
     onchain: toMeta(onchain),
   });
+  await notify(userId, {
+    type: "deposit",
+    title: "Deposit received",
+    body: `${formatMoney(amountCents)} was added to your wallet.`,
+    link: "/activity",
+  });
+  return txn;
 }
 
 export async function withdraw(userId: string, amountCents: number) {
@@ -45,7 +54,7 @@ export async function withdraw(userId: string, amountCents: number) {
   if ((available._sum.amountCents ?? 0) < amountCents) {
     throw new Error("Insufficient available balance");
   }
-  return transfer({
+  const txn = await transfer({
     type: "withdrawal",
     description: "Withdrawal to local currency",
     userId,
@@ -53,6 +62,13 @@ export async function withdraw(userId: string, amountCents: number) {
     toKey: acct.external,
     amountCents,
   });
+  await notify(userId, {
+    type: "withdrawal",
+    title: "Withdrawal sent",
+    body: `${formatMoney(amountCents)} is on its way to your local currency.`,
+    link: "/activity",
+  });
+  return txn;
 }
 
 export function toMeta(r: OnchainResult) {

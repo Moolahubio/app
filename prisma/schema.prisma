@@ -32,6 +32,22 @@ model User {
   lessonProgress LessonProgress[]
   ledgerAccounts LedgerAccount[]
   createdCircles Circle[]         @relation("CircleCreator")
+  notifications  Notification[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // invite | invite_accepted | circle_started | contribution | payout | deposit | withdrawal | goal | yield | system
+  title     String
+  body      String
+  link      String? // in-app route to open
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([userId, createdAt])
 }
 
 model Session {

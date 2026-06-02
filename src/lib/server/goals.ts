@@ -1,6 +1,8 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { acct, transfer, goalBalances } from "./ledger";
+import { notify } from "./notifications";
+import { formatMoney } from "@/lib/utils";
 
 export async function listGoals(userId: string) {
   const [goals, balances] = await Promise.all([
@@ -52,7 +54,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
   if ((available._sum.amountCents ?? 0) < amountCents) {
     throw new Error("Insufficient available balance");
   }
-  return transfer({
+  const txn = await transfer({
     type: "goal_allocate",
     description: `Allocation → ${goal.name}`,
     userId,
@@ -60,6 +62,13 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
     toKey: acct.goal(goalId),
     amountCents,
   });
+  await notify(userId, {
+    type: "goal",
+    title: `Added to ${goal.name}`,
+    body: `${formatMoney(amountCents)} ${goal.emoji} moved into your ${goal.name} goal.`,
+    link: `/goals/${goalId}`,
+  });
+  return txn;
 }
 
 /** Release funds from a goal back to the available wallet balance. */
@@ -68,7 +77,7 @@ export async function releaseFromGoal(userId: string, goalId: string, amountCent
   if (!goal) throw new Error("Goal not found");
   const balances = await goalBalances(userId);
   if ((balances[goalId] ?? 0) < amountCents) throw new Error("Insufficient goal balance");
-  return transfer({
+  const txn = await transfer({
     type: "goal_release",
     description: `Released from ${goal.name}`,
     userId,
@@ -76,4 +85,11 @@ export async function releaseFromGoal(userId: string, goalId: string, amountCent
     toKey: acct.wallet(userId),
     amountCents,
   });
+  await notify(userId, {
+    type: "goal",
+    title: `Withdrawn from ${goal.name}`,
+    body: `${formatMoney(amountCents)} returned to your available balance.`,
+    link: `/goals/${goalId}`,
+  });
+  return txn;
 }

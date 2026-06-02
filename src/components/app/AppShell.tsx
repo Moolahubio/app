@@ -8,11 +8,11 @@ import {
   Target,
   GraduationCap,
   Receipt,
-  Bell,
   Plus,
 } from "lucide-react";
 import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Avatar, Button } from "@/components/ui";
+import { NotificationBell, type NotificationItem } from "@/components/app/NotificationBell";
 import { formatMoney, cn } from "@/lib/utils";
 
 const nav = [
@@ -32,10 +32,19 @@ export type ShellProps = {
   user: { name: string; kycStatus: string };
   balanceCents: number;
   reminder: { title: string; amountCents: number; dueDate: string } | null;
+  notifications: NotificationItem[];
+  unreadCount: number;
   children: React.ReactNode;
 };
 
-export function AppShell({ user, balanceCents, reminder, children }: ShellProps) {
+export function AppShell({
+  user,
+  balanceCents,
+  reminder,
+  notifications,
+  unreadCount,
+  children,
+}: ShellProps) {
   const pathname = usePathname();
   const kycLabel =
     user.kycStatus === "verified"
@@ -119,15 +128,7 @@ export function AppShell({ user, balanceCents, reminder, children }: ShellProps)
             </div>
 
             <div className="flex items-center gap-2">
-              <button
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-ink-900/[0.08] bg-white text-ink-600 transition-colors hover:text-ink-900 focus-ring"
-                aria-label="Reminders"
-              >
-                <Bell className="h-5 w-5" />
-                {reminder && (
-                  <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-jade-500 ring-2 ring-white" />
-                )}
-              </button>
+              <NotificationBell notifications={notifications} unreadCount={unreadCount} />
               <Button href="/goals/new" size="sm" className="hidden sm:inline-flex">
                 <Plus className="h-4 w-4" /> New goal
               </Button>

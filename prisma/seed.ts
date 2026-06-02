@@ -255,6 +255,16 @@ async function main() {
   console.log("Lesson progress…");
   await db.lessonProgress.create({ data: { userId: ama.id, slug: "what-is-susu" } });
 
+  console.log("Notifications…");
+  await db.notification.createMany({
+    data: [
+      { userId: ama.id, type: "contribution", title: "Contributed to Makola Market Circle", body: "You paid 50.00 USDC for round 3.", link: `/circles/${makola.id}`, read: false, createdAt: daysAgo(3) },
+      { userId: ama.id, type: "payout", title: "You received the pot! 🎉", body: "60.00 USDC from \"Family Savings\" landed in your wallet.", link: `/circles/${family.id}`, read: false, createdAt: daysAgo(34) },
+      { userId: ama.id, type: "deposit", title: "Deposit received", body: "4,752.30 USDC was added to your wallet.", link: "/activity", read: true, createdAt: daysAgo(4) },
+      { userId: ama.id, type: "goal", title: "Added to Rent buffer", body: "1,640.00 USDC 🏠 moved into your Rent buffer goal.", link: "/goals/", read: true, createdAt: daysAgo(5) },
+    ],
+  });
+
   console.log("✔ Seed complete.");
   console.log(`   Demo login:  ama@moolahub.io  /  ${DEMO_PASSWORD}`);
   void makolaMembers;
