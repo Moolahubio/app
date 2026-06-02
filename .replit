@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -27,6 +27,10 @@ externalPort = 80
 localPort = 8081
 externalPort = 8081
 
+[[ports]]
+localPort = 23183
+externalPort = 3000
+
 [userenv]
 
 [userenv.shared]
@@ -41,3 +45,6 @@ NEXT_PUBLIC_ONRAMP = "false"
 NEXT_PUBLIC_BASE_ACCOUNT = "false"
 EMAIL_FROM = "MoolaHub <noreply@moolahub.io>"
 APP_URL = "https://moolahub.io"
+
+[nix]
+channel = "stable-25_05"

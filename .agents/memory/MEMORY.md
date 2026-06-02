@@ -1,0 +1,1 @@
+- [MoolaHub stack decisions](moolahub-stack.md) — auth uses bcryptjs (not pgcrypto), seed hash must be generated via Node require not ESM import

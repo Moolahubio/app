@@ -3,20 +3,38 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: MoolaHub API — social savings platform on Base blockchain
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: wallet
+    description: Wallet operations
+  - name: circles
+    description: Susu circle operations
+  - name: goals
+    description: Savings goal operations
+  - name: learn
+    description: Financial education operations
+  - name: activity
+    description: Activity feed operations
+  - name: notifications
+    description: Notification operations
+  - name: profile
+    description: User profile operations
+  - name: dashboard
+    description: Dashboard summary operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +42,1109 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ---- Auth ----
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Create a new account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current session
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/privy:
+    post:
+      operationId: privyAuth
+      tags: [auth]
+      summary: Authenticate with Privy token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrivyAuthInput"
+      responses:
+        "200":
+          description: Logged in via Privy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+
+  # ---- Dashboard ----
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary (balances, totals, stats)
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  # ---- Wallet ----
+  /wallet:
+    get:
+      operationId: getWallet
+      tags: [wallet]
+      summary: Get wallet info and balance
+      responses:
+        "200":
+          description: Wallet info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletInfo"
+
+  /wallet/deposit:
+    post:
+      operationId: depositFaucet
+      tags: [wallet]
+      summary: Testnet faucet deposit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountInput"
+      responses:
+        "200":
+          description: Deposit submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /wallet/withdraw:
+    post:
+      operationId: withdrawFunds
+      tags: [wallet]
+      summary: Withdraw USDC to external Base address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawInput"
+      responses:
+        "200":
+          description: Withdrawal submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /wallet/sync:
+    post:
+      operationId: syncDeposits
+      tags: [wallet]
+      summary: Sync on-chain deposits
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+
+  /wallet/onramp-url:
+    get:
+      operationId: getOnrampUrl
+      tags: [wallet]
+      summary: Get Coinbase Onramp URL for buying USDC
+      responses:
+        "200":
+          description: Onramp URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnrampUrlResponse"
+
+  # ---- Circles ----
+  /circles:
+    get:
+      operationId: listCircles
+      tags: [circles]
+      summary: List user's circles
+      responses:
+        "200":
+          description: List of circles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CircleSummary"
+    post:
+      operationId: createCircle
+      tags: [circles]
+      summary: Create a new Susu circle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CircleInput"
+      responses:
+        "201":
+          description: Circle created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CircleSummary"
+
+  /circles/invites:
+    get:
+      operationId: listInvites
+      tags: [circles]
+      summary: List pending circle invites
+      responses:
+        "200":
+          description: List of invites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CircleInvite"
+
+  /circles/{id}:
+    get:
+      operationId: getCircle
+      tags: [circles]
+      summary: Get circle details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Circle details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CircleDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /circles/{id}/invite:
+    post:
+      operationId: inviteToCircle
+      tags: [circles]
+      summary: Invite member to circle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteInput"
+      responses:
+        "200":
+          description: Invited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /circles/{id}/start:
+    post:
+      operationId: startCircle
+      tags: [circles]
+      summary: Start the circle (lock in members and begin rounds)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Circle started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /circles/{id}/contribute:
+    post:
+      operationId: contributeToCircle
+      tags: [circles]
+      summary: Make a contribution to the circle
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contribution recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /circles/invites/{id}/accept:
+    post:
+      operationId: acceptInvite
+      tags: [circles]
+      summary: Accept a circle invite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /circles/invites/{id}/decline:
+    post:
+      operationId: declineInvite
+      tags: [circles]
+      summary: Decline a circle invite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Declined
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  # ---- Goals ----
+  /goals:
+    get:
+      operationId: listGoals
+      tags: [goals]
+      summary: List user's savings goals
+      responses:
+        "200":
+          description: List of goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a savings goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalInput"
+      responses:
+        "201":
+          description: Goal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /goals/{id}:
+    get:
+      operationId: getGoal
+      tags: [goals]
+      summary: Get goal details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Goal details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /goals/{id}/allocate:
+    post:
+      operationId: allocateToGoal
+      tags: [goals]
+      summary: Allocate funds to a goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountInput"
+      responses:
+        "200":
+          description: Allocated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /goals/{id}/release:
+    post:
+      operationId: releaseFromGoal
+      tags: [goals]
+      summary: Release funds from a goal back to wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AmountInput"
+      responses:
+        "200":
+          description: Released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  # ---- Learn ----
+  /learn/lessons:
+    get:
+      operationId: listLessons
+      tags: [learn]
+      summary: List all lessons with completion status
+      responses:
+        "200":
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LessonSummary"
+
+  /learn/lessons/{slug}:
+    get:
+      operationId: getLesson
+      tags: [learn]
+      summary: Get lesson content and completion status
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /learn/lessons/{slug}/complete:
+    post:
+      operationId: completeLesson
+      tags: [learn]
+      summary: Mark lesson as completed
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson marked complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  # ---- Activity ----
+  /activity:
+    get:
+      operationId: listActivity
+      tags: [activity]
+      summary: List transaction activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Activity list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ---- Notifications ----
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationsResponse"
+    delete:
+      operationId: clearNotifications
+      tags: [notifications]
+      summary: Clear all notifications
+      responses:
+        "200":
+          description: Cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  # ---- Profile ----
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+
+    # ---- Auth ----
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    PrivyAuthInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+
+    AuthUser:
+      type: object
+      required: [id, name, email, kycStatus, hasWallet]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        kycStatus:
+          type: string
+        hasWallet:
+          type: boolean
+        walletAddress:
+          type: ["string", "null"]
+
+    # ---- Dashboard ----
+    DashboardSummary:
+      type: object
+      required: [availableCents, totalCents, goalTotalCents, circlePotCents, recentActivity, activeGoals, activeCircles, lessonsCompleted, totalLessons, yieldApy]
+      properties:
+        availableCents:
+          type: integer
+        totalCents:
+          type: integer
+        goalTotalCents:
+          type: integer
+        circlePotCents:
+          type: integer
+        yieldApy:
+          type: number
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+        activeGoals:
+          type: array
+          items:
+            $ref: "#/components/schemas/Goal"
+        activeCircles:
+          type: array
+          items:
+            $ref: "#/components/schemas/CircleSummary"
+        lessonsCompleted:
+          type: integer
+        totalLessons:
+          type: integer
+        upcomingReminder:
+          $ref: "#/components/schemas/Reminder"
+
+    Reminder:
+      type: object
+      required: [title, amountCents, dueDate]
+      properties:
+        title:
+          type: string
+        amountCents:
+          type: integer
+        dueDate:
+          type: string
+
+    # ---- Wallet ----
+    WalletInfo:
+      type: object
+      required: [availableCents, totalCents, goalAllocatedCents, address, network, onrampEnabled, onchainEnabled]
+      properties:
+        availableCents:
+          type: integer
+        totalCents:
+          type: integer
+        goalAllocatedCents:
+          type: integer
+        address:
+          type: string
+        network:
+          type: string
+        onrampEnabled:
+          type: boolean
+        onchainEnabled:
+          type: boolean
+
+    AmountInput:
+      type: object
+      required: [amountCents]
+      properties:
+        amountCents:
+          type: integer
+
+    WithdrawInput:
+      type: object
+      required: [amountCents, destination]
+      properties:
+        amountCents:
+          type: integer
+        destination:
+          type: string
+
+    SyncResult:
+      type: object
+      required: [ok, credited]
+      properties:
+        ok:
+          type: boolean
+        credited:
+          type: integer
+        totalCents:
+          type: integer
+
+    OnrampUrlResponse:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+
+    # ---- Circles ----
+    CircleSummary:
+      type: object
+      required: [id, name, status, frequency, contributionCents, potCents, memberCount, myPayoutRound, currentRound, totalRounds]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        frequency:
+          type: string
+        contributionCents:
+          type: integer
+        potCents:
+          type: integer
+        memberCount:
+          type: integer
+        myPayoutRound:
+          type: integer
+        currentRound:
+          type: integer
+        totalRounds:
+          type: integer
+        nextPayoutDate:
+          type: ["string", "null"]
+
+    CircleDetail:
+      type: object
+      required: [id, name, status, frequency, contributionCents, potCents, currentRound, totalRounds, startDate, members]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        frequency:
+          type: string
+        contributionCents:
+          type: integer
+        potCents:
+          type: integer
+        currentRound:
+          type: integer
+        totalRounds:
+          type: integer
+        startDate:
+          type: ["string", "null"]
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/CircleMember"
+        myContributionStatus:
+          type: ["string", "null"]
+        myPayoutRound:
+          type: ["integer", "null"]
+
+    CircleMember:
+      type: object
+      required: [id, name, payoutRound, state, paidOut]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        payoutRound:
+          type: integer
+        state:
+          type: string
+        paidOut:
+          type: boolean
+        contributedThisRound:
+          type: boolean
+
+    CircleInvite:
+      type: object
+      required: [id, circleName, inviterName, contributionCents, frequency]
+      properties:
+        id:
+          type: string
+        circleName:
+          type: string
+        inviterName:
+          type: string
+        contributionCents:
+          type: integer
+        frequency:
+          type: string
+
+    CircleInput:
+      type: object
+      required: [name, contributionCents, frequency, memberEmails]
+      properties:
+        name:
+          type: string
+        contributionCents:
+          type: integer
+        frequency:
+          type: string
+        memberEmails:
+          type: array
+          items:
+            type: string
+
+    InviteInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+
+    # ---- Goals ----
+    Goal:
+      type: object
+      required: [id, name, emoji, color, targetCents, savedCents, deadline, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        emoji:
+          type: string
+        color:
+          type: string
+        targetCents:
+          type: integer
+        savedCents:
+          type: integer
+        deadline:
+          type: string
+        autoSaveCents:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    GoalInput:
+      type: object
+      required: [name, targetCents, deadline]
+      properties:
+        name:
+          type: string
+        emoji:
+          type: string
+        color:
+          type: string
+        targetCents:
+          type: integer
+        deadline:
+          type: string
+        autoSaveCents:
+          type: ["integer", "null"]
+
+    # ---- Learn ----
+    LessonSummary:
+      type: object
+      required: [slug, title, summary, minutes, level, category, emoji, completed]
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        minutes:
+          type: integer
+        level:
+          type: string
+        category:
+          type: string
+        emoji:
+          type: string
+        completed:
+          type: boolean
+
+    LessonBody:
+      type: object
+      required: [heading, text]
+      properties:
+        heading:
+          type: string
+        text:
+          type: string
+
+    LessonDetail:
+      type: object
+      required: [slug, title, summary, minutes, level, category, emoji, completed, body, takeaways]
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        summary:
+          type: string
+        minutes:
+          type: integer
+        level:
+          type: string
+        category:
+          type: string
+        emoji:
+          type: string
+        completed:
+          type: boolean
+        body:
+          type: array
+          items:
+            $ref: "#/components/schemas/LessonBody"
+        takeaways:
+          type: array
+          items:
+            type: string
+
+    # ---- Activity ----
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        amountCents:
+          type: ["integer", "null"]
+        txHash:
+          type: ["string", "null"]
+        onchainStatus:
+          type: string
+        createdAt:
+          type: string
+
+    # ---- Notifications ----
+    Notification:
+      type: object
+      required: [id, type, title, body, read, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        link:
+          type: ["string", "null"]
+        read:
+          type: boolean
+        createdAt:
+          type: string
+
+    NotificationsResponse:
+      type: object
+      required: [notifications, unreadCount]
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer
+
+    # ---- Profile ----
+    UserProfile:
+      type: object
+      required: [id, name, email, kycStatus, walletAddress, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        kycStatus:
+          type: string
+        walletAddress:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string

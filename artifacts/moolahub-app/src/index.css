@@ -1,0 +1,155 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: 0 0% 98%; /* FAFAFA */
+  --foreground: 160 30% 6%; /* 0C1512 */
+  --border: 150 10% 90%;
+  --input: 150 10% 90%;
+  --ring: 158 83% 34%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 160 30% 6%;
+  --card-border: 150 10% 92%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 160 30% 6%;
+  --popover-border: 150 10% 92%;
+
+  --primary: 158 83% 34%; /* 0E9E6E */
+  --primary-foreground: 0 0% 100%;
+  --primary-border: 158 83% 30%;
+
+  --secondary: 135 15% 97%; /* F5F8F6 */
+  --secondary-foreground: 160 30% 20%;
+  --secondary-border: 135 15% 90%;
+
+  --muted: 150 10% 94%;
+  --muted-foreground: 160 10% 40%;
+  --muted-border: 150 10% 85%;
+
+  --accent: 135 15% 95%;
+  --accent-foreground: 160 30% 15%;
+  --accent-border: 135 15% 85%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --destructive-border: 0 84% 50%;
+
+  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: Menlo, monospace;
+  
+  --radius: 0.75rem;
+
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 160 30% 6%;
+  --sidebar-border: 150 10% 92%;
+  --sidebar-primary: 158 83% 34%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 135 15% 95%;
+  --sidebar-accent-foreground: 160 30% 15%;
+  --sidebar-ring: 158 83% 34%;
+}
+
+.dark {
+  --background: 160 30% 6%; /* 0C1512 */
+  --foreground: 0 0% 98%;
+  --border: 160 20% 15%;
+  --input: 160 20% 15%;
+  --ring: 158 83% 34%;
+
+  --card: 162 25% 8%; /* 070D0B */
+  --card-foreground: 0 0% 98%;
+  --card-border: 160 20% 15%;
+
+  --popover: 162 25% 8%;
+  --popover-foreground: 0 0% 98%;
+  --popover-border: 160 20% 15%;
+
+  --primary: 158 83% 34%;
+  --primary-foreground: 0 0% 100%;
+  --primary-border: 158 83% 30%;
+
+  --secondary: 160 20% 12%;
+  --secondary-foreground: 0 0% 90%;
+  --secondary-border: 160 20% 18%;
+
+  --muted: 160 20% 12%;
+  --muted-foreground: 160 10% 60%;
+  --muted-border: 160 20% 15%;
+
+  --accent: 160 20% 14%;
+  --accent-foreground: 0 0% 95%;
+  --accent-border: 160 20% 20%;
+
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 0 0% 98%;
+  --destructive-border: 0 62% 25%;
+
+  --sidebar: 162 25% 8%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-border: 160 20% 15%;
+  --sidebar-primary: 158 83% 34%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 160 20% 14%;
+  --sidebar-accent-foreground: 0 0% 95%;
+  --sidebar-ring: 158 83% 34%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
