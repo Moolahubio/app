@@ -46,13 +46,17 @@ function describe(key: string): AccountSeed {
   throw new Error(`Unknown ledger account key: ${key}`);
 }
 
-async function ensureAccount(key: string, tx: Prisma.TransactionClient) {
+async function ensureAccount(key: string) {
   const seed = describe(key);
-  return tx.ledgerAccount.upsert({
-    where: { key },
-    update: {},
-    create: seed,
-  });
+  try {
+    return await db.ledgerAccount.upsert({ where: { key }, update: {}, create: seed });
+  } catch {
+    // Concurrent transfers may race to create the same shared account
+    // (e.g. "external"). The loser of the race just reads the winner's row.
+    const existing = await db.ledgerAccount.findUnique({ where: { key } });
+    if (existing) return existing;
+    throw new Error(`Could not resolve ledger account: ${key}`);
+  }
 }
 
 export type OnchainMeta = {
@@ -72,25 +76,25 @@ export async function transfer(params: {
   onchain?: OnchainMeta;
 }) {
   if (params.amountCents <= 0) throw new Error("amount must be positive");
-  return db.$transaction(async (tx) => {
-    const from = await ensureAccount(params.fromKey, tx);
-    const to = await ensureAccount(params.toKey, tx);
-    return tx.transaction.create({
-      data: {
-        type: params.type,
-        description: params.description,
-        userId: params.userId ?? null,
-        txHash: params.onchain?.txHash ?? null,
-        onchainStatus: params.onchain?.onchainStatus ?? "none",
-        onchainXdr: params.onchain?.onchainXdr ?? null,
-        postings: {
-          create: [
-            { accountId: from.id, amountCents: -params.amountCents },
-            { accountId: to.id, amountCents: params.amountCents },
-          ],
-        },
+  // Resolve accounts first (idempotent), then write the balanced transaction as
+  // a single atomic create with its two postings.
+  const from = await ensureAccount(params.fromKey);
+  const to = await ensureAccount(params.toKey);
+  return db.transaction.create({
+    data: {
+      type: params.type,
+      description: params.description,
+      userId: params.userId ?? null,
+      txHash: params.onchain?.txHash ?? null,
+      onchainStatus: params.onchain?.onchainStatus ?? "none",
+      onchainXdr: params.onchain?.onchainXdr ?? null,
+      postings: {
+        create: [
+          { accountId: from.id, amountCents: -params.amountCents },
+          { accountId: to.id, amountCents: params.amountCents },
+        ],
       },
-    });
+    },
   });
 }
 
