@@ -26,3 +26,18 @@ externalPort = 80
 [[ports]]
 localPort = 8081
 externalPort = 8081
+
+[userenv]
+
+[userenv.shared]
+BASE_NETWORK = "sepolia"
+BASE_RPC_URL = "https://sepolia.base.org"
+USDC_CONTRACT_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+BASE_EXPLORER_URL = "https://sepolia.basescan.org"
+NEXT_PUBLIC_BASE_CHAIN = "baseSepolia"
+NEXT_PUBLIC_BASE_RPC_URL = "https://sepolia.base.org"
+NEXT_PUBLIC_USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+NEXT_PUBLIC_ONRAMP = "false"
+NEXT_PUBLIC_BASE_ACCOUNT = "false"
+EMAIL_FROM = "MoolaHub <noreply@moolahub.io>"
+APP_URL = "https://moolahub.io"
