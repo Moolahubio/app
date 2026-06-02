@@ -95,6 +95,21 @@ npm run stellar:init        # prints issuer/distributor env vars
 Mainnet with pooled Susu funds stays **audit-gated** and is intentionally not
 wired.
 
+## Integrations (auth + email)
+
+Both are **config-driven**: they activate when their secrets are present and
+fall back safely otherwise, so dev works without them.
+
+- **Privy** (auth/wallets) — set `PRIVY_APP_ID`, `PRIVY_APP_SECRET`, and
+  `NEXT_PUBLIC_PRIVY_APP_ID`. The login page then offers "Continue with Privy";
+  the client posts its access token to `POST /api/auth/privy`, which verifies it
+  server-side and issues a MoolaHub session. With no keys, the email/password
+  flow is used. (The Privy React SDK pulls a web3 dep tree, so the repo pins
+  `legacy-peer-deps=true` in `.npmrc` — `npm ci` respects it.)
+- **Resend** (email) — set `RESEND_API_KEY`, `EMAIL_FROM`, and `APP_URL`.
+  Circle invitations are then emailed; without a key they log to the server
+  console. See `src/lib/server/email.ts`.
+
 ## Deploying
 
 The app ships with a **Dockerfile** and **docker-compose.yml** (app + Postgres).

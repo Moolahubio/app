@@ -21,7 +21,10 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const user = await db.user.findUnique({ where: { email: parsed.data.email } });
-  if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
+  if (!user || !user.passwordHash) {
+    return { error: "Incorrect email or password." };
+  }
+  if (!(await verifyPassword(parsed.data.password, user.passwordHash))) {
     return { error: "Incorrect email or password." };
   }
   await createSession(user.id);

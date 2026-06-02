@@ -4,6 +4,8 @@ import { acct, transfer } from "./ledger";
 import { onchainEnabled, sendPayment } from "./stellar";
 import { getSigningSecret } from "./wallet";
 import { toMeta } from "./deposits";
+import { sendEmail, brandedEmail, appUrl } from "./email";
+import { formatMoney } from "@/lib/utils";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
 
@@ -226,6 +228,20 @@ export async function inviteToCircle(userId: string, circleId: string, emailRaw:
     where: { circleId_email: { circleId, email } },
     update: { status: "pending" },
     create: { circleId, email, invitedById: userId },
+  });
+
+  const inviter = circle.members.find((m) => m.userId === userId)?.user.name ?? "A MoolaHub member";
+  await sendEmail({
+    to: email,
+    subject: `${inviter} invited you to a Susu circle on MoolaHub`,
+    html: brandedEmail({
+      heading: `Join "${circle.name}"`,
+      body: `${inviter} invited you to save together in the "${circle.name}" Susu circle — ${formatMoney(
+        circle.contributionCents,
+      )} per ${circle.frequency} round. Sign in to accept and join the rotation.`,
+      cta: { label: "View invitation", href: appUrl("/circles") },
+    }),
+    text: `${inviter} invited you to join "${circle.name}" on MoolaHub. Visit ${appUrl("/circles")} to accept.`,
   });
 }
 

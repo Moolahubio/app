@@ -19,7 +19,8 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
-  passwordHash String
+  passwordHash String? // null for Privy (passwordless) accounts
+  privyId      String?  @unique // Privy DID, when authenticated via Privy
   kycStatus    String   @default("unstarted") // unstarted | pending | verified
   createdAt    DateTime @default(now())
 

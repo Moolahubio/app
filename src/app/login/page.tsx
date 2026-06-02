@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ShieldCheck, Lock, Users } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
-import { AuthForm } from "@/components/auth/AuthForm";
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { getCurrentUser } from "@/lib/server/auth";
 
 export const metadata = { title: "Sign in" };
@@ -60,7 +60,7 @@ export default async function LoginPage() {
           <div className="mb-8 lg:hidden">
             <Logo />
           </div>
-          <AuthForm />
+          <AuthPanel />
         </div>
       </section>
     </main>
