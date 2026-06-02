@@ -4,6 +4,7 @@ import { ShieldCheck, Lock, Users } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
 import { AuthPanel } from "@/components/auth/AuthPanel";
+import { BaseAuthPanel } from "@/components/base/BaseAuthPanel";
 import { getCurrentUser } from "@/lib/server/auth";
 
 export const metadata = { title: "Sign in" };
@@ -60,6 +61,7 @@ export default async function LoginPage() {
           <div className="mb-8 lg:hidden">
             <Logo />
           </div>
+          <BaseAuthPanel />
           <AuthPanel />
         </div>
       </section>

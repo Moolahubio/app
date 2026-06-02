@@ -141,6 +141,44 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
   return txn;
 }
 
+/**
+ * Record a withdrawal that the user already broadcast from their Base Account
+ * (a sponsored, gasless UserOp signed client-side). The chain move happened in
+ * the browser; here we validate and debit the ledger with the real tx hash.
+ */
+export async function recordWithdrawal(
+  userId: string,
+  amountCents: number,
+  destination: string,
+  txHash: string,
+) {
+  if (!isValidAddress(destination)) throw new Error("Invalid destination address.");
+  if (amountCents <= 0) throw new Error("Invalid amount.");
+  if ((await availableCents(userId)) < amountCents) {
+    throw new Error("Insufficient available balance.");
+  }
+  const txn = await transfer({
+    type: "withdrawal",
+    description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
+    userId,
+    fromKey: acct.wallet(userId),
+    toKey: acct.external,
+    amountCents,
+    onchain: { txHash, onchainStatus: "confirmed" },
+  });
+  await notify(
+    userId,
+    {
+      type: "withdrawal",
+      title: "Withdrawal sent",
+      body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
+      link: "/activity",
+    },
+    { email: true },
+  );
+  return txn;
+}
+
 export function toMeta(r: OnchainResult) {
   if (r.status === "confirmed") return { txHash: r.hash, onchainStatus: "confirmed" };
   if (r.status === "queued")

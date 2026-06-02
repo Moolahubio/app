@@ -2,6 +2,7 @@ import { ArrowDownLeft, ArrowUpRight, Wallet, ShieldCheck, Sparkles, RefreshCw, 
 import { Card, Badge } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
+import { BaseWalletActions } from "@/components/base/BaseWalletActions";
 import { requireUser } from "@/lib/server/auth";
 import { userBalances } from "@/lib/server/ledger";
 import { depositAction, syncDepositsAction } from "@/app/(app)/actions";
@@ -110,6 +111,7 @@ export default async function WalletPage() {
           </div>
           <div className="mt-5">
             <WithdrawForm />
+            <BaseWalletActions />
           </div>
         </Card>
       </div>

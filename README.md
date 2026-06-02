@@ -120,6 +120,11 @@ fall back safely otherwise, so dev works without them.
 - **Resend** (email) — set `RESEND_API_KEY`, `EMAIL_FROM`, and `APP_URL`.
   Circle invitations are then emailed; without a key they log to the server
   console. See `src/lib/server/email.ts`.
+- **Base Account + Paymaster** (gasless) — scaffolded behind
+  `NEXT_PUBLIC_BASE_ACCOUNT`. Set it to `"true"` with the CDP keys to enable
+  "Sign in with Base" (passkey smart wallet) and gasless USDC withdrawals
+  (sponsored UserOps). Validate on a networked Base Sepolia deploy. Full setup:
+  [`docs/BASE_ACCOUNT.md`](./docs/BASE_ACCOUNT.md).
 
 ## Deploying
 

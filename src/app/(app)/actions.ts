@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser, destroySession } from "@/lib/server/auth";
-import { faucetDeposit, withdrawToAddress, syncDeposits } from "@/lib/server/deposits";
+import {
+  faucetDeposit,
+  withdrawToAddress,
+  syncDeposits,
+  recordWithdrawal,
+} from "@/lib/server/deposits";
 import { createGoal, allocateToGoal, releaseFromGoal } from "@/lib/server/goals";
 import {
   contribute,
@@ -79,6 +84,24 @@ export async function syncDepositsAction(_prev: ActionState, _formData: FormData
   return result.credited > 0
     ? { ok: true }
     : { error: "No new deposits found yet. Send USDC to your address, then check again." };
+}
+
+/** Record a gasless Base Account withdrawal already broadcast client-side. */
+export async function recordWithdrawalAction(
+  amountCents: number,
+  destination: string,
+  txHash: string,
+): Promise<ActionState> {
+  const user = await requireUser();
+  try {
+    await recordWithdrawal(user.id, amountCents, destination, txHash);
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath("/");
+  revalidatePath("/wallet");
+  revalidatePath("/activity");
+  return { ok: true };
 }
 
 export async function createGoalAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
