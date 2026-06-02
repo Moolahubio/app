@@ -55,7 +55,7 @@ export function brandedEmail(opts: { heading: string; body: string; cta?: { labe
       <h1 style="font-family:Poppins,Arial,sans-serif;font-size:22px;color:#0C1512;margin:20px 0 8px">${opts.heading}</h1>
       <p style="color:#3A5046;line-height:1.6;margin:0">${opts.body}</p>
       ${button}
-      <p style="color:#5C7468;font-size:12px;margin-top:28px">Save Now. Grow Together. · Built on Stellar</p>
+      <p style="color:#5C7468;font-size:12px;margin-top:28px">Save Now. Grow Together. · Built on Base</p>
     </div>
   </div>`;
 }

@@ -40,7 +40,7 @@ export default function HomePage() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-jade-400" />
               </span>
               <span className="font-mono text-xs uppercase tracking-[0.18em] text-white/70">
-                Built on Stellar
+                Built on Base
               </span>
             </div>
 
@@ -53,7 +53,7 @@ export default function HomePage() {
             <p className="mt-6 max-w-md text-lg leading-relaxed text-white/65">
               MoolaHub is a non-custodial savings app that brings the trusted
               Susu tradition on-chain. Hit your goals, save with your circle, and
-              watch every contribution verified on the Stellar ledger.
+              watch every contribution verified on Base.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -107,7 +107,7 @@ export default function HomePage() {
             <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/35">
               Powered by
             </span>
-            {["Stellar", "USDC", "Privy", "Blend", "Soroban"].map((name) => (
+            {["Base", "USDC", "Privy", "Blend", "OnchainKit"].map((name) => (
               <span key={name} className="text-sm font-semibold text-white/55">
                 {name}
               </span>
@@ -149,7 +149,7 @@ export default function HomePage() {
             {
               icon: ShieldCheck,
               title: "Verified on-chain",
-              text: "Every deposit, contribution and payout settles on Stellar — public, permanent, provable.",
+              text: "Every deposit, contribution and payout settles on Base — public, permanent, provable.",
             },
           ].map((f) => (
             <div
@@ -177,7 +177,7 @@ export default function HomePage() {
             <p className="mt-4 text-lg text-ink-500">
               Everyone contributes a fixed amount each round. Each round, one
               member receives the whole pot. MoolaHub replaces the human
-              collector with an audited Soroban contract — so the rules can&apos;t
+              collector with an audited smart contract on Base — so the rules can&apos;t
               be bent and the schedule is guaranteed.
             </p>
 
@@ -185,7 +185,7 @@ export default function HomePage() {
               {[
                 "Transparent payout order — agreed up front, locked on-chain",
                 "Automatic contribution reminders so no one falls behind",
-                "Full contribution history, provable on the Stellar ledger",
+                "Full contribution history, provable on Base",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-jade-500" />
@@ -377,11 +377,11 @@ export default function HomePage() {
               {
                 icon: ShieldCheck,
                 title: "Audited contracts",
-                text: "Susu pooling runs on Soroban smart contracts. Pooled-funds contracts ship to mainnet only after an independent security audit.",
+                text: "Susu pooling runs on audited smart contracts on Base. Pooled-funds contracts ship to mainnet only after an independent security audit.",
               },
               {
                 icon: Link2,
-                title: "Provable on Stellar",
+                title: "Provable on Base",
                 text: "Every deposit, contribution and payout has a transaction hash you can open in any block explorer.",
               },
             ].map((c) => (

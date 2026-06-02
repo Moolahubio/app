@@ -13,6 +13,9 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["./test/setup.ts"],
+    // Only our suite — never test files inside transient agent worktrees.
+    include: ["test/**/*.test.ts"],
+    exclude: ["**/node_modules/**", "**/.claude/**", "**/.next/**", "**/dist/**"],
     // Tests share one Postgres database, so run them serially.
     fileParallelism: false,
     sequence: { concurrent: false },

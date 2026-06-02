@@ -34,8 +34,8 @@ clean light body. Port the *system*, not pixel-for-pixel markup.
 
 | # | Section | Upgrade |
 | --- | --- | --- |
-| 1 | **Hero** | Ink background + grid + jade glow; H1 "Save Now. Grow Together."; primary CTA → `app.moolahub.io/login`; live "total saved" + ascending-chart visual; `Built on Stellar` eyebrow. |
-| 2 | **Trust strip** | "Powered by" row using the real `public/partners/` marks (Privy · Yellowcard · Stellar) + `GHS · NGN · USDC`. |
+| 1 | **Hero** | Ink background + grid + jade glow; H1 "Save Now. Grow Together."; primary CTA → `app.moolahub.io/login`; live "total saved" + ascending-chart visual; `Built on Base` eyebrow. |
+| 2 | **Trust strip** | "Powered by" row using the real `public/partners/` marks (Privy · Base · USDC) + `GHS · NGN · USDC`. |
 | 3 | **Pillars** | Four cards: Susu Circles · Savings Goals · Learn · Verified on-chain. |
 | 4 | **How a Susu works** | Explain rotating savings + the audited-contract replacement for the human collector; animated circle/rotation visual. |
 | 5 | **Goals** | "Name it, automate it, reach it"; reinforce *goals are allocations over one wallet*, not separate accounts. |

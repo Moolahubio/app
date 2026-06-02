@@ -7,7 +7,7 @@ import { userBalances } from "@/lib/server/ledger";
 import { depositAction, syncDepositsAction } from "@/app/(app)/actions";
 import { formatMoney } from "@/lib/utils";
 
-const NETWORK = process.env.STELLAR_NETWORK === "public" ? "Stellar mainnet" : "Stellar testnet";
+const NETWORK = process.env.BASE_NETWORK === "mainnet" ? "Base" : "Base Sepolia";
 
 export default async function WalletPage() {
   const user = await requireUser();
@@ -19,7 +19,7 @@ export default async function WalletPage() {
       <PageHeader
         eyebrow="Wallet"
         title="Deposit & withdraw USDC"
-        description="MoolaHub runs on USDC over Stellar. Receive crypto into your wallet, or send it to any Stellar address."
+        description="MoolaHub runs on USDC over Base. Receive crypto into your wallet, or send it to any Base address."
       />
 
       {/* balance + receive address */}
@@ -74,7 +74,7 @@ export default async function WalletPage() {
           </div>
 
           <p className="mt-4 text-sm text-ink-600">
-            Send USDC to your address above from any Stellar wallet, then check for it:
+            Send USDC to your address above from any Base wallet, then check for it:
           </p>
           <div className="mt-3">
             <ActionButton
@@ -105,7 +105,7 @@ export default async function WalletPage() {
             </span>
             <div>
               <h2 className="font-display text-lg font-bold text-ink-900">Withdraw</h2>
-              <p className="text-xs text-ink-500">Send USDC to any Stellar address</p>
+              <p className="text-xs text-ink-500">Send USDC to any Base address</p>
             </div>
           </div>
           <div className="mt-5">
@@ -117,9 +117,9 @@ export default async function WalletPage() {
       <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-ink-600">
-          MoolaHub is non-custodial — funds settle to your own Stellar wallet, and every movement
+          MoolaHub is non-custodial — funds settle to your own Base wallet, and every movement
           is recorded on the ledger with an on-chain reference.{" "}
-          <Badge tone="jade" className="ml-1">Built on Stellar</Badge>
+          <Badge tone="jade" className="ml-1">Built on Base</Badge>
         </p>
       </Card>
 

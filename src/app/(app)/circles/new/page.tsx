@@ -64,7 +64,7 @@ export default function NewCirclePage() {
 
           <div className="flex items-start gap-2 rounded-2xl bg-jade-50/60 p-4 text-xs text-ink-600">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-jade-600" />
-            On mainnet, pooled funds run on an audited Soroban contract. New circles start on
+            On mainnet, pooled funds run on an audited smart contract on Base. New circles start on
             testnet until that audit clears.
           </div>
 

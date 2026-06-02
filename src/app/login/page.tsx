@@ -25,7 +25,7 @@ export default async function LoginPage() {
 
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
-            Built on Stellar
+            Built on Base
           </p>
           <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
             Save Now.

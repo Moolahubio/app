@@ -53,7 +53,7 @@ camel-cased: `MoolaHub`. Don't recreate the wordmark in HTML — use the asset.
 ### Voice & motifs
 
 "Connecting people through savings." Supporting cues used across the UI:
-**Built on Stellar**, currencies **GHS · NGN · USDC**, and the ascending-chart
+**Built on Base**, currencies **GHS · NGN · USDC**, and the ascending-chart
 visual (`components/marketing/AscendingChart.tsx`).
 
 ## Golden rules
@@ -65,13 +65,13 @@ visual (`components/marketing/AscendingChart.tsx`).
    `formatMoney()` in `src/lib/utils.ts`.
 3. **Chain is the source of truth.** On-chain references (`txHash`) are the
    record of what happened; the UI reflects the ledger, not the other way round.
-4. **Audit gate.** Susu pooling runs on Soroban smart contracts that hold
+4. **Audit gate.** Susu pooling runs on audited smart contracts on Base that hold
    pooled funds — those ship to mainnet only after an independent security
    audit. Keep that framing in copy.
 5. **Goals are allocations, not accounts.** A savings goal is metadata over the
    user's single wallet balance — not a separate on-chain account.
 6. **Crypto-only rails (for now).** Deposits and withdrawals are **USDC on
-   Stellar** — receive to your wallet address, withdraw to any Stellar address.
+   Base** — receive to your wallet address, withdraw to any Base address.
    No KYC on the crypto rail. Local-currency (GHS · NGN) on/off-ramp via a
    licensed partner — and the per-user KYC it requires — is planned for later.
    Test everything on **testnet** before mainnet contracts. No KYB.

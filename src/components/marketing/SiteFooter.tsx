@@ -39,7 +39,7 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <Logo tone="light" />
             <p className="mt-4 text-sm leading-relaxed text-white/55">
-              Connecting people through savings. Non-custodial, built on Stellar,
+              Connecting people through savings. Non-custodial, built on Base,
               and verifiable on-chain — so you always know your money is yours.
             </p>
             <p className="eyebrow mt-6 text-white/35">GHS · NGN · USDC</p>
@@ -66,7 +66,7 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/40 sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} MoolaHub. All rights reserved.</p>
-          <p className="font-mono uppercase tracking-[0.2em]">Built on Stellar</p>
+          <p className="font-mono uppercase tracking-[0.2em]">Built on Base</p>
         </div>
       </div>
     </footer>

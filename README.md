@@ -2,11 +2,11 @@
 
 > **Save Now. Grow Together.**
 > The MoolaHub product app: a non-custodial savings experience built on
-> Stellar. Hit your goals, save with trusted Susu circles, learn as you go —
+> Base. Hit your goals, save with trusted Susu circles, learn as you go —
 > and verify every contribution on-chain.
 
 A real full-stack app — **Next.js (App Router) · TypeScript · Tailwind ·
-Prisma · Stellar SDK**. Session auth, a double-entry money ledger, and real
+Prisma · viem (Base)**. Session auth, a double-entry money ledger, and real
 on-chain (testnet) settlement.
 
 ## Quick start
@@ -45,7 +45,7 @@ npm run dev                 # http://localhost:3000
 | `npm run db:push` | Sync the Prisma schema to the database |
 | `npm run db:seed` | Seed a realistic, ledger-consistent dataset |
 | `npm run db:reset` | Force-reset + reseed |
-| `npm run stellar:init` | Bootstrap the testnet USDC issuer/distributor (needs network) |
+| `npm run base:init` | Generate the Base platform account + print faucet steps |
 
 ## Architecture
 
@@ -67,8 +67,8 @@ src/
         ├── auth.ts         #   bcrypt + DB-backed sessions (Privy-ready seam)
         ├── crypto.ts       #   AES-256-GCM for secrets at rest
         ├── ledger.ts       #   double-entry ledger (balances are derived)
-        ├── stellar.ts      #   real Stellar SDK integration (testnet)
-        ├── wallet.ts       #   per-user Stellar wallet provisioning
+        ├── chain.ts        #   real Base/viem integration (Base Sepolia)
+        ├── wallet.ts       #   per-user Base (EVM) wallet provisioning
         ├── deposits.ts circles.ts goals.ts reminders.ts learn.ts
 prisma/schema.prisma        # data model (PostgreSQL) + prisma/migrations/
 ```
@@ -80,15 +80,15 @@ they're derived from a double-entry ledger (`LedgerAccount` + `Transaction` +
 **Auth** is session-based (bcrypt + httpOnly cookies) behind a thin seam, so
 swapping in **Privy** later only touches `lib/server/auth.ts`.
 
-## On-chain (Stellar)
+## On-chain (Base)
 
 Keypair generation and transaction signing are real and run offline. **Funding
-(friendbot) and submission (Horizon) require network egress** — where it's
+and submission (Base RPC) require network egress** — where it's
 unavailable the signed transaction is recorded with its real hash and queued
 for broadcast (`onchainStatus: "queued"`). To go live on testnet:
 
 ```bash
-npm run stellar:init        # prints issuer/distributor env vars
+npm run base:init           # prints the platform account + faucet steps
 # paste them into .env, then deposits/contributions settle on-chain
 ```
 
@@ -97,12 +97,12 @@ wired.
 
 ### Rails: crypto-only (for now)
 
-Deposits and withdrawals are **USDC over Stellar**:
+Deposits and withdrawals are **USDC over Base**:
 
-- **Receive** — your wallet has a Stellar address; send USDC to it, then
+- **Receive** — your wallet has a Base (EVM) address; send USDC to it, then
   `/wallet` → "Check for deposits" credits any new on-chain payments
   (`syncDeposits`). A **testnet faucet** button issues test USDC for trying flows.
-- **Withdraw** — send USDC to any Stellar address (validated) from your wallet.
+- **Withdraw** — send USDC to any Base address (validated) from your wallet.
 - **No KYC** on the crypto rail. Local-currency (GHS · NGN) on/off-ramp via a
   licensed partner — and its KYC — is planned for a later release.
 
@@ -133,8 +133,9 @@ docker compose exec app npm run db:seed   # one-time, optional demo data
 
 For a managed host (Render / Fly / Railway / self-host): build the image, point
 `DATABASE_URL` at your Postgres, and set `APP_ENCRYPTION_KEY`, `SESSION_SECRET`,
-and the `STELLAR_*` vars as secrets. Migrations live in `prisma/migrations/`.
-Run `npm run stellar:init` once to populate the testnet Stellar vars.
+and the `BASE_*` / `USDC_CONTRACT_ADDRESS` / `PLATFORM_PRIVATE_KEY` vars as
+secrets. Migrations live in `prisma/migrations/`.
+Run `npm run base:init` once to generate the platform key, then fund it from the Base Sepolia faucets.
 
 ## Brand
 

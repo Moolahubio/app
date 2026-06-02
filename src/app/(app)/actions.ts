@@ -46,7 +46,7 @@ export async function depositAction(_prev: ActionState, formData: FormData): Pro
   return { ok: true };
 }
 
-/** Withdraw USDC to an external Stellar address. */
+/** Withdraw USDC to an external Base address. */
 export async function withdrawAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
   try {

@@ -8,7 +8,7 @@ import { inviteMemberAction, withdrawAction, type ActionState } from "@/app/(app
 
 type Action = (prev: ActionState, fd: FormData) => Promise<ActionState>;
 
-/** Withdraw USDC to an external Stellar address. */
+/** Withdraw USDC to an external Base address. */
 export function WithdrawForm() {
   const [state, formAction, pending] = useActionState(withdrawAction, {});
   return (
@@ -18,7 +18,7 @@ export function WithdrawForm() {
         type="text"
         autoComplete="off"
         spellCheck={false}
-        placeholder="Recipient Stellar address (G…)"
+        placeholder="Recipient Base address (0x…)"
         required
         className="h-12 w-full rounded-2xl border border-ink-900/10 bg-white px-4 font-mono text-sm text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
       />

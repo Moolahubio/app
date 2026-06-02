@@ -52,7 +52,7 @@ export default async function ActivityPage() {
       <PageHeader
         eyebrow="Activity"
         title="Your money, on the record"
-        description="Every deposit, contribution and payout — each linked to its proof on the Stellar ledger."
+        description="Every deposit, contribution and payout — each linked to its proof on Base."
       />
 
       {reminders.length > 0 && (

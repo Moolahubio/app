@@ -28,12 +28,12 @@ export const metadata: Metadata = {
     template: "%s · MoolaHub",
   },
   description:
-    "MoolaHub is a non-custodial savings app built on Stellar. Save toward your goals, join trusted Susu circles, and grow together — every contribution verified on-chain.",
+    "MoolaHub is a non-custodial savings app built on Base. Save toward your goals, join trusted Susu circles, and grow together — every contribution verified on-chain.",
   keywords: [
     "MoolaHub",
     "Susu",
     "savings circle",
-    "Stellar",
+    "Base",
     "USDC",
     "group savings",
     "financial empowerment",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "MoolaHub — Save Now. Grow Together.",
     description:
-      "Non-custodial savings on Stellar. Goals, Susu circles, and financial education — verified on-chain.",
+      "Non-custodial savings on Base. Goals, Susu circles, and financial education — verified on-chain.",
     siteName: "MoolaHub",
     type: "website",
   },

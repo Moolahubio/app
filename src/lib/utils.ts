@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format an integer minor-unit amount (e.g. USDC has 7 decimals on Stellar,
+ * Format an integer minor-unit amount (e.g. USDC has 6 decimals on Base,
  * but for display we treat balances as integer cents) into a currency string.
  *
  * Money is ALWAYS handled as integers internally (see CLAUDE.md golden rule).
@@ -41,7 +41,7 @@ export function timeAgo(iso: string, now: Date = new Date()) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-/** Truncate a Stellar address for display: GABC…WXYZ */
+/** Truncate a blockchain address for display: 0xAB…CDEF */
 export function truncateAddress(addr: string, lead = 4, tail = 4) {
   if (addr.length <= lead + tail + 1) return addr;
   return `${addr.slice(0, lead)}…${addr.slice(-tail)}`;

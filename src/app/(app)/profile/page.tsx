@@ -61,7 +61,7 @@ export default async function ProfilePage() {
           <div className="flex items-center gap-2">
             <Wallet className="h-4 w-4 text-jade-400" />
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-              Stellar wallet · non-custodial
+              Base wallet · non-custodial
             </p>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">

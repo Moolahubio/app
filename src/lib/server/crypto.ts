@@ -7,7 +7,7 @@ import {
 } from "node:crypto";
 
 /**
- * AES-256-GCM encryption for secrets at rest (Stellar secret keys).
+ * AES-256-GCM encryption for secrets at rest (EVM private keys).
  *
  * In production wallets are non-custodial (Privy embedded signer) and the app
  * never holds a secret key. On testnet we custody an encrypted key per user as

@@ -35,7 +35,7 @@ export const lessons: Lesson[] = [
       },
       {
         heading: "Where MoolaHub fits in",
-        text: "Traditionally, a human collector holds the money — which means trust risk. MoolaHub replaces the collector with an audited Soroban smart contract: contributions and payouts follow rules no single person can change, and every movement is verifiable on the Stellar ledger.",
+        text: "Traditionally, a human collector holds the money — which means trust risk. MoolaHub replaces the collector with an audited smart contract on Base: contributions and payouts follow rules no single person can change, and every movement is verifiable on Base.",
       },
     ],
     takeaways: [
