@@ -70,8 +70,11 @@ visual (`components/marketing/AscendingChart.tsx`).
    audit. Keep that framing in copy.
 5. **Goals are allocations, not accounts.** A savings goal is metadata over the
    user's single wallet balance — not a separate on-chain account.
-6. **KYC is per-user** (via the fiat rail), required for local-currency
-   deposits; the crypto rail stays KYC-light. No KYB.
+6. **Crypto-only rails (for now).** Deposits and withdrawals are **USDC on
+   Stellar** — receive to your wallet address, withdraw to any Stellar address.
+   No KYC on the crypto rail. Local-currency (GHS · NGN) on/off-ramp via a
+   licensed partner — and the per-user KYC it requires — is planned for later.
+   Test everything on **testnet** before mainnet contracts. No KYB.
 
 ## Conventions
 

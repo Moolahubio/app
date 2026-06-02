@@ -73,16 +73,17 @@ export default async function ProfilePage() {
         </div>
       </Card>
 
-      {/* KYC banner if not verified */}
+      {/* KYC is not required for the crypto rail; offered ahead of local currency */}
       {!verified && (
-        <Card className="flex flex-wrap items-center justify-between gap-4 border-amber-500/20 bg-amber-50/60 p-5">
-          <p className="text-sm text-ink-700">
-            <span className="font-semibold text-ink-900">Verify your identity</span> to deposit
-            local currency. The crypto rail stays available without KYC.
+        <Card className="flex flex-wrap items-center justify-between gap-4 border-ink-900/[0.06] bg-white p-5">
+          <p className="text-sm text-ink-600">
+            <span className="font-semibold text-ink-900">No verification needed</span> to deposit or
+            withdraw USDC. Identity verification will be added for local-currency support (coming
+            soon) — you can complete it early if you like.
           </p>
           <form action={verifyKycAction}>
-            <Button type="submit" size="sm">
-              Complete verification
+            <Button type="submit" size="sm" variant="secondary">
+              Verify identity
             </Button>
           </form>
         </Card>

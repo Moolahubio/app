@@ -107,7 +107,7 @@ export default function HomePage() {
             <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/35">
               Powered by
             </span>
-            {["Stellar", "USDC", "Privy", "Yellowcard", "Blend"].map((name) => (
+            {["Stellar", "USDC", "Privy", "Blend", "Soroban"].map((name) => (
               <span key={name} className="text-sm font-semibold text-white/55">
                 {name}
               </span>

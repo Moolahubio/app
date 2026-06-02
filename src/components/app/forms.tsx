@@ -4,9 +4,51 @@ import { useActionState, useState } from "react";
 import { CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui";
 import { formatMoney, cn } from "@/lib/utils";
-import { inviteMemberAction, type ActionState } from "@/app/(app)/actions";
+import { inviteMemberAction, withdrawAction, type ActionState } from "@/app/(app)/actions";
 
 type Action = (prev: ActionState, fd: FormData) => Promise<ActionState>;
+
+/** Withdraw USDC to an external Stellar address. */
+export function WithdrawForm() {
+  const [state, formAction, pending] = useActionState(withdrawAction, {});
+  return (
+    <form action={formAction} className="space-y-3">
+      <input
+        name="destination"
+        type="text"
+        autoComplete="off"
+        spellCheck={false}
+        placeholder="Recipient Stellar address (G…)"
+        required
+        className="h-12 w-full rounded-2xl border border-ink-900/10 bg-white px-4 font-mono text-sm text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
+      />
+      <div className="flex items-center rounded-2xl border border-ink-900/10 bg-white px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+        <input
+          name="amount"
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="0.00"
+          required
+          className="h-12 w-full bg-transparent text-lg font-semibold text-ink-900 outline-none placeholder:text-ink-300"
+        />
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-ink-400">USDC</span>
+      </div>
+      {state.error && (
+        <p className="flex items-center gap-1.5 text-sm text-red-600">
+          <AlertCircle className="h-4 w-4" /> {state.error}
+        </p>
+      )}
+      {state.ok && (
+        <p className="flex items-center gap-1.5 text-sm text-jade-600">
+          <CheckCircle2 className="h-4 w-4" /> Withdrawal submitted.
+        </p>
+      )}
+      <Button type="submit" variant="secondary" disabled={pending} className="w-full">
+        {pending ? "Sending…" : "Withdraw USDC"}
+      </Button>
+    </form>
+  );
+}
 
 /** Invite a member to a forming circle by email. */
 export function InviteForm({ circleId }: { circleId: string }) {

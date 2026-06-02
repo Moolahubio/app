@@ -1,22 +1,40 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { acct, transfer } from "./ledger";
-import { onchainEnabled, sendPayment, type OnchainResult } from "./stellar";
+import {
+  onchainEnabled,
+  sendPayment,
+  getIncomingUsdcPayments,
+  isValidStellarAddress,
+  type OnchainResult,
+} from "./stellar";
 import { notify } from "./notifications";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, truncateAddress } from "@/lib/utils";
 
 /**
- * Fiat on-ramp (Yellowcard, in production). KYC is required for local-currency
- * deposits — enforced here. On testnet the platform distributor sends real USDC
- * to the user's wallet; the ledger records external → wallet.
+ * Crypto rail (USDC on Stellar). Deposits arrive on-chain to the user's wallet;
+ * withdrawals send USDC to any Stellar address. No KYC gate on the crypto rail.
+ * (Local-currency on/off-ramp via a fiat partner is planned for later.)
  */
-export async function deposit(userId: string, amountCents: number) {
+
+async function availableCents(userId: string) {
+  const r = await db.posting.aggregate({
+    _sum: { amountCents: true },
+    where: { account: { key: acct.wallet(userId) } },
+  });
+  return r._sum.amountCents ?? 0;
+}
+
+/**
+ * Testnet faucet: the platform distributor sends test USDC to the user's
+ * wallet so flows can be exercised before real funds exist. Credits the ledger.
+ */
+export async function faucetDeposit(userId: string, amountCents: number) {
   const user = await db.user.findUnique({ where: { id: userId }, include: { wallet: true } });
-  if (!user) throw new Error("User not found");
-  if (user.kycStatus !== "verified") {
-    throw new Error("KYC verification is required before depositing local currency.");
+  if (!user?.wallet) throw new Error("Wallet not provisioned");
+  if (amountCents <= 0 || amountCents > 1_000_00) {
+    throw new Error("Enter an amount up to 1,000 test USDC.");
   }
-  if (!user.wallet) throw new Error("Wallet not provisioned");
 
   let onchain: OnchainResult = { status: "skipped", reason: "onchain disabled" };
   if (onchainEnabled()) {
@@ -24,13 +42,13 @@ export async function deposit(userId: string, amountCents: number) {
       fromSecret: process.env.STELLAR_DISTRIBUTOR_SECRET!,
       toPublicKey: user.wallet.stellarPublicKey,
       amountCents,
-      memo: "deposit",
+      memo: "faucet",
     });
   }
 
   const txn = await transfer({
     type: "deposit",
-    description: "Deposit via Yellowcard",
+    description: "Test USDC received (faucet)",
     userId,
     fromKey: acct.external,
     toKey: acct.wallet(userId),
@@ -39,33 +57,85 @@ export async function deposit(userId: string, amountCents: number) {
   });
   await notify(userId, {
     type: "deposit",
-    title: "Deposit received",
-    body: `${formatMoney(amountCents)} was added to your wallet.`,
+    title: "USDC received",
+    body: `${formatMoney(amountCents)} is now in your wallet.`,
     link: "/activity",
-  }, { email: true });
+  });
   return txn;
 }
 
-export async function withdraw(userId: string, amountCents: number) {
-  const available = await db.posting.aggregate({
-    _sum: { amountCents: true },
-    where: { account: { key: acct.wallet(userId) } },
-  });
-  if ((available._sum.amountCents ?? 0) < amountCents) {
-    throw new Error("Insufficient available balance");
+/**
+ * Detect real incoming USDC payments to the user's wallet and credit any that
+ * aren't already recorded. Returns the number of new deposits credited.
+ */
+export async function syncDeposits(userId: string): Promise<{ credited: number; totalCents: number }> {
+  const user = await db.user.findUnique({ where: { id: userId }, include: { wallet: true } });
+  if (!user?.wallet) return { credited: 0, totalCents: 0 };
+
+  const payments = await getIncomingUsdcPayments(user.wallet.stellarPublicKey);
+  let credited = 0;
+  let totalCents = 0;
+  for (const p of payments) {
+    // Dedupe on the on-chain reference (we store the op id as txHash for deposits).
+    const seen = await db.transaction.findFirst({ where: { type: "deposit", txHash: p.opId } });
+    if (seen) continue;
+    await transfer({
+      type: "deposit",
+      description: `USDC deposit from ${truncateAddress(p.from, 4, 4)}`,
+      userId,
+      fromKey: acct.external,
+      toKey: acct.wallet(userId),
+      amountCents: p.amountCents,
+      onchain: { txHash: p.opId, onchainStatus: "confirmed" },
+    });
+    await notify(userId, {
+      type: "deposit",
+      title: "USDC received",
+      body: `${formatMoney(p.amountCents)} arrived in your wallet.`,
+      link: "/activity",
+    });
+    credited += 1;
+    totalCents += p.amountCents;
   }
+  return { credited, totalCents };
+}
+
+/** Withdraw USDC on-chain to an external Stellar address. */
+export async function withdrawToAddress(userId: string, amountCents: number, destination: string) {
+  if (!isValidStellarAddress(destination)) {
+    throw new Error("Enter a valid Stellar address (starts with G).");
+  }
+  if (amountCents <= 0) throw new Error("Enter a valid amount.");
+  if ((await availableCents(userId)) < amountCents) {
+    throw new Error("Insufficient available balance.");
+  }
+  const wallet = await db.wallet.findUnique({ where: { userId } });
+  if (!wallet) throw new Error("Wallet not provisioned");
+
+  let onchain: OnchainResult = { status: "skipped", reason: "onchain disabled" };
+  if (onchainEnabled()) {
+    const { decryptSecret } = await import("./crypto");
+    onchain = await sendPayment({
+      fromSecret: decryptSecret(wallet.stellarSecretEnc),
+      toPublicKey: destination,
+      amountCents,
+      memo: "withdrawal",
+    });
+  }
+
   const txn = await transfer({
     type: "withdrawal",
-    description: "Withdrawal to local currency",
+    description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
     userId,
     fromKey: acct.wallet(userId),
     toKey: acct.external,
     amountCents,
+    onchain: toMeta(onchain),
   });
   await notify(userId, {
     type: "withdrawal",
     title: "Withdrawal sent",
-    body: `${formatMoney(amountCents)} is on its way to your local currency.`,
+    body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
     link: "/activity",
   }, { email: true });
   return txn;

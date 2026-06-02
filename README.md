@@ -95,6 +95,17 @@ npm run stellar:init        # prints issuer/distributor env vars
 Mainnet with pooled Susu funds stays **audit-gated** and is intentionally not
 wired.
 
+### Rails: crypto-only (for now)
+
+Deposits and withdrawals are **USDC over Stellar**:
+
+- **Receive** — your wallet has a Stellar address; send USDC to it, then
+  `/wallet` → "Check for deposits" credits any new on-chain payments
+  (`syncDeposits`). A **testnet faucet** button issues test USDC for trying flows.
+- **Withdraw** — send USDC to any Stellar address (validated) from your wallet.
+- **No KYC** on the crypto rail. Local-currency (GHS · NGN) on/off-ramp via a
+  licensed partner — and its KYC — is planned for a later release.
+
 ## Integrations (auth + email)
 
 Both are **config-driven**: they activate when their secrets are present and

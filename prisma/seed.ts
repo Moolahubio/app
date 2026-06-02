@@ -41,7 +41,7 @@ function describe(key: string) {
   if (key.startsWith("wallet:")) return { key, kind: "available", label: "Wallet", userId: key.slice(7) };
   if (key.startsWith("goal:")) return { key, kind: "goal", label: "Goal allocation", goalId: key.slice(5) };
   if (key.startsWith("pool:")) return { key, kind: "pool", label: "Circle pot", circleId: key.slice(5) };
-  if (key === "external") return { key, kind: "external", label: "Fiat rail" };
+  if (key === "external") return { key, kind: "external", label: "External (on-chain)" };
   if (key === "yield") return { key, kind: "yield", label: "Yield (Blend)" };
   return { key, kind: "fees", label: "Platform fees" };
 }
@@ -148,7 +148,7 @@ async function main() {
   );
 
   console.log("Funding Ama + goals…");
-  await transfer({ type: "deposit", description: "Deposit via Yellowcard", userId: ama.id, fromKey: "external", toKey: acctKey("wallet", ama.id), amountCents: 475230, txHash: "dep3k9a1", createdAt: daysAgo(4) });
+  await transfer({ type: "deposit", description: "USDC deposit", userId: ama.id, fromKey: "external", toKey: acctKey("wallet", ama.id), amountCents: 475230, txHash: "dep3k9a1", createdAt: daysAgo(4) });
   await transfer({ type: "yield", description: "Yield earned · Blend", userId: ama.id, fromKey: "yield", toKey: acctKey("wallet", ama.id), amountCents: 7420, createdAt: daysAgo(0) });
 
   const goalSeeds = [

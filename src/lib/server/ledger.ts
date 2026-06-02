@@ -10,7 +10,7 @@ import type { Prisma } from "@prisma/client";
  *   wallet:<userId>  (available, unallocated balance in the user's wallet)
  *   goal:<goalId>    (allocated to a goal — still in the wallet, earmarked)
  *   pool:<circleId>  (a Susu circle's escrowed pot)
- *   external         (the outside world: fiat rails)
+ *   external         (the outside world: on-chain USDC in/out)
  *   yield            (yield source: Blend lending)
  *   fees             (platform fees)
  */
@@ -40,7 +40,7 @@ function describe(key: string): AccountSeed {
     return { key, kind: "goal", label: "Goal allocation", goalId: key.slice(5) };
   if (key.startsWith("pool:"))
     return { key, kind: "pool", label: "Circle pot", circleId: key.slice(5) };
-  if (key === "external") return { key, kind: "external", label: "Fiat rail" };
+  if (key === "external") return { key, kind: "external", label: "External (on-chain)" };
   if (key === "yield") return { key, kind: "yield", label: "Yield (Blend)" };
   if (key === "fees") return { key, kind: "fees", label: "Platform fees" };
   throw new Error(`Unknown ledger account key: ${key}`);

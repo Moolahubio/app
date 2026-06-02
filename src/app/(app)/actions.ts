@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser, destroySession } from "@/lib/server/auth";
-import { deposit, withdraw } from "@/lib/server/deposits";
+import { faucetDeposit, withdrawToAddress, syncDeposits } from "@/lib/server/deposits";
 import { createGoal, allocateToGoal, releaseFromGoal } from "@/lib/server/goals";
 import {
   contribute,
@@ -32,28 +32,53 @@ export async function logoutAction() {
   redirect("/login");
 }
 
+/** Testnet faucet: receive test USDC into the wallet. */
 export async function depositAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
   try {
-    await deposit(user.id, toCents(formData.get("amount")));
+    await faucetDeposit(user.id, toCents(formData.get("amount")));
   } catch (e) {
     return fail(e);
   }
   revalidatePath("/");
+  revalidatePath("/wallet");
   revalidatePath("/activity");
   return { ok: true };
 }
 
+/** Withdraw USDC to an external Stellar address. */
 export async function withdrawAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const user = await requireUser();
   try {
-    await withdraw(user.id, toCents(formData.get("amount")));
+    await withdrawToAddress(
+      user.id,
+      toCents(formData.get("amount")),
+      String(formData.get("destination") ?? "").trim(),
+    );
   } catch (e) {
     return fail(e);
   }
   revalidatePath("/");
+  revalidatePath("/wallet");
   revalidatePath("/activity");
   return { ok: true };
+}
+
+/** Check the chain for new incoming USDC deposits and credit them. */
+export async function syncDepositsAction(_prev: ActionState, _formData: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  let result: { credited: number; totalCents: number };
+  try {
+    result = await syncDeposits(user.id);
+  } catch (e) {
+    return fail(e);
+  }
+  revalidatePath("/");
+  revalidatePath("/wallet");
+  revalidatePath("/activity");
+  return result.credited > 0
+    ? { ok: true }
+    : { error: "No new deposits found yet. Send USDC to your address, then check again." };
 }
 
 export async function createGoalAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -236,7 +261,7 @@ export async function completeLessonAction(_prev: ActionState, formData: FormDat
   return { ok: true };
 }
 
-/** Demo KYC: marks the user verified (stands in for the Yellowcard flow). */
+/** Demo KYC: marks the user verified (for future local-currency support). */
 export async function verifyKycAction(): Promise<void> {
   const user = await requireUser();
   await db.user.update({ where: { id: user.id }, data: { kycStatus: "verified" } });

@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { Keypair } from "@stellar/stellar-sdk";
 import { db } from "@/lib/db";
 import { userBalances, accountBalance, acct } from "@/lib/server/ledger";
 import { createGoal, allocateToGoal, releaseFromGoal, listGoals } from "@/lib/server/goals";
-import { deposit, withdraw } from "@/lib/server/deposits";
+import { faucetDeposit, withdrawToAddress } from "@/lib/server/deposits";
 import { resetDb, createTestUser, fund } from "./helpers";
+
+const VALID_DEST = Keypair.random().publicKey();
 
 describe("ledger", () => {
   beforeEach(async () => {
@@ -21,17 +24,12 @@ describe("ledger", () => {
     }
   });
 
-  it("reflects deposits in the available balance", async () => {
-    const u = await createTestUser();
-    await deposit(u.id, 25_000);
+  it("credits the available balance on a (faucet) deposit — no KYC needed", async () => {
+    const u = await createTestUser("No KYC", "unstarted");
+    await faucetDeposit(u.id, 25_000);
     const b = await userBalances(u.id);
     expect(b.availableCents).toBe(25_000);
     expect(b.totalCents).toBe(25_000);
-  });
-
-  it("blocks deposits without KYC", async () => {
-    const u = await createTestUser("No KYC", "unstarted");
-    await expect(deposit(u.id, 5_000)).rejects.toThrow(/KYC/i);
   });
 
   it("allocates to a goal without changing the total, then releases", async () => {
@@ -67,13 +65,25 @@ describe("ledger", () => {
       deadline: new Date("2027-01-01"),
     });
     await expect(allocateToGoal(u.id, goal.id, 10_000)).rejects.toThrow(/insufficient/i);
-    await expect(withdraw(u.id, 10_000)).rejects.toThrow(/insufficient/i);
+    await expect(withdrawToAddress(u.id, 10_000, VALID_DEST)).rejects.toThrow(/insufficient/i);
+  });
+
+  it("rejects a withdrawal to an invalid Stellar address", async () => {
+    const u = await createTestUser();
+    await fund(u.id, 50_000);
+    await expect(withdrawToAddress(u.id, 10_000, "not-an-address")).rejects.toThrow(/valid Stellar/i);
+  });
+
+  it("debits available on a valid withdrawal", async () => {
+    const u = await createTestUser();
+    await fund(u.id, 50_000);
+    await withdrawToAddress(u.id, 20_000, VALID_DEST);
+    expect((await userBalances(u.id)).availableCents).toBe(30_000);
   });
 
   it("tracks the external account as the mirror of money in the system", async () => {
     const u = await createTestUser();
-    await deposit(u.id, 30_000);
-    // external is debited as money enters the system
+    await faucetDeposit(u.id, 30_000);
     expect(await accountBalance(acct.external)).toBe(-30_000);
     expect(await accountBalance(acct.wallet(u.id))).toBe(30_000);
   });

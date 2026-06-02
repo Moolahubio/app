@@ -7,6 +7,7 @@ import {
   Operation,
   Asset,
   BASE_FEE,
+  StrKey,
 } from "@stellar/stellar-sdk";
 
 /**
@@ -53,6 +54,56 @@ export function onchainEnabled(): boolean {
 /** cents (1/100 USDC) -> Stellar 7-dp amount string. */
 export function centsToAmount(cents: number): string {
   return (cents / 100).toFixed(7);
+}
+
+/** Stellar 7-dp amount string -> integer cents. */
+export function amountToCents(amount: string): number {
+  return Math.round(parseFloat(amount) * 100);
+}
+
+/** Validate a Stellar public key (G...). */
+export function isValidStellarAddress(addr: string): boolean {
+  try {
+    return StrKey.isValidEd25519PublicKey(addr);
+  } catch {
+    return false;
+  }
+}
+
+export type IncomingPayment = {
+  opId: string;
+  hash: string;
+  amountCents: number;
+  from: string;
+};
+
+/**
+ * Fetch USDC payments received by an account from Horizon. Network-dependent;
+ * returns [] when Horizon is unreachable (sandbox/offline).
+ */
+export async function getIncomingUsdcPayments(publicKey: string): Promise<IncomingPayment[]> {
+  const asset = usdcAsset();
+  if (!asset) return [];
+  try {
+    const page = await server().payments().forAccount(publicKey).order("desc").limit(100).call();
+    const out: IncomingPayment[] = [];
+    for (const rec of page.records) {
+      if (rec.type !== "payment") continue;
+      const p = rec as Horizon.ServerApi.PaymentOperationRecord;
+      if (p.to !== publicKey) continue; // incoming only
+      if (p.asset_type === "native") continue;
+      if (p.asset_code !== "USDC" || p.asset_issuer !== asset.getIssuer()) continue;
+      out.push({
+        opId: p.id,
+        hash: p.transaction_hash,
+        amountCents: amountToCents(p.amount),
+        from: p.from,
+      });
+    }
+    return out;
+  } catch {
+    return [];
+  }
 }
 
 /** Generate a real Stellar keypair (offline). */
