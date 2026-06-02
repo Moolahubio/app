@@ -18,7 +18,7 @@ export default async function WalletPage() {
       <PageHeader
         eyebrow="Wallet"
         title="Add or withdraw money"
-        description="Deposit local currency via the fiat rail or move USDC out. Settlement is on Stellar."
+        description="Deposit local currency via the fiat rail or move USDC out. Settlement is on Base."
       />
 
       {/* balance + address */}
@@ -97,9 +97,9 @@ export default async function WalletPage() {
       <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-ink-600">
-          MoolaHub is non-custodial — funds settle to your own Stellar wallet. Every deposit and
+          MoolaHub is non-custodial — funds settle to your own Base wallet. Every deposit and
           withdrawal is recorded on the ledger with an on-chain reference.{" "}
-          <Badge tone="jade" className="ml-1">Built on Stellar</Badge>
+          <Badge tone="jade" className="ml-1">Built on Base</Badge>
         </p>
       </Card>
     </div>
