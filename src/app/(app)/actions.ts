@@ -13,7 +13,7 @@ import {
   declineInvite,
   startCircle,
 } from "@/lib/server/circles";
-import { markAllRead } from "@/lib/server/notifications";
+import { markAllRead, markRead, clearAll } from "@/lib/server/notifications";
 
 export type ActionState = { ok?: boolean; error?: string };
 
@@ -205,6 +205,18 @@ export async function startCircleAction(_prev: ActionState, formData: FormData):
 export async function markNotificationsReadAction(): Promise<void> {
   const user = await requireUser();
   await markAllRead(user.id);
+}
+
+export async function markOneNotificationReadAction(id: string): Promise<void> {
+  const user = await requireUser();
+  await markRead(user.id, id);
+  revalidatePath("/notifications");
+}
+
+export async function clearNotificationsAction(): Promise<void> {
+  const user = await requireUser();
+  await clearAll(user.id);
+  revalidatePath("/notifications");
 }
 
 export async function completeLessonAction(_prev: ActionState, formData: FormData): Promise<ActionState> {

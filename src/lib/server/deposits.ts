@@ -42,7 +42,7 @@ export async function deposit(userId: string, amountCents: number) {
     title: "Deposit received",
     body: `${formatMoney(amountCents)} was added to your wallet.`,
     link: "/activity",
-  });
+  }, { email: true });
   return txn;
 }
 
@@ -67,7 +67,7 @@ export async function withdraw(userId: string, amountCents: number) {
     title: "Withdrawal sent",
     body: `${formatMoney(amountCents)} is on its way to your local currency.`,
     link: "/activity",
-  });
+  }, { email: true });
   return txn;
 }
 

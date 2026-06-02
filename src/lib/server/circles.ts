@@ -165,7 +165,7 @@ export async function contribute(userId: string, circleId: string) {
     title: `Contributed to ${circle.name}`,
     body: `You paid ${formatMoney(circle.contributionCents)} for round ${round}.`,
     link: `/circles/${circleId}`,
-  });
+  }, { email: true });
 
   await maybeProcessPayout(circleId, round);
   return txn;
@@ -210,7 +210,7 @@ async function maybeProcessPayout(circleId: string, round: number) {
       title: "You received the pot! 🎉",
       body: `${formatMoney(potCents)} from "${circle.name}" landed in your wallet.`,
       link: `/circles/${circleId}`,
-    });
+    }, { email: true });
   }
 
   // Advance the round (or complete the circle).
@@ -312,7 +312,7 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
     title: "New circle member",
     body: `${accepter?.name ?? "Someone"} joined "${invite.circle.name}".`,
     link: `/circles/${invite.circleId}`,
-  });
+  }, { email: true });
   return invite.circleId;
 }
 
@@ -346,5 +346,5 @@ export async function startCircle(userId: string, circleId: string) {
     title: "Circle started",
     body: `"${circle.name}" is now active — round 1 has begun.`,
     link: `/circles/${circleId}`,
-  });
+  }, { email: true });
 }
