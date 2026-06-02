@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { Keypair } from "@stellar/stellar-sdk";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { db } from "@/lib/db";
 import { userBalances, accountBalance, acct } from "@/lib/server/ledger";
 import { createGoal, allocateToGoal, releaseFromGoal, listGoals } from "@/lib/server/goals";
 import { faucetDeposit, withdrawToAddress } from "@/lib/server/deposits";
 import { resetDb, createTestUser, fund } from "./helpers";
 
-const VALID_DEST = Keypair.random().publicKey();
+const VALID_DEST = privateKeyToAccount(generatePrivateKey()).address;
 
 describe("ledger", () => {
   beforeEach(async () => {
@@ -71,7 +71,7 @@ describe("ledger", () => {
   it("rejects a withdrawal to an invalid Stellar address", async () => {
     const u = await createTestUser();
     await fund(u.id, 50_000);
-    await expect(withdrawToAddress(u.id, 10_000, "not-an-address")).rejects.toThrow(/valid Stellar/i);
+    await expect(withdrawToAddress(u.id, 10_000, "not-an-address")).rejects.toThrow(/valid Base/i);
   });
 
   it("debits available on a valid withdrawal", async () => {

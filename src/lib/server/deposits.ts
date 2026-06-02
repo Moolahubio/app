@@ -3,17 +3,17 @@ import { db } from "@/lib/db";
 import { acct, transfer } from "./ledger";
 import {
   onchainEnabled,
-  sendPayment,
-  getIncomingUsdcPayments,
-  isValidStellarAddress,
+  sendUsdc,
+  getIncomingUsdc,
+  isValidAddress,
   type OnchainResult,
-} from "./stellar";
+} from "./chain";
 import { notify } from "./notifications";
 import { formatMoney, truncateAddress } from "@/lib/utils";
 
 /**
- * Crypto rail (USDC on Stellar). Deposits arrive on-chain to the user's wallet;
- * withdrawals send USDC to any Stellar address. No KYC gate on the crypto rail.
+ * Crypto rail (USDC on Base). Deposits arrive on-chain to the user's wallet;
+ * withdrawals send USDC to any Base address. No KYC gate on the crypto rail.
  * (Local-currency on/off-ramp via a fiat partner is planned for later.)
  */
 
@@ -38,9 +38,9 @@ export async function faucetDeposit(userId: string, amountCents: number) {
 
   let onchain: OnchainResult = { status: "skipped", reason: "onchain disabled" };
   if (onchainEnabled()) {
-    onchain = await sendPayment({
-      fromSecret: process.env.STELLAR_DISTRIBUTOR_SECRET!,
-      toPublicKey: user.wallet.stellarPublicKey,
+    onchain = await sendUsdc({
+      fromPrivateKey: process.env.PLATFORM_PRIVATE_KEY!,
+      to: user.wallet.address,
       amountCents,
       memo: "faucet",
     });
@@ -72,7 +72,7 @@ export async function syncDeposits(userId: string): Promise<{ credited: number; 
   const user = await db.user.findUnique({ where: { id: userId }, include: { wallet: true } });
   if (!user?.wallet) return { credited: 0, totalCents: 0 };
 
-  const payments = await getIncomingUsdcPayments(user.wallet.stellarPublicKey);
+  const payments = await getIncomingUsdc(user.wallet.address);
   let credited = 0;
   let totalCents = 0;
   for (const p of payments) {
@@ -100,10 +100,10 @@ export async function syncDeposits(userId: string): Promise<{ credited: number; 
   return { credited, totalCents };
 }
 
-/** Withdraw USDC on-chain to an external Stellar address. */
+/** Withdraw USDC on-chain to an external Base address. */
 export async function withdrawToAddress(userId: string, amountCents: number, destination: string) {
-  if (!isValidStellarAddress(destination)) {
-    throw new Error("Enter a valid Stellar address (starts with G).");
+  if (!isValidAddress(destination)) {
+    throw new Error("Enter a valid Base address (starts with 0x).");
   }
   if (amountCents <= 0) throw new Error("Enter a valid amount.");
   if ((await availableCents(userId)) < amountCents) {
@@ -115,9 +115,9 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
   let onchain: OnchainResult = { status: "skipped", reason: "onchain disabled" };
   if (onchainEnabled()) {
     const { decryptSecret } = await import("./crypto");
-    onchain = await sendPayment({
-      fromSecret: decryptSecret(wallet.stellarSecretEnc),
-      toPublicKey: destination,
+    onchain = await sendUsdc({
+      fromPrivateKey: decryptSecret(wallet.privateKeyEnc),
+      to: destination,
       amountCents,
       memo: "withdrawal",
     });

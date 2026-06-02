@@ -13,7 +13,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
-    "stellar:init": "tsx scripts/stellar-init.ts"
+    "base:init": "tsx scripts/base-init.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -22,7 +22,6 @@
     "@prisma/client": "^6.19.3",
     "@privy-io/react-auth": "^3.28.0",
     "@privy-io/server-auth": "^1.32.5",
-    "@stellar/stellar-sdk": "^15.1.0",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
@@ -33,6 +32,7 @@
     "react-dom": "^19.0.0",
     "resend": "^6.12.4",
     "tailwind-merge": "^2.5.5",
+    "viem": "^2.52.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

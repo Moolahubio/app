@@ -1,34 +1,29 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { encryptSecret, decryptSecret } from "./crypto";
-import { generateKeypair, fundWithFriendbot, onchainEnabled } from "./stellar";
+import { generateAccount, ensureGas, onchainEnabled } from "./chain";
 
 /**
- * Create a Stellar wallet for a user. The keypair is real; on-chain funding is
- * attempted (testnet friendbot) and recorded if it succeeds. Where the network
- * is unreachable the wallet still exists and funds on next provisioning.
+ * Create a Base (EVM) wallet for a user. The account is generated locally and
+ * its private key encrypted at rest. When on-chain is configured, the wallet is
+ * gas-funded so it can transact; otherwise it still exists and funds later.
  */
 export async function createWalletForUser(userId: string) {
   const existing = await db.wallet.findUnique({ where: { userId } });
   if (existing) return existing;
 
-  const { publicKey, secret } = generateKeypair();
+  const { address, privateKey } = generateAccount();
   const wallet = await db.wallet.create({
     data: {
       userId,
-      stellarPublicKey: publicKey,
-      stellarSecretEnc: encryptSecret(secret),
+      address,
+      privateKeyEnc: encryptSecret(privateKey),
     },
   });
 
   if (onchainEnabled()) {
-    const funded = await fundWithFriendbot(publicKey);
-    if (funded.status === "confirmed") {
-      await db.wallet.update({
-        where: { id: wallet.id },
-        data: { fundedAt: new Date() },
-      });
-    }
+    await ensureGas(address);
+    await db.wallet.update({ where: { id: wallet.id }, data: { fundedAt: new Date() } });
   }
   return wallet;
 }
@@ -37,5 +32,5 @@ export async function createWalletForUser(userId: string) {
 export async function getSigningSecret(userId: string): Promise<string | null> {
   const wallet = await db.wallet.findUnique({ where: { userId } });
   if (!wallet) return null;
-  return decryptSecret(wallet.stellarSecretEnc);
+  return decryptSecret(wallet.privateKeyEnc);
 }

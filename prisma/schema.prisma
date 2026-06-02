@@ -61,17 +61,17 @@ model Session {
   @@index([userId])
 }
 
-// Non-custodial in production (Privy embedded wallet). Here, the testnet
-// secret is encrypted at rest (AES-256-GCM) as a stand-in for that signer.
+// A Base (EVM) wallet. The custodial private key is encrypted at rest
+// (AES-256-GCM); Base Account (passkey smart wallet) replaces this for
+// user-signed flows in a later phase.
 model Wallet {
-  id               String   @id @default(cuid())
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stellarPublicKey String   @unique
-  stellarSecretEnc String // encrypted; never returned to the client
-  fundedAt         DateTime? // set once the account is created on-chain (friendbot)
-  trustlineAt      DateTime? // set once the USDC trustline is established
-  createdAt        DateTime @default(now())
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address       String    @unique // EVM address (0x…)
+  privateKeyEnc String // encrypted; never returned to the client
+  fundedAt      DateTime? // set once the wallet has been gas-funded on-chain
+  createdAt     DateTime  @default(now())
 }
 
 // ---- Double-entry ledger -------------------------------------------------

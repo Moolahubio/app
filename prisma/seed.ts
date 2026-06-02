@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { createCipheriv, randomBytes, createHash } from "node:crypto";
 import { PrismaClient, type Prisma } from "@prisma/client";
-import { Keypair } from "@stellar/stellar-sdk";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import bcrypt from "bcryptjs";
 
 // ---- load .env (DATABASE_URL, APP_ENCRYPTION_KEY) ----
@@ -80,7 +80,8 @@ async function transfer(p: {
 
 async function makeUser(name: string, email: string, kyc = "unstarted") {
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
-  const kp = Keypair.random();
+  const privateKey = generatePrivateKey();
+  const address = privateKeyToAccount(privateKey).address;
   const user = await db.user.create({
     data: {
       name,
@@ -89,8 +90,8 @@ async function makeUser(name: string, email: string, kyc = "unstarted") {
       kycStatus: kyc,
       wallet: {
         create: {
-          stellarPublicKey: kp.publicKey(),
-          stellarSecretEnc: encryptSecret(kp.secret()),
+          address,
+          privateKeyEnc: encryptSecret(privateKey),
         },
       },
     },

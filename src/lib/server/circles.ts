@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { acct, transfer } from "./ledger";
-import { onchainEnabled, sendPayment } from "./stellar";
+import { onchainEnabled, sendUsdc, platformAddress } from "./chain";
 import { getSigningSecret } from "./wallet";
 import { toMeta } from "./deposits";
 import { sendEmail, brandedEmail, appUrl } from "./email";
@@ -123,15 +123,15 @@ export async function contribute(userId: string, circleId: string) {
     throw new Error("Insufficient available balance");
   }
 
-  // On-chain: member → platform escrow (distributor stands in for the Soroban pot).
+  // On-chain: member → platform escrow (a Solidity Susu contract follows later).
   let meta = {};
   if (onchainEnabled()) {
     const secret = await getSigningSecret(userId);
-    const distributor = process.env.STELLAR_DISTRIBUTOR_PUBLIC;
-    if (secret && distributor) {
-      const r = await sendPayment({
-        fromSecret: secret,
-        toPublicKey: distributor,
+    const escrow = platformAddress();
+    if (secret && escrow) {
+      const r = await sendUsdc({
+        fromPrivateKey: secret,
+        to: escrow,
         amountCents: circle.contributionCents,
         memo: `susu:${circleId}`,
       });
@@ -187,9 +187,9 @@ async function maybeProcessPayout(circleId: string, round: number) {
 
     let meta = {};
     if (onchainEnabled() && recipient.user.wallet) {
-      const r = await sendPayment({
-        fromSecret: process.env.STELLAR_DISTRIBUTOR_SECRET!,
-        toPublicKey: recipient.user.wallet.stellarPublicKey,
+      const r = await sendUsdc({
+        fromPrivateKey: process.env.PLATFORM_PRIVATE_KEY!,
+        to: recipient.user.wallet.address,
         amountCents: potCents,
         memo: `payout:${circleId}`,
       });

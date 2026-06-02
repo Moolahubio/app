@@ -12,7 +12,7 @@ const NETWORK = process.env.STELLAR_NETWORK === "public" ? "Stellar mainnet" : "
 export default async function WalletPage() {
   const user = await requireUser();
   const balances = await userBalances(user.id);
-  const address = user.wallet?.stellarPublicKey ?? "";
+  const address = user.wallet?.address ?? "";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

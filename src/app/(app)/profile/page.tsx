@@ -28,7 +28,7 @@ export default async function ProfilePage() {
   const user = await requireUser();
   const balances = await userBalances(user.id);
   const verified = user.kycStatus === "verified";
-  const address = user.wallet?.stellarPublicKey ?? "Not provisioned";
+  const address = user.wallet?.address ?? "Not provisioned";
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
