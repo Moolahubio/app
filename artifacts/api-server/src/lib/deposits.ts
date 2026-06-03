@@ -1,4 +1,4 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { db, walletsTable, transactionsTable } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
 import {
@@ -77,10 +77,19 @@ export async function syncDeposits(
   let credited = 0;
   let totalCents = 0;
   for (const p of payments) {
+    // The bare on-chain tx hash is the canonical dedupe key shared by every
+    // deposit source (faucet records `p.hash` too), so a faucet send can't be
+    // re-imported by sync. We also match the legacy `hash:logIndex` form for
+    // any rows written before this canonicalization.
     const [seen] = await db
       .select({ id: transactionsTable.id })
       .from(transactionsTable)
-      .where(and(eq(transactionsTable.type, "deposit"), eq(transactionsTable.txHash, p.opId)));
+      .where(
+        and(
+          eq(transactionsTable.type, "deposit"),
+          inArray(transactionsTable.txHash, [p.hash, p.opId]),
+        ),
+      );
     if (seen) continue;
     await transfer({
       type: "deposit",
@@ -89,7 +98,7 @@ export async function syncDeposits(
       fromKey: acct.external,
       toKey: acct.wallet(userId),
       amountCents: p.amountCents,
-      onchain: { txHash: p.opId, onchainStatus: "confirmed" },
+      onchain: { txHash: p.hash, onchainStatus: "confirmed" },
     });
     await notify(userId, {
       type: "deposit",

@@ -1,2 +1,3 @@
 - [MoolaHub stack decisions](moolahub-stack.md) — auth uses bcryptjs (not pgcrypto), seed hash must be generated via Node require not ESM import
 - [api-server db composite refs](api-server-db-composite.md) — after any lib/db schema change, rebuild db .d.ts (`pnpm --filter @workspace/db exec tsc -p tsconfig.json`) or api-server typecheck breaks.
+- [MoolaHub ledger invariants](moolahub-ledger-invariants.md) — reservation+ledger posting must share ONE tx (no double-debit); deposit dedup on bare tx hash; on-chain is best-effort, never fail on it.
