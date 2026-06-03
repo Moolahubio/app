@@ -228,14 +228,14 @@ export default function DashboardPage() {
             <h2 className="font-display text-lg font-bold text-ink-900">Keep learning</h2>
           </div>
           <div className="mt-5 flex-1">
-            <span className="text-3xl">🏦</span>
-            <p className="mt-3 font-semibold leading-snug text-ink-900">Intro to Non-Custodial Wallets</p>
+            <span className="text-3xl">⛓️</span>
+            <p className="mt-3 font-semibold leading-snug text-ink-900">Understanding Blockchain (Simply)</p>
             <p className="mt-1 font-mono text-xs uppercase tracking-wide text-ink-400">
               5 min · Beginner
             </p>
           </div>
           <Button
-            href={`/learn/intro-to-wallets`}
+            href={`/learn/understanding-blockchain`}
             variant="secondary"
             size="sm"
             className="mt-5 w-full"
