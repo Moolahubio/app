@@ -13,7 +13,7 @@ import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Avatar, Button, Skeleton } from "@/components/ui";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { ShellNavList, type NavItem } from "@/components/app/ShellNav";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, avatarSrc } from "@/lib/utils";
 import { useGetDashboardSummary, useListNotifications, getGetDashboardSummaryQueryKey, getListNotificationsQueryKey } from "@workspace/api-client-react";
 
 const nav: NavItem[] = [
@@ -44,12 +44,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   if (isAuthLoading || !isAuthenticated) {
     return null;
   }
-
-  const kycLabel = user?.kycStatus === "verified"
-    ? "Verified · KYC"
-    : user?.kycStatus === "pending"
-      ? "KYC pending"
-      : "KYC required";
 
   const reminder = summary?.upcomingReminder;
   const notifications = (notifData?.notifications ?? []).map((n) => ({
@@ -90,13 +84,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           className="mt-auto flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-ink-900/[0.04] active:bg-ink-900/[0.06]"
         >
           {user ? (
-            <Avatar name={user.name} tone="jade" />
+            <Avatar name={user.name} src={avatarSrc(user.avatarUrl)} tone="jade" />
           ) : (
             <Skeleton className="h-9 w-9 rounded-full" />
           )}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-ink-900">{user?.name ?? "..."}</p>
-            <p className="truncate text-xs text-ink-400">{kycLabel}</p>
+            <p className="truncate text-xs text-ink-400">{user?.email ?? ""}</p>
           </div>
         </Link>
 

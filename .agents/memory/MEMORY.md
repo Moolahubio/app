@@ -1,3 +1,2 @@
-- [MoolaHub stack decisions](moolahub-stack.md) — auth uses bcryptjs (not pgcrypto), seed hash must be generated via Node require not ESM import
-- [api-server db composite refs](api-server-db-composite.md) — after any lib/db schema change, rebuild db .d.ts (`pnpm --filter @workspace/db exec tsc -p tsconfig.json`) or api-server typecheck breaks.
-- [MoolaHub ledger invariants](moolahub-ledger-invariants.md) — reservation+ledger posting must share ONE tx (no double-debit); deposit dedup on bare tx hash; on-chain is best-effort, never fail on it.
+- [MoolaHub Account section](moolahub-account.md) — keep email/password+Privy+passkey auth, no KYC; WebAuthn challenges single-use via atomic DELETE..RETURNING; private object route is auth-guarded.
+- [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.

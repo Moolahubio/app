@@ -50,6 +50,16 @@ export function pct(part: number, whole: number) {
   return Math.min(100, Math.round((part / whole) * 100));
 }
 
+/** Resolve a stored avatar value to a displayable URL. Stored avatars are object
+ * storage paths (e.g. "/objects/<id>") served through the storage route; absolute
+ * URLs are returned unchanged. */
+export function avatarSrc(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  if (/^https?:\/\//.test(value)) return value;
+  if (value.startsWith("/objects/")) return `/api/storage${value}`;
+  return value;
+}
+
 /** Extract a human-readable message from an API error (ErrorType<ApiError> or unknown). */
 export function apiErrorMessage(err: unknown): string | undefined {
   if (!err) return undefined;

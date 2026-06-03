@@ -115,10 +115,12 @@ export function Eyebrow({
 
 export function Avatar({
   name,
+  src,
   className,
   tone = "jade",
 }: {
   name: string;
+  src?: string | null;
   className?: string;
   tone?: "jade" | "ink" | "amber" | "sky";
 }) {
@@ -134,6 +136,18 @@ export function Avatar({
     amber: "bg-amber-100 text-amber-700",
     sky: "bg-sky-100 text-sky-700",
   };
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        className={cn(
+          "inline-block rounded-full object-cover",
+          className ?? "h-9 w-9",
+        )}
+      />
+    );
+  }
   return (
     <span
       className={cn(

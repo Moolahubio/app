@@ -6,13 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UserProfile {
+export interface PasskeySummary {
   id: string;
-  name: string;
-  email: string;
   /** @nullable */
-  avatarUrl?: string | null;
-  /** @nullable */
-  walletAddress: string | null;
+  deviceName: string | null;
   createdAt: string;
+  /** @nullable */
+  lastUsedAt: string | null;
 }

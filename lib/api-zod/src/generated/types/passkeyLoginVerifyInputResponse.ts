@@ -6,8 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ProfileUpdate {
-  name?: string;
-  /** @nullable */
-  avatarUrl?: string | null;
-}
+export type PasskeyLoginVerifyInputResponse = { [key: string]: unknown };

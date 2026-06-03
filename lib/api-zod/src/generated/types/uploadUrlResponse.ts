@@ -5,9 +5,10 @@
  * MoolaHub API — social savings platform on Base blockchain
  * OpenAPI spec version: 0.1.0
  */
+import type { UploadUrlRequest } from './uploadUrlRequest';
 
-export interface ProfileUpdate {
-  name?: string;
-  /** @nullable */
-  avatarUrl?: string | null;
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlRequest;
 }

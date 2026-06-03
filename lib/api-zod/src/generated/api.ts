@@ -9,6 +9,114 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Request a presigned URL for file upload
+ */
+
+
+
+
+
+export const RequestUploadUrlBody = zod.object({
+  "name": zod.string().min(1),
+  "size": zod.number().min(1),
+  "contentType": zod.string().min(1)
+})
+
+
+
+
+
+
+export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.string().url(),
+  "objectPath": zod.string(),
+  "metadata": zod.object({
+  "name": zod.string().min(1),
+  "size": zod.number().min(1),
+  "contentType": zod.string().min(1)
+}).optional()
+})
+
+
+/**
+ * @summary List the current user's passkeys
+ */
+export const ListPasskeysResponse = zod.object({
+  "passkeys": zod.array(zod.object({
+  "id": zod.string(),
+  "deviceName": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "lastUsedAt": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Remove a passkey
+ */
+export const DeletePasskeyParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeletePasskeyResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Begin passkey registration (returns WebAuthn creation options)
+ */
+export const RegisterPasskeyOptionsResponse = zod.object({
+  "flowId": zod.string(),
+  "options": zod.record(zod.string(), zod.unknown())
+})
+
+
+/**
+ * @summary Complete passkey registration
+ */
+export const RegisterPasskeyVerifyBody = zod.object({
+  "flowId": zod.string(),
+  "deviceName": zod.string().nullish(),
+  "response": zod.record(zod.string(), zod.unknown())
+})
+
+export const RegisterPasskeyVerifyResponse = zod.object({
+  "id": zod.string(),
+  "deviceName": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "lastUsedAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary Begin passkey login (returns WebAuthn request options)
+ */
+export const LoginPasskeyOptionsResponse = zod.object({
+  "flowId": zod.string(),
+  "options": zod.record(zod.string(), zod.unknown())
+})
+
+
+/**
+ * @summary Complete passkey login
+ */
+export const LoginPasskeyVerifyBody = zod.object({
+  "flowId": zod.string(),
+  "response": zod.record(zod.string(), zod.unknown())
+})
+
+export const LoginPasskeyVerifyResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "hasWallet": zod.boolean(),
+  "walletAddress": zod.string().nullish()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
@@ -28,7 +136,7 @@ export const LoginResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
-  "kycStatus": zod.string(),
+  "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean(),
   "walletAddress": zod.string().nullish()
 })
@@ -59,7 +167,7 @@ export const GetMeResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
-  "kycStatus": zod.string(),
+  "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean(),
   "walletAddress": zod.string().nullish()
 })
@@ -78,7 +186,7 @@ export const PrivyAuthResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
-  "kycStatus": zod.string(),
+  "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean(),
   "walletAddress": zod.string().nullish()
 })
@@ -537,7 +645,7 @@ export const GetProfileResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
-  "kycStatus": zod.string(),
+  "avatarUrl": zod.string().nullish(),
   "walletAddress": zod.string().nullable(),
   "createdAt": zod.string()
 })
@@ -547,14 +655,15 @@ export const GetProfileResponse = zod.object({
  * @summary Update user profile
  */
 export const UpdateProfileBody = zod.object({
-  "name": zod.string().optional()
+  "name": zod.string().optional(),
+  "avatarUrl": zod.string().nullish()
 })
 
 export const UpdateProfileResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
-  "kycStatus": zod.string(),
+  "avatarUrl": zod.string().nullish(),
   "walletAddress": zod.string().nullable(),
   "createdAt": zod.string()
 })

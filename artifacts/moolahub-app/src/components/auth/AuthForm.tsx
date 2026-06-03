@@ -1,8 +1,16 @@
 import { useState } from "react";
-import { Mail, Lock, User, ArrowRight, AlertCircle } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, AlertCircle, Fingerprint } from "lucide-react";
+import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import { Button } from "@/components/ui";
 import { SegmentedControl } from "@/components/app/SegmentedControl";
-import { useLogin, useRegister, getGetMeQueryKey } from "@workspace/api-client-react";
+import {
+  useLogin,
+  useRegister,
+  useLoginPasskeyOptions,
+  useLoginPasskeyVerify,
+  getGetMeQueryKey,
+} from "@workspace/api-client-react";
 import { apiErrorMessage } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,12 +23,38 @@ export function AuthForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
+  const passkeyOptions = useLoginPasskeyOptions();
+  const passkeyVerify = useLoginPasskeyVerify();
 
-  const pending = loginMutation.isPending || registerMutation.isPending;
-  const error = apiErrorMessage(loginMutation.error) || apiErrorMessage(registerMutation.error);
+  const passkeyPending = passkeyOptions.isPending || passkeyVerify.isPending;
+  const pending = loginMutation.isPending || registerMutation.isPending || passkeyPending;
+  const error =
+    apiErrorMessage(loginMutation.error) || apiErrorMessage(registerMutation.error) || passkeyError;
+
+  const handlePasskeyLogin = async () => {
+    setPasskeyError(null);
+    try {
+      const { flowId, options } = await passkeyOptions.mutateAsync();
+      const response = await startAuthentication({
+        optionsJSON: options as unknown as PublicKeyCredentialRequestOptionsJSON,
+      });
+      await passkeyVerify.mutateAsync({
+        data: { flowId, response: response as unknown as Record<string, unknown> },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      setLocation("/");
+    } catch (err) {
+      if (err instanceof Error && err.name === "NotAllowedError") {
+        setPasskeyError("Passkey sign-in was cancelled.");
+      } else {
+        setPasskeyError(apiErrorMessage(err) ?? "Could not sign in with passkey.");
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,6 +153,27 @@ export function AuthForm() {
           {!pending && <ArrowRight className="h-4 w-4" />}
         </Button>
       </form>
+
+      {mode === "login" && browserSupportsWebAuthn() && (
+        <>
+          <div className="my-4 flex items-center gap-3 text-xs text-ink-400">
+            <span className="h-px flex-1 bg-ink-900/10" />
+            or
+            <span className="h-px flex-1 bg-ink-900/10" />
+          </div>
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            className="w-full"
+            disabled={pending}
+            onClick={handlePasskeyLogin}
+          >
+            <Fingerprint className="h-4 w-4" />
+            {passkeyPending ? "Verifying…" : "Sign in with passkey"}
+          </Button>
+        </>
+      )}
     </div>
   );
 }

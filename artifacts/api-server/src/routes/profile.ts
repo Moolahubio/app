@@ -15,7 +15,7 @@ router.get("/profile", requireAuth, async (req, res): Promise<void> => {
       id: user.id,
       name: user.name,
       email: user.email,
-      kycStatus: user.kycStatus,
+      avatarUrl: user.avatarUrl ?? null,
       walletAddress: wallet?.address ?? null,
       createdAt: user.createdAt.toISOString(),
     })
@@ -32,6 +32,7 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
 
   const updates: Partial<typeof usersTable.$inferInsert> = {};
   if (parsed.data.name != null) updates.name = parsed.data.name;
+  if (parsed.data.avatarUrl !== undefined) updates.avatarUrl = parsed.data.avatarUrl;
 
   const [updated] = await db
     .update(usersTable)
@@ -46,7 +47,7 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
       id: updated.id,
       name: updated.name,
       email: updated.email,
-      kycStatus: updated.kycStatus,
+      avatarUrl: updated.avatarUrl ?? null,
       walletAddress: wallet?.address ?? null,
       createdAt: updated.createdAt.toISOString(),
     })

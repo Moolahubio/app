@@ -6,13 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UserProfile {
-  id: string;
+export interface UploadUrlRequest {
+  /** @minLength 1 */
   name: string;
-  email: string;
-  /** @nullable */
-  avatarUrl?: string | null;
-  /** @nullable */
-  walletAddress: string | null;
-  createdAt: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
 }

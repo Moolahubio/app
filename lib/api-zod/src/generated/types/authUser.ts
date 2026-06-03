@@ -10,7 +10,8 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  kycStatus: string;
+  /** @nullable */
+  avatarUrl?: string | null;
   hasWallet: boolean;
   /** @nullable */
   walletAddress?: string | null;

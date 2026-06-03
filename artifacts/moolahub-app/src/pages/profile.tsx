@@ -1,23 +1,36 @@
+import { useRef, useState } from "react";
 import {
-  ShieldCheck,
   Wallet as WalletIcon,
   Bell,
   Globe,
   LogOut,
-  BadgeCheck,
   TrendingUp,
-  AlertCircle,
-  ChevronRight
+  ChevronRight,
+  Camera,
+  Pencil,
+  Check,
+  X,
+  ShieldCheck,
 } from "lucide-react";
 import { Link } from "wouter";
-import { Card, Badge, Avatar, Button, Eyebrow } from "@/components/ui";
+import { Card, Avatar, Button, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
-import { useGetMe, useGetDashboardSummary, useLogout, getGetMeQueryKey } from "@workspace/api-client-react";
-import { formatMoney, truncateAddress } from "@/lib/utils";
+import { PasskeysCard } from "@/components/app/PasskeysCard";
+import {
+  useGetMe,
+  useGetDashboardSummary,
+  useLogout,
+  useUpdateProfile,
+  getGetMeQueryKey,
+  getGetProfileQueryKey,
+} from "@workspace/api-client-react";
+import { useUpload } from "@workspace/object-storage-web";
+import { formatMoney, truncateAddress, avatarSrc, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
 const settings = [
+  { icon: WalletIcon, label: "View wallet", detail: "Balance & address on Base", href: "/wallet" },
   { icon: Bell, label: "Notifications", detail: "Reminders and activity", href: "/notifications" },
   { icon: TrendingUp, label: "Activity & yield", detail: "Ledger and earnings", href: "/activity" },
   { icon: Globe, label: "Learn", detail: "Financial empowerment", href: "/learn" },
@@ -28,13 +41,70 @@ export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading } = useGetMe();
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const logoutMutation = useLogout();
+  const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (isUserLoading || isSummaryLoading) return <div className="p-8 text-center text-ink-400">Loading profile...</div>;
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const invalidateUser = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() }),
+    ]);
+
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: async (res) => {
+      try {
+        await updateProfile.mutateAsync({ data: { avatarUrl: res.objectPath } });
+        await invalidateUser();
+      } catch (err) {
+        setProfileError(apiErrorMessage(err) ?? "Could not save profile picture.");
+      }
+    },
+    onError: () => setProfileError("Could not upload image."),
+  });
+
+  if (isUserLoading || isSummaryLoading)
+    return <div className="p-8 text-center text-ink-400">Loading profile...</div>;
   if (!user || !summary) return null;
 
-  const verified = user.kycStatus === "verified";
   const address = user.walletAddress ?? "Not provisioned";
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setProfileError("Please choose an image file.");
+      return;
+    }
+    setProfileError(null);
+    void uploadFile(file);
+  };
+
+  const startEditName = () => {
+    setNameDraft(user.name);
+    setEditingName(true);
+    setProfileError(null);
+  };
+
+  const saveName = async () => {
+    const next = nameDraft.trim();
+    if (!next || next === user.name) {
+      setEditingName(false);
+      return;
+    }
+    try {
+      await updateProfile.mutateAsync({ data: { name: next } });
+      await invalidateUser();
+      setEditingName(false);
+    } catch (err) {
+      setProfileError(apiErrorMessage(err) ?? "Could not update name.");
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -46,26 +116,82 @@ export default function ProfilePage() {
           className="pointer-events-none absolute inset-0 bg-grid-dark [background-size:32px_32px] opacity-35"
           aria-hidden
         />
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="relative z-10 flex items-center gap-4">
-            <Avatar name={user.name} tone="jade" className="h-16 w-16 text-lg" />
-            <div>
-              <h2 className="font-display text-xl font-bold">{user.name}</h2>
-              <p className="text-sm text-white/55">{user.email}</p>
-            </div>
+        <div className="relative z-10 flex flex-wrap items-center gap-4">
+          <div className="relative">
+            <Avatar
+              name={user.name}
+              src={avatarSrc(user.avatarUrl)}
+              tone="jade"
+              className="h-16 w-16 text-lg"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-ink-900 text-white transition-colors hover:bg-ink-800 focus-ring disabled:opacity-60"
+              aria-label="Change profile picture"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFile}
+            />
           </div>
-          <div className="relative z-10">
-            {verified ? (
-              <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-                <BadgeCheck className="h-3.5 w-3.5" /> KYC Verified
-              </Badge>
+
+          <div className="min-w-0 flex-1">
+            {editingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void saveName();
+                    if (e.key === "Escape") setEditingName(false);
+                  }}
+                  className="w-full max-w-xs rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 font-display text-lg font-bold text-white outline-none placeholder:text-white/40 focus:border-jade-400/50"
+                />
+                <button
+                  onClick={() => void saveName()}
+                  disabled={updateProfile.isPending}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-jade-500 text-white transition-colors hover:bg-jade-400 focus-ring"
+                  aria-label="Save name"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setEditingName(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 focus-ring"
+                  aria-label="Cancel"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             ) : (
-              <Badge tone="amber">
-                <AlertCircle className="h-3.5 w-3.5" /> KYC required
-              </Badge>
+              <div className="flex items-center gap-2">
+                <h2 className="truncate font-display text-xl font-bold">{user.name}</h2>
+                <button
+                  onClick={startEditName}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white focus-ring"
+                  aria-label="Edit name"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </div>
             )}
+            <p className="mt-0.5 text-sm text-white/55">{user.email}</p>
+            {isUploading && <p className="mt-1 text-xs text-jade-300">Uploading picture…</p>}
           </div>
         </div>
+
+        {profileError && (
+          <p className="relative z-10 mt-4 text-sm text-red-300" role="alert">
+            {profileError}
+          </p>
+        )}
 
         <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex items-center gap-2">
@@ -82,19 +208,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
-
-      {!verified && (
-        <Card className="flex flex-wrap items-center justify-between gap-4 border-ink-900/[0.06] bg-white p-5">
-          <p className="text-sm text-ink-600 flex-1">
-            <span className="font-semibold text-ink-900">No verification needed</span> to deposit or
-            withdraw USDC. Identity verification will be added for local-currency support (coming
-            soon) — you can complete it early if you like.
-          </p>
-          <Button size="sm" variant="secondary">
-            Verify identity
-          </Button>
-        </Card>
-      )}
 
       {/* balance snapshot */}
       <div className="grid gap-4 sm:grid-cols-3">
@@ -113,14 +226,15 @@ export default function ProfilePage() {
           </p>
         </Card>
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
-            Yield APY
-          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">Yield APY</p>
           <p className="mt-1 font-display text-2xl font-bold text-ink-900">
             {(summary.yieldApy * 100).toFixed(1)}%
           </p>
         </Card>
       </div>
+
+      {/* passkeys */}
+      <PasskeysCard />
 
       {/* settings list */}
       <Card className="overflow-hidden p-1">
@@ -129,7 +243,7 @@ export default function ProfilePage() {
             const Icon = item.icon;
             return (
               <Link
-                key={item.href}
+                key={item.label}
                 href={item.href}
                 className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-mist"
               >
@@ -152,7 +266,7 @@ export default function ProfilePage() {
       <button
         onClick={() => {
           logoutMutation.mutate(undefined, {
-            onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() })
+            onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() }),
           });
         }}
         disabled={logoutMutation.isPending}

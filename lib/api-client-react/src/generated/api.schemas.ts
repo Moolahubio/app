@@ -40,7 +40,8 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  kycStatus: string;
+  /** @nullable */
+  avatarUrl?: string | null;
   hasWallet: boolean;
   /** @nullable */
   walletAddress?: string | null;
@@ -240,7 +241,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  kycStatus: string;
+  /** @nullable */
+  avatarUrl?: string | null;
   /** @nullable */
   walletAddress: string | null;
   createdAt: string;
@@ -248,6 +250,59 @@ export interface UserProfile {
 
 export interface ProfileUpdate {
   name?: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+}
+
+export interface UploadUrlRequest {
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 1 */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface UploadUrlResponse {
+  uploadURL: string;
+  objectPath: string;
+  metadata?: UploadUrlRequest;
+}
+
+export type PasskeyChallengeResponseOptions = { [key: string]: unknown };
+
+export interface PasskeyChallengeResponse {
+  flowId: string;
+  options: PasskeyChallengeResponseOptions;
+}
+
+export type PasskeyRegisterVerifyInputResponse = { [key: string]: unknown };
+
+export interface PasskeyRegisterVerifyInput {
+  flowId: string;
+  /** @nullable */
+  deviceName?: string | null;
+  response: PasskeyRegisterVerifyInputResponse;
+}
+
+export type PasskeyLoginVerifyInputResponse = { [key: string]: unknown };
+
+export interface PasskeyLoginVerifyInput {
+  flowId: string;
+  response: PasskeyLoginVerifyInputResponse;
+}
+
+export interface PasskeySummary {
+  id: string;
+  /** @nullable */
+  deviceName: string | null;
+  createdAt: string;
+  /** @nullable */
+  lastUsedAt: string | null;
+}
+
+export interface PasskeyListResponse {
+  passkeys: PasskeySummary[];
 }
 
 export type ListActivityParams = {

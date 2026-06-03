@@ -28,8 +28,162 @@ tags:
     description: User profile operations
   - name: dashboard
     description: Dashboard summary operations
+  - name: storage
+    description: Object storage upload and serving endpoints
+  - name: passkeys
+    description: WebAuthn passkey registration and login
 
 paths:
+  /storage/uploads/request-url:
+    post:
+      tags: [storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Missing or invalid required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /passkeys:
+    get:
+      tags: [passkeys]
+      operationId: listPasskeys
+      summary: List the current user's passkeys
+      responses:
+        "200":
+          description: Passkeys for the user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasskeyListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /passkeys/{id}:
+    delete:
+      tags: [passkeys]
+      operationId: deletePasskey
+      summary: Remove a passkey
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /passkeys/register/options:
+    post:
+      tags: [passkeys]
+      operationId: registerPasskeyOptions
+      summary: Begin passkey registration (returns WebAuthn creation options)
+      responses:
+        "200":
+          description: Registration options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasskeyChallengeResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /passkeys/register/verify:
+    post:
+      tags: [passkeys]
+      operationId: registerPasskeyVerify
+      summary: Complete passkey registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasskeyRegisterVerifyInput"
+      responses:
+        "200":
+          description: Registered passkey
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasskeySummary"
+        "400":
+          description: Verification failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /passkeys/login/options:
+    post:
+      tags: [passkeys]
+      operationId: loginPasskeyOptions
+      summary: Begin passkey login (returns WebAuthn request options)
+      responses:
+        "200":
+          description: Login options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasskeyChallengeResponse"
+
+  /passkeys/login/verify:
+    post:
+      tags: [passkeys]
+      operationId: loginPasskeyVerify
+      summary: Complete passkey login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasskeyLoginVerifyInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Verification failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /healthz:
     get:
       operationId: healthCheck
@@ -746,7 +900,7 @@ components:
 
     AuthUser:
       type: object
-      required: [id, name, email, kycStatus, hasWallet]
+      required: [id, name, email, hasWallet]
       properties:
         id:
           type: string
@@ -754,8 +908,8 @@ components:
           type: string
         email:
           type: string
-        kycStatus:
-          type: string
+        avatarUrl:
+          type: ["string", "null"]
         hasWallet:
           type: boolean
         walletAddress:
@@ -1128,7 +1282,7 @@ components:
     # ---- Profile ----
     UserProfile:
       type: object
-      required: [id, name, email, kycStatus, walletAddress, createdAt]
+      required: [id, name, email, walletAddress, createdAt]
       properties:
         id:
           type: string
@@ -1136,8 +1290,8 @@ components:
           type: string
         email:
           type: string
-        kycStatus:
-          type: string
+        avatarUrl:
+          type: ["string", "null"]
         walletAddress:
           type: ["string", "null"]
         createdAt:
@@ -1148,3 +1302,82 @@ components:
       properties:
         name:
           type: string
+        avatarUrl:
+          type: ["string", "null"]
+
+    # ---- Storage ----
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: integer
+          minimum: 1
+        contentType:
+          type: string
+          minLength: 1
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+          format: uri
+        objectPath:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/UploadUrlRequest"
+
+    # ---- Passkeys ----
+    PasskeyChallengeResponse:
+      type: object
+      required: [flowId, options]
+      properties:
+        flowId:
+          type: string
+        options:
+          type: object
+          additionalProperties: true
+    PasskeyRegisterVerifyInput:
+      type: object
+      required: [flowId, response]
+      properties:
+        flowId:
+          type: string
+        deviceName:
+          type: ["string", "null"]
+        response:
+          type: object
+          additionalProperties: true
+    PasskeyLoginVerifyInput:
+      type: object
+      required: [flowId, response]
+      properties:
+        flowId:
+          type: string
+        response:
+          type: object
+          additionalProperties: true
+    PasskeySummary:
+      type: object
+      required: [id, deviceName, createdAt, lastUsedAt]
+      properties:
+        id:
+          type: string
+        deviceName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        lastUsedAt:
+          type: ["string", "null"]
+    PasskeyListResponse:
+      type: object
+      required: [passkeys]
+      properties:
+        passkeys:
+          type: array
+          items:
+            $ref: "#/components/schemas/PasskeySummary"
