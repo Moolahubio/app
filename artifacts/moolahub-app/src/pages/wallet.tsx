@@ -96,7 +96,11 @@ export default function WalletPage() {
                   onSuccess: (res) => {
                     queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-                    setSyncOk(`Credited ${formatMoney(res.credited)} from chain`);
+                    setSyncOk(
+                      res.credited > 0
+                        ? `Credited ${res.credited} deposit${res.credited === 1 ? "" : "s"} totaling ${formatMoney(res.totalCents ?? 0)}`
+                        : "No new deposits found",
+                    );
                   }
                 });
               }}
