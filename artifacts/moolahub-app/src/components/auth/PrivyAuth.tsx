@@ -1,40 +1,72 @@
 import { PrivyProvider, usePrivy, useLogin as usePrivyLoginHook } from "@privy-io/react-auth";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui";
 import { usePrivyAuth, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 function PrivyLoginButton() {
   const [, setLocation] = useLocation();
-  const { getAccessToken } = usePrivy();
+  const { getAccessToken, authenticated } = usePrivy();
   const privyAuthMutation = usePrivyAuth();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+  // Tracks whether the user *intentionally* triggered a login. Privy fires
+  // `onComplete` both on an explicit login AND when it silently restores a
+  // persisted session on mount — without this guard, signing out (which drops
+  // only our server session, not Privy's) would auto re-create a server session
+  // and bounce the user straight back in.
+  const intentionalRef = useRef(false);
 
-  const { login } = usePrivyLoginHook({
-    onComplete: async () => {
-      setBusy(true);
-      try {
-        const token = await getAccessToken();
-        if (token) {
-          privyAuthMutation.mutate({ data: { token } }, {
+  const authenticateWithServer = async () => {
+    setBusy(true);
+    try {
+      const token = await getAccessToken();
+      if (token) {
+        privyAuthMutation.mutate(
+          { data: { token } },
+          {
             onSuccess: () => {
               queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
               setLocation("/");
             },
-            onSettled: () => setBusy(false)
-          });
-        }
-      } catch {
+            onSettled: () => setBusy(false),
+          },
+        );
+      } else {
         setBusy(false);
       }
+    } catch {
+      setBusy(false);
+    }
+  };
+
+  const { login } = usePrivyLoginHook({
+    onComplete: () => {
+      if (!intentionalRef.current) return;
+      intentionalRef.current = false;
+      authenticateWithServer();
     },
-    onError: () => setBusy(false)
+    onError: () => {
+      intentionalRef.current = false;
+      setBusy(false);
+    },
   });
 
+  const handleClick = () => {
+    if (authenticated) {
+      // Privy already holds a session (e.g. restored after a server-side sign
+      // out). `login()` won't re-open the modal or re-fire onComplete, so go
+      // straight to the server exchange.
+      authenticateWithServer();
+    } else {
+      intentionalRef.current = true;
+      login();
+    }
+  };
+
   return (
-    <Button onClick={() => login()} size="lg" className="w-full" disabled={busy || privyAuthMutation.isPending}>
+    <Button onClick={handleClick} size="lg" className="w-full" disabled={busy || privyAuthMutation.isPending}>
       {busy || privyAuthMutation.isPending ? "Signing in…" : "Continue with Privy"}
     </Button>
   );

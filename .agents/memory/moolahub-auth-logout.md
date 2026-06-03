@@ -34,6 +34,19 @@ everything (including `getMe`) reintroduces the refetch race.
 render-phase `setLocation` — the latter throws React's "Cannot update a component while
 rendering" and can cause a redirect bounce loop right after logout.
 
+## Privy re-login after sign-out (important)
+Server `/auth/logout` clears the cookie + DB session, but it does NOT clear Privy's
+own persisted (localStorage) session — the profile/sign-out button is outside the
+`PrivyProvider`. Privy's `useLogin().onComplete` fires BOTH on an explicit login AND
+when Privy silently restores its session on mount. So after sign-out the redirect to
+`/login` mounts `PrivyProvider`, Privy restores, `onComplete` fires, and the app
+re-calls `/auth/privy` → instant re-login loop.
+- **Fix:** in `PrivyAuth.tsx` guard `onComplete` with an `intentionalRef` flag set only
+  on an actual button click; ignore passive restores. When `usePrivy().authenticated`
+  is already true on click, call the server exchange directly (login() won't re-fire).
+- **How to apply:** never run the server `/auth/privy` exchange straight from
+  `onComplete` unconditionally; it will auto-undo a sign-out.
+
 ## Note on console noise
 The "Invalid hook call / more than one copy of React" console error is NOT an app bug:
 vite config already `dedupe`s react/react-dom and only one react@19.1.0 resolves. It comes
