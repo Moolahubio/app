@@ -56,6 +56,7 @@ export interface Goal {
   targetCents: number;
   savedCents: number;
   deadline: string;
+  frequency: string;
   /** @nullable */
   autoSaveCents?: number | null;
   createdAt: string;
@@ -179,6 +180,7 @@ export interface GoalInput {
   color?: string;
   targetCents: number;
   deadline: string;
+  frequency?: string;
   /** @nullable */
   autoSaveCents?: number | null;
   imageUrl?: string;

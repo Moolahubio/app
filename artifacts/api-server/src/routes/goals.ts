@@ -31,6 +31,7 @@ type GoalRow = {
   targetCents: number;
   savedCents: number;
   deadline: Date;
+  frequency: string;
   autoSaveCents: number | null;
   createdAt: Date;
 };
@@ -45,6 +46,7 @@ function goalToJson(g: GoalRow) {
     targetCents: g.targetCents,
     savedCents: g.savedCents,
     deadline: g.deadline.toISOString(),
+    frequency: g.frequency,
     autoSaveCents: g.autoSaveCents ?? null,
     createdAt: g.createdAt.toISOString(),
   };
@@ -70,6 +72,7 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
     color: parsed.data.color,
     targetCents: parsed.data.targetCents,
     deadline: new Date(parsed.data.deadline),
+    frequency: parsed.data.frequency,
     autoSaveCents: parsed.data.autoSaveCents ?? null,
     imageUrl: parsed.data.imageUrl ?? null,
   });

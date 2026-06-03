@@ -14,6 +14,7 @@ export interface Goal {
   targetCents: number;
   savedCents: number;
   deadline: string;
+  frequency: string;
   /** @nullable */
   autoSaveCents?: number | null;
   createdAt: string;

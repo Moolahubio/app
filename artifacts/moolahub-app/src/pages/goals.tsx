@@ -7,9 +7,19 @@ import { formatMoney, pct } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageUploadField } from "@/components/app/ImageUploadField";
 import { avatarSrc } from "@/lib/utils";
-import { useState } from "react";
+import {
+  asFrequency,
+  buildGoalPlan,
+  nextContribution,
+  FREQUENCY_OPTIONS,
+  FREQUENCY_SHORT,
+  FREQUENCY_NOUN,
+  type Frequency,
+} from "@/lib/contribution-plan";
+import { useState, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function GoalsPage() {
@@ -23,7 +33,16 @@ export default function GoalsPage() {
   const [name, setName] = useState("");
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [frequency, setFrequency] = useState<Frequency>("weekly");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const previewPlan = useMemo(() => {
+    const targetCents = Math.floor(parseFloat(target) * 100);
+    if (!Number.isFinite(targetCents) || targetCents <= 0 || !deadline) return null;
+    const deadlineDate = new Date(deadline);
+    if (Number.isNaN(deadlineDate.getTime()) || deadlineDate <= new Date()) return null;
+    return buildGoalPlan(targetCents, new Date(), deadlineDate, frequency);
+  }, [target, deadline, frequency]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +52,7 @@ export default function GoalsPage() {
           name, 
           targetCents: Math.floor(parseFloat(target) * 100), 
           deadline: new Date(deadline).toISOString(),
+          frequency,
           imageUrl: imageUrl ?? undefined,
         } 
       },
@@ -43,6 +63,7 @@ export default function GoalsPage() {
           setName("");
           setTarget("");
           setDeadline("");
+          setFrequency("weekly");
           setImageUrl(null);
         }
       }
@@ -87,6 +108,40 @@ export default function GoalsPage() {
                   <Label>Target Date</Label>
                   <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} required />
                 </div>
+                <div className="space-y-2">
+                  <Label>Contribution frequency</Label>
+                  <Select value={frequency} onValueChange={(v) => setFrequency(asFrequency(v))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {FREQUENCY_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-ink-500">
+                    Contributions start small to build the habit and grow gradually until you hit your target.
+                  </p>
+                </div>
+                {previewPlan && (
+                  <div className="rounded-xl border border-jade-500/15 bg-jade-50/50 p-4">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-jade-700">
+                      Your savings plan
+                    </p>
+                    <p className="mt-1.5 text-sm text-ink-700">
+                      Start at{" "}
+                      <span className="font-semibold text-ink-900">
+                        {formatMoney(previewPlan.firstCents)}
+                      </span>{" "}
+                      this {FREQUENCY_NOUN[frequency]} and build up to{" "}
+                      <span className="font-semibold text-ink-900">
+                        {formatMoney(previewPlan.lastCents)}
+                      </span>{" "}
+                      over {previewPlan.periods}{" "}
+                      {FREQUENCY_NOUN[frequency]}
+                      {previewPlan.periods === 1 ? "" : "s"}.
+                    </p>
+                  </div>
+                )}
                 <ImageUploadField
                   label="Picture (optional)"
                   hint="Add a photo of what you're saving for to keep the dream alive."
@@ -130,7 +185,11 @@ export default function GoalsPage() {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {goalsList.map((g) => (
+        {goalsList.map((g) => {
+          const gFreq = asFrequency(g.frequency);
+          const gPlan = buildGoalPlan(g.targetCents, g.createdAt, g.deadline, gFreq);
+          const gNext = nextContribution(gPlan.plan, g.savedCents);
+          return (
           <Link key={g.id} href={`/goals/${g.id}`} className="group block">
             <Card className="h-full overflow-hidden p-0 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
               {g.imageUrl && (
@@ -147,9 +206,9 @@ export default function GoalsPage() {
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mist text-2xl">
                   {g.emoji || "🎯"}
                 </span>
-                {g.autoSaveCents && (
+                {gNext && (
                   <Badge tone="jade">
-                    <Repeat className="h-3 w-3" /> {formatMoney(g.autoSaveCents, { compact: true })}/wk
+                    <Repeat className="h-3 w-3" /> next {formatMoney(gNext.amountCents, { compact: true })}/{FREQUENCY_SHORT[gFreq]}
                   </Badge>
                 )}
               </div>
@@ -180,7 +239,8 @@ export default function GoalsPage() {
               </div>
             </Card>
           </Link>
-        ))}
+          );
+        })}
 
         <button
           onClick={() => setIsCreateOpen(true)}

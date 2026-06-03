@@ -12,6 +12,7 @@ export const goalsTable = pgTable("goals", {
   imageUrl: text("image_url"),
   targetCents: integer("target_cents").notNull(),
   deadline: timestamp("deadline", { withTimezone: true }).notNull(),
+  frequency: text("frequency").notNull().default("weekly"),
   autoSaveCents: integer("auto_save_cents"),
   status: text("status").notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

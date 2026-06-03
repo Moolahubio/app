@@ -36,6 +36,7 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
       targetCents: g.targetCents,
       savedCents: g.savedCents,
       deadline: g.deadline.toISOString(),
+      frequency: g.frequency,
       autoSaveCents: g.autoSaveCents ?? null,
       createdAt: g.createdAt.toISOString(),
     }));

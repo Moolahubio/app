@@ -5,6 +5,7 @@ import { BackLink } from "@/components/app/bits";
 import { AmountForm } from "@/components/app/forms";
 import { useGetGoal, useAllocateToGoal, useReleaseFromGoal, getGetGoalQueryKey, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatMoney, pct, apiErrorMessage } from "@/lib/utils";
+import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -24,7 +25,10 @@ export default function GoalDetailPage() {
 
   const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
-  const weeksLeft = goal.autoSaveCents ? Math.ceil(remaining / goal.autoSaveCents) : null;
+  const frequency = asFrequency(goal.frequency);
+  const goalPlan = buildGoalPlan(goal.targetCents, goal.createdAt, goal.deadline, frequency);
+  const next = nextContribution(goalPlan.plan, goal.savedCents);
+  const periodsLeft = next ? goalPlan.plan.length - next.index + 1 : 0;
   const circumference = 2 * Math.PI * 52;
 
   return (
@@ -140,28 +144,48 @@ export default function GoalDetailPage() {
             </Card>
           </div>
 
-          <Card className="flex items-center justify-between p-5">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-jade-50 text-jade-600">
-                <Repeat className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-semibold text-ink-900">Auto-save</p>
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-jade-50 text-jade-600">
+                  <Repeat className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-ink-900">Contribution plan</p>
+                  <p className="text-sm text-ink-500 capitalize">{FREQUENCY_ADVERB[frequency]} · grows gradually</p>
+                </div>
+              </div>
+              {next ? <Badge tone="jade">Step {next.index}/{next.total}</Badge> : <Badge tone="jade">Complete</Badge>}
+            </div>
+            {next ? (
+              <div className="mt-4 flex items-end justify-between border-t border-ink-900/[0.06] pt-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
+                    Next contribution
+                  </p>
+                  <p className="mt-1 font-display text-2xl font-bold text-ink-900">
+                    {formatMoney(next.amountCents)}
+                  </p>
+                </div>
                 <p className="text-sm text-ink-500">
-                  {goal.autoSaveCents
-                    ? `${formatMoney(goal.autoSaveCents)} every week`
-                    : "Not set up yet"}
+                  this {FREQUENCY_NOUN[frequency]}
                 </p>
               </div>
-            </div>
-            {goal.autoSaveCents ? <Badge tone="jade">On</Badge> : <Badge tone="neutral">Off</Badge>}
+            ) : (
+              <p className="mt-4 border-t border-ink-900/[0.06] pt-4 text-sm text-ink-500">
+                You&apos;ve completed every step of your plan. 🎉
+              </p>
+            )}
           </Card>
 
-          {weeksLeft !== null && remaining > 0 && (
+          {next && remaining > 0 && (
             <p className="flex items-center justify-center gap-2 text-center text-sm text-ink-500">
               <Sparkles className="h-4 w-4 text-jade-500" />
-              At {formatMoney(goal.autoSaveCents!)} per week, you&apos;ll reach this goal in about{" "}
-              <span className="font-semibold text-ink-900">{weeksLeft} weeks</span>.
+              Keep going {FREQUENCY_ADVERB[frequency]} — about{" "}
+              <span className="font-semibold text-ink-900">
+                {periodsLeft} {FREQUENCY_NOUN[frequency]}{periodsLeft === 1 ? "" : "s"}
+              </span>{" "}
+              of rising contributions left to reach your target.
             </p>
           )}
         </div>

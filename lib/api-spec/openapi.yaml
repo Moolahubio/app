@@ -1076,7 +1076,7 @@ components:
     # ---- Goals ----
     Goal:
       type: object
-      required: [id, name, emoji, color, targetCents, savedCents, deadline, createdAt]
+      required: [id, name, emoji, color, targetCents, savedCents, deadline, frequency, createdAt]
       properties:
         id:
           type: string
@@ -1091,6 +1091,8 @@ components:
         savedCents:
           type: integer
         deadline:
+          type: string
+        frequency:
           type: string
         autoSaveCents:
           type: ["integer", "null"]
@@ -1112,6 +1114,8 @@ components:
         targetCents:
           type: integer
         deadline:
+          type: string
+        frequency:
           type: string
         autoSaveCents:
           type: ["integer", "null"]

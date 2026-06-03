@@ -29,6 +29,7 @@ export async function createGoal(
     emoji?: string;
     targetCents: number;
     deadline: Date;
+    frequency?: string;
     autoSaveCents?: number | null;
     color?: string;
     imageUrl?: string | null;
@@ -42,6 +43,7 @@ export async function createGoal(
       emoji: input.emoji || "🎯",
       targetCents: input.targetCents,
       deadline: input.deadline,
+      frequency: input.frequency || "weekly",
       autoSaveCents: input.autoSaveCents ?? null,
       color: input.color || "jade",
       imageUrl: input.imageUrl ?? null,

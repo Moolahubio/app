@@ -190,6 +190,7 @@ export const GetDashboardSummaryResponse = zod.object({
   "targetCents": zod.number(),
   "savedCents": zod.number(),
   "deadline": zod.string(),
+  "frequency": zod.string(),
   "autoSaveCents": zod.number().nullish(),
   "createdAt": zod.string(),
   "imageUrl": zod.string().nullish()
@@ -417,6 +418,7 @@ export const ListGoalsResponseItem = zod.object({
   "targetCents": zod.number(),
   "savedCents": zod.number(),
   "deadline": zod.string(),
+  "frequency": zod.string(),
   "autoSaveCents": zod.number().nullish(),
   "createdAt": zod.string(),
   "imageUrl": zod.string().nullish()
@@ -433,6 +435,7 @@ export const CreateGoalBody = zod.object({
   "color": zod.string().optional(),
   "targetCents": zod.number(),
   "deadline": zod.string(),
+  "frequency": zod.string().optional(),
   "autoSaveCents": zod.number().nullish(),
   "imageUrl": zod.string().optional()
 })
@@ -453,6 +456,7 @@ export const GetGoalResponse = zod.object({
   "targetCents": zod.number(),
   "savedCents": zod.number(),
   "deadline": zod.string(),
+  "frequency": zod.string(),
   "autoSaveCents": zod.number().nullish(),
   "createdAt": zod.string(),
   "imageUrl": zod.string().nullish()
