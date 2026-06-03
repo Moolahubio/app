@@ -632,3 +632,41 @@ export const UpdateProfileResponse = zod.object({
 })
 
 
+/**
+ * Read-only snapshot of the onchain_transfers queue grouped by status, plus the platform distributor wallet's ETH/USDC balance. Requires an operator token via the `x-operator-token` header (matching the OPERATOR_TOKEN secret).
+ * @summary Operator view of the on-chain settlement queue and platform wallet funding
+ */
+export const GetSettlementOverviewResponse = zod.object({
+  "onchainEnabled": zod.boolean(),
+  "maxAttempts": zod.number(),
+  "rowLimit": zod.number(),
+  "truncated": zod.boolean(),
+  "platform": zod.object({
+  "address": zod.string().nullable(),
+  "ethWei": zod.string().nullable(),
+  "ethFormatted": zod.string().nullable(),
+  "usdcCents": zod.number().nullable(),
+  "reachable": zod.boolean()
+}),
+  "groups": zod.array(zod.object({
+  "status": zod.string(),
+  "count": zod.number(),
+  "totalAmountCents": zod.number(),
+  "transfers": zod.array(zod.object({
+  "id": zod.string(),
+  "kind": zod.string(),
+  "amountCents": zod.number(),
+  "attempts": zod.number(),
+  "status": zod.string(),
+  "toAddress": zod.string(),
+  "memo": zod.string().nullable(),
+  "lastError": zod.string().nullable(),
+  "txHash": zod.string().nullable(),
+  "lastAttemptAt": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+}))
+})
+
+

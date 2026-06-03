@@ -5,6 +5,7 @@ import {
   isAddress,
   getAddress,
   parseAbi,
+  formatEther,
   type Hex,
   type Address,
 } from "viem";
@@ -160,6 +161,67 @@ export async function usdcBalance(address: string): Promise<number> {
   } catch {
     return 0;
   }
+}
+
+/** Read an ETH (native gas) balance, in wei. Returns null when unreachable. */
+export async function ethBalanceWei(address: string): Promise<bigint | null> {
+  try {
+    return await publicClient().getBalance({ address: getAddress(address) });
+  } catch {
+    return null;
+  }
+}
+
+export type PlatformBalances = {
+  /** The platform distributor address, or null when no platform key is set. */
+  address: string | null;
+  /** ETH balance in wei (as a string), or null when unreachable / no address. */
+  ethWei: string | null;
+  /** Human-readable ETH balance (e.g. "0.0123"), or null. */
+  ethFormatted: string | null;
+  /** USDC balance in integer cents, or null when unreachable / no address. */
+  usdcCents: number | null;
+  /** Whether the RPC could be reached to read live balances. */
+  reachable: boolean;
+};
+
+/**
+ * Read the platform distributor wallet's ETH (gas) and USDC balances so an
+ * operator can confirm it is funded enough to settle queued transfers. Network-
+ * dependent; `reachable` is false (and balances null) when the RPC is down or no
+ * platform key is configured.
+ */
+export async function platformBalances(): Promise<PlatformBalances> {
+  const address = platformAddress();
+  if (!address) {
+    return { address: null, ethWei: null, ethFormatted: null, usdcCents: null, reachable: false };
+  }
+  const wei = await ethBalanceWei(address);
+  if (wei === null) {
+    return { address, ethWei: null, ethFormatted: null, usdcCents: null, reachable: false };
+  }
+  const usdc = usdcContract();
+  let usdcCents: number | null = null;
+  if (usdc) {
+    try {
+      const units = await publicClient().readContract({
+        address: usdc,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [getAddress(address)],
+      });
+      usdcCents = unitsToCents(units as bigint);
+    } catch {
+      usdcCents = null;
+    }
+  }
+  return {
+    address,
+    ethWei: wei.toString(),
+    ethFormatted: formatEther(wei),
+    usdcCents,
+    reachable: true,
+  };
 }
 
 /**

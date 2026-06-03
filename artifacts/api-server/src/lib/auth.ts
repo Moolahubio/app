@@ -32,6 +32,34 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
+/**
+ * Gate operator-only, read-only endpoints behind a shared operator token. The
+ * caller must send `x-operator-token` matching the `OPERATOR_TOKEN` secret. When
+ * the secret is unset the route is treated as not configured (503) rather than
+ * open, so operational data is never exposed by default.
+ */
+export function requireOperator(req: Request, res: Response, next: NextFunction): void {
+  const expected = process.env.OPERATOR_TOKEN;
+  if (!expected) {
+    res.status(503).json({ error: "Operator console not configured (OPERATOR_TOKEN unset)" });
+    return;
+  }
+  const header = req.headers["x-operator-token"];
+  const provided = Array.isArray(header) ? header[0] : header;
+  if (!provided || !timingSafeEqualStr(provided, expected)) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  next();
+}
+
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 export async function createSession(userId: string): Promise<string> {
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);

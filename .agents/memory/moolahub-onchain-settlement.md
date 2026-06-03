@@ -47,3 +47,15 @@ The platform wallet must hold Base Sepolia ETH (gas) + test USDC. When unfunded,
 the reconciler attempt fails with `"gas required exceeds allowance (0)"` and the
 row correctly stays `pending`. Funding is a USER step (external faucet) — cannot
 be done from the sandbox.
+
+## Operator observability endpoint
+`GET /api/operations/settlements` is a READ-ONLY operator view of the queue
+(counts/totals per status + a recent-rows sample) plus the platform wallet's live
+ETH/USDC balance. It is **gated by an optional `OPERATOR_TOKEN`** (via the
+`x-operator-token` header, timing-safe compared in `requireOperator`).
+**Why:** the data is operationally sensitive (wallet address/balance, transfer
+errors). The gate is **safe-by-default LOCKED**: when `OPERATOR_TOKEN` is unset
+the route returns 503 and exposes nothing. The user explicitly declined to
+provision the token secret (considers a shared bearer token a security risk), so
+do NOT auto-create/request it — leave enabling it to the operator. Do not weaken
+the gate to plain `requireAuth` (that would leak operator data to every user).

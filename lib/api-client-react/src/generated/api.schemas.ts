@@ -289,6 +289,53 @@ export interface PasskeyListResponse {
   passkeys: PasskeySummary[];
 }
 
+export interface PlatformBalances {
+  /** @nullable */
+  address: string | null;
+  /** @nullable */
+  ethWei: string | null;
+  /** @nullable */
+  ethFormatted: string | null;
+  /** @nullable */
+  usdcCents: number | null;
+  reachable: boolean;
+}
+
+export interface SettlementTransfer {
+  id: string;
+  kind: string;
+  amountCents: number;
+  attempts: number;
+  status: string;
+  toAddress: string;
+  /** @nullable */
+  memo: string | null;
+  /** @nullable */
+  lastError: string | null;
+  /** @nullable */
+  txHash: string | null;
+  /** @nullable */
+  lastAttemptAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SettlementStatusGroup {
+  status: string;
+  count: number;
+  totalAmountCents: number;
+  transfers: SettlementTransfer[];
+}
+
+export interface SettlementOverviewResponse {
+  onchainEnabled: boolean;
+  maxAttempts: number;
+  rowLimit: number;
+  truncated: boolean;
+  platform: PlatformBalances;
+  groups: SettlementStatusGroup[];
+}
+
 export type ListActivityParams = {
 limit?: number;
 };

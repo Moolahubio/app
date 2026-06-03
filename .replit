@@ -46,5 +46,7 @@ NEXT_PUBLIC_BASE_ACCOUNT = "false"
 EMAIL_FROM = "MoolaHub <noreply@moolahub.io>"
 APP_URL = "https://moolahub.io"
 
+[userenv.development]
+
 [nix]
 channel = "stable-25_05"

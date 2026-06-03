@@ -32,6 +32,8 @@ tags:
     description: Object storage upload and serving endpoints
   - name: passkeys
     description: WebAuthn passkey registration and login
+  - name: operations
+    description: Operator/admin read-only observability
 
 paths:
   /storage/uploads/request-url:
@@ -780,6 +782,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserProfile"
 
+  /operations/settlements:
+    get:
+      tags: [operations]
+      operationId: getSettlementOverview
+      summary: Operator view of the on-chain settlement queue and platform wallet funding
+      description: >-
+        Read-only snapshot of the onchain_transfers queue grouped by status, plus
+        the platform distributor wallet's ETH/USDC balance. Requires an operator
+        token via the `x-operator-token` header (matching the OPERATOR_TOKEN
+        secret).
+      responses:
+        "200":
+          description: Settlement queue overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SettlementOverviewResponse"
+        "401":
+          description: Missing or invalid operator token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          description: Operator console not configured (OPERATOR_TOKEN unset)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 components:
   schemas:
     HealthStatus:
@@ -1289,3 +1321,80 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/PasskeySummary"
+
+    # ---- Operations ----
+    PlatformBalances:
+      type: object
+      required: [address, ethWei, ethFormatted, usdcCents, reachable]
+      properties:
+        address:
+          type: ["string", "null"]
+        ethWei:
+          type: ["string", "null"]
+        ethFormatted:
+          type: ["string", "null"]
+        usdcCents:
+          type: ["integer", "null"]
+        reachable:
+          type: boolean
+    SettlementTransfer:
+      type: object
+      required:
+        [id, kind, amountCents, attempts, status, toAddress, memo, lastError, txHash, lastAttemptAt, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        amountCents:
+          type: integer
+        attempts:
+          type: integer
+        status:
+          type: string
+        toAddress:
+          type: string
+        memo:
+          type: ["string", "null"]
+        lastError:
+          type: ["string", "null"]
+        txHash:
+          type: ["string", "null"]
+        lastAttemptAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    SettlementStatusGroup:
+      type: object
+      required: [status, count, totalAmountCents, transfers]
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+        totalAmountCents:
+          type: integer
+        transfers:
+          type: array
+          items:
+            $ref: "#/components/schemas/SettlementTransfer"
+    SettlementOverviewResponse:
+      type: object
+      required: [onchainEnabled, maxAttempts, rowLimit, truncated, platform, groups]
+      properties:
+        onchainEnabled:
+          type: boolean
+        maxAttempts:
+          type: integer
+        rowLimit:
+          type: integer
+        truncated:
+          type: boolean
+        platform:
+          $ref: "#/components/schemas/PlatformBalances"
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/SettlementStatusGroup"

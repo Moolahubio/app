@@ -1,4 +1,4 @@
-import { eq, and, or, inArray, isNull, lt, asc, sql } from "drizzle-orm";
+import { eq, and, or, inArray, isNull, lt, asc, desc, sql } from "drizzle-orm";
 import {
   db,
   onchainTransfersTable,
@@ -39,6 +39,123 @@ const BATCH_SIZE = 10;
 // invalid destination address) and moved to the dead-letter state instead of
 // being retried forever. Overridable so ops can tune it per environment.
 const MAX_ATTEMPTS = Number(process.env.SETTLEMENT_MAX_ATTEMPTS) || 10;
+
+// Known queue states, surfaced in the operator overview even when empty so an
+// operator always sees every category at a glance.
+const OVERVIEW_STATUSES = ["pending", "processing", "confirmed", "failed"] as const;
+// Cap on rows fetched for the overview's per-status sample. Counts/totals are
+// exact (aggregated separately); the row list is the most-recently-touched slice.
+const OVERVIEW_ROW_LIMIT = 200;
+
+export type SettlementTransferView = {
+  id: string;
+  kind: string;
+  amountCents: number;
+  attempts: number;
+  status: string;
+  toAddress: string;
+  memo: string | null;
+  lastError: string | null;
+  txHash: string | null;
+  lastAttemptAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SettlementStatusGroup = {
+  status: string;
+  count: number;
+  totalAmountCents: number;
+  /** Most-recently-touched transfers in this status (a sample if count is large). */
+  transfers: SettlementTransferView[];
+};
+
+export type SettlementOverview = {
+  onchainEnabled: boolean;
+  maxAttempts: number;
+  rowLimit: number;
+  /** True when the total queue size exceeds the sampled rows, so groups are partial. */
+  truncated: boolean;
+  groups: SettlementStatusGroup[];
+};
+
+function toView(row: OnchainTransfer): SettlementTransferView {
+  return {
+    id: row.id,
+    kind: row.kind,
+    amountCents: row.amountCents,
+    attempts: row.attempts,
+    status: row.status,
+    toAddress: row.toAddress,
+    memo: row.memo ?? null,
+    lastError: row.lastError ?? null,
+    txHash: row.txHash ?? null,
+    lastAttemptAt: row.lastAttemptAt ? row.lastAttemptAt.toISOString() : null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+/**
+ * Read-only snapshot of the on-chain settlement queue for operators: exact
+ * counts and total amounts per status, plus a sample of the most-recently-
+ * touched rows (capped at OVERVIEW_ROW_LIMIT) carrying the fields needed to
+ * triage a stuck transfer — kind, amount, attempts, lastError, lastAttemptAt and
+ * txHash. Does not mutate anything.
+ */
+export async function getSettlementOverview(): Promise<SettlementOverview> {
+  const countRows = await db
+    .select({
+      status: onchainTransfersTable.status,
+      count: sql<number>`count(*)::int`,
+      totalAmountCents: sql<number>`coalesce(sum(${onchainTransfersTable.amountCents}), 0)::int`,
+    })
+    .from(onchainTransfersTable)
+    .groupBy(onchainTransfersTable.status);
+
+  const sampled = await db
+    .select()
+    .from(onchainTransfersTable)
+    .orderBy(desc(onchainTransfersTable.updatedAt))
+    .limit(OVERVIEW_ROW_LIMIT);
+
+  const counts = new Map<string, { count: number; totalAmountCents: number }>();
+  for (const r of countRows) {
+    counts.set(r.status, { count: r.count, totalAmountCents: r.totalAmountCents });
+  }
+
+  const rowsByStatus = new Map<string, SettlementTransferView[]>();
+  for (const row of sampled) {
+    const list = rowsByStatus.get(row.status) ?? [];
+    list.push(toView(row));
+    rowsByStatus.set(row.status, list);
+  }
+
+  // Preserve a stable order: the known lifecycle states first, then any others.
+  const ordered: string[] = [...OVERVIEW_STATUSES];
+  for (const status of counts.keys()) {
+    if (!ordered.includes(status)) ordered.push(status);
+  }
+
+  const totalRows = countRows.reduce((sum, r) => sum + r.count, 0);
+  const groups: SettlementStatusGroup[] = ordered.map((status) => {
+    const agg = counts.get(status);
+    return {
+      status,
+      count: agg?.count ?? 0,
+      totalAmountCents: agg?.totalAmountCents ?? 0,
+      transfers: rowsByStatus.get(status) ?? [],
+    };
+  });
+
+  return {
+    onchainEnabled: onchainEnabled(),
+    maxAttempts: MAX_ATTEMPTS,
+    rowLimit: OVERVIEW_ROW_LIMIT,
+    truncated: totalRows > sampled.length,
+    groups,
+  };
+}
 
 export type QueueParams = {
   transactionId: string;

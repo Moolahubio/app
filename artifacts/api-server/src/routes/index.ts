@@ -11,6 +11,7 @@ import notificationsRouter from "./notifications";
 import profileRouter from "./profile";
 import storageRouter from "./storage";
 import passkeysRouter from "./passkeys";
+import operationsRouter from "./operations";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(notificationsRouter);
 router.use(profileRouter);
 router.use(storageRouter);
 router.use(passkeysRouter);
+router.use(operationsRouter);
 
 export default router;

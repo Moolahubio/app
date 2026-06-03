@@ -45,6 +45,7 @@ import type {
   PasskeySummary,
   PrivyAuthInput,
   ProfileUpdate,
+  SettlementOverviewResponse,
   SyncResult,
   UploadUrlRequest,
   UploadUrlResponse,
@@ -2991,4 +2992,82 @@ export const useUpdateProfile = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpdateProfileMutationOptions(options));
     }
+
+export const getGetSettlementOverviewUrl = () => {
+
+
+
+
+  return `/api/operations/settlements`
+}
+
+/**
+ * Read-only snapshot of the onchain_transfers queue grouped by status, plus the platform distributor wallet's ETH/USDC balance. Requires an operator token via the `x-operator-token` header (matching the OPERATOR_TOKEN secret).
+ * @summary Operator view of the on-chain settlement queue and platform wallet funding
+ */
+export const getSettlementOverview = async ( options?: RequestInit): Promise<SettlementOverviewResponse> => {
+
+  return customFetch<SettlementOverviewResponse>(getGetSettlementOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSettlementOverviewQueryKey = () => {
+    return [
+    `/api/operations/settlements`
+    ] as const;
+    }
+
+
+export const getGetSettlementOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getSettlementOverview>>, TError = ErrorType<ApiError>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSettlementOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSettlementOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettlementOverview>>> = ({ signal }) => getSettlementOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSettlementOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSettlementOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getSettlementOverview>>>
+export type GetSettlementOverviewQueryError = ErrorType<ApiError>
+
+
+/**
+ * @summary Operator view of the on-chain settlement queue and platform wallet funding
+ */
+
+export function useGetSettlementOverview<TData = Awaited<ReturnType<typeof getSettlementOverview>>, TError = ErrorType<ApiError>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSettlementOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSettlementOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
