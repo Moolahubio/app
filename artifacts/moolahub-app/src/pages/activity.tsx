@@ -107,7 +107,9 @@ export default function ActivityPage() {
                             <TxTag hash={item.txHash} confirmed={item.onchainStatus !== "failed"} />
                           ) : (
                             <span className="font-mono text-[11px] text-ink-400">
-                              {item.onchainStatus === "queued" ? "queued for chain" : "off-chain"}
+                              {item.onchainStatus === "pending" || item.onchainStatus === "queued"
+                                ? "settling on-chain…"
+                                : "off-chain"}
                             </span>
                           )}
                         </div>

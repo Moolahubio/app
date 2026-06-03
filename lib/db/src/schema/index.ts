@@ -7,12 +7,14 @@ export * from "./circles";
 export * from "./transactions";
 export * from "./notifications";
 export * from "./lessons";
+export * from "./onchain";
 
 import { usersTable } from "./users";
 import { walletsTable } from "./wallets";
 import { goalsTable } from "./goals";
 import { circlesTable, circleMembersTable, circleInvitesTable, contributionsTable } from "./circles";
 import { ledgerAccountsTable, transactionsTable, postingsTable } from "./transactions";
+import { onchainTransfersTable } from "./onchain";
 import { notificationsTable } from "./notifications";
 import { relations } from "drizzle-orm";
 
@@ -38,6 +40,18 @@ export const notificationsRelations = relations(notificationsTable, ({ one }) =>
 export const transactionsRelations = relations(transactionsTable, ({ many, one }) => ({
   postings: many(postingsTable),
   user: one(usersTable, { fields: [transactionsTable.userId], references: [usersTable.id] }),
+  onchainTransfers: many(onchainTransfersTable),
+}));
+
+export const onchainTransfersRelations = relations(onchainTransfersTable, ({ one }) => ({
+  transaction: one(transactionsTable, {
+    fields: [onchainTransfersTable.transactionId],
+    references: [transactionsTable.id],
+  }),
+  sourceUser: one(usersTable, {
+    fields: [onchainTransfersTable.sourceUserId],
+    references: [usersTable.id],
+  }),
 }));
 
 export const postingsRelations = relations(postingsTable, ({ one }) => ({

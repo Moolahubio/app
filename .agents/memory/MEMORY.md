@@ -3,3 +3,4 @@
 - [MoolaHub Account section](moolahub-account.md) — keep email/password+Privy+passkey auth, NO KYC (removed by design); WebAuthn challenges single-use via atomic DELETE..RETURNING; private object route is auth-guarded.
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.
+- [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; book pending (not none) on failure; no double-send via SKIP LOCKED + in-proc guard.

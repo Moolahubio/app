@@ -5,13 +5,11 @@ import {
   circleMembersTable,
   circleInvitesTable,
   contributionsTable,
-  transactionsTable,
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import { onchainEnabled, sendUsdc, platformAddress } from "./chain";
-import { getSigningSecret } from "./wallet";
-import { toMeta } from "./deposits";
+import { onchainEnabled, platformAddress } from "./chain";
+import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
@@ -194,12 +192,18 @@ export async function contribute(userId: string, circleId: string) {
     throw new Error("Insufficient available balance");
   }
 
+  // On-chain settlement is member wallet → platform escrow. Resolve the escrow
+  // address before the tx; null disables on-chain for this contribution.
+  const escrow = onchainEnabled() ? platformAddress() : null;
+
   // Reserve the contribution slot and move the money in ONE transaction so they
   // commit or roll back together. The unique (circle_id, user_id, round)
   // constraint is the authoritative race guard: a concurrent second request
   // hits onConflictDoNothing → 0 rows → we throw and the whole tx (including the
-  // ledger postings) rolls back, so no double-debit is possible.
-  const { txn, contributionId } = await db.transaction(async (tx) => {
+  // ledger postings) rolls back, so no double-debit is possible. The on-chain
+  // settlement is enqueued in the SAME tx, then settled out of band by the
+  // reconciler — never silently dropped to ledger-only.
+  const { txn } = await db.transaction(async (tx) => {
     const reserved = await tx
       .insert(contributionsTable)
       .values({
@@ -222,40 +226,28 @@ export async function contribute(userId: string, circleId: string) {
       fromKey: acct.wallet(userId),
       toKey: acct.pool(circleId),
       amountCents: circle.contributionCents,
+      onchain: escrow ? { onchainStatus: "pending" } : { onchainStatus: "none" },
       requireSufficientFrom: true,
       tx,
     });
+    if (escrow) {
+      await enqueueOnchainTransfer(
+        {
+          transactionId: t.id,
+          contributionId: reserved[0].id,
+          kind: "contribution",
+          sourceUserId: userId,
+          toAddress: escrow,
+          amountCents: circle.contributionCents,
+          memo: `susu:${circleId}`,
+        },
+        tx,
+      );
+    }
     return { txn: t, contributionId: reserved[0].id };
   });
 
-  // On-chain settlement (member → platform escrow) is best-effort and happens
-  // after the ledger commit; the ledger is the source of truth. On testnet with
-  // an unfunded platform wallet this is skipped. We patch the tx hash back in.
-  if (onchainEnabled()) {
-    const secret = await getSigningSecret(userId);
-    const escrow = platformAddress();
-    if (secret && escrow) {
-      const r = await sendUsdc({
-        fromPrivateKey: secret,
-        to: escrow,
-        amountCents: circle.contributionCents,
-        memo: `susu:${circleId}`,
-      });
-      const meta = toMeta(r);
-      await db
-        .update(contributionsTable)
-        .set({ txHash: meta.txHash ?? null })
-        .where(eq(contributionsTable.id, contributionId));
-      await db
-        .update(transactionsTable)
-        .set({
-          txHash: meta.txHash ?? null,
-          onchainStatus: meta.onchainStatus ?? "none",
-          onchainXdr: meta.onchainXdr ?? null,
-        })
-        .where(eq(transactionsTable.id, txn.id));
-    }
-  }
+  if (escrow) kickReconciler();
 
   await notify(
     userId,
@@ -299,27 +291,38 @@ async function maybeProcessPayout(circleId: string, round: number) {
 
     const potCents = circle.contributionCents * circle.members.length;
 
-    let meta: { txHash?: string | null; onchainStatus?: string; onchainXdr?: string | null } = {};
+    // Payout is platform escrow → recipient wallet, settled out of band. Booked
+    // "pending" and enqueued atomically with the ledger move; the reconciler
+    // settles it on-chain (never silently ledger-only).
     const recipientWallet = (recipient.user as { wallet?: { address: string } | null }).wallet;
-    if (onchainEnabled() && recipientWallet) {
-      const r = await sendUsdc({
-        fromPrivateKey: process.env.PLATFORM_PRIVATE_KEY!,
-        to: recipientWallet.address,
+    const canSettle = onchainEnabled() && !!recipientWallet;
+    await db.transaction(async (tx) => {
+      const t = await transfer({
+        type: "payout",
+        description: `${circle.name} · round ${round} payout`,
+        userId: recipient.userId,
+        fromKey: acct.pool(circleId),
+        toKey: acct.wallet(recipient.userId),
         amountCents: potCents,
-        memo: `payout:${circleId}`,
+        onchain: canSettle ? { onchainStatus: "pending" } : { onchainStatus: "none" },
+        requireSufficientFrom: true,
+        tx,
       });
-      meta = toMeta(r);
-    }
-    await transfer({
-      type: "payout",
-      description: `${circle.name} · round ${round} payout`,
-      userId: recipient.userId,
-      fromKey: acct.pool(circleId),
-      toKey: acct.wallet(recipient.userId),
-      amountCents: potCents,
-      onchain: meta,
-      requireSufficientFrom: true,
+      if (canSettle && recipientWallet) {
+        await enqueueOnchainTransfer(
+          {
+            transactionId: t.id,
+            kind: "payout",
+            sourceUserId: null,
+            toAddress: recipientWallet.address,
+            amountCents: potCents,
+            memo: `payout:${circleId}`,
+          },
+          tx,
+        );
+      }
     });
+    if (canSettle) kickReconciler();
     await notify(
       recipient.userId,
       {

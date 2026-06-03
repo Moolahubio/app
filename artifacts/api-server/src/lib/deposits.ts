@@ -1,27 +1,27 @@
 import { eq, and, inArray } from "drizzle-orm";
-import { db, walletsTable, transactionsTable } from "@workspace/db";
+import { db, transactionsTable } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import {
-  onchainEnabled,
-  sendUsdc,
-  getIncomingUsdc,
-  isValidAddress,
-  type OnchainResult,
-} from "./chain";
+import { onchainEnabled, getIncomingUsdc, isValidAddress } from "./chain";
+import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { getWalletForUser } from "./wallet";
-import { decryptSecret } from "./crypto";
 import { notify } from "./notifications";
 import { formatMoney, truncateAddress } from "./money";
 
 /**
  * Crypto rail (USDC on Base). Deposits arrive on-chain to the user's wallet;
  * withdrawals send USDC to any Base address.
+ *
+ * Money moves through the double-entry ledger synchronously (source of truth);
+ * the matching USDC transfer is enqueued and settled out of band by the
+ * reconciler (`lib/settlement.ts`), so an unfunded wallet or unreachable RPC
+ * leaves the transfer "pending" rather than silently ledger-only.
  */
 
-export function toMeta(r: OnchainResult) {
-  if (r.status === "confirmed") return { txHash: r.hash, onchainStatus: "confirmed" };
-  if (r.status === "queued") return { txHash: r.hash, onchainStatus: "queued", onchainXdr: r.xdr };
-  return { onchainStatus: "none" as const };
+/** Initial on-chain meta for a movement: pending when settlement is configured. */
+function initialOnchainMeta() {
+  return onchainEnabled()
+    ? { onchainStatus: "pending" as const }
+    : { onchainStatus: "none" as const };
 }
 
 /**
@@ -35,25 +35,34 @@ export async function faucetDeposit(userId: string, amountCents: number) {
     throw new Error("Enter an amount up to 1,000 test USDC.");
   }
 
-  let onchain: OnchainResult = { status: "skipped", reason: "onchain disabled" };
-  if (onchainEnabled()) {
-    onchain = await sendUsdc({
-      fromPrivateKey: process.env.PLATFORM_PRIVATE_KEY!,
-      to: wallet.address,
+  const enabled = onchainEnabled();
+  const txn = await db.transaction(async (tx) => {
+    const t = await transfer({
+      type: "deposit",
+      description: "Test USDC received (faucet)",
+      userId,
+      fromKey: acct.external,
+      toKey: acct.wallet(userId),
       amountCents,
-      memo: "faucet",
+      onchain: initialOnchainMeta(),
+      tx,
     });
-  }
-
-  const txn = await transfer({
-    type: "deposit",
-    description: "Test USDC received (faucet)",
-    userId,
-    fromKey: acct.external,
-    toKey: acct.wallet(userId),
-    amountCents,
-    onchain: toMeta(onchain),
+    if (enabled) {
+      await enqueueOnchainTransfer(
+        {
+          transactionId: t.id,
+          kind: "faucet",
+          sourceUserId: null,
+          toAddress: wallet.address,
+          amountCents,
+          memo: "faucet",
+        },
+        tx,
+      );
+    }
+    return t;
   });
+  if (enabled) kickReconciler();
   await notify(userId, {
     type: "deposit",
     title: "USDC received",
@@ -124,26 +133,35 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
   const wallet = await getWalletForUser(userId);
   if (!wallet) throw new Error("Wallet not provisioned");
 
-  let onchain: OnchainResult = { status: "skipped", reason: "onchain disabled" };
-  if (onchainEnabled()) {
-    onchain = await sendUsdc({
-      fromPrivateKey: decryptSecret(wallet.privateKeyEnc),
-      to: destination,
+  const enabled = onchainEnabled();
+  const txn = await db.transaction(async (tx) => {
+    const t = await transfer({
+      type: "withdrawal",
+      description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
+      userId,
+      fromKey: acct.wallet(userId),
+      toKey: acct.external,
       amountCents,
-      memo: "withdrawal",
+      onchain: initialOnchainMeta(),
+      requireSufficientFrom: true,
+      tx,
     });
-  }
-
-  const txn = await transfer({
-    type: "withdrawal",
-    description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
-    userId,
-    fromKey: acct.wallet(userId),
-    toKey: acct.external,
-    amountCents,
-    onchain: toMeta(onchain),
-    requireSufficientFrom: true,
+    if (enabled) {
+      await enqueueOnchainTransfer(
+        {
+          transactionId: t.id,
+          kind: "withdrawal",
+          sourceUserId: userId,
+          toAddress: destination,
+          amountCents,
+          memo: "withdrawal",
+        },
+        tx,
+      );
+    }
+    return t;
   });
+  if (enabled) kickReconciler();
   await notify(
     userId,
     {
