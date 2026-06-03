@@ -32,6 +32,15 @@ it confirms, so once the platform wallet is funded everything self-heals.
   BEFORE we recorded the hash (fine on testnet).
 - **Backoff:** failed rows record `lastError` + `lastAttemptAt` and wait ~30s
   before the next attempt; never throw out of the reconciler.
+- **Dead-letter (not infinite retry):** after `MAX_ATTEMPTS`
+  (`SETTLEMENT_MAX_ATTEMPTS`, default 10) the row is marked `status='failed'`
+  and the linked transaction `onchainStatus='failed'` (one tx) so activity.tsx
+  surfaces it. The claim query filters `status='pending'`, so failed rows are
+  never re-claimed. `requeueOrFail` makes this decision for ALL transient
+  failures (RPC/skipped, thrown error, missing signing key).
+  **Gotcha:** `attempts` is incremented at claim time, but the in-memory `row`
+  returned from the claim holds the PRE-increment value — the attempt just made
+  is `row.attempts + 1`. Use that when comparing to a max, or you're off by one.
 
 ## Operational dependency
 The platform wallet must hold Base Sepolia ETH (gas) + test USDC. When unfunded,

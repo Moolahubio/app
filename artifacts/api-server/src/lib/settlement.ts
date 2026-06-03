@@ -35,6 +35,10 @@ const RECONCILE_INTERVAL_MS = 15_000;
 // unfunded wallet (the expected testnet state) doesn't hammer the RPC.
 const RETRY_BACKOFF_MS = 30_000;
 const BATCH_SIZE = 10;
+// After this many attempts a transfer is treated as permanently broken (e.g. an
+// invalid destination address) and moved to the dead-letter state instead of
+// being retried forever. Overridable so ops can tune it per environment.
+const MAX_ATTEMPTS = Number(process.env.SETTLEMENT_MAX_ATTEMPTS) || 10;
 
 export type QueueParams = {
   transactionId: string;
@@ -100,11 +104,43 @@ async function requeue(rowId: string, reason: string): Promise<void> {
     .where(eq(onchainTransfersTable.id, rowId));
 }
 
-async function markFailed(rowId: string, reason: string): Promise<void> {
-  await db
-    .update(onchainTransfersTable)
-    .set({ status: "failed", lastError: reason })
-    .where(eq(onchainTransfersTable.id, rowId));
+/**
+ * Dead-letter a transfer: mark the queue row 'failed' (so the claim query never
+ * picks it up again) and flag the linked ledger transaction 'failed' so the
+ * activity feed surfaces it for an operator. The ledger itself is unchanged —
+ * the money already moved in the double-entry ledger; only the on-chain mirror
+ * is broken.
+ */
+async function markFailed(row: OnchainTransfer, reason: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(onchainTransfersTable)
+      .set({ status: "failed", lastError: reason })
+      .where(eq(onchainTransfersTable.id, row.id));
+    await tx
+      .update(transactionsTable)
+      .set({ onchainStatus: "failed" })
+      .where(eq(transactionsTable.id, row.transactionId));
+  });
+}
+
+/**
+ * A transfer didn't settle this pass. Retry it (back to 'pending') unless it has
+ * exhausted MAX_ATTEMPTS, in which case dead-letter it. The claim step already
+ * bumped `attempts` in the DB, but the in-memory `row.attempts` still holds the
+ * pre-claim value, so the attempt just made is `row.attempts + 1`.
+ */
+async function requeueOrFail(row: OnchainTransfer, reason: string): Promise<void> {
+  const attemptsMade = row.attempts + 1;
+  if (attemptsMade >= MAX_ATTEMPTS) {
+    logger.warn(
+      { rowId: row.id, kind: row.kind, attempts: attemptsMade, reason },
+      "settlement transfer exhausted retries; dead-lettering",
+    );
+    await markFailed(row, reason);
+    return;
+  }
+  await requeue(row.id, reason);
 }
 
 async function processRow(row: OnchainTransfer): Promise<boolean> {
@@ -126,7 +162,7 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
   if (!fromPrivateKey) {
     // No usable signing key: this can't be settled on-chain. Don't block the
     // queue forever — mark it failed (the ledger already reflects the money).
-    await markFailed(row.id, "source signing key unavailable");
+    await markFailed(row, "source signing key unavailable");
     return false;
   }
 
@@ -142,9 +178,10 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
     return true;
   }
   // "skipped" — wallet unfunded or RPC unreachable. Both are transient on
-  // testnet, so keep retrying rather than dropping to ledger-only.
+  // testnet, so keep retrying rather than dropping to ledger-only — until the
+  // attempt budget is spent, at which point it's dead-lettered.
   const reason = result.status === "skipped" ? result.reason : "queued";
-  await requeue(row.id, reason);
+  await requeueOrFail(row, reason);
   return false;
 }
 
@@ -197,7 +234,7 @@ export async function runReconciler(limit = BATCH_SIZE): Promise<{ processed: nu
       } catch (e) {
         const reason = e instanceof Error ? e.message : String(e);
         logger.warn({ rowId: row.id, kind: row.kind, reason }, "settlement attempt failed");
-        await requeue(row.id, reason).catch(() => undefined);
+        await requeueOrFail(row, reason).catch(() => undefined);
       }
     }
     if (claimed.length > 0) {
