@@ -36,10 +36,8 @@ import type {
   LessonDetail,
   LessonSummary,
   ListActivityParams,
-  LoginInput,
   NotificationsResponse,
   OkResponse,
-  OnrampUrlResponse,
   PasskeyChallengeResponse,
   PasskeyListResponse,
   PasskeyLoginVerifyInput,
@@ -47,7 +45,6 @@ import type {
   PasskeySummary,
   PrivyAuthInput,
   ProfileUpdate,
-  RegisterInput,
   SyncResult,
   UploadUrlRequest,
   UploadUrlResponse,
@@ -645,148 +642,6 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
-export const getLoginUrl = () => {
-
-
-
-
-  return `/api/auth/login`
-}
-
-/**
- * @summary Login with email and password
- */
-export const login = async (loginInput: LoginInput, options?: RequestInit): Promise<AuthUser> => {
-
-  return customFetch<AuthUser>(getLoginUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginInput,)
-  }
-);}
-
-
-
-
-export const getLoginMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext> => {
-
-const mutationKey = ['login'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof login>>, {data: BodyType<LoginInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  login(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type LoginMutationResult = NonNullable<Awaited<ReturnType<typeof login>>>
-    export type LoginMutationBody = BodyType<LoginInput>
-    export type LoginMutationError = ErrorType<ApiError>
-
-    /**
- * @summary Login with email and password
- */
-export const useLogin = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof login>>, TError,{data: BodyType<LoginInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof login>>,
-        TError,
-        {data: BodyType<LoginInput>},
-        TContext
-      > => {
-      return useMutation(getLoginMutationOptions(options));
-    }
-
-export const getRegisterUrl = () => {
-
-
-
-
-  return `/api/auth/register`
-}
-
-/**
- * @summary Create a new account
- */
-export const register = async (registerInput: RegisterInput, options?: RequestInit): Promise<AuthUser> => {
-
-  return customFetch<AuthUser>(getRegisterUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      registerInput,)
-  }
-);}
-
-
-
-
-export const getRegisterMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: BodyType<RegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: BodyType<RegisterInput>}, TContext> => {
-
-const mutationKey = ['register'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register>>, {data: BodyType<RegisterInput>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  register(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RegisterMutationResult = NonNullable<Awaited<ReturnType<typeof register>>>
-    export type RegisterMutationBody = BodyType<RegisterInput>
-    export type RegisterMutationError = ErrorType<ApiError>
-
-    /**
- * @summary Create a new account
- */
-export const useRegister = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register>>, TError,{data: BodyType<RegisterInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof register>>,
-        TError,
-        {data: BodyType<RegisterInput>},
-        TContext
-      > => {
-      return useMutation(getRegisterMutationOptions(options));
-    }
-
 export const getLogoutUrl = () => {
 
 
@@ -1370,83 +1225,6 @@ export const useSyncDeposits = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getSyncDepositsMutationOptions(options));
     }
-
-export const getGetOnrampUrlUrl = () => {
-
-
-
-
-  return `/api/wallet/onramp-url`
-}
-
-/**
- * @summary Get Coinbase Onramp URL for buying USDC
- */
-export const getOnrampUrl = async ( options?: RequestInit): Promise<OnrampUrlResponse> => {
-
-  return customFetch<OnrampUrlResponse>(getGetOnrampUrlUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getGetOnrampUrlQueryKey = () => {
-    return [
-    `/api/wallet/onramp-url`
-    ] as const;
-    }
-
-
-export const getGetOnrampUrlQueryOptions = <TData = Awaited<ReturnType<typeof getOnrampUrl>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOnrampUrl>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetOnrampUrlQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOnrampUrl>>> = ({ signal }) => getOnrampUrl({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOnrampUrl>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetOnrampUrlQueryResult = NonNullable<Awaited<ReturnType<typeof getOnrampUrl>>>
-export type GetOnrampUrlQueryError = ErrorType<unknown>
-
-
-/**
- * @summary Get Coinbase Onramp URL for buying USDC
- */
-
-export function useGetOnrampUrl<TData = Awaited<ReturnType<typeof getOnrampUrl>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOnrampUrl>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetOnrampUrlQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return { ...query, queryKey: queryOptions.queryKey };
-}
-
-
-
-
-
-
 
 export const getListCirclesUrl = () => {
 

@@ -12,6 +12,5 @@ export interface WalletInfo {
   goalAllocatedCents: number;
   address: string;
   network: string;
-  onrampEnabled: boolean;
   onchainEnabled: boolean;
 }

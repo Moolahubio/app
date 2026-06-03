@@ -11,14 +11,11 @@
     "test:susu": "tsx src/lib/circles.e2e.ts"
   },
   "dependencies": {
-    "@coinbase/cdp-sdk": "^1.51.0",
     "@google-cloud/storage": "^7.19.0",
     "@privy-io/server-auth": "^1.32.5",
     "@simplewebauthn/server": "^13.3.1",
-    "@types/bcryptjs": "^3.0.0",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
-    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "drizzle-orm": "catalog:",

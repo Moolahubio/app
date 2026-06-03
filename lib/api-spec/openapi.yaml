@@ -198,56 +198,6 @@ paths:
                 $ref: "#/components/schemas/HealthStatus"
 
   # ---- Auth ----
-  /auth/login:
-    post:
-      operationId: login
-      tags: [auth]
-      summary: Login with email and password
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginInput"
-      responses:
-        "200":
-          description: Logged in
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthUser"
-        "400":
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
-  /auth/register:
-    post:
-      operationId: register
-      tags: [auth]
-      summary: Create a new account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegisterInput"
-      responses:
-        "201":
-          description: Account created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthUser"
-        "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiError"
-
   /auth/logout:
     post:
       operationId: logout
@@ -377,19 +327,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SyncResult"
-
-  /wallet/onramp-url:
-    get:
-      operationId: getOnrampUrl
-      tags: [wallet]
-      summary: Get Coinbase Onramp URL for buying USDC
-      responses:
-        "200":
-          description: Onramp URL
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OnrampUrlResponse"
 
   # ---- Circles ----
   /circles:
@@ -867,26 +804,6 @@ components:
           type: boolean
 
     # ---- Auth ----
-    LoginInput:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-
-    RegisterInput:
-      type: object
-      required: [name, email, password]
-      properties:
-        name:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-
     PrivyAuthInput:
       type: object
       required: [token]
@@ -963,7 +880,7 @@ components:
     # ---- Wallet ----
     WalletInfo:
       type: object
-      required: [availableCents, totalCents, goalAllocatedCents, address, network, onrampEnabled, onchainEnabled]
+      required: [availableCents, totalCents, goalAllocatedCents, address, network, onchainEnabled]
       properties:
         availableCents:
           type: integer
@@ -975,8 +892,6 @@ components:
           type: string
         network:
           type: string
-        onrampEnabled:
-          type: boolean
         onchainEnabled:
           type: boolean
 
@@ -1006,13 +921,6 @@ components:
           type: integer
         totalCents:
           type: integer
-
-    OnrampUrlResponse:
-      type: object
-      required: [url]
-      properties:
-        url:
-          type: string
 
     # ---- Circles ----
     CircleSummary:

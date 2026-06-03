@@ -6,14 +6,12 @@ import {
   DepositFaucetResponse,
   WithdrawFundsResponse,
   SyncDepositsResponse,
-  GetOnrampUrlResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { createWalletForUser } from "../lib/wallet";
 import { userBalances } from "../lib/ledger";
 import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
 import { onchainEnabled, networkName } from "../lib/chain";
-import { onrampEnabled, createOnrampSessionToken, buildOnrampUrl } from "../lib/onramp";
 
 const router: IRouter = Router();
 
@@ -29,7 +27,6 @@ router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
       goalAllocatedCents: bal.allocatedCents,
       address: wallet.address,
       network: networkName(),
-      onrampEnabled: onrampEnabled(),
       onchainEnabled: onchainEnabled(),
     }),
   );
@@ -81,29 +78,6 @@ router.post("/wallet/sync", requireAuth, async (req, res): Promise<void> => {
       totalCents: result.totalCents,
     }),
   );
-});
-
-router.get("/wallet/onramp-url", requireAuth, async (req, res): Promise<void> => {
-  const user = (req as AuthRequest).user;
-  if (!onrampEnabled()) {
-    res.status(400).json({ error: "Card purchases are not configured." });
-    return;
-  }
-
-  const wallet = await createWalletForUser(user.id);
-  const forwarded = req.headers["x-forwarded-for"];
-  const clientIp =
-    (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0]?.trim()) ??
-    req.socket.remoteAddress ??
-    "0.0.0.0";
-
-  try {
-    const sessionToken = await createOnrampSessionToken(wallet.address, clientIp);
-    const url = buildOnrampUrl(sessionToken);
-    res.json(GetOnrampUrlResponse.parse({ url }));
-  } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Could not start purchase" });
-  }
 });
 
 export default router;

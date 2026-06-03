@@ -125,34 +125,6 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * @summary Login with email and password
- */
-export const LoginBody = zod.object({
-  "email": zod.string(),
-  "password": zod.string()
-})
-
-export const LoginResponse = zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "email": zod.string(),
-  "avatarUrl": zod.string().nullish(),
-  "hasWallet": zod.boolean(),
-  "walletAddress": zod.string().nullish()
-})
-
-
-/**
- * @summary Create a new account
- */
-export const RegisterBody = zod.object({
-  "name": zod.string(),
-  "email": zod.string(),
-  "password": zod.string()
-})
-
-
-/**
  * @summary Logout current session
  */
 export const LogoutResponse = zod.object({
@@ -253,7 +225,6 @@ export const GetWalletResponse = zod.object({
   "goalAllocatedCents": zod.number(),
   "address": zod.string(),
   "network": zod.string(),
-  "onrampEnabled": zod.boolean(),
   "onchainEnabled": zod.boolean()
 })
 
@@ -290,14 +261,6 @@ export const SyncDepositsResponse = zod.object({
   "ok": zod.boolean(),
   "credited": zod.number(),
   "totalCents": zod.number().optional()
-})
-
-
-/**
- * @summary Get Coinbase Onramp URL for buying USDC
- */
-export const GetOnrampUrlResponse = zod.object({
-  "url": zod.string()
 })
 
 

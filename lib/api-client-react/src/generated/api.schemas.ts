@@ -17,17 +17,6 @@ export interface OkResponse {
   ok: boolean;
 }
 
-export interface LoginInput {
-  email: string;
-  password: string;
-}
-
-export interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
-}
-
 export interface PrivyAuthInput {
   token: string;
   /** @nullable */
@@ -113,7 +102,6 @@ export interface WalletInfo {
   goalAllocatedCents: number;
   address: string;
   network: string;
-  onrampEnabled: boolean;
   onchainEnabled: boolean;
 }
 
@@ -130,10 +118,6 @@ export interface SyncResult {
   ok: boolean;
   credited: number;
   totalCents?: number;
-}
-
-export interface OnrampUrlResponse {
-  url: string;
 }
 
 export interface CircleMember {

@@ -4,8 +4,9 @@ description: Durable decisions for the MoolaHub Account area — passkeys/WebAut
 ---
 
 # Auth model
-- MoolaHub keeps THREE login paths simultaneously: email/password, Privy, and passkeys (real WebAuthn via `@simplewebauthn`). Do not remove any when touching auth.
-- **Why:** product requirement; KYC was explicitly removed but these three must stay.
+- MoolaHub auth is **Privy-primary with passkeys** (real WebAuthn via `@simplewebauthn`) as a secondary path. Email/password login was **removed** (no `/auth/login`, `/auth/register`, no `passwordHash` column, no bcrypt). Coinbase/CDP onramp was also removed.
+- **Why:** once Privy was integrated it became the primary auth; email/password and the CDP onramp (which required a Coinbase wallet) were dropped at the user's request. KYC was removed earlier and stays removed.
+- **How to apply:** do not reintroduce email/password fields, bcrypt, or onramp UI when touching auth/wallet. Privy `/auth/privy` returns `PrivyAuthResponse`; passkey verify returns `LoginPasskeyVerifyResponse`.
 
 # WebAuthn challenge single-use
 - Challenge consumption must be a single atomic `DELETE ... RETURNING` (not SELECT-then-DELETE). Two concurrent verify requests must never both claim the same challenge.

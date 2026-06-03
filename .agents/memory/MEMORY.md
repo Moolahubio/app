@@ -1,6 +1,6 @@
-- [MoolaHub stack decisions](moolahub-stack.md) — auth (email/password+Privy), double-entry ledger, on-chain testnet tradeoff, circles/Susu, no seed/demo data; everything is real per-user data.
+- [MoolaHub stack decisions](moolahub-stack.md) — auth (Privy primary + passkeys; email/password & CDP onramp removed), double-entry ledger, on-chain testnet tradeoff, circles/Susu, no seed/demo data; everything is real per-user data.
 - [MoolaHub ledger invariants](moolahub-ledger-invariants.md) — reservation + ledger.transfer must share one tx; deposit dedup uses the bare on-chain tx hash. Past review rejections.
-- [MoolaHub Account section](moolahub-account.md) — email/password+Privy+passkey auth, NO KYC (removed); WebAuthn challenges single-use; private object route auth-guarded.
+- [MoolaHub Account section](moolahub-account.md) — Privy-primary auth + passkeys (email/password removed); NO KYC; WebAuthn challenges single-use; private object route auth-guarded.
 - [MoolaHub client auth/logout](moolahub-auth-logout.md) — logout: setQueryData(getMe,null) then removeQueries excluding getMe, then navigate; invalidate/remove-all race refetch and keep stale auth.
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.

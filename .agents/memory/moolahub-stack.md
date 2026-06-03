@@ -12,10 +12,10 @@ description: Non-obvious decisions and quirks for the MoolaHub social-savings ap
 - The ledger is the source of truth; on-chain USDC settles only when `onchainEnabled()` AND the platform/user wallet is funded. Faucet credits and withdrawals still book to the ledger when the chain step is skipped — by design, because the platform wallet may have no testnet gas/USDC. Do NOT "fail on chain error" or the whole testnet flow breaks.
 
 ## Auth
-- Two methods: email/password (bcryptjs, CJS-only — `await import('bcryptjs')` fails from the ESM code_execution sandbox) AND Privy.
+- **Privy is the primary auth, with passkeys (WebAuthn) as a secondary path.** Email/password was removed entirely (no `/auth/login`, `/auth/register`, no `passwordHash`, no bcrypt). Coinbase/CDP onramp removed too (no `/wallet/onramp-url`, no `@coinbase/cdp-sdk`). Wallets stay local non-custodial (viem-generated, encrypted key in DB) — unaffected by CDP removal.
 - Sessions: HTTP-only cookie `moolahub_session` (30d). Must be sent on every authenticated request.
 - **Privy `/auth/privy`:** identity is derived strictly from the verified token DID + server-fetched Privy profile. NEVER trust client-supplied email/name for account linking — that was an account-takeover hole. Link to an existing account only on a Privy-*verified* email match.
-- The client Privy app id comes from `PRIVY_APP_ID` (valid ~25-char cuid). `NEXT_PUBLIC_PRIVY_APP_ID` was a 2-char placeholder; vite `define` prefers the longer/valid one and `AuthPanel` falls back to email-only when `appId.length < 10`.
+- The client Privy app id comes from `PRIVY_APP_ID` (valid ~25-char cuid), exposed to the client as `VITE_PRIVY_APP_ID` via vite `define`. `AuthPanel` shows a "not configured" message (and passkey-only) when `appId.length < 10`.
 
 ## Circles (Susu)
 - Payout is claimed atomically: `update circle_members set paidOut=true where id=? and paidOut=false returning` — if 0 rows, another caller already paid (prevents double-pay). Round advance is a conditional update `where current_round = round` (idempotent).

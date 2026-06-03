@@ -1,19 +1,17 @@
-import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, Clock, CreditCard } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, Clock } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
-import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, useGetOnrampUrl, getGetWalletQueryKey, getGetOnrampUrlQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatMoney, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 const NETWORK = import.meta.env.VITE_BASE_NETWORK === "mainnet" ? "Base" : "Base Sepolia";
-const ONRAMP = true;
 
 export default function WalletPage() {
   const { data: wallet, isLoading } = useGetWallet();
-  const { data: onrampData } = useGetOnrampUrl({ query: { enabled: !!wallet?.onrampEnabled, queryKey: getGetOnrampUrlQueryKey() } });
-  
+
   const queryClient = useQueryClient();
   const depositMutation = useDepositFaucet();
   const withdrawMutation = useWithdrawFunds();
@@ -113,25 +111,6 @@ export default function WalletPage() {
             />
             {syncOk && <p className="mt-2 text-sm text-jade-600 font-medium">{syncOk}</p>}
           </div>
-
-          {ONRAMP && (
-            <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
-              <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-ink-700">
-                <CreditCard className="h-4 w-4 text-jade-500" /> Buy with card
-              </p>
-              <p className="mb-3 text-xs text-ink-500">
-                Purchase USDC with a card or bank — it lands in your wallet.
-              </p>
-              <ActionButton 
-                onClick={() => {
-                  if (onrampData?.url) window.open(onrampData.url, "_blank");
-                }}
-                label="Buy USDC"
-                variant="secondary"
-                className="w-full [&>button]:w-full"
-              />
-            </div>
-          )}
 
           <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
             <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-ink-700">
