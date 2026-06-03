@@ -7,6 +7,8 @@ import { formatMoney, pct } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/components/app/ImageUploadField";
+import { avatarSrc } from "@/lib/utils";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -21,6 +23,7 @@ export default function GoalsPage() {
   const [name, setName] = useState("");
   const [target, setTarget] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,8 @@ export default function GoalsPage() {
         data: { 
           name, 
           targetCents: Math.floor(parseFloat(target) * 100), 
-          deadline: new Date(deadline).toISOString()
+          deadline: new Date(deadline).toISOString(),
+          imageUrl: imageUrl ?? undefined,
         } 
       },
       {
@@ -39,6 +43,7 @@ export default function GoalsPage() {
           setName("");
           setTarget("");
           setDeadline("");
+          setImageUrl(null);
         }
       }
     );
@@ -82,6 +87,12 @@ export default function GoalsPage() {
                   <Label>Target Date</Label>
                   <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} required />
                 </div>
+                <ImageUploadField
+                  label="Picture (optional)"
+                  hint="Add a photo of what you're saving for to keep the dream alive."
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                />
                 <Button type="submit" className="w-full" disabled={createMutation.isPending}>
                   {createMutation.isPending ? "Creating…" : "Create Goal"}
                 </Button>
@@ -121,7 +132,17 @@ export default function GoalsPage() {
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {goalsList.map((g) => (
           <Link key={g.id} href={`/goals/${g.id}`} className="group block">
-            <Card className="h-full p-6 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
+            <Card className="h-full overflow-hidden p-0 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
+              {g.imageUrl && (
+                <div className="h-32 w-full overflow-hidden bg-mist">
+                  <img
+                    src={avatarSrc(g.imageUrl)}
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                  />
+                </div>
+              )}
+              <div className="p-6">
               <div className="flex items-start justify-between">
                 <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mist text-2xl">
                   {g.emoji || "🎯"}
@@ -155,6 +176,7 @@ export default function GoalsPage() {
               <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600">
                 Manage goal{" "}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </div>
               </div>
             </Card>
           </Link>

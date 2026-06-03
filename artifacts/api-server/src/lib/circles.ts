@@ -40,7 +40,13 @@ async function memberCircleIds(userId: string): Promise<string[]> {
 
 export async function createCircle(
   userId: string,
-  input: { name: string; contributionCents: number; frequency: string; memberEmails?: string[] },
+  input: {
+    name: string;
+    contributionCents: number;
+    frequency: string;
+    memberEmails?: string[];
+    imageUrl?: string | null;
+  },
 ) {
   if (!input.name?.trim()) throw new Error("Circle name is required.");
   if (input.contributionCents <= 0) throw new Error("Enter a contribution amount.");
@@ -49,6 +55,7 @@ export async function createCircle(
     .values({
       name: input.name.trim(),
       createdById: userId,
+      imageUrl: input.imageUrl ?? null,
       contributionCents: input.contributionCents,
       frequency: input.frequency || "monthly",
       status: "forming",
@@ -95,6 +102,7 @@ export async function listCirclesForUser(userId: string) {
       myPayoutRound: me?.payoutRound ?? 0,
       currentRound: c.currentRound,
       totalRounds: c.totalRounds,
+      imageUrl: c.imageUrl ?? null,
       nextPayoutDate: c.startDate
         ? addInterval(c.startDate, c.frequency, Math.max(0, c.currentRound - 1)).toISOString()
         : null,
@@ -132,6 +140,7 @@ export async function getCircleDetail(userId: string, circleId: string) {
     memberCount,
     totalRounds: c.totalRounds,
     currentRound: c.currentRound,
+    imageUrl: c.imageUrl ?? null,
     startDate: c.startDate ? c.startDate.toISOString() : null,
     contractAddress: c.contractAddress,
     myPayoutRound: me?.payoutRound ?? null,

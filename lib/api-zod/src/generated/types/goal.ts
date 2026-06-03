@@ -17,4 +17,6 @@ export interface Goal {
   /** @nullable */
   autoSaveCents?: number | null;
   createdAt: string;
+  /** @nullable */
+  imageUrl?: string | null;
 }

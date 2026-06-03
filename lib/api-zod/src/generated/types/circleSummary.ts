@@ -19,4 +19,6 @@ export interface CircleSummary {
   totalRounds: number;
   /** @nullable */
   nextPayoutDate?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
 }

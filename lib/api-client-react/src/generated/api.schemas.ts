@@ -59,6 +59,8 @@ export interface Goal {
   /** @nullable */
   autoSaveCents?: number | null;
   createdAt: string;
+  /** @nullable */
+  imageUrl?: string | null;
 }
 
 export interface CircleSummary {
@@ -74,6 +76,8 @@ export interface CircleSummary {
   totalRounds: number;
   /** @nullable */
   nextPayoutDate?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
 }
 
 export interface Reminder {
@@ -145,6 +149,8 @@ export interface CircleDetail {
   myContributionStatus?: string | null;
   /** @nullable */
   myPayoutRound?: number | null;
+  /** @nullable */
+  imageUrl?: string | null;
 }
 
 export interface CircleInvite {
@@ -160,6 +166,7 @@ export interface CircleInput {
   contributionCents: number;
   frequency: string;
   memberEmails: string[];
+  imageUrl?: string;
 }
 
 export interface InviteInput {
@@ -174,6 +181,7 @@ export interface GoalInput {
   deadline: string;
   /** @nullable */
   autoSaveCents?: number | null;
+  imageUrl?: string;
 }
 
 export interface LessonSummary {

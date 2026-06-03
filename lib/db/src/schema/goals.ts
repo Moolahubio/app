@@ -9,6 +9,7 @@ export const goalsTable = pgTable("goals", {
   name: text("name").notNull(),
   emoji: text("emoji").notNull().default("🎯"),
   color: text("color").notNull().default("jade"),
+  imageUrl: text("image_url"),
   targetCents: integer("target_cents").notNull(),
   deadline: timestamp("deadline", { withTimezone: true }).notNull(),
   autoSaveCents: integer("auto_save_cents"),

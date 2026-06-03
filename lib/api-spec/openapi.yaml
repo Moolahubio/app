@@ -981,6 +981,8 @@ components:
           type: integer
         nextPayoutDate:
           type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
 
     CircleDetail:
       type: object
@@ -1012,6 +1014,8 @@ components:
           type: ["string", "null"]
         myPayoutRound:
           type: ["integer", "null"]
+        imageUrl:
+          type: ["string", "null"]
 
     CircleMember:
       type: object
@@ -1059,6 +1063,8 @@ components:
           type: array
           items:
             type: string
+        imageUrl:
+          type: string
 
     InviteInput:
       type: object
@@ -1090,6 +1096,8 @@ components:
           type: ["integer", "null"]
         createdAt:
           type: string
+        imageUrl:
+          type: ["string", "null"]
 
     GoalInput:
       type: object
@@ -1107,6 +1115,8 @@ components:
           type: string
         autoSaveCents:
           type: ["integer", "null"]
+        imageUrl:
+          type: string
 
     # ---- Learn ----
     LessonSummary:

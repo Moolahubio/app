@@ -191,7 +191,8 @@ export const GetDashboardSummaryResponse = zod.object({
   "savedCents": zod.number(),
   "deadline": zod.string(),
   "autoSaveCents": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "imageUrl": zod.string().nullish()
 })),
   "activeCircles": zod.array(zod.object({
   "id": zod.string(),
@@ -204,7 +205,8 @@ export const GetDashboardSummaryResponse = zod.object({
   "myPayoutRound": zod.number(),
   "currentRound": zod.number(),
   "totalRounds": zod.number(),
-  "nextPayoutDate": zod.string().nullish()
+  "nextPayoutDate": zod.string().nullish(),
+  "imageUrl": zod.string().nullish()
 })),
   "lessonsCompleted": zod.number(),
   "totalLessons": zod.number(),
@@ -278,7 +280,8 @@ export const ListCirclesResponseItem = zod.object({
   "myPayoutRound": zod.number(),
   "currentRound": zod.number(),
   "totalRounds": zod.number(),
-  "nextPayoutDate": zod.string().nullish()
+  "nextPayoutDate": zod.string().nullish(),
+  "imageUrl": zod.string().nullish()
 })
 export const ListCirclesResponse = zod.array(ListCirclesResponseItem)
 
@@ -290,7 +293,8 @@ export const CreateCircleBody = zod.object({
   "name": zod.string(),
   "contributionCents": zod.number(),
   "frequency": zod.string(),
-  "memberEmails": zod.array(zod.string())
+  "memberEmails": zod.array(zod.string()),
+  "imageUrl": zod.string().optional()
 })
 
 
@@ -333,7 +337,8 @@ export const GetCircleResponse = zod.object({
   "contributedThisRound": zod.boolean().optional()
 })),
   "myContributionStatus": zod.string().nullish(),
-  "myPayoutRound": zod.number().nullish()
+  "myPayoutRound": zod.number().nullish(),
+  "imageUrl": zod.string().nullish()
 })
 
 
@@ -413,7 +418,8 @@ export const ListGoalsResponseItem = zod.object({
   "savedCents": zod.number(),
   "deadline": zod.string(),
   "autoSaveCents": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "imageUrl": zod.string().nullish()
 })
 export const ListGoalsResponse = zod.array(ListGoalsResponseItem)
 
@@ -427,7 +433,8 @@ export const CreateGoalBody = zod.object({
   "color": zod.string().optional(),
   "targetCents": zod.number(),
   "deadline": zod.string(),
-  "autoSaveCents": zod.number().nullish()
+  "autoSaveCents": zod.number().nullish(),
+  "imageUrl": zod.string().optional()
 })
 
 
@@ -447,7 +454,8 @@ export const GetGoalResponse = zod.object({
   "savedCents": zod.number(),
   "deadline": zod.string(),
   "autoSaveCents": zod.number().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "imageUrl": zod.string().nullish()
 })
 
 

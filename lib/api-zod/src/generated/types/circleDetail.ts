@@ -23,4 +23,6 @@ export interface CircleDetail {
   myContributionStatus?: string | null;
   /** @nullable */
   myPayoutRound?: number | null;
+  /** @nullable */
+  imageUrl?: string | null;
 }

@@ -11,4 +11,5 @@ export interface CircleInput {
   contributionCents: number;
   frequency: string;
   memberEmails: string[];
+  imageUrl?: string;
 }

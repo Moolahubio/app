@@ -27,6 +27,7 @@ type GoalRow = {
   name: string;
   emoji: string;
   color: string;
+  imageUrl: string | null;
   targetCents: number;
   savedCents: number;
   deadline: Date;
@@ -40,6 +41,7 @@ function goalToJson(g: GoalRow) {
     name: g.name,
     emoji: g.emoji,
     color: g.color,
+    imageUrl: g.imageUrl ?? null,
     targetCents: g.targetCents,
     savedCents: g.savedCents,
     deadline: g.deadline.toISOString(),
@@ -69,6 +71,7 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
     targetCents: parsed.data.targetCents,
     deadline: new Date(parsed.data.deadline),
     autoSaveCents: parsed.data.autoSaveCents ?? null,
+    imageUrl: parsed.data.imageUrl ?? null,
   });
 
   res.status(201).json(GetGoalResponse.parse(goalToJson(goal)));

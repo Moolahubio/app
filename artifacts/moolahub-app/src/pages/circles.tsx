@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ImageUploadField } from "@/components/app/ImageUploadField";
+import { avatarSrc } from "@/lib/utils";
 import { useState } from "react";
 
 const statusTone = {
@@ -32,6 +34,7 @@ export default function CirclesPage() {
   const [contribution, setContribution] = useState("");
   const [frequency, setFrequency] = useState("weekly");
   const [emails, setEmails] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +44,8 @@ export default function CirclesPage() {
           name, 
           contributionCents: Math.floor(parseFloat(contribution) * 100), 
           frequency, 
-          memberEmails: emails.split(",").map(e => e.trim()).filter(Boolean)
+          memberEmails: emails.split(",").map(e => e.trim()).filter(Boolean),
+          imageUrl: imageUrl ?? undefined,
         } 
       },
       {
@@ -51,6 +55,7 @@ export default function CirclesPage() {
           setName("");
           setContribution("");
           setEmails("");
+          setImageUrl(null);
         }
       }
     );
@@ -104,6 +109,12 @@ export default function CirclesPage() {
                   <Label>Member Emails (comma separated)</Label>
                   <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder="friend@example.com, cousin@example.com" />
                 </div>
+                <ImageUploadField
+                  label="Circle picture (optional)"
+                  hint="As the circle admin, add a photo to rally your group around the goal."
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                />
                 <Button type="submit" className="w-full" disabled={createMutation.isPending}>
                   {createMutation.isPending ? "Creating…" : "Create Circle"}
                 </Button>
@@ -183,7 +194,17 @@ export default function CirclesPage() {
       <div className="grid gap-5 md:grid-cols-2">
         {visible.map((circle) => (
           <Link key={circle.id} href={`/circles/${circle.id}`} className="group block">
-            <Card className="h-full p-6 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
+            <Card className="h-full overflow-hidden p-0 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
+              {circle.imageUrl && (
+                <div className="h-32 w-full overflow-hidden bg-mist">
+                  <img
+                    src={avatarSrc(circle.imageUrl)}
+                    alt=""
+                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                  />
+                </div>
+              )}
+              <div className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink-900 text-white">
@@ -234,6 +255,7 @@ export default function CirclesPage() {
               <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600">
                 View circle{" "}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </div>
               </div>
             </Card>
           </Link>

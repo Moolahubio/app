@@ -59,6 +59,7 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
       contributionCents: parsed.data.contributionCents,
       frequency: parsed.data.frequency,
       memberEmails: parsed.data.memberEmails,
+      imageUrl: parsed.data.imageUrl ?? null,
     });
     circleId = circle.id;
   } catch (e) {

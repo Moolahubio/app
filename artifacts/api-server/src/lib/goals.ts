@@ -31,6 +31,7 @@ export async function createGoal(
     deadline: Date;
     autoSaveCents?: number | null;
     color?: string;
+    imageUrl?: string | null;
   },
 ) {
   const [goal] = await db
@@ -43,6 +44,7 @@ export async function createGoal(
       deadline: input.deadline,
       autoSaveCents: input.autoSaveCents ?? null,
       color: input.color || "jade",
+      imageUrl: input.imageUrl ?? null,
     })
     .returning();
   return { ...goal, savedCents: 0 };

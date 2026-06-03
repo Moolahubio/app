@@ -7,6 +7,7 @@ export const circlesTable = pgTable("circles", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   createdById: uuid("created_by_id").notNull().references(() => usersTable.id),
+  imageUrl: text("image_url"),
   status: text("status").notNull().default("forming"),
   frequency: text("frequency").notNull().default("monthly"),
   contributionCents: integer("contribution_cents").notNull(),

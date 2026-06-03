@@ -14,4 +14,5 @@ export interface GoalInput {
   deadline: string;
   /** @nullable */
   autoSaveCents?: number | null;
+  imageUrl?: string;
 }
