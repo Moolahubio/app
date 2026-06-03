@@ -4,4 +4,5 @@
 - [MoolaHub client auth/logout](moolahub-auth-logout.md) — logout: setQueryData(getMe,null) then removeQueries excluding getMe, then navigate; invalidate/remove-all race refetch and keep stale auth.
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.
-- [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; no double-send via SKIP LOCKED + in-proc guard.
+- [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; book pending (not none) on failure; no double-send via SKIP LOCKED + in-proc guard.
+- [MoolaHub backend tests](moolahub-backend-tests.md) — run flow tests via tsx against real DB; delete USDC/PLATFORM/RESEND env BEFORE imports (snapshotted at load) for offline determinism; clean up in finally.
