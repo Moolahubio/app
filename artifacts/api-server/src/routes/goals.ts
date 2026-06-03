@@ -1,6 +1,4 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
-import { db, goalsTable, walletsTable, transactionsTable } from "@workspace/db";
 import {
   CreateGoalBody,
   GetGoalParams,
@@ -10,12 +8,33 @@ import {
   ReleaseFromGoalBody,
   ListGoalsResponse,
   GetGoalResponse,
+  AllocateToGoalResponse,
+  ReleaseFromGoalResponse,
 } from "@workspace/api-zod";
-import { requireAuth, getOrCreateWallet, type AuthRequest } from "../lib/auth";
+import { requireAuth, type AuthRequest } from "../lib/auth";
+import {
+  listGoals,
+  getGoal,
+  createGoal,
+  allocateToGoal,
+  releaseFromGoal,
+} from "../lib/goals";
 
 const router: IRouter = Router();
 
-function goalToJson(g: typeof goalsTable.$inferSelect) {
+type GoalRow = {
+  id: string;
+  name: string;
+  emoji: string;
+  color: string;
+  targetCents: number;
+  savedCents: number;
+  deadline: Date;
+  autoSaveCents: number | null;
+  createdAt: Date;
+};
+
+function goalToJson(g: GoalRow) {
   return {
     id: g.id,
     name: g.name,
@@ -31,11 +50,7 @@ function goalToJson(g: typeof goalsTable.$inferSelect) {
 
 router.get("/goals", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
-  const goals = await db
-    .select()
-    .from(goalsTable)
-    .where(eq(goalsTable.userId, user.id));
-
+  const goals = await listGoals(user.id);
   res.json(ListGoalsResponse.parse(goals.map(goalToJson)));
 });
 
@@ -47,18 +62,14 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const [goal] = await db
-    .insert(goalsTable)
-    .values({
-      userId: user.id,
-      name: parsed.data.name,
-      emoji: parsed.data.emoji ?? "🎯",
-      color: parsed.data.color ?? "#0E9E6E",
-      targetCents: parsed.data.targetCents,
-      deadline: new Date(parsed.data.deadline),
-      autoSaveCents: parsed.data.autoSaveCents ?? null,
-    })
-    .returning();
+  const goal = await createGoal(user.id, {
+    name: parsed.data.name,
+    emoji: parsed.data.emoji,
+    color: parsed.data.color,
+    targetCents: parsed.data.targetCents,
+    deadline: new Date(parsed.data.deadline),
+    autoSaveCents: parsed.data.autoSaveCents ?? null,
+  });
 
   res.status(201).json(GetGoalResponse.parse(goalToJson(goal)));
 });
@@ -72,11 +83,7 @@ router.get("/goals/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const [goal] = await db
-    .select()
-    .from(goalsTable)
-    .where(and(eq(goalsTable.id, params.data.id), eq(goalsTable.userId, user.id)));
-
+  const goal = await getGoal(user.id, params.data.id);
   if (!goal) {
     res.status(404).json({ error: "Goal not found" });
     return;
@@ -99,46 +106,14 @@ router.post("/goals/:id/allocate", requireAuth, async (req, res): Promise<void> 
     return;
   }
 
-  const wallet = await getOrCreateWallet(user.id);
-  if (wallet.availableCents < parsed.data.amountCents) {
-    res.status(400).json({ error: "Insufficient balance" });
+  try {
+    await allocateToGoal(user.id, params.data.id, parsed.data.amountCents);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Allocation failed" });
     return;
   }
 
-  const [goal] = await db
-    .select()
-    .from(goalsTable)
-    .where(and(eq(goalsTable.id, params.data.id), eq(goalsTable.userId, user.id)));
-
-  if (!goal) {
-    res.status(404).json({ error: "Goal not found" });
-    return;
-  }
-
-  await db
-    .update(walletsTable)
-    .set({
-      availableCents: wallet.availableCents - parsed.data.amountCents,
-      goalAllocatedCents: wallet.goalAllocatedCents + parsed.data.amountCents,
-    })
-    .where(eq(walletsTable.id, wallet.id));
-
-  await db
-    .update(goalsTable)
-    .set({ savedCents: goal.savedCents + parsed.data.amountCents })
-    .where(eq(goalsTable.id, goal.id));
-
-  await db.insert(transactionsTable).values({
-    userId: user.id,
-    type: "goal_allocation",
-    description: `Allocated to goal: ${goal.name}`,
-    amountCents: parsed.data.amountCents,
-    onchainStatus: "none",
-    referenceId: goal.id,
-    referenceType: "goal",
-  });
-
-  res.json({ ok: true });
+  res.json(AllocateToGoalResponse.parse({ ok: true }));
 });
 
 router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> => {
@@ -155,47 +130,14 @@ router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> =
     return;
   }
 
-  const [goal] = await db
-    .select()
-    .from(goalsTable)
-    .where(and(eq(goalsTable.id, params.data.id), eq(goalsTable.userId, user.id)));
-
-  if (!goal) {
-    res.status(404).json({ error: "Goal not found" });
+  try {
+    await releaseFromGoal(user.id, params.data.id, parsed.data.amountCents);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Release failed" });
     return;
   }
 
-  if (goal.savedCents < parsed.data.amountCents) {
-    res.status(400).json({ error: "Cannot release more than saved" });
-    return;
-  }
-
-  const wallet = await getOrCreateWallet(user.id);
-
-  await db
-    .update(walletsTable)
-    .set({
-      availableCents: wallet.availableCents + parsed.data.amountCents,
-      goalAllocatedCents: wallet.goalAllocatedCents - parsed.data.amountCents,
-    })
-    .where(eq(walletsTable.id, wallet.id));
-
-  await db
-    .update(goalsTable)
-    .set({ savedCents: goal.savedCents - parsed.data.amountCents })
-    .where(eq(goalsTable.id, goal.id));
-
-  await db.insert(transactionsTable).values({
-    userId: user.id,
-    type: "goal_release",
-    description: `Released from goal: ${goal.name}`,
-    amountCents: parsed.data.amountCents,
-    onchainStatus: "none",
-    referenceId: goal.id,
-    referenceType: "goal",
-  });
-
-  res.json({ ok: true });
+  res.json(ReleaseFromGoalResponse.parse({ ok: true }));
 });
 
 export default router;

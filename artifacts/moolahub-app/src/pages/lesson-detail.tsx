@@ -1,88 +1,117 @@
-import { useGetLesson, useCompleteLesson, getGetLessonQueryKey, getListLessonsQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Link, useParams, useLocation } from "wouter";
+import { CheckCircle2, Clock, Lightbulb, ArrowRight } from "lucide-react";
+import { Card, Badge } from "@/components/ui";
+import { BackLink } from "@/components/app/bits";
+import { ActionButton } from "@/components/app/forms";
+import { useGetLesson, useListLessons, useCompleteLesson, getGetLessonQueryKey, getListLessonsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, CheckCircle2 } from "lucide-react";
 
-export default function LessonDetail() {
+export default function LessonPage() {
   const { slug } = useParams();
   const [, setLocation] = useLocation();
-  const { data: lesson, isLoading } = useGetLesson(slug!, { query: { enabled: !!slug } });
   const queryClient = useQueryClient();
+
+  const { data: lesson, isLoading } = useGetLesson(slug!, { query: { enabled: !!slug, queryKey: getGetLessonQueryKey(slug!) } });
+  const { data: lessonsList } = useListLessons();
   const completeMutation = useCompleteLesson();
 
-  if (isLoading) return <div className="p-8">Loading...</div>;
-  if (!lesson) return <div className="p-8">Lesson not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-ink-400">Loading lesson...</div>;
+  if (!lesson) return <div className="p-8 text-center text-ink-400">Lesson not found</div>;
 
-  const handleComplete = () => {
-    if (lesson.completed) {
-      setLocation("/learn");
-      return;
-    }
-    
-    completeMutation.mutate({ slug: lesson.slug }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetLessonQueryKey(lesson.slug) });
-        queryClient.invalidateQueries({ queryKey: getListLessonsQueryKey() });
-        setLocation("/learn");
-      }
-    });
-  };
+  const index = lessonsList?.findIndex((l) => l.slug === slug) ?? -1;
+  const next = index !== -1 && lessonsList ? lessonsList[index + 1] : undefined;
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
-      <Link href="/learn" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Lessons
-      </Link>
-      
-      <div className="space-y-4">
-        <div className="text-4xl">{lesson.emoji}</div>
-        <h1 className="text-4xl font-bold tracking-tight">{lesson.title}</h1>
-        <p className="text-xl text-muted-foreground">{lesson.summary}</p>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <BackLink href="/learn" label="All lessons" />
 
-      <div className="space-y-8">
-        {lesson.body.map((section, idx) => (
-          <section key={idx} className="space-y-3">
-            <h2 className="text-2xl font-semibold">{section.heading}</h2>
-            <div className="text-muted-foreground leading-relaxed">
-              {section.text.split('\n').map((paragraph, i) => (
-                <p key={i} className="mb-4">{paragraph}</p>
-              ))}
+      <article>
+        <div className="flex items-center gap-3">
+          <Badge tone={lesson.level === "Beginner" ? "jade" : "sky"}>{lesson.level}</Badge>
+          <span className="inline-flex items-center gap-1.5 text-sm text-ink-500">
+            <Clock className="h-4 w-4" /> {lesson.minutes} min read
+          </span>
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-ink-400">
+            {lesson.category}
+          </span>
+          {lesson.completed && (
+            <Badge tone="jade">
+              <CheckCircle2 className="h-3 w-3" /> Completed
+            </Badge>
+          )}
+        </div>
+
+        <div className="mt-5 flex items-start gap-4">
+          <span className="text-5xl">{lesson.emoji}</span>
+          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-ink-900">
+            {lesson.title}
+          </h1>
+        </div>
+        <p className="mt-4 text-lg leading-relaxed text-ink-500">{lesson.summary}</p>
+
+        <div className="mt-8 space-y-8">
+          {lesson.body.map((section) => (
+            <section key={section.heading}>
+              <h2 className="font-display text-xl font-bold text-ink-900">{section.heading}</h2>
+              <p className="mt-2 leading-relaxed text-ink-600">{section.text}</p>
+            </section>
+          ))}
+        </div>
+
+        {lesson.takeaways && lesson.takeaways.length > 0 && (
+          <Card className="mt-10 border-jade-500/15 bg-jade-50/50 p-6">
+            <div className="flex items-center gap-2 text-jade-700">
+              <Lightbulb className="h-5 w-5" />
+              <h2 className="font-display text-lg font-bold">Key takeaways</h2>
             </div>
-          </section>
-        ))}
-      </div>
-
-      {lesson.takeaways && lesson.takeaways.length > 0 && (
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="pt-6">
-            <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-primary" /> Key Takeaways
-            </h3>
-            <ul className="space-y-2">
-              {lesson.takeaways.map((takeaway, idx) => (
-                <li key={idx} className="flex gap-3">
-                  <span className="text-primary font-bold">{idx + 1}.</span>
-                  <span>{takeaway}</span>
+            <ul className="mt-4 space-y-3">
+              {lesson.takeaways.map((t) => (
+                <li key={t} className="flex items-start gap-2.5">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-jade-500" />
+                  <span className="text-ink-700">{t}</span>
                 </li>
               ))}
             </ul>
-          </CardContent>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      <div className="pt-8 border-t">
-        <Button 
-          size="lg" 
-          className="w-full sm:w-auto"
-          onClick={handleComplete}
-          disabled={completeMutation.isPending}
-        >
-          {lesson.completed ? "Back to Lessons" : "Mark as Completed"}
-        </Button>
-      </div>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+          {lesson.completed ? (
+            <Badge tone="jade" className="px-4 py-2">
+              <CheckCircle2 className="h-4 w-4" /> Lesson completed
+            </Badge>
+          ) : (
+            <ActionButton
+              onClick={() => {
+                completeMutation.mutate({ slug: lesson.slug }, {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: getGetLessonQueryKey(lesson.slug) });
+                    queryClient.invalidateQueries({ queryKey: getListLessonsQueryKey() });
+                    setLocation("/learn");
+                  }
+                });
+              }}
+              label="Mark complete"
+              pendingLabel="Saving…"
+              pending={completeMutation.isPending}
+            />
+          )}
+          {next && (
+            <Link
+              href={`/learn/${next.slug}`}
+              className="group inline-flex items-center gap-2 text-sm font-medium text-ink-600 hover:text-ink-900"
+            >
+              <span className="text-right">
+                <span className="block font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                  Next lesson
+                </span>
+                {next.title}
+              </span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
+        </div>
+      </article>
     </div>
   );
 }

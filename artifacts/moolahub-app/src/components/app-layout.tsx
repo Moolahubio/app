@@ -1,126 +1,149 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLogout } from "@workspace/api-client-react";
 import { useEffect } from "react";
 import { 
-  Home, 
-  Wallet, 
+  LayoutDashboard, 
   Users, 
   Target, 
-  BookOpen, 
-  Activity, 
-  Bell, 
-  User, 
-  LogOut 
+  GraduationCap, 
+  Receipt, 
+  Plus 
 } from "lucide-react";
+import { Logo, MoolaMark } from "@/components/brand/Logo";
+import { Avatar, Button, Skeleton } from "@/components/ui";
+import { NotificationBell } from "@/components/app/NotificationBell";
+import { ShellNavList, type NavItem } from "@/components/app/ShellNav";
+import { formatMoney } from "@/lib/utils";
+import { useGetDashboardSummary, useListNotifications, getGetDashboardSummaryQueryKey, getListNotificationsQueryKey } from "@workspace/api-client-react";
+
+const nav: NavItem[] = [
+  { label: "Home", href: "/", icon: LayoutDashboard },
+  { label: "Circles", href: "/circles", icon: Users },
+  { label: "Goals", href: "/goals", icon: Target },
+  { label: "Learn", href: "/learn", icon: GraduationCap },
+  { label: "Activity", href: "/activity", icon: Receipt },
+];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [, setLocation] = useLocation();
 
+  const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary({
+    query: { enabled: isAuthenticated, queryKey: getGetDashboardSummaryQueryKey() }
+  });
+  const { data: notifData } = useListNotifications({
+    query: { enabled: isAuthenticated, queryKey: getListNotificationsQueryKey() }
+  });
+
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isAuthLoading && !isAuthenticated) {
       setLocation("/login");
     }
-  }, [isLoading, isAuthenticated, setLocation]);
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground text-sm">Loading...</div>
-      </div>
-    );
-  }
-  
-  if (!isAuthenticated) {
+  }, [isAuthLoading, isAuthenticated, setLocation]);
+
+  if (isAuthLoading || !isAuthenticated) {
     return null;
   }
 
+  const kycLabel = user?.kycStatus === "verified"
+    ? "Verified · KYC"
+    : user?.kycStatus === "pending"
+      ? "KYC pending"
+      : "KYC required";
+
+  const reminder = summary?.upcomingReminder;
+  const notifications = (notifData?.notifications ?? []).map((n) => ({
+    ...n,
+    link: n.link ?? null,
+  }));
+  const unreadCount = notifData?.unreadCount ?? 0;
+
   return (
-    <div className="min-h-screen flex bg-background">
-      <Sidebar />
-      <main className="flex-1 pb-16 md:pb-0 overflow-y-auto">
-        <div className="max-w-5xl mx-auto p-4 md:p-8">
-          {children}
+    <div className="min-h-[100dvh] bg-mist">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-ink-900/[0.08] bg-white px-4 py-6 lg:flex">
+        <Link href="/" className="px-2 transition-opacity hover:opacity-80">
+          <Logo />
+        </Link>
+
+        <div className="mt-8">
+          <ShellNavList items={nav} layout="sidebar" />
         </div>
-      </main>
-      <BottomNav />
-    </div>
-  );
-}
 
-function Sidebar() {
-  const [location, setLocation] = useLocation();
-  const logout = useLogout();
+        {reminder && (
+          <div className="mt-6 rounded-xl border border-ink-900/10 bg-ink-950 p-4 text-white">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+              Next due
+            </p>
+            <p className="mt-1 text-sm font-semibold">{reminder.title}</p>
+            <p className="text-xs text-white/55">
+              {formatMoney(reminder.amountCents)} ·{" "}
+              {new Date(reminder.dueDate).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+        )}
 
-  const navItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard" },
-    { icon: Wallet, label: "Wallet", href: "/wallet" },
-    { icon: Users, label: "Circles", href: "/circles" },
-    { icon: Target, label: "Goals", href: "/goals" },
-    { icon: BookOpen, label: "Learn", href: "/learn" },
-    { icon: Activity, label: "Activity", href: "/activity" },
-  ];
+        <Link
+          href="/profile"
+          className="mt-auto flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-ink-900/[0.04] active:bg-ink-900/[0.06]"
+        >
+          {user ? (
+            <Avatar name={user.name} tone="jade" />
+          ) : (
+            <Skeleton className="h-9 w-9 rounded-full" />
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-ink-900">{user?.name ?? "..."}</p>
+            <p className="truncate text-xs text-ink-400">{kycLabel}</p>
+          </div>
+        </Link>
 
-  return (
-    <div className="hidden md:flex w-64 flex-col border-r bg-card h-screen sticky top-0">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-primary tracking-tight">MoolaHub</h1>
-      </div>
-      
-      <nav className="flex-1 px-4 space-y-2">
-        {navItems.map((item) => {
-          const isActive = location === item.href;
-          return (
-            <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
-              <item.icon className="w-5 h-5" />
-              {item.label}
+        <a
+          href="#"
+          className="mt-2 px-2 text-xs text-ink-400 transition-colors duration-150 hover:text-jade-600"
+        >
+          moolahub.io
+        </a>
+      </aside>
+
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-20 border-b border-ink-900/[0.08] bg-mist/90 backdrop-blur-sm">
+          <div className="flex h-14 items-center justify-between gap-4 px-5 lg:h-16 lg:px-8">
+            <Link href="/" className="lg:hidden">
+              <MoolaMark className="h-8 w-8" />
             </Link>
-          );
-        })}
+
+            <Link
+              href="/wallet"
+              className="flex items-center gap-2 rounded-xl border border-ink-900/10 bg-white px-3 py-1.5 transition-colors duration-150 hover:border-ink-900/16 active:bg-mist sm:px-4 sm:py-2"
+            >
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400">
+                Balance
+              </span>
+              <span className="text-sm font-bold tabular-nums text-ink-900">
+                {isSummaryLoading ? "..." : formatMoney(summary?.totalCents ?? 0)}
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <NotificationBell notifications={notifications} unreadCount={unreadCount} />
+              <Button href="/goals/new" size="sm" className="hidden sm:inline-flex">
+                <Plus className="h-4 w-4" /> New goal
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="relative z-0 px-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-6 lg:px-8 lg:pb-12">
+          {children}
+        </main>
+      </div>
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-ink-900/[0.08] bg-white/95 backdrop-blur-sm lg:hidden">
+        <ShellNavList items={nav} layout="bottom" />
       </nav>
-
-      <div className="p-4 space-y-2 border-t">
-        <Link href="/notifications" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground">
-          <Bell className="w-5 h-5" />
-          Notifications
-        </Link>
-        <Link href="/profile" className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-secondary hover:text-foreground">
-          <User className="w-5 h-5" />
-          Profile
-        </Link>
-        <button onClick={() => logout.mutate(undefined, { onSuccess: () => setLocation("/login") })} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
-          <LogOut className="w-5 h-5" />
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function BottomNav() {
-  const [location] = useLocation();
-  
-  const navItems = [
-    { icon: Home, label: "Home", href: "/dashboard" },
-    { icon: Wallet, label: "Wallet", href: "/wallet" },
-    { icon: Users, label: "Circles", href: "/circles" },
-    { icon: Target, label: "Goals", href: "/goals" },
-  ];
-
-  return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-card pb-safe z-50">
-      <div className="flex justify-around p-2">
-        {navItems.map((item) => {
-          const isActive = location === item.href;
-          return (
-            <Link key={item.href} href={item.href} className={`flex flex-col items-center justify-center p-2 rounded-lg min-w-[64px] ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-              <item.icon className="w-6 h-6 mb-1" />
-              <span className="text-[10px] font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
     </div>
   );
 }

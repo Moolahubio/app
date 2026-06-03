@@ -50,6 +50,9 @@ function Router() {
       <Route path="/goals">
         <ProtectedRoute component={Goals} />
       </Route>
+      <Route path="/goals/new">
+        <ProtectedRoute component={Goals} />
+      </Route>
       <Route path="/goals/:id">
         <ProtectedRoute component={GoalDetail} />
       </Route>

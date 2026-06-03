@@ -1,8 +1,7 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
-import { db, transactionsTable } from "@workspace/db";
 import { ListActivityQueryParams, ListActivityResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { userActivity } from "../lib/ledger";
 
 const router: IRouter = Router();
 
@@ -11,18 +10,12 @@ router.get("/activity", requireAuth, async (req, res): Promise<void> => {
   const queryParams = ListActivityQueryParams.safeParse(req.query);
   const limit = queryParams.success ? (queryParams.data.limit ?? 20) : 20;
 
-  const txs = await db
-    .select()
-    .from(transactionsTable)
-    .where(eq(transactionsTable.userId, user.id))
-    .orderBy(desc(transactionsTable.createdAt))
-    .limit(limit);
-
-  const result = txs.map((t) => ({
+  const rows = await userActivity(user.id, limit);
+  const result = rows.map((t) => ({
     id: t.id,
     type: t.type,
     description: t.description,
-    amountCents: t.amountCents ?? null,
+    amountCents: t.amountCents,
     txHash: t.txHash ?? null,
     onchainStatus: t.onchainStatus,
     createdAt: t.createdAt.toISOString(),

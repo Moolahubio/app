@@ -1,6 +1,4 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, walletsTable, transactionsTable } from "@workspace/db";
 import {
   DepositFaucetBody,
   WithdrawFundsBody,
@@ -10,24 +8,30 @@ import {
   SyncDepositsResponse,
   GetOnrampUrlResponse,
 } from "@workspace/api-zod";
-import { requireAuth, getOrCreateWallet, type AuthRequest } from "../lib/auth";
+import { requireAuth, type AuthRequest } from "../lib/auth";
+import { createWalletForUser } from "../lib/wallet";
+import { userBalances } from "../lib/ledger";
+import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
+import { onchainEnabled, networkName } from "../lib/chain";
+import { onrampEnabled, createOnrampSessionToken, buildOnrampUrl } from "../lib/onramp";
 
 const router: IRouter = Router();
 
 router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
-  const wallet = await getOrCreateWallet(user.id);
+  const wallet = await createWalletForUser(user.id);
+  const bal = await userBalances(user.id);
 
   res.json(
     GetWalletResponse.parse({
-      availableCents: wallet.availableCents,
-      totalCents: wallet.availableCents + wallet.goalAllocatedCents,
-      goalAllocatedCents: wallet.goalAllocatedCents,
+      availableCents: bal.availableCents,
+      totalCents: bal.totalCents,
+      goalAllocatedCents: bal.allocatedCents,
       address: wallet.address,
-      network: wallet.network,
-      onrampEnabled: wallet.onrampEnabled,
-      onchainEnabled: wallet.onchainEnabled,
-    })
+      network: networkName(),
+      onrampEnabled: onrampEnabled(),
+      onchainEnabled: onchainEnabled(),
+    }),
   );
 });
 
@@ -39,19 +43,12 @@ router.post("/wallet/deposit", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
-  const wallet = await getOrCreateWallet(user.id);
-  await db
-    .update(walletsTable)
-    .set({ availableCents: wallet.availableCents + parsed.data.amountCents })
-    .where(eq(walletsTable.id, wallet.id));
-
-  await db.insert(transactionsTable).values({
-    userId: user.id,
-    type: "deposit",
-    description: "Testnet faucet deposit",
-    amountCents: parsed.data.amountCents,
-    onchainStatus: "confirmed",
-  });
+  try {
+    await faucetDeposit(user.id, parsed.data.amountCents);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Deposit failed" });
+    return;
+  }
 
   res.json(DepositFaucetResponse.parse({ ok: true }));
 });
@@ -64,37 +61,49 @@ router.post("/wallet/withdraw", requireAuth, async (req, res): Promise<void> => 
     return;
   }
 
-  const wallet = await getOrCreateWallet(user.id);
-  if (wallet.availableCents < parsed.data.amountCents) {
-    res.status(400).json({ error: "Insufficient balance" });
+  try {
+    await withdrawToAddress(user.id, parsed.data.amountCents, parsed.data.destination);
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Withdrawal failed" });
     return;
   }
-
-  await db
-    .update(walletsTable)
-    .set({ availableCents: wallet.availableCents - parsed.data.amountCents })
-    .where(eq(walletsTable.id, wallet.id));
-
-  await db.insert(transactionsTable).values({
-    userId: user.id,
-    type: "withdrawal",
-    description: `Withdrawal to ${parsed.data.destination.slice(0, 10)}...`,
-    amountCents: parsed.data.amountCents,
-    onchainStatus: "pending",
-  });
 
   res.json(WithdrawFundsResponse.parse({ ok: true }));
 });
 
 router.post("/wallet/sync", requireAuth, async (req, res): Promise<void> => {
-  res.json(SyncDepositsResponse.parse({ ok: true, credited: 0, totalCents: 0 }));
+  const user = (req as AuthRequest).user;
+  const result = await syncDeposits(user.id);
+  res.json(
+    SyncDepositsResponse.parse({
+      ok: true,
+      credited: result.credited,
+      totalCents: result.totalCents,
+    }),
+  );
 });
 
 router.get("/wallet/onramp-url", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
-  const wallet = await getOrCreateWallet(user.id);
-  const url = `https://pay.coinbase.com/buy/select-asset?appId=${process.env.NEXT_PUBLIC_CDP_PROJECT_ID ?? "demo"}&destinationWallets=${encodeURIComponent(JSON.stringify([{ address: wallet.address, assets: ["USDC"], blockchains: ["base"] }]))}`;
-  res.json(GetOnrampUrlResponse.parse({ url }));
+  if (!onrampEnabled()) {
+    res.status(400).json({ error: "Card purchases are not configured." });
+    return;
+  }
+
+  const wallet = await createWalletForUser(user.id);
+  const forwarded = req.headers["x-forwarded-for"];
+  const clientIp =
+    (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0]?.trim()) ??
+    req.socket.remoteAddress ??
+    "0.0.0.0";
+
+  try {
+    const sessionToken = await createOnrampSessionToken(wallet.address, clientIp);
+    const url = buildOnrampUrl(sessionToken);
+    res.json(GetOnrampUrlResponse.parse({ url }));
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Could not start purchase" });
+  }
 });
 
 export default router;

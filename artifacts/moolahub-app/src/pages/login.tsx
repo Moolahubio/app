@@ -1,99 +1,73 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useLogin, usePrivyAuth } from "@workspace/api-client-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { ShieldCheck, Lock, Users } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
+import { AscendingChart } from "@/components/marketing/AscendingChart";
+import { AuthPanel } from "@/components/auth/AuthPanel";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Login() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const loginMutation = useLogin();
-  const privyAuthMutation = usePrivyAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginMutation.mutate(
-      { data: { email, password } },
-      {
-        onSuccess: () => {
-          setLocation("/dashboard");
-        },
-        onError: (err: any) => {
-          toast({
-            title: "Error",
-            description: err.error || "Failed to login",
-            variant: "destructive"
-          });
-        }
-      }
-    );
-  };
-
-  const handlePrivyLogin = () => {
-    toast({
-      title: "Connect wallet via Privy",
-      description: "Privy integration coming soon.",
-    });
-  };
+  if (!isLoading && isAuthenticated) {
+    setLocation("/");
+    return null;
+  }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md bg-card border rounded-2xl shadow-sm p-8 space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-primary tracking-tight">MoolaHub</h1>
-          <p className="text-muted-foreground">Welcome back to your savings community</p>
-        </div>
+    <main className="grid min-h-[100dvh] lg:grid-cols-2">
+      {/* ---------------------------------------------------- brand panel */}
+      <section className="relative isolate hidden flex-col justify-between overflow-hidden bg-ink-950 p-12 text-white lg:flex">
+        <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:48px_48px] [mask-image:radial-gradient(80%_60%_at_30%_20%,black,transparent)]" />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="you@example.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+        <Link href="/login">
+          <Logo tone="light" />
+        </Link>
 
-          <Button type="submit" className="w-full" size="lg" disabled={loginMutation.isPending}>
-            {loginMutation.isPending ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+        <div>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
+            Connecting People Through Savings
+          </p>
+          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
+            Built on Base
+          </p>
+          <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
+            Save Now.
+            <br />
+            <span className="text-jade-400">Grow Together.</span>
+          </h1>
+          <p className="mt-5 max-w-sm text-lg text-white/60">
+            Open a non-custodial wallet in minutes. No bank account needed — just
+            you, your goals, and your circle.
+          </p>
+          <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <AscendingChart className="max-h-32" />
           </div>
         </div>
 
-        <Button variant="outline" type="button" className="w-full" size="lg" onClick={handlePrivyLogin}>
-          Continue with Privy
-        </Button>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/50">
+          <span className="inline-flex items-center gap-2">
+            <Lock className="h-4 w-4 text-jade-400" /> Non-custodial
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-jade-400" /> On-chain verified
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <Users className="h-4 w-4 text-jade-400" /> Trusted circles
+          </span>
+        </div>
+      </section>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Don't have an account? <Link href="/register" className="text-primary hover:underline">Sign up</Link>
-        </p>
-      </div>
-    </div>
+      {/* ----------------------------------------------------- form panel */}
+      <section className="flex flex-col justify-center bg-mist px-6 py-12 sm:px-12">
+        <div className="mx-auto w-full max-w-sm">
+          <div className="mb-8 lg:hidden">
+            <Logo />
+          </div>
+          <AuthPanel />
+        </div>
+      </section>
+    </main>
   );
 }

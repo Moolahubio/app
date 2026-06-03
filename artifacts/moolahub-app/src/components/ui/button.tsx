@@ -1,65 +1,55 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "dark";
+export type ButtonSize = "sm" | "md" | "lg";
 
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0" +
-" hover-elevate active-elevate-2",
-  {
-    variants: {
-      variant: {
-        default:
-           // @replit: no hover, and add primary border
-           "bg-primary text-primary-foreground border border-primary-border",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm border-destructive-border",
-        outline:
-          // @replit Shows the background color of whatever card / sidebar / accent background it is inside of.
-          // Inherits the current text color. Uses shadow-xs. no shadow on active
-          // No hover state
-          " border [border-color:var(--button-outline)] shadow-xs active:shadow-none ",
-        secondary:
-          // @replit border, no hover, no shadow, secondary border.
-          "border bg-secondary text-secondary-foreground border border-secondary-border ",
-        // @replit no hover, transparent border
-        ghost: "border border-transparent",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        // @replit changed sizes
-        default: "min-h-9 px-4 py-2",
-        sm: "min-h-8 rounded-md px-3 text-xs",
-        lg: "min-h-10 rounded-md px-8",
-        icon: "h-9 w-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
+const buttonBase = cn(
+  "inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-xl font-semibold",
+  "transition-[color,background-color,border-color,transform] duration-150 ease-out",
+  "active:scale-[0.98] active:duration-75",
+  "focus-ring disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100",
+  "whitespace-nowrap",
+);
+
+const buttonVariants: Record<ButtonVariant, string> = {
+  primary:
+    "border border-jade-600 bg-jade-500 text-white hover:bg-jade-600 active:bg-jade-700",
+  secondary:
+    "border border-ink-900/12 bg-white text-ink-900 hover:border-ink-900/20 hover:bg-mist active:bg-ink-900/[0.04]",
+  ghost: "border border-transparent text-ink-700 hover:bg-ink-900/[0.05] active:bg-ink-900/[0.08]",
+  dark: "border border-ink-800 bg-ink-900 text-white hover:bg-ink-800 active:bg-ink-850",
+};
+
+const buttonSizes: Record<ButtonSize, string> = {
+  sm: "h-9 px-3.5 text-sm",
+  md: "h-10 px-4 text-sm",
+  lg: "h-12 px-5 text-[0.9375rem]",
+};
+
+export type ButtonProps = {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  className?: string;
+} & (
+  | ({ href: string } & Omit<React.ComponentProps<typeof Link>, "className" | "to" | "asChild">)
+  | ({ href?: undefined } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "className">)
+);
+
+export function Button({
+  variant = "primary",
+  size = "md",
+  className,
+  ...props
+}: ButtonProps) {
+  const classes = cn(buttonBase, buttonVariants[variant], buttonSizes[size], className);
+
+  if ("href" in props && props.href !== undefined) {
+    const { href, ...rest } = props;
+    return <Link href={href} className={classes} {...rest} />;
   }
-)
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
+  const { type = "button", ...rest } = props as React.ButtonHTMLAttributes<HTMLButtonElement>;
+  return <button type={type} className={classes} {...rest} />;
 }
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
-
-export { Button, buttonVariants }

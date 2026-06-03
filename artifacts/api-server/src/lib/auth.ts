@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db, usersTable, sessionsTable, walletsTable } from "@workspace/db";
+import { db, usersTable, sessionsTable } from "@workspace/db";
 import type { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
@@ -46,15 +46,6 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function comparePassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
-}
-
-export async function getOrCreateWallet(userId: string): Promise<typeof walletsTable.$inferSelect> {
-  const [existing] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
-  if (existing) return existing;
-
-  const address = "0x" + crypto.randomBytes(20).toString("hex");
-  const [wallet] = await db.insert(walletsTable).values({ userId, address }).returning();
-  return wallet;
 }
 
 export type AuthRequest = Request & { user: typeof usersTable.$inferSelect };

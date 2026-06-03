@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -42,19 +43,74 @@
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
+  --font-display: var(--app-font-display);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-4xl: 2rem;
+
+  --color-jade-50: #ECFBF4;
+  --color-jade-100: #CFF5E3;
+  --color-jade-200: #A1EAC9;
+  --color-jade-300: #67DBAB;
+  --color-jade-400: #30C58A;
+  --color-jade-500: #0E9E6E;
+  --color-jade-600: #0B8A60;
+  --color-jade-700: #0A6E4E;
+  --color-jade-800: #0B563F;
+  --color-jade-900: #0A3F2F;
+
+  --color-ink: #0C1512;
+  --color-ink-950: #070D0B;
+  --color-ink-900: #0C1512;
+  --color-ink-850: #0F1814;
+  --color-ink-800: #14201B;
+  --color-ink-700: #1B2A24;
+  --color-ink-600: #26392F;
+  --color-ink-500: #3A5046;
+  --color-ink-400: #5C7468;
+
+  --color-paper: #FFFFFF;
+  --color-mist: #F5F8F6;
+
+  --shadow-card: 0 1px 2px rgba(12, 21, 18, 0.04), 0 8px 24px -12px rgba(12, 21, 18, 0.12);
+  --shadow-card-hover: 0 2px 4px rgba(12, 21, 18, 0.06), 0 16px 40px -16px rgba(12, 21, 18, 0.18);
+  --shadow-glow: 0 0 0 1px rgba(14,158,110,0.2), 0 12px 40px -12px rgba(14,158,110,0.45);
+
+  --background-image-grid-dark: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  --background-image-grid-light: linear-gradient(rgba(12,21,18,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(12,21,18,0.045) 1px, transparent 1px);
+
+  --animate-fade-up: fade-up 0.6s ease-out both;
+  --animate-draw-line: draw-line 2.4s ease-out forwards;
+  --animate-pulse-soft: pulse-soft 3s ease-in-out infinite;
+  --animate-twinkle: twinkle 2.8s ease-in-out infinite;
+
+  @keyframes fade-up {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes draw-line {
+    0% { stroke-dashoffset: 1000; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
 }
 
 :root {
-  --background: 0 0% 98%; /* FAFAFA */
-  --foreground: 160 30% 6%; /* 0C1512 */
+  --background: 135 15% 97%; /* mist */
+  --foreground: 160 30% 6%; /* ink-900 */
   --border: 150 10% 90%;
   --input: 150 10% 90%;
-  --ring: 158 83% 34%;
+  --ring: 158 83% 34%; /* jade-500 */
 
   --card: 0 0% 100%;
   --card-foreground: 160 30% 6%;
@@ -64,11 +120,11 @@
   --popover-foreground: 160 30% 6%;
   --popover-border: 150 10% 92%;
 
-  --primary: 158 83% 34%; /* 0E9E6E */
+  --primary: 158 83% 34%; /* jade-500 */
   --primary-foreground: 0 0% 100%;
   --primary-border: 158 83% 30%;
 
-  --secondary: 135 15% 97%; /* F5F8F6 */
+  --secondary: 135 15% 97%;
   --secondary-foreground: 160 30% 20%;
   --secondary-border: 135 15% 90%;
 
@@ -84,9 +140,9 @@
   --destructive-foreground: 0 0% 100%;
   --destructive-border: 0 84% 50%;
 
-  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
-  --app-font-serif: Georgia, serif;
-  --app-font-mono: Menlo, monospace;
+  --app-font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --app-font-display: 'Poppins', 'Inter', sans-serif;
+  --app-font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
   
   --radius: 0.75rem;
 
@@ -101,13 +157,13 @@
 }
 
 .dark {
-  --background: 160 30% 6%; /* 0C1512 */
+  --background: 162 25% 8%; /* ink-950 */
   --foreground: 0 0% 98%;
   --border: 160 20% 15%;
   --input: 160 20% 15%;
   --ring: 158 83% 34%;
 
-  --card: 162 25% 8%; /* 070D0B */
+  --card: 160 30% 6%; /* ink-900 */
   --card-foreground: 0 0% 98%;
   --card-border: 160 20% 15%;
 
@@ -148,8 +204,64 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    scroll-behavior: smooth;
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  ::selection {
+    background: rgba(14, 158, 110, 0.22);
+  }
+}
+
+/* Branded scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(12, 21, 18, 0.18);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(12, 21, 18, 0.3);
+  background-clip: content-box;
+}
+
+@layer components {
+  /* Monospace eyebrow label — a core MoolaHub brand signature */
+  .eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.22em];
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-jade-500/60 focus-visible:ring-offset-2;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .safe-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

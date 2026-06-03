@@ -1,150 +1,209 @@
-import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, useGetOnrampUrl, getGetWalletQueryKey } from "@workspace/api-client-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatMoney } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, Clock, CreditCard } from "lucide-react";
+import { Card, Badge } from "@/components/ui";
+import { PageHeader } from "@/components/app/bits";
+import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
+import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, useGetOnrampUrl, getGetWalletQueryKey, getGetOnrampUrlQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
+import { formatMoney, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 
-export default function Wallet() {
+const NETWORK = import.meta.env.VITE_BASE_NETWORK === "mainnet" ? "Base" : "Base Sepolia";
+const ONRAMP = true;
+
+export default function WalletPage() {
   const { data: wallet, isLoading } = useGetWallet();
-  const { data: onrampData } = useGetOnrampUrl({ query: { enabled: !!wallet?.onrampEnabled } });
+  const { data: onrampData } = useGetOnrampUrl({ query: { enabled: !!wallet?.onrampEnabled, queryKey: getGetOnrampUrlQueryKey() } });
   
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
   const depositMutation = useDepositFaucet();
   const withdrawMutation = useWithdrawFunds();
   const syncMutation = useSyncDeposits();
-  
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawDest, setWithdrawDest] = useState("");
 
-  if (isLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>;
-  if (!wallet) return null;
+  const [depositOk, setDepositOk] = useState<string | null>(null);
+  const [withdrawOk, setWithdrawOk] = useState<string | null>(null);
+  const [syncOk, setSyncOk] = useState<string | null>(null);
+
+  if (isLoading || !wallet) {
+    return <div className="p-8 text-center text-ink-400">Loading wallet...</div>;
+  }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Wallet</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-primary text-primary-foreground">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium opacity-90">Available Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">{formatMoney(wallet.availableCents)} USDC</div>
-            <div className="mt-2 text-sm opacity-80">
-              Total: {formatMoney(wallet.totalCents)} USDC | Allocated to goals: {formatMoney(wallet.goalAllocatedCents)} USDC
-            </div>
-          </CardContent>
-        </Card>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <PageHeader
+        eyebrow="Wallet"
+        title="Deposit & withdraw USDC"
+        description="MoolaHub runs on USDC over Base. Receive crypto into your wallet, or send it to any Base address."
+      />
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium">Wallet Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Address:</span> <br/>
-              <span className="font-mono text-xs bg-secondary p-1 rounded break-all">{wallet.address}</span>
-            </div>
-            <div className="text-sm">
-              <span className="text-muted-foreground">Network:</span> <span className="font-medium capitalize">{wallet.network}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* balance + receive address */}
+      <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">
+        <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:32px_32px] [mask-image:radial-gradient(70%_80%_at_90%_0%,black,transparent)]" />
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+            Available balance
+          </p>
+          <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
+            {NETWORK}
+          </Badge>
+        </div>
+        <p className="mt-1.5 font-display text-4xl font-bold">
+          {formatMoney(wallet.availableCents)}
+        </p>
+        <p className="mt-1 text-sm text-white/55">
+          {formatMoney(wallet.goalAllocatedCents)} allocated to goals
+        </p>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          onClick={() => {
-            depositMutation.mutate({ data: { amountCents: 10000 } }, {
-              onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                toast({ title: "Deposited", description: "$100 added from faucet" });
-              }
-            });
-          }}
-          disabled={depositMutation.isPending}
-        >
-          Get Testnet Faucet
-        </Button>
-        
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="h-24 flex-col gap-2">
-              Withdraw
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Withdraw Funds</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Amount (USD)</Label>
-                <Input type="number" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} placeholder="0.00" />
-              </div>
-              <div className="space-y-2">
-                <Label>Destination Address</Label>
-                <Input value={withdrawDest} onChange={e => setWithdrawDest(e.target.value)} placeholder="0x..." />
-              </div>
-              <Button 
-                className="w-full" 
-                disabled={withdrawMutation.isPending || !withdrawAmount || !withdrawDest}
+        {wallet.address && (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="flex items-center gap-2">
+              <WalletIcon className="h-4 w-4 text-jade-400" />
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+                Your USDC deposit address
+              </p>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <code className="truncate font-mono text-sm text-white/80">{wallet.address}</code>
+              <CopyButton value={wallet.address} />
+            </div>
+            <p className="mt-2 text-xs text-white/45">
+              Send only <span className="text-white/70">USDC on {NETWORK}</span> to this address.
+            </p>
+          </div>
+        )}
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* receive */}
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-jade-50 text-jade-600">
+              <ArrowDownLeft className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="font-display text-lg font-bold text-ink-900">Receive</h2>
+              <p className="text-xs text-ink-500">Deposit USDC on-chain</p>
+            </div>
+          </div>
+
+          <p className="mt-4 text-sm text-ink-600">
+            Send USDC to your address above from any Base wallet, then check for it:
+          </p>
+          <div className="mt-3">
+            <ActionButton
+              onClick={() => {
+                setSyncOk(null);
+                syncMutation.mutate(undefined, {
+                  onSuccess: (res) => {
+                    queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                    setSyncOk(`Credited ${formatMoney(res.credited)} from chain`);
+                  }
+                });
+              }}
+              label="Check for deposits"
+              pendingLabel="Checking…"
+              variant="secondary"
+              className="w-full [&>button]:w-full"
+              pending={syncMutation.isPending}
+              error={apiErrorMessage(syncMutation.error)}
+            />
+            {syncOk && <p className="mt-2 text-sm text-jade-600 font-medium">{syncOk}</p>}
+          </div>
+
+          {ONRAMP && (
+            <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
+              <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-ink-700">
+                <CreditCard className="h-4 w-4 text-jade-500" /> Buy with card
+              </p>
+              <p className="mb-3 text-xs text-ink-500">
+                Purchase USDC with a card or bank — it lands in your wallet.
+              </p>
+              <ActionButton 
                 onClick={() => {
-                  withdrawMutation.mutate({ 
-                    data: { amountCents: Math.floor(parseFloat(withdrawAmount) * 100), destination: withdrawDest } 
-                  }, {
-                    onSuccess: () => {
-                      queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                      toast({ title: "Withdrawn", description: "Funds successfully withdrawn" });
-                    }
-                  });
+                  if (onrampData?.url) window.open(onrampData.url, "_blank");
                 }}
-              >
-                Confirm Withdrawal
-              </Button>
+                label="Buy USDC"
+                variant="secondary"
+                className="w-full [&>button]:w-full"
+              />
             </div>
-          </DialogContent>
-        </Dialog>
+          )}
 
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          onClick={() => {
-            syncMutation.mutate(undefined, {
-              onSuccess: (res) => {
-                queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                toast({ title: "Synced", description: `Credited ${formatMoney(res.credited)} from chain` });
-              }
-            });
-          }}
-          disabled={syncMutation.isPending || !wallet.onchainEnabled}
-        >
-          Sync On-Chain
-        </Button>
+          <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
+            <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-ink-700">
+              <Sparkles className="h-4 w-4 text-jade-500" /> Testnet faucet
+            </p>
+            <p className="mb-3 text-xs text-ink-500">
+              Grab test USDC to try things out before real funds.
+            </p>
+            <AmountForm 
+              onSubmit={(amountCents) => {
+                setDepositOk(null);
+                depositMutation.mutate({ data: { amountCents } }, {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                    setDepositOk("Test USDC received");
+                  }
+                });
+              }}
+              presets={[10000, 25000, 50000]} 
+              submitLabel="Receive test USDC" 
+              pending={depositMutation.isPending}
+              error={apiErrorMessage(depositMutation.error)}
+              ok={depositOk}
+            />
+          </div>
+        </Card>
 
-        <Button 
-          variant="outline" 
-          className="h-24 flex-col gap-2"
-          disabled={!wallet.onrampEnabled || !onrampData?.url}
-          onClick={() => {
-            if (onrampData?.url) {
-              window.open(onrampData.url, "_blank");
-            }
-          }}
-        >
-          Buy USDC (Onramp)
-        </Button>
+        {/* withdraw */}
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink-900/[0.06] text-ink-700">
+              <ArrowUpRight className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="font-display text-lg font-bold text-ink-900">Withdraw</h2>
+              <p className="text-xs text-ink-500">Send USDC to any Base address</p>
+            </div>
+          </div>
+          <div className="mt-5">
+            <WithdrawForm 
+              onSubmit={(data) => {
+                setWithdrawOk(null);
+                withdrawMutation.mutate({ data }, {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                    setWithdrawOk("Withdrawal successful");
+                  }
+                });
+              }}
+              pending={withdrawMutation.isPending}
+              error={apiErrorMessage(withdrawMutation.error)}
+              ok={withdrawOk}
+            />
+          </div>
+        </Card>
       </div>
+
+      <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
+        <p className="text-sm text-ink-600">
+          MoolaHub is non-custodial — funds settle to your own Base wallet, and every movement
+          is recorded on the ledger with an on-chain reference.{" "}
+          <Badge tone="jade" className="ml-1">Built on Base</Badge>
+        </p>
+      </Card>
+
+      <Card className="flex items-start gap-3 border-ink-900/[0.06] bg-white p-5">
+        <Clock className="mt-0.5 h-5 w-5 shrink-0 text-ink-400" />
+        <p className="text-sm text-ink-500">
+          <span className="font-semibold text-ink-700">Local currency (GHS · NGN) is coming soon.</span>{" "}
+          Cash deposits and withdrawals via a licensed on/off-ramp partner will arrive in a later
+          release. For now, MoolaHub runs entirely on USDC.
+        </p>
+      </Card>
     </div>
   );
 }
