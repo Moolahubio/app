@@ -89,7 +89,7 @@ export type OnchainMeta = {
  * makes the check-then-move sequence race-safe and prevents overdrafts /
  * double-spends. Locks are acquired in a stable key order to avoid deadlocks.
  */
-export async function transfer(params: {
+type TransferParams = {
   type: string;
   description: string;
   userId?: string | null;
@@ -98,38 +98,57 @@ export async function transfer(params: {
   amountCents: number;
   onchain?: OnchainMeta;
   requireSufficientFrom?: boolean;
-}) {
+};
+
+async function runTransfer(tx: Executor, params: TransferParams) {
+  const from = await ensureAccount(params.fromKey, tx);
+  const to = await ensureAccount(params.toKey, tx);
+
+  for (const key of [params.fromKey, params.toKey].sort()) {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${key}))`);
+  }
+
+  if (params.requireSufficientFrom) {
+    const bal = await accountBalance(params.fromKey, tx);
+    if (bal < params.amountCents) throw new InsufficientFundsError();
+  }
+
+  const [txn] = await tx
+    .insert(transactionsTable)
+    .values({
+      type: params.type,
+      description: params.description,
+      userId: params.userId ?? null,
+      txHash: params.onchain?.txHash ?? null,
+      onchainStatus: params.onchain?.onchainStatus ?? "none",
+      onchainXdr: params.onchain?.onchainXdr ?? null,
+    })
+    .returning();
+  await tx.insert(postingsTable).values([
+    { transactionId: txn.id, accountId: from.id, amountCents: -params.amountCents },
+    { transactionId: txn.id, accountId: to.id, amountCents: params.amountCents },
+  ]);
+  return txn;
+}
+
+/**
+ * Move `amountCents` from one account to another atomically.
+ *
+ * Runs inside a DB transaction and takes a per-account Postgres advisory lock
+ * (transaction-scoped, auto-released at commit) so concurrent transfers
+ * touching the same account are serialized. When `requireSufficientFrom` is
+ * set, the source balance is checked *inside* the locked transaction, which
+ * makes the check-then-move sequence race-safe and prevents overdrafts /
+ * double-spends. Locks are acquired in a stable key order to avoid deadlocks.
+ *
+ * Pass an existing `tx` to compose this posting with other writes (e.g. a
+ * uniqueness reservation) in the *same* transaction, so they commit or roll
+ * back together.
+ */
+export async function transfer(params: TransferParams & { tx?: Executor }) {
   if (params.amountCents <= 0) throw new Error("amount must be positive");
-  return db.transaction(async (tx) => {
-    const from = await ensureAccount(params.fromKey, tx);
-    const to = await ensureAccount(params.toKey, tx);
-
-    for (const key of [params.fromKey, params.toKey].sort()) {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${key}))`);
-    }
-
-    if (params.requireSufficientFrom) {
-      const bal = await accountBalance(params.fromKey, tx);
-      if (bal < params.amountCents) throw new InsufficientFundsError();
-    }
-
-    const [txn] = await tx
-      .insert(transactionsTable)
-      .values({
-        type: params.type,
-        description: params.description,
-        userId: params.userId ?? null,
-        txHash: params.onchain?.txHash ?? null,
-        onchainStatus: params.onchain?.onchainStatus ?? "none",
-        onchainXdr: params.onchain?.onchainXdr ?? null,
-      })
-      .returning();
-    await tx.insert(postingsTable).values([
-      { transactionId: txn.id, accountId: from.id, amountCents: -params.amountCents },
-      { transactionId: txn.id, accountId: to.id, amountCents: params.amountCents },
-    ]);
-    return txn;
-  });
+  if (params.tx) return runTransfer(params.tx, params);
+  return db.transaction((tx) => runTransfer(tx, params));
 }
 
 export async function accountBalance(key: string, exec: DbLike = db): Promise<number> {

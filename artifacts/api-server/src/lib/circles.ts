@@ -5,6 +5,7 @@ import {
   circleMembersTable,
   circleInvitesTable,
   contributionsTable,
+  transactionsTable,
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
@@ -175,6 +176,8 @@ export async function contribute(userId: string, circleId: string) {
   if (circle.status !== "active") throw new Error("Circle is not active");
   const round = circle.currentRound;
 
+  // Non-authoritative pre-checks, purely for friendly error messages. The real
+  // guards run inside the atomic transaction below.
   const [already] = await db
     .select({ id: contributionsTable.id })
     .from(contributionsTable)
@@ -191,8 +194,43 @@ export async function contribute(userId: string, circleId: string) {
     throw new Error("Insufficient available balance");
   }
 
-  // On-chain: member → platform escrow.
-  let meta: { txHash?: string | null; onchainStatus?: string; onchainXdr?: string | null } = {};
+  // Reserve the contribution slot and move the money in ONE transaction so they
+  // commit or roll back together. The unique (circle_id, user_id, round)
+  // constraint is the authoritative race guard: a concurrent second request
+  // hits onConflictDoNothing → 0 rows → we throw and the whole tx (including the
+  // ledger postings) rolls back, so no double-debit is possible.
+  const { txn, contributionId } = await db.transaction(async (tx) => {
+    const reserved = await tx
+      .insert(contributionsTable)
+      .values({
+        circleId,
+        userId,
+        round,
+        amountCents: circle.contributionCents,
+        status: "confirmed",
+      })
+      .onConflictDoNothing({
+        target: [contributionsTable.circleId, contributionsTable.userId, contributionsTable.round],
+      })
+      .returning({ id: contributionsTable.id });
+    if (reserved.length === 0) throw new Error("You've already contributed this round");
+
+    const t = await transfer({
+      type: "contribution",
+      description: `${circle.name} · round ${round}`,
+      userId,
+      fromKey: acct.wallet(userId),
+      toKey: acct.pool(circleId),
+      amountCents: circle.contributionCents,
+      requireSufficientFrom: true,
+      tx,
+    });
+    return { txn: t, contributionId: reserved[0].id };
+  });
+
+  // On-chain settlement (member → platform escrow) is best-effort and happens
+  // after the ledger commit; the ledger is the source of truth. On testnet with
+  // an unfunded platform wallet this is skipped. We patch the tx hash back in.
   if (onchainEnabled()) {
     const secret = await getSigningSecret(userId);
     const escrow = platformAddress();
@@ -203,32 +241,21 @@ export async function contribute(userId: string, circleId: string) {
         amountCents: circle.contributionCents,
         memo: `susu:${circleId}`,
       });
-      meta = toMeta(r);
+      const meta = toMeta(r);
+      await db
+        .update(contributionsTable)
+        .set({ txHash: meta.txHash ?? null })
+        .where(eq(contributionsTable.id, contributionId));
+      await db
+        .update(transactionsTable)
+        .set({
+          txHash: meta.txHash ?? null,
+          onchainStatus: meta.onchainStatus ?? "none",
+          onchainXdr: meta.onchainXdr ?? null,
+        })
+        .where(eq(transactionsTable.id, txn.id));
     }
   }
-
-  const txn = await transfer({
-    type: "contribution",
-    description: `${circle.name} · round ${round}`,
-    userId,
-    fromKey: acct.wallet(userId),
-    toKey: acct.pool(circleId),
-    amountCents: circle.contributionCents,
-    onchain: meta,
-    requireSufficientFrom: true,
-  });
-
-  // Unique (circle_id, user_id, round) constraint makes this the authoritative
-  // guard against a double-contribution race; the pre-check above is just for a
-  // friendly error message.
-  await db.insert(contributionsTable).values({
-    circleId,
-    userId,
-    round,
-    amountCents: circle.contributionCents,
-    txHash: meta.txHash ?? null,
-    status: "confirmed",
-  });
 
   await notify(
     userId,
