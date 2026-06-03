@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { ShieldCheck, Lock, Users } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
@@ -10,8 +10,13 @@ export default function Login() {
   const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      setLocation("/");
+    }
+  }, [isLoading, isAuthenticated, setLocation]);
+
   if (!isLoading && isAuthenticated) {
-    setLocation("/");
     return null;
   }
 

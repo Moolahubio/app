@@ -12,7 +12,7 @@ import {
   X,
   ShieldCheck,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, Avatar, Button, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
@@ -28,6 +28,7 @@ import {
 import { useUpload } from "@workspace/object-storage-web";
 import { formatMoney, truncateAddress, avatarSrc, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 const settings = [
   { icon: WalletIcon, label: "View wallet", detail: "Balance & address on Base", href: "/wallet" },
@@ -43,6 +44,7 @@ export default function ProfilePage() {
   const logoutMutation = useLogout();
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [editingName, setEditingName] = useState(false);
@@ -266,7 +268,20 @@ export default function ProfilePage() {
       <button
         onClick={() => {
           logoutMutation.mutate(undefined, {
-            onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() }),
+            onSuccess: () => {
+              queryClient.setQueryData(getGetMeQueryKey(), null);
+              queryClient.removeQueries({
+                predicate: (q) => q.queryKey[0] !== getGetMeQueryKey()[0],
+              });
+              setLocation("/login");
+            },
+            onError: () => {
+              toast({
+                title: "Could not sign out",
+                description: "Please try again.",
+                variant: "destructive",
+              });
+            },
           });
         }}
         disabled={logoutMutation.isPending}
