@@ -347,7 +347,15 @@ export const GetCircleResponse = zod.object({
 })),
   "myContributionStatus": zod.string().nullish(),
   "myPayoutRound": zod.number().nullish(),
-  "imageUrl": zod.string().nullish()
+  "imageUrl": zod.string().nullish(),
+  "isCreator": zod.boolean().optional(),
+  "canInvite": zod.boolean().optional(),
+  "canStart": zod.boolean().optional(),
+  "canContribute": zod.boolean().optional(),
+  "pendingInvites": zod.array(zod.object({
+  "id": zod.string(),
+  "email": zod.string()
+})).optional()
 })
 
 

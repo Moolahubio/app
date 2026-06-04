@@ -136,6 +136,11 @@ export interface CircleMember {
   contributedThisRound?: boolean;
 }
 
+export interface CirclePendingInvite {
+  id: string;
+  email: string;
+}
+
 export interface CircleDetail {
   id: string;
   name: string;
@@ -156,6 +161,11 @@ export interface CircleDetail {
   myPayoutRound?: number | null;
   /** @nullable */
   imageUrl?: string | null;
+  isCreator?: boolean;
+  canInvite?: boolean;
+  canStart?: boolean;
+  canContribute?: boolean;
+  pendingInvites?: CirclePendingInvite[];
 }
 
 export interface CircleInvite {

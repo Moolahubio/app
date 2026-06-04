@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CircleMember } from './circleMember';
+import type { CirclePendingInvite } from './circlePendingInvite';
 
 export interface CircleDetail {
   id: string;
@@ -27,4 +28,9 @@ export interface CircleDetail {
   myPayoutRound?: number | null;
   /** @nullable */
   imageUrl?: string | null;
+  isCreator?: boolean;
+  canInvite?: boolean;
+  canStart?: boolean;
+  canContribute?: boolean;
+  pendingInvites?: CirclePendingInvite[];
 }

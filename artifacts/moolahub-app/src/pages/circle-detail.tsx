@@ -29,11 +29,12 @@ export default function CircleDetailPage() {
   if (isLoading) return <div className="p-8 text-center text-ink-400">Loading circle...</div>;
   if (!circle) return <div className="p-8 text-center text-ink-400">Circle not found</div>;
 
-  const isPending = circle.status === "pending";
+  const isForming = circle.status === "forming";
   const isActive = circle.status === "active";
   const isAccumulation = circle.type === "accumulation";
-  const allAccepted = circle.members.every(m => m.state === "accepted");
-  const isCreator = true; // simplifying logic, could use actual creator state
+  const isCreator = circle.isCreator ?? false;
+  const canStart = circle.canStart ?? false;
+  const canInvite = circle.canInvite ?? false;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -52,7 +53,7 @@ export default function CircleDetailPage() {
               <h1 className="font-display text-2xl font-bold">{circle.name}</h1>
               <p className="text-sm capitalize text-white/55">
                 {circle.frequency} · {circle.members.length} members
-                {isPending
+                {isForming
                   ? " · forming"
                   : ` · Round ${circle.currentRound} of ${circle.totalRounds}`}
               </p>
@@ -93,7 +94,7 @@ export default function CircleDetailPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          {isActive && circle.myContributionStatus !== "paid" ? (
+          {(circle.canContribute ?? (isActive && circle.myContributionStatus !== "paid")) ? (
             <ActionButton
               onClick={() => {
                 contributeMutation.mutate({ id: circle.id }, {
@@ -116,7 +117,7 @@ export default function CircleDetailPage() {
       </Card>
 
       {/* ------------------------------------------------- forming controls */}
-      {isPending && (
+      {isForming && (
         <Card className="p-6">
           <div className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-jade-600" />
@@ -128,21 +129,23 @@ export default function CircleDetailPage() {
               : "Invite people by email. Rounds equal members — everyone gets exactly one payout. Start the circle once everyone's in."}
           </p>
 
-          <div className="mt-4 max-w-md">
-            <InviteForm 
-              onSubmit={(email) => {
-                inviteMutation.mutate({ id: circle.id, data: { email } }, {
-                  onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) })
-                });
-              }}
-              pending={inviteMutation.isPending}
-              ok={inviteMutation.isSuccess ? "Sent" : null}
-            />
-          </div>
+          {canInvite && (
+            <div className="mt-4 max-w-md">
+              <InviteForm 
+                onSubmit={(email) => {
+                  inviteMutation.mutate({ id: circle.id, data: { email } }, {
+                    onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) })
+                  });
+                }}
+                pending={inviteMutation.isPending}
+                ok={inviteMutation.isSuccess ? "Sent" : null}
+              />
+            </div>
+          )}
 
           {isCreator && (
             <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-ink-900/[0.06] pt-5">
-              {allAccepted && circle.members.length > 1 ? (
+              {canStart ? (
                 <ActionButton
                   onClick={() => {
                     startMutation.mutate({ id: circle.id }, {
@@ -156,7 +159,7 @@ export default function CircleDetailPage() {
               ) : (
                 <p className="inline-flex items-center gap-2 text-sm text-ink-500">
                   <Rocket className="h-4 w-4 text-ink-400" />
-                  Invite at least one more member and wait for them to accept to start.
+                  Invite at least one more member to start the circle.
                 </p>
               )}
             </div>

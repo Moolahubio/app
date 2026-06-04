@@ -14,6 +14,7 @@ export * from './circleDetail';
 export * from './circleInput';
 export * from './circleInvite';
 export * from './circleMember';
+export * from './circlePendingInvite';
 export * from './circleSummary';
 export * from './dashboardSummary';
 export * from './goal';

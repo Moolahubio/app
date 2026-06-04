@@ -6,4 +6,4 @@
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.
 - [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; book pending (not none) on failure; no double-send via SKIP LOCKED + in-proc guard.
 - [MoolaHub backend tests](moolahub-backend-tests.md) — run flow tests via tsx against real DB; delete USDC/PLATFORM/RESEND env BEFORE imports (snapshotted at load) for offline determinism; clean up in finally.
-- [Circle status/state mismatch](circle-status-mismatch.md) — circle-detail checks status "pending"/state "accepted" but backend emits "forming" + paid/current/upcoming, so the start/setup UI never renders.
+- [API responses filtered by schema](openapi-response-parse-strips-fields.md) — route .parse() strips fields not in openapi.yaml response schema, so backend-returned fields silently never reach the client until declared + codegen'd.

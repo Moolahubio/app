@@ -1024,6 +1024,27 @@ components:
           type: ["integer", "null"]
         imageUrl:
           type: ["string", "null"]
+        isCreator:
+          type: boolean
+        canInvite:
+          type: boolean
+        canStart:
+          type: boolean
+        canContribute:
+          type: boolean
+        pendingInvites:
+          type: array
+          items:
+            $ref: "#/components/schemas/CirclePendingInvite"
+
+    CirclePendingInvite:
+      type: object
+      required: [id, email]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
 
     CircleMember:
       type: object
