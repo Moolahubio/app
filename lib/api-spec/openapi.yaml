@@ -957,7 +957,7 @@ components:
     # ---- Circles ----
     CircleSummary:
       type: object
-      required: [id, name, status, frequency, contributionCents, potCents, memberCount, myPayoutRound, currentRound, totalRounds]
+      required: [id, name, status, type, frequency, contributionCents, payoutCents, potCents, memberCount, myPayoutRound, currentRound, totalRounds]
       properties:
         id:
           type: string
@@ -965,9 +965,13 @@ components:
           type: string
         status:
           type: string
+        type:
+          type: string
         frequency:
           type: string
         contributionCents:
+          type: integer
+        payoutCents:
           type: integer
         potCents:
           type: integer
@@ -986,7 +990,7 @@ components:
 
     CircleDetail:
       type: object
-      required: [id, name, status, frequency, contributionCents, potCents, currentRound, totalRounds, startDate, members]
+      required: [id, name, status, type, frequency, contributionCents, payoutCents, potCents, currentRound, totalRounds, startDate, members]
       properties:
         id:
           type: string
@@ -994,9 +998,13 @@ components:
           type: string
         status:
           type: string
+        type:
+          type: string
         frequency:
           type: string
         contributionCents:
+          type: integer
+        payoutCents:
           type: integer
         potCents:
           type: integer
@@ -1055,7 +1063,11 @@ components:
       properties:
         name:
           type: string
+        type:
+          type: string
         contributionCents:
+          type: integer
+        numRounds:
           type: integer
         frequency:
           type: string

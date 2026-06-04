@@ -68,8 +68,10 @@ export interface CircleSummary {
   id: string;
   name: string;
   status: string;
+  type: string;
   frequency: string;
   contributionCents: number;
+  payoutCents: number;
   potCents: number;
   memberCount: number;
   myPayoutRound: number;
@@ -138,8 +140,10 @@ export interface CircleDetail {
   id: string;
   name: string;
   status: string;
+  type: string;
   frequency: string;
   contributionCents: number;
+  payoutCents: number;
   potCents: number;
   currentRound: number;
   totalRounds: number;
@@ -164,7 +168,9 @@ export interface CircleInvite {
 
 export interface CircleInput {
   name: string;
+  type?: string;
   contributionCents: number;
+  numRounds?: number;
   frequency: string;
   memberEmails: string[];
   imageUrl?: string;

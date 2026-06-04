@@ -8,7 +8,9 @@
 
 export interface CircleInput {
   name: string;
+  type?: string;
   contributionCents: number;
+  numRounds?: number;
   frequency: string;
   memberEmails: string[];
   imageUrl?: string;

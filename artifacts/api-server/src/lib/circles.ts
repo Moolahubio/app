@@ -22,6 +22,22 @@ function addInterval(start: Date | null, frequency: string, rounds: number): Dat
   return d;
 }
 
+/**
+ * How much each member receives from a circle.
+ * - Accumulation: your own savings back at the end (contribution × rounds).
+ * - Rotation: the full pot when it's your turn (contribution × members).
+ * Falls back to the stored payout once finalized, else a live estimate.
+ */
+function receivePerPerson(
+  c: { type: string; contributionCents: number; totalRounds: number; payoutCents: number | null },
+  memberCount: number,
+): number {
+  if (c.type === "accumulation") {
+    return c.payoutCents ?? c.contributionCents * c.totalRounds;
+  }
+  return c.payoutCents ?? c.contributionCents * memberCount;
+}
+
 export type MemberState = "paid" | "current" | "upcoming";
 
 function memberState(payoutRound: number, currentRound: number, paidOut: boolean): MemberState {
@@ -42,7 +58,9 @@ export async function createCircle(
   userId: string,
   input: {
     name: string;
+    type?: string;
     contributionCents: number;
+    numRounds?: number;
     frequency: string;
     memberEmails?: string[];
     imageUrl?: string | null;
@@ -50,17 +68,34 @@ export async function createCircle(
 ) {
   if (!input.name?.trim()) throw new Error("Circle name is required.");
   if (input.contributionCents <= 0) throw new Error("Enter a contribution amount.");
+  const type = input.type === "accumulation" ? "accumulation" : "rotation";
+
+  // For accumulation circles the organizer chooses how many rounds the circle
+  // runs, and each member receives their own savings back (contribution × rounds)
+  // at the end. For rotation, rounds are derived from member count at start, and
+  // the payout (full pot) is finalized then.
+  let totalRounds = 1;
+  let payoutCents: number | null = null;
+  if (type === "accumulation") {
+    const rounds = Math.floor(input.numRounds ?? 0);
+    if (rounds < 2) throw new Error("Choose at least 2 rounds for an accumulation circle.");
+    totalRounds = rounds;
+    payoutCents = input.contributionCents * rounds;
+  }
+
   const [circle] = await db
     .insert(circlesTable)
     .values({
       name: input.name.trim(),
       createdById: userId,
       imageUrl: input.imageUrl ?? null,
+      type,
       contributionCents: input.contributionCents,
+      payoutCents,
       frequency: input.frequency || "monthly",
       status: "forming",
       currentRound: 0,
-      totalRounds: 1,
+      totalRounds,
     })
     .returning();
 
@@ -95,8 +130,10 @@ export async function listCirclesForUser(userId: string) {
       id: c.id,
       name: c.name,
       status: c.status,
+      type: c.type,
       frequency: c.frequency,
       contributionCents: c.contributionCents,
+      payoutCents: receivePerPerson(c, memberCount),
       potCents: c.contributionCents * memberCount,
       memberCount,
       myPayoutRound: me?.payoutRound ?? 0,
@@ -134,8 +171,10 @@ export async function getCircleDetail(userId: string, circleId: string) {
     id: c.id,
     name: c.name,
     status: c.status,
+    type: c.type,
     frequency: c.frequency,
     contributionCents: c.contributionCents,
+    payoutCents: receivePerPerson(c, memberCount),
     potCents: c.contributionCents * memberCount,
     memberCount,
     totalRounds: c.totalRounds,
@@ -285,6 +324,84 @@ async function maybeProcessPayout(circleId: string, round: number) {
     .from(contributionsTable)
     .where(and(eq(contributionsTable.circleId, circleId), eq(contributionsTable.round, round)));
   if (Number(contribCount) < circle.members.length) return;
+
+  if (circle.type === "accumulation") {
+    // Accumulation has no per-round recipient. Members save into the shared pool
+    // each round; on the final round each member receives their own savings back
+    // (contribution × rounds). Distribute then advance.
+    if (round >= circle.totalRounds) {
+      const shareCents = circle.contributionCents * circle.totalRounds;
+      for (const member of circle.members) {
+        if (member.paidOut) continue;
+
+        const memberWallet = (member.user as { wallet?: { address: string } | null }).wallet;
+        const canSettle = onchainEnabled() && !!memberWallet;
+        // Claim and pay atomically in one transaction: flip paidOut false→true
+        // alongside the ledger move so a concurrent caller can't double-pay
+        // (the conditional update is the guard) and a failed transfer can't
+        // strand a member as "paid" with no money moved.
+        const paid = await db.transaction(async (tx) => {
+          const claimed = await tx
+            .update(circleMembersTable)
+            .set({ paidOut: true })
+            .where(and(eq(circleMembersTable.id, member.id), eq(circleMembersTable.paidOut, false)))
+            .returning({ id: circleMembersTable.id });
+          if (claimed.length === 0) return false;
+          const t = await transfer({
+            type: "payout",
+            description: `${circle.name} · savings returned`,
+            userId: member.userId,
+            fromKey: acct.pool(circleId),
+            toKey: acct.wallet(member.userId),
+            amountCents: shareCents,
+            onchain: canSettle ? { onchainStatus: "pending" } : { onchainStatus: "none" },
+            requireSufficientFrom: true,
+            tx,
+          });
+          if (canSettle && memberWallet) {
+            await enqueueOnchainTransfer(
+              {
+                transactionId: t.id,
+                kind: "payout",
+                sourceUserId: null,
+                toAddress: memberWallet.address,
+                amountCents: shareCents,
+                memo: `payout:${circleId}`,
+              },
+              tx,
+            );
+          }
+          return true;
+        });
+        if (!paid) continue;
+        if (canSettle) kickReconciler();
+        await notify(
+          member.userId,
+          {
+            type: "payout",
+            title: "Your savings are back! 🎉",
+            body: `${formatMoney(shareCents)} from "${circle.name}" landed in your wallet.`,
+            link: `/circles/${circleId}`,
+          },
+          { email: true },
+        );
+      }
+    }
+
+    const nextRound = round + 1;
+    if (nextRound > circle.totalRounds) {
+      await db
+        .update(circlesTable)
+        .set({ status: "completed", currentRound: circle.totalRounds })
+        .where(and(eq(circlesTable.id, circleId), eq(circlesTable.currentRound, round)));
+    } else {
+      await db
+        .update(circlesTable)
+        .set({ currentRound: nextRound })
+        .where(and(eq(circlesTable.id, circleId), eq(circlesTable.currentRound, round)));
+    }
+    return;
+  }
 
   const recipient = circle.members.find((m) => m.payoutRound === round);
   if (recipient && !recipient.paidOut) {
@@ -444,7 +561,10 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
     position: nextPos,
     payoutRound: nextPos,
   });
-  await db.update(circlesTable).set({ totalRounds: nextPos }).where(eq(circlesTable.id, invite.circleId));
+  // Rotation rounds track member count; accumulation rounds are fixed at creation.
+  if (invite.circle.type !== "accumulation") {
+    await db.update(circlesTable).set({ totalRounds: nextPos }).where(eq(circlesTable.id, invite.circleId));
+  }
   await db.update(circleInvitesTable).set({ status: "accepted" }).where(eq(circleInvitesTable.id, inviteId));
 
   const [accepter] = await db
@@ -482,15 +602,19 @@ export async function startCircle(userId: string, circleId: string) {
   if (!circle) throw new Error("Only the creator can start this circle.");
   if (circle.status !== "forming") throw new Error("This circle has already started.");
   if (circle.members.length < 2) throw new Error("Invite at least one more member first.");
-  await db
-    .update(circlesTable)
-    .set({
-      status: "active",
-      currentRound: 1,
-      totalRounds: circle.members.length,
-      startDate: new Date(),
-    })
-    .where(eq(circlesTable.id, circleId));
+  // Rotation: lock rounds to the final member count and finalize each member's
+  // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
+  const startUpdate =
+    circle.type === "accumulation"
+      ? { status: "active", currentRound: 1, startDate: new Date() }
+      : {
+          status: "active",
+          currentRound: 1,
+          totalRounds: circle.members.length,
+          payoutCents: circle.contributionCents * circle.members.length,
+          startDate: new Date(),
+        };
+  await db.update(circlesTable).set(startUpdate).where(eq(circlesTable.id, circleId));
   const others = circle.members.map((m) => m.userId).filter((id) => id !== userId);
   await notifyMany(
     others,

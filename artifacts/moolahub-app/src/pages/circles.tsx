@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImageUploadField } from "@/components/app/ImageUploadField";
-import { avatarSrc } from "@/lib/utils";
+import { avatarSrc, cn } from "@/lib/utils";
 import { useState } from "react";
 
 const statusTone = {
@@ -31,10 +32,21 @@ export default function CirclesPage() {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [name, setName] = useState("");
+  const [type, setType] = useState<"rotation" | "accumulation">("rotation");
   const [contribution, setContribution] = useState("");
+  const [numRounds, setNumRounds] = useState("6");
   const [frequency, setFrequency] = useState("weekly");
   const [emails, setEmails] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const contributionAmount = parseFloat(contribution) || 0;
+  const emailCount = emails.split(",").map((e) => e.trim()).filter(Boolean).length;
+  const estMembers = emailCount + 1; // organizer + invitees
+  const roundsNum = Math.max(0, parseInt(numRounds, 10) || 0);
+  // Rotation: receive the full pot when it's your turn (pay × members).
+  // Accumulation: get your own savings back at the end (pay × rounds).
+  const receiveAmount =
+    type === "accumulation" ? contributionAmount * roundsNum : contributionAmount * estMembers;
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +54,9 @@ export default function CirclesPage() {
       { 
         data: { 
           name, 
-          contributionCents: Math.floor(parseFloat(contribution) * 100), 
+          type,
+          contributionCents: Math.floor(contributionAmount * 100), 
+          numRounds: type === "accumulation" ? roundsNum : undefined,
           frequency, 
           memberEmails: emails.split(",").map(e => e.trim()).filter(Boolean),
           imageUrl: imageUrl ?? undefined,
@@ -53,7 +67,9 @@ export default function CirclesPage() {
           queryClient.invalidateQueries({ queryKey: getListCirclesQueryKey() });
           setIsCreateOpen(false);
           setName("");
+          setType("rotation");
           setContribution("");
+          setNumRounds("6");
           setEmails("");
           setImageUrl(null);
         }
@@ -91,9 +107,61 @@ export default function CirclesPage() {
                   <Input value={name} onChange={e => setName(e.target.value)} required placeholder="Family Savings" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Contribution Amount (USDC)</Label>
+                  <Label>Circle type</Label>
+                  <RadioGroup
+                    value={type}
+                    onValueChange={(v) => setType(v as "rotation" | "accumulation")}
+                    className="gap-2"
+                  >
+                    <label
+                      htmlFor="type-rotation"
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
+                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60" : "border-ink-900/[0.08]",
+                      )}
+                    >
+                      <RadioGroupItem value="rotation" id="type-rotation" className="mt-0.5" />
+                      <span className="text-sm">
+                        <span className="font-semibold text-ink-900">Rotation</span>
+                        <span className="block text-xs text-ink-500">
+                          Take turns — everyone pays each round and one member receives the full pot until all have had a turn.
+                        </span>
+                      </span>
+                    </label>
+                    <label
+                      htmlFor="type-accumulation"
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
+                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60" : "border-ink-900/[0.08]",
+                      )}
+                    >
+                      <RadioGroupItem value="accumulation" id="type-accumulation" className="mt-0.5" />
+                      <span className="text-sm">
+                        <span className="font-semibold text-ink-900">Accumulation</span>
+                        <span className="block text-xs text-ink-500">
+                          Save together — everyone pays into one shared pot and gets their own savings back at the end.
+                        </span>
+                      </span>
+                    </label>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label>Each person pays per round (USDC)</Label>
                   <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
                 </div>
+                {type === "accumulation" && (
+                  <div className="space-y-2">
+                    <Label>Number of rounds</Label>
+                    <Input
+                      type="number"
+                      min={2}
+                      value={numRounds}
+                      onChange={(e) => setNumRounds(e.target.value)}
+                      required
+                      placeholder="6"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Frequency</Label>
                   <Select value={frequency} onValueChange={setFrequency}>
@@ -108,6 +176,23 @@ export default function CirclesPage() {
                 <div className="space-y-2">
                   <Label>Member Emails (comma separated)</Label>
                   <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder="friend@example.com, cousin@example.com" />
+                </div>
+                <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4">
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">You pay / round</p>
+                    <p className="font-semibold text-ink-900">{formatMoney(Math.round(contributionAmount * 100))}</p>
+                  </div>
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                      {type === "accumulation" ? "You receive at end" : "You receive"}
+                    </p>
+                    <p className="font-semibold text-ink-900">{formatMoney(Math.round(receiveAmount * 100))}</p>
+                  </div>
+                  <p className="col-span-2 text-xs text-ink-500">
+                    {type === "accumulation"
+                      ? `Your own savings back after ${roundsNum || 0} rounds.`
+                      : "Estimate based on members so far — finalized when the circle starts."}
+                  </p>
                 </div>
                 <ImageUploadField
                   label="Circle picture (optional)"
@@ -130,8 +215,10 @@ export default function CirclesPage() {
         </span>
         <p className="text-sm text-ink-700">
           <span className="font-semibold text-ink-900">How a Susu works:</span> everyone
-          contributes a fixed amount each round, and one member receives the full pot. By the
-          end, everyone has paid in equally and received one payout — all verifiable on Base.
+          contributes a fixed amount each round. In a <span className="font-medium text-ink-900">rotation</span>{" "}
+          circle, one member receives the full pot each round until everyone has had a turn. In an{" "}
+          <span className="font-medium text-ink-900">accumulation</span> circle, everyone saves into a shared
+          pot and gets their own savings back at the end — all verifiable on Base.
         </p>
       </Card>
 
@@ -217,9 +304,14 @@ export default function CirclesPage() {
                     </p>
                   </div>
                 </div>
-                <Badge tone={statusTone[circle.status as keyof typeof statusTone] ?? "neutral"} className="capitalize">
-                  {circle.status}
-                </Badge>
+                <div className="flex flex-col items-end gap-1.5">
+                  <Badge tone={statusTone[circle.status as keyof typeof statusTone] ?? "neutral"} className="capitalize">
+                    {circle.status}
+                  </Badge>
+                  <Badge tone="neutral">
+                    {circle.type === "accumulation" ? "Accumulation" : "Rotation"}
+                  </Badge>
+                </div>
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
@@ -232,8 +324,8 @@ export default function CirclesPage() {
                   </p>
                 </div>
                 <div className="rounded-2xl bg-mist px-4 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">Pot</p>
-                  <p className="font-semibold text-ink-900">{formatMoney(circle.potCents)}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">You receive</p>
+                  <p className="font-semibold text-ink-900">{formatMoney(circle.payoutCents)}</p>
                 </div>
               </div>
 

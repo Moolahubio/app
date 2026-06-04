@@ -56,7 +56,9 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
   try {
     const circle = await createCircle(user.id, {
       name: parsed.data.name,
+      type: parsed.data.type,
       contributionCents: parsed.data.contributionCents,
+      numRounds: parsed.data.numRounds,
       frequency: parsed.data.frequency,
       memberEmails: parsed.data.memberEmails,
       imageUrl: parsed.data.imageUrl ?? null,

@@ -10,8 +10,10 @@ export interface CircleSummary {
   id: string;
   name: string;
   status: string;
+  type: string;
   frequency: string;
   contributionCents: number;
+  payoutCents: number;
   potCents: number;
   memberCount: number;
   myPayoutRound: number;

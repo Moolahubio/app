@@ -31,6 +31,7 @@ export default function CircleDetailPage() {
 
   const isPending = circle.status === "pending";
   const isActive = circle.status === "active";
+  const isAccumulation = circle.type === "accumulation";
   const allAccepted = circle.members.every(m => m.state === "accepted");
   const isCreator = true; // simplifying logic, could use actual creator state
 
@@ -57,16 +58,23 @@ export default function CircleDetailPage() {
               </p>
             </div>
           </div>
-          <Badge tone="jade" className="bg-jade-500/15 capitalize text-jade-300 ring-jade-400/20">
-            {circle.status}
-          </Badge>
+          <div className="flex flex-col items-end gap-1.5">
+            <Badge tone="jade" className="bg-jade-500/15 capitalize text-jade-300 ring-jade-400/20">
+              {circle.status}
+            </Badge>
+            <Badge tone="neutral" className="bg-white/10 text-white/70 ring-white/15">
+              {isAccumulation ? "Accumulation" : "Rotation"}
+            </Badge>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
             { label: "Per round", value: formatMoney(circle.contributionCents) },
-            { label: "Pot payout", value: formatMoney(circle.potCents) },
-            { label: "Your position", value: circle.myPayoutRound ? `#${circle.myPayoutRound}` : "—" },
+            { label: "You receive", value: formatMoney(circle.payoutCents) },
+            isAccumulation
+              ? { label: "Rounds", value: `${circle.totalRounds}` }
+              : { label: "Your position", value: circle.myPayoutRound ? `#${circle.myPayoutRound}` : "—" },
             {
               label: "Started",
               value: circle.startDate ? new Date(circle.startDate).toLocaleDateString("en-US", {
@@ -115,8 +123,9 @@ export default function CircleDetailPage() {
             <h2 className="font-display text-lg font-bold text-ink-900">Build your circle</h2>
           </div>
           <p className="mt-1 text-sm text-ink-500">
-            Invite people by email. Rounds equal members — everyone gets exactly one payout. Start
-            the circle once everyone&apos;s in.
+            {isAccumulation
+              ? `Invite people by email. Everyone saves into one shared pot for ${circle.totalRounds} rounds, then gets their savings back. Start the circle once everyone's in.`
+              : "Invite people by email. Rounds equal members — everyone gets exactly one payout. Start the circle once everyone's in."}
           </p>
 
           <div className="mt-4 max-w-md">
@@ -160,18 +169,22 @@ export default function CircleDetailPage() {
         <Card className="p-6 lg:col-span-3">
           <div className="flex items-center gap-2">
             <CalendarClock className="h-5 w-5 text-jade-600" />
-            <h2 className="font-display text-lg font-bold text-ink-900">Payout schedule</h2>
+            <h2 className="font-display text-lg font-bold text-ink-900">
+              {isAccumulation ? "Members" : "Payout schedule"}
+            </h2>
           </div>
           <p className="mt-1 text-sm text-ink-500">
-            The rotation is locked on-chain — everyone knows who receives the pot, and when.
+            {isAccumulation
+              ? `Everyone saves into one shared pot. After ${circle.totalRounds} rounds, each member gets their own savings back — locked on-chain.`
+              : "The rotation is locked on-chain — everyone knows who receives the pot, and when."}
           </p>
 
           <ol className="mt-5 space-y-2">
             {circle.members.map((m) => {
               const done = m.paidOut;
-              const current = isActive && circle.currentRound === m.payoutRound;
+              const current = !isAccumulation && isActive && circle.currentRound === m.payoutRound;
               const isYou = m.payoutRound === circle.myPayoutRound;
-              
+
               return (
                 <li
                   key={m.id}
@@ -180,7 +193,9 @@ export default function CircleDetailPage() {
                     current ? "border-jade-500/30 bg-jade-50" : "border-ink-900/[0.06] bg-white",
                   )}
                 >
-                  <span className="font-mono text-xs text-ink-400">{m.payoutRound}</span>
+                  {!isAccumulation && (
+                    <span className="font-mono text-xs text-ink-400">{m.payoutRound}</span>
+                  )}
                   {done ? (
                     <CheckCircle2 className="h-5 w-5 text-jade-500" />
                   ) : current ? (
@@ -194,7 +209,15 @@ export default function CircleDetailPage() {
                       {m.name} {isYou && <span className="text-jade-600">(you)</span>}
                     </p>
                     <p className="text-xs text-ink-500 capitalize">
-                      {done ? "Received pot" : current ? "Receiving now" : m.state}
+                      {isAccumulation
+                        ? done
+                          ? "Savings returned"
+                          : "Saving"
+                        : done
+                          ? "Received pot"
+                          : current
+                            ? "Receiving now"
+                            : m.state}
                     </p>
                   </div>
                   {current && <Badge tone="jade">Current</Badge>}

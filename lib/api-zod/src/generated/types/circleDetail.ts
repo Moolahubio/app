@@ -11,8 +11,10 @@ export interface CircleDetail {
   id: string;
   name: string;
   status: string;
+  type: string;
   frequency: string;
   contributionCents: number;
+  payoutCents: number;
   potCents: number;
   currentRound: number;
   totalRounds: number;
