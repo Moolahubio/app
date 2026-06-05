@@ -13,7 +13,7 @@ export function AuthPanel() {
           Welcome to MoolaHub
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-500">
-          Sign in or create your account — personal goals and trusted circles, one wallet on Base.
+          Save smarter, together. Open a wallet in minutes, chase your goals, and grow your money with circles you trust.
         </p>
       </div>
 
