@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
@@ -50,15 +49,10 @@ contract MoolaHubGoalVault is IMoolaHubGoalVault, Ownable2Step, ReentrancyGuard 
 
     // --- Deposits (free) -----------------------------------------------------
 
+    /// @notice Deposit into a goal. The caller must have approved this vault for
+    ///         `amount` USDC. (No EIP-2612 permit path — see the contribute notes
+    ///         in the circle contracts; smart accounts can't sign a permit.)
     function deposit(bytes32 goalId, uint256 amount) external nonReentrant {
-        _deposit(goalId, amount);
-    }
-
-    function depositWithPermit(bytes32 goalId, uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
-        external
-        nonReentrant
-    {
-        try IERC20Permit(address(usdc)).permit(msg.sender, address(this), amount, deadline, v, r, s) {} catch {}
         _deposit(goalId, amount);
     }
 

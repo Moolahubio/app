@@ -35,7 +35,7 @@ contract SusuEscrowTest is Test {
         factory = new MoolaHubCircleFactory(
             address(impl), address(usdc), treasury, guardian, address(rep), FEE, owner
         );
-        rep.setFactory(address(factory));
+        rep.setAuthorizer(address(factory), true);
         vm.stopPrank();
     }
 
@@ -208,7 +208,7 @@ contract SusuEscrowTest is Test {
         MoolaHubCircleFactory bad = new MoolaHubCircleFactory(
             address(impl), address(usdc), treasury, guardian, address(rep), 200, owner
         );
-        rep.setFactory(address(bad));
+        rep.setAuthorizer(address(bad), true);
         // setFeeBps over cap must revert at the factory.
         vm.expectRevert(MoolaHubCircleFactory.BadConfig.selector);
         bad.setFeeBps(501);

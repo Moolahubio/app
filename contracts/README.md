@@ -2,7 +2,7 @@
 
 Solidity contracts for MoolaHub's on-chain layer on **Base Sepolia** (testnet first). Built with Foundry + OpenZeppelin v5, Solidity 0.8.28.
 
-> **Unaudited.** Custodies user funds — must pass an external audit before mainnet. See `../docs/blockchain/BLOCKCHAIN_BUILD_SPEC.md` for the full design and security requirements.
+> **Testnet / pre-audit.** Custodies user funds — must pass a full third-party audit before mainnet. See `../docs/blockchain/BLOCKCHAIN_BUILD_SPEC.md` for the design and `../docs/blockchain/SECURITY_AUDIT.md` for the internal security review (no Critical/High; 1 Medium, 5 Low; 27/27 tests passing).
 
 ## Contracts
 
@@ -13,6 +13,7 @@ Solidity contracts for MoolaHub's on-chain layer on **Base Sepolia** (testnet fi
 | `MoolaHubGoalVault` | Singleton personal-savings vault. Non-custodial (only the owner of a balance can withdraw). Free deposits; 2% withdrawal fee; early withdrawal always allowed. |
 | `MoolaHubTreasury` | Passive fee sink; owner-only withdrawals. Never touches principal. |
 | `MoolaHubReputation` | Append-only bad-actor registry; escrows report members who miss a round deadline. Enforcement is off-chain. |
+| `MoolaHubSusuAccumulation` | Accumulation-mode circle: members save on a shared schedule and each withdraws their OWN accumulated balance (no rotating pot, no redistribution). 2% fee on withdrawal (waived on cancellation); `lockUntilMaturity` controls early exit. Deploy one per circle via `script/DeployAccumulation.s.sol`. |
 
 ## Layout
 
