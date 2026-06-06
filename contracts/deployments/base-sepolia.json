@@ -1,0 +1,18 @@
+{
+  "network": "base-sepolia",
+  "chainId": 84532,
+  "explorer": "https://sepolia.basescan.org",
+  "deployer": "0xB4376025E1575f8c4f62c69D217Aaff3ffA4d641",
+  "owner": "0xB4376025E1575f8c4f62c69D217Aaff3ffA4d641",
+  "guardian": "0xB4376025E1575f8c4f62c69D217Aaff3ffA4d641",
+  "feeBps": 200,
+  "usdcKind": "mock-mintable",
+  "contracts": {
+    "usdc": "0xf03C3dA6fb2a59775043CAC8ABfb75c4627728bB",
+    "treasury": "0x2C25dE21170668BFA0DDC1967F746d1D4f5FE8c2",
+    "reputation": "0x7F78497494AB186d62200b279bb63aB8d5281b2D",
+    "escrowImplementation": "0xfd6EeE6a3D4208b877a95C19f348F1e7661Dc49A",
+    "circleFactory": "0x013e2f7d212Dd06302998a53D4775Fdda126ca4C",
+    "goalVault": "0xba9D507B7E7f9d3A8B8b28946A4C2F0d4E9781b1"
+  }
+}
