@@ -34,7 +34,7 @@ _Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Before any smart-contract deployment, ALWAYS ask the user to provide/confirm the addresses for crucial roles (e.g. `OWNER_ADDRESS`, `GUARDIAN_ADDRESS`, treasury/fee recipient, authorizers). Do NOT silently default these to the deployer wallet. Deployed contract addresses (e.g. `TREASURY_ADDRESS`, `REPUTATION_ADDRESS`) are deployment outputs, but the control/role addresses they're configured with must be user-confirmed.
 
 ## Gotchas
 
