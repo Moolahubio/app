@@ -48,6 +48,29 @@ cent. Accepted — same property circles has and prior reviews accepted. Don't
   could crash in between and strand the fee txn `pending` forever, and the
   early-return path (net already confirmed) would never revisit it.
 
+## Deposit/withdraw enqueue asymmetry → cap withdraw to live on-chain balance
+`allocateToGoal` enqueues a `goal_deposit` ONLY if the vault is enabled *at
+allocate-time*; `releaseFromGoalCore`/`deleteGoal` enqueue a `goal_withdraw` for
+the FULL ledger balance whenever the vault is enabled *at withdraw-time*. A goal
+funded while the vault was disabled (or whose deposit never settled) therefore has
+a smaller/zero on-chain `balanceOf(owner,goalId)` than the ledger, so the withdraw
+over-pulls and reverts forever with `Insufficient` (selector `0x1dc930eb`) until
+it dead-letters. **Fix (chain.ts `goalWithdraw`):** read live `balanceOf` and
+`gross = min(requested, onchainUnits)`; if `gross==0n` return
+`{status:"confirmed", hash:"", feeCents:0, netCents:0}` (no tx) so the
+already-booked pending ledger postings still get stamped by `confirmGoalWithdraw`
+(which keys off transaction id, not hash — empty hash is safe, reconciler only
+claims `pending` rows). `ensureGas` runs AFTER the read; `netCents` derives from
+the actual (capped) `gross`. **Why this is enough today:** there are ZERO
+`goal_deposit` rows in practice, so the mirror is always empty → only the
+`gross==0` path is hit. **Known residual (follow-up, harmless until real on-chain
+deposits exist):** in a *partial*-cap case the ledger booked fee/net on the full
+requested gross while the chain charges fee on the capped gross — an accounting
+drift, not a safety/retry bug. Proper cure = make enqueue symmetric (track a
+per-goal on-chain-mirrored amount, only withdraw up to settled deposits) +
+reconcile partial-cap fee/net. Don't expand the cap fix into that refactor without
+the v2 contract deploy that actually puts deposits on-chain.
+
 ## Soft-delete is mandatory
 `ledger_accounts.goalId` FKs the goals row with ON DELETE CASCADE, so a hard
 delete wipes the goal's postings and corrupts the double-entry ledger. Delete =

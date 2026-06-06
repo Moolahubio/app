@@ -621,11 +621,31 @@ export async function goalWithdraw(params: {
       ? params.fromPrivateKey
       : `0x${params.fromPrivateKey}`) as Hex;
     const account = privateKeyToAccount(pk);
-    const gross = centsToUnits(params.grossCents);
     const goalId = goalIdToBytes32(params.goalId);
+    const requested = centsToUnits(params.grossCents);
+    const pub = publicClient();
+
+    // The ledger is the source of truth for the user's app balance, but the
+    // vault can only return what was actually deposited on-chain for this
+    // (owner, goal). A goal funded while the vault was disabled — or whose
+    // deposit never settled — has a smaller (possibly zero) on-chain balance
+    // than the ledger. Cap the withdraw to the live on-chain balance so we never
+    // pull more than exists: an over-withdraw reverts with `Insufficient`, which
+    // exhausts retries and dead-letters the row. When nothing is on-chain there
+    // is nothing to settle — report confirmed with no tx so the already-booked
+    // pending ledger postings still get stamped.
+    const onchainUnits = (await pub.readContract({
+      address: vault,
+      abi: GOAL_VAULT_ABI,
+      functionName: "balanceOf",
+      args: [account.address, goalId],
+    })) as bigint;
+    const gross = requested < onchainUnits ? requested : onchainUnits;
+    if (gross === 0n) {
+      return { status: "confirmed", hash: "", feeCents: 0, netCents: 0 };
+    }
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
-    const pub = publicClient();
 
     const hash = await wallet.writeContract({
       address: vault,
@@ -650,11 +670,13 @@ export async function goalWithdraw(params: {
       /* event decode best-effort; the withdraw still settled on-chain */
     }
     const feeCents = unitsToCents(feeUnits);
+    // Net is derived from what was actually withdrawn on-chain (`gross`), which
+    // may have been capped below the requested amount above.
     return {
       status: "confirmed",
       hash,
       feeCents,
-      netCents: params.grossCents - feeCents,
+      netCents: unitsToCents(gross) - feeCents,
     };
   } catch (e) {
     return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
