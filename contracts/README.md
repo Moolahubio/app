@@ -26,8 +26,8 @@ foundry.toml        toolchain + Base Sepolia rpc/etherscan config
 ## Quickstart
 
 ```bash
-forge install OpenZeppelin/openzeppelin-contracts@v5.1.0 --no-commit
-forge install foundry-rs/forge-std --no-commit
+git clone --depth 1 --branch v5.1.0 https://github.com/OpenZeppelin/openzeppelin-contracts lib/openzeppelin-contracts
+git clone --depth 1 --branch v1.9.4 https://github.com/foundry-rs/forge-std lib/forge-std
 forge build
 forge test -vv      # 17 tests
 ```
