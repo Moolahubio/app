@@ -35,8 +35,8 @@ export default function GoalDetailPage() {
   const [releaseOk, setReleaseOk] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (isLoading) return <div className="p-8 text-center text-ink-400">Loading goal...</div>;
-  if (!goal) return <div className="p-8 text-center text-ink-400">Goal not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading goal...</div>;
+  if (!goal) return <div className="p-8 text-center text-muted-foreground">Goal not found</div>;
 
   const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
@@ -66,7 +66,7 @@ export default function GoalDetailPage() {
       <div className="grid gap-6 md:grid-cols-5">
         {/* progress ring */}
         <Card className="flex flex-col items-center justify-center p-8 text-center md:col-span-2">
-          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-mist text-3xl">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-background text-3xl">
             {goal.emoji || "🎯"}
           </span>
           <div className="relative h-40 w-40">
@@ -85,18 +85,18 @@ export default function GoalDetailPage() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display text-3xl font-bold text-ink-900">{progress}%</span>
-              <span className="font-mono text-[10px] uppercase tracking-wide text-ink-400">
+              <span className="font-display text-3xl font-bold text-foreground">{progress}%</span>
+              <span className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                 saved
               </span>
             </div>
           </div>
-          <h1 className="mt-5 font-display text-xl font-bold text-ink-900">{goal.name}</h1>
-          <p className="text-sm text-ink-500">
+          <h1 className="mt-5 font-display text-xl font-bold text-foreground">{goal.name}</h1>
+          <p className="text-sm text-muted-foreground">
             {formatMoney(goal.savedCents)} of {formatMoney(goal.targetCents)}
           </p>
           {onchain && (
-            <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20">
+            <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300">
               <Link2 className="h-3.5 w-3.5" /> On-chain
             </Badge>
           )}
@@ -105,8 +105,8 @@ export default function GoalDetailPage() {
         {/* details + actions */}
         <div className="space-y-6 md:col-span-3">
           <Card className="p-6">
-            <h2 className="font-display text-lg font-bold text-ink-900">Add to this goal</h2>
-            <p className="mt-1 text-sm text-ink-500">
+            <h2 className="font-display text-lg font-bold text-foreground">Add to this goal</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               {onchain
                 ? "Move funds from your available balance into this goal's on-chain vault. Deposits are free."
                 : "Move funds from your available balance into this allocation."}
@@ -129,10 +129,10 @@ export default function GoalDetailPage() {
                 ok={allocOk}
               />
             </div>
-            <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
-              <p className="mb-1 text-sm font-medium text-ink-700">Withdraw from this goal</p>
+            <div className="mt-5 border-t border-border pt-5">
+              <p className="mb-1 text-sm font-medium text-foreground">Withdraw from this goal</p>
               {onchain && feeBps > 0 && (
-                <p className="mb-3 text-xs text-ink-500">
+                <p className="mb-3 text-xs text-muted-foreground">
                   A {feePct}% withdrawal fee is taken on-chain. You receive the amount net of the fee.
                 </p>
               )}
@@ -161,20 +161,20 @@ export default function GoalDetailPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Card className="p-5">
-              <div className="flex items-center gap-2 text-jade-600">
+              <div className="flex items-center gap-2 text-jade-600 dark:text-jade-400">
                 <Target className="h-4 w-4" />
                 <p className="font-mono text-[10px] uppercase tracking-[0.15em]">Remaining</p>
               </div>
-              <p className="mt-1.5 font-display text-xl font-bold text-ink-900">
+              <p className="mt-1.5 font-display text-xl font-bold text-foreground">
                 {formatMoney(remaining)}
               </p>
             </Card>
             <Card className="p-5">
-              <div className="flex items-center gap-2 text-jade-600">
+              <div className="flex items-center gap-2 text-jade-600 dark:text-jade-400">
                 <Calendar className="h-4 w-4" />
                 <p className="font-mono text-[10px] uppercase tracking-[0.15em]">Target date</p>
               </div>
-              <p className="mt-1.5 font-display text-xl font-bold text-ink-900">
+              <p className="mt-1.5 font-display text-xl font-bold text-foreground">
                 {new Date(goal.deadline).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
@@ -187,42 +187,42 @@ export default function GoalDetailPage() {
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-jade-50 text-jade-600">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
                   <Repeat className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-ink-900">Contribution plan</p>
-                  <p className="text-sm text-ink-500 capitalize">{FREQUENCY_ADVERB[frequency]} · grows gradually</p>
+                  <p className="font-semibold text-foreground">Contribution plan</p>
+                  <p className="text-sm text-muted-foreground capitalize">{FREQUENCY_ADVERB[frequency]} · grows gradually</p>
                 </div>
               </div>
               {next ? <Badge tone="jade">Step {next.index}/{next.total}</Badge> : <Badge tone="jade">Complete</Badge>}
             </div>
             {next ? (
-              <div className="mt-4 flex items-end justify-between border-t border-ink-900/[0.06] pt-4">
+              <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                     Next contribution
                   </p>
-                  <p className="mt-1 font-display text-2xl font-bold text-ink-900">
+                  <p className="mt-1 font-display text-2xl font-bold text-foreground">
                     {formatMoney(next.amountCents)}
                   </p>
                 </div>
-                <p className="text-sm text-ink-500">
+                <p className="text-sm text-muted-foreground">
                   this {FREQUENCY_NOUN[frequency]}
                 </p>
               </div>
             ) : (
-              <p className="mt-4 border-t border-ink-900/[0.06] pt-4 text-sm text-ink-500">
+              <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
                 You&apos;ve completed every step of your plan. 🎉
               </p>
             )}
           </Card>
 
           {next && remaining > 0 && (
-            <p className="flex items-center justify-center gap-2 text-center text-sm text-ink-500">
+            <p className="flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 text-jade-500" />
               Keep going {FREQUENCY_ADVERB[frequency]} — about{" "}
-              <span className="font-semibold text-ink-900">
+              <span className="font-semibold text-foreground">
                 {periodsLeft} {FREQUENCY_NOUN[frequency]}{periodsLeft === 1 ? "" : "s"}
               </span>{" "}
               of rising contributions left to reach your target.
@@ -232,10 +232,10 @@ export default function GoalDetailPage() {
           {onchain && goal.vaultAddress && (
             <Card className="p-6">
               <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-jade-600" />
-                <h2 className="font-display text-lg font-bold text-ink-900">On-chain vault</h2>
+                <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+                <h2 className="font-display text-lg font-bold text-foreground">On-chain vault</h2>
               </div>
-              <p className="mt-1 text-sm text-ink-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Funds you allocate are deposited into this vault on Base. A {feePct}% protocol fee is
                 taken on each withdrawal.
               </p>
@@ -243,7 +243,7 @@ export default function GoalDetailPage() {
                 href={`${explorer}/address/${goal.vaultAddress}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-ink-900/[0.08] bg-white px-3 py-2 font-mono text-xs text-ink-700 transition hover:border-jade-500/40 hover:text-jade-700"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700 dark:hover:text-jade-300"
               >
                 {truncateAddress(goal.vaultAddress)}
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -253,25 +253,25 @@ export default function GoalDetailPage() {
 
           {history.length > 0 && (
             <Card className="p-6">
-              <h2 className="font-display text-lg font-bold text-ink-900">Activity</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Activity</h2>
               <ul className="mt-4 space-y-2">
                 {history.map((h) => (
                   <li
                     key={h.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-ink-900/[0.06] bg-white px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold capitalize text-ink-900">
+                      <p className="text-sm font-semibold capitalize text-foreground">
                         {h.type.replace(/_/g, " ")}
                       </p>
-                      <p className="text-xs text-ink-500">{formatMoney(h.amountCents)}</p>
+                      <p className="text-xs text-muted-foreground">{formatMoney(h.amountCents)}</p>
                     </div>
                     {h.txHash ? (
                       <a
                         href={`${explorer}/tx/${h.txHash}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800"
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800 dark:text-jade-300"
                       >
                         {truncateAddress(h.txHash)}
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -286,8 +286,8 @@ export default function GoalDetailPage() {
           )}
 
           <Card className="border-rose-500/20 p-6">
-            <h2 className="font-display text-lg font-bold text-ink-900">Delete goal</h2>
-            <p className="mt-1 text-sm text-ink-500">
+            <h2 className="font-display text-lg font-bold text-foreground">Delete goal</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               {goal.savedCents > 0
                 ? onchain && feeBps > 0
                   ? `This withdraws the full ${formatMoney(goal.savedCents)} balance back to your available funds (minus the ${feePct}% withdrawal fee) and closes the goal.`
@@ -302,7 +302,7 @@ export default function GoalDetailPage() {
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                  className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-card px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                 >
                   <Trash2 className="h-4 w-4" /> Delete goal
                 </button>
@@ -334,7 +334,7 @@ export default function GoalDetailPage() {
                     type="button"
                     disabled={deleteMutation.isPending}
                     onClick={() => setConfirmDelete(false)}
-                    className="rounded-xl border border-ink-900/[0.08] bg-white px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-mist"
+                    className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent"
                   >
                     Cancel
                   </button>

@@ -25,16 +25,16 @@ export type NotificationItem = {
 };
 
 const ICONS: Record<string, { icon: typeof Bell; tone: string }> = {
-  invite: { icon: UserPlus, tone: "bg-jade-50 text-jade-600" },
-  invite_accepted: { icon: Users, tone: "bg-jade-50 text-jade-600" },
-  circle_started: { icon: Users, tone: "bg-sky-50 text-sky-600" },
-  contribution: { icon: ArrowUpRight, tone: "bg-ink-900/[0.06] text-ink-700" },
-  payout: { icon: PartyPopper, tone: "bg-amber-50 text-amber-600" },
-  deposit: { icon: ArrowDownLeft, tone: "bg-jade-50 text-jade-600" },
-  withdrawal: { icon: ArrowUpRight, tone: "bg-ink-900/[0.06] text-ink-700" },
-  goal: { icon: Target, tone: "bg-jade-50 text-jade-600" },
-  yield: { icon: Sparkles, tone: "bg-jade-50 text-jade-600" },
-  system: { icon: Bell, tone: "bg-ink-900/[0.06] text-ink-700" },
+  invite: { icon: UserPlus, tone: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300" },
+  invite_accepted: { icon: Users, tone: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300" },
+  circle_started: { icon: Users, tone: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300" },
+  contribution: { icon: ArrowUpRight, tone: "bg-muted text-foreground" },
+  payout: { icon: PartyPopper, tone: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300" },
+  deposit: { icon: ArrowDownLeft, tone: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300" },
+  withdrawal: { icon: ArrowUpRight, tone: "bg-muted text-foreground" },
+  goal: { icon: Target, tone: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300" },
+  yield: { icon: Sparkles, tone: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300" },
+  system: { icon: Bell, tone: "bg-muted text-foreground" },
 };
 
 export function NotificationBell({
@@ -81,25 +81,25 @@ export function NotificationBell({
     <div className="relative" ref={containerRef}>
       <button
         onClick={toggle}
-        className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-ink-900/10 bg-white text-ink-600 transition-[color,background-color,transform] duration-150 hover:border-ink-900/16 hover:text-ink-900 active:scale-95 focus-ring"
+        className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-[color,background-color,transform] duration-150 hover:bg-muted hover:text-foreground active:scale-95 focus-ring"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jade-500 px-1 text-[10px] font-bold text-white ring-2 ring-mist">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jade-500 px-1 text-[10px] font-bold text-white ring-2 ring-background">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 z-[70] mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-xl shadow-ink-950/10">
-            <div className="flex items-center justify-between border-b border-ink-900/[0.06] px-4 py-3">
-              <p className="font-display text-sm font-bold text-ink-900">Notifications</p>
+        <div className="absolute right-0 z-[70] mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-popover shadow-xl shadow-black/20">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <p className="font-display text-sm font-bold text-foreground">Notifications</p>
               <Link
                 href="/notifications"
                 onClick={() => setOpen(false)}
-                className="text-xs font-medium text-jade-600 hover:text-jade-700"
+                className="text-xs font-medium text-jade-600 hover:text-jade-700 dark:text-jade-400 dark:hover:text-jade-300"
               >
                 View all
               </Link>
@@ -107,11 +107,11 @@ export function NotificationBell({
 
             {notifications.length === 0 ? (
               <div className="px-4 py-10 text-center">
-                <Bell className="mx-auto h-6 w-6 text-ink-300" />
-                <p className="mt-2 text-sm text-ink-400">You&apos;re all caught up.</p>
+                <Bell className="mx-auto h-6 w-6 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">You&apos;re all caught up.</p>
               </div>
             ) : (
-              <ul className="max-h-[26rem] divide-y divide-ink-900/[0.06] overflow-y-auto">
+              <ul className="max-h-[26rem] divide-y divide-border overflow-y-auto">
                 {notifications.map((n) => {
                   const { icon: Icon, tone } = ICONS[n.type] ?? ICONS.system;
                   return (
@@ -120,8 +120,8 @@ export function NotificationBell({
                         href={n.link ?? "/activity"}
                         onClick={() => setOpen(false)}
                         className={cn(
-                          "flex gap-3 px-4 py-3 transition-colors hover:bg-mist",
-                          !n.read && "bg-jade-50/40",
+                          "flex gap-3 px-4 py-3 transition-colors hover:bg-accent",
+                          !n.read && "bg-jade-50/40 dark:bg-jade-500/10",
                         )}
                       >
                         <span
@@ -133,9 +133,9 @@ export function NotificationBell({
                           <Icon className="h-4.5 w-4.5" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-ink-900">{n.title}</p>
-                          <p className="text-xs leading-snug text-ink-500">{n.body}</p>
-                          <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                          <p className="text-sm font-semibold text-foreground">{n.title}</p>
+                          <p className="text-xs leading-snug text-muted-foreground">{n.body}</p>
+                          <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                             {timeAgo(n.createdAt)}
                           </p>
                         </div>

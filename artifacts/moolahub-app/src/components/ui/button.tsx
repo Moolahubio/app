@@ -17,8 +17,8 @@ const buttonVariants: Record<ButtonVariant, string> = {
   primary:
     "border border-jade-600 bg-jade-500 text-white hover:bg-jade-600 active:bg-jade-700",
   secondary:
-    "border border-ink-900/12 bg-white text-ink-900 hover:border-ink-900/20 hover:bg-mist active:bg-ink-900/[0.04]",
-  ghost: "border border-transparent text-ink-700 hover:bg-ink-900/[0.05] active:bg-ink-900/[0.08]",
+    "border border-border bg-card text-foreground hover:bg-muted active:bg-accent",
+  ghost: "border border-transparent text-foreground hover:bg-accent active:bg-accent",
   dark: "border border-ink-800 bg-ink-900 text-white hover:bg-ink-800 active:bg-ink-850",
 };
 

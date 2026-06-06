@@ -50,8 +50,8 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
           onClick={() => inputRef.current?.click()}
           disabled={busy}
           className={cn(
-            "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-ink-900/15 bg-mist text-ink-400 transition-colors hover:border-jade-500/40 hover:text-jade-600 focus-ring disabled:opacity-60",
-            preview && "border-solid border-ink-900/10",
+            "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted text-muted-foreground transition-colors hover:border-jade-500/40 hover:text-jade-600 dark:hover:text-jade-300 focus-ring disabled:opacity-60",
+            preview && "border-solid border-border",
           )}
           aria-label={preview ? "Change picture" : "Upload a picture"}
         >
@@ -64,21 +64,21 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
           )}
         </button>
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-ink-500">
+          <p className="text-xs text-muted-foreground">
             {hint ?? "Add a photo to keep the dream alive."}
           </p>
           {value && !isUploading && (
             <button
               type="button"
               onClick={() => onChange(null)}
-              className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-ink-400 hover:text-ink-700"
+              className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               <X className="h-3 w-3" /> Remove
             </button>
           )}
         </div>
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
       <input
         ref={inputRef}
         type="file"

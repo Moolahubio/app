@@ -71,7 +71,7 @@ export default function GoalsPage() {
   };
 
   if (goalsLoading || walletLoading) {
-    return <div className="p-8 text-center text-ink-400">Loading goals...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading goals...</div>;
   }
 
   const goalsList = goals ?? [];
@@ -118,22 +118,22 @@ export default function GoalsPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-ink-500">
+                  <p className="text-xs text-muted-foreground">
                     Contributions start small to build the habit and grow gradually until you hit your target.
                   </p>
                 </div>
                 {previewPlan && (
-                  <div className="rounded-xl border border-jade-500/15 bg-jade-50/50 p-4">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-jade-700">
+                  <div className="rounded-xl border border-jade-500/15 bg-jade-50/50 p-4 dark:bg-jade-500/15">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-jade-700 dark:text-jade-300">
                       Your savings plan
                     </p>
-                    <p className="mt-1.5 text-sm text-ink-700">
+                    <p className="mt-1.5 text-sm text-foreground">
                       Start at{" "}
-                      <span className="font-semibold text-ink-900">
+                      <span className="font-semibold text-foreground">
                         {formatMoney(previewPlan.firstCents)}
                       </span>{" "}
                       this {FREQUENCY_NOUN[frequency]} and build up to{" "}
-                      <span className="font-semibold text-ink-900">
+                      <span className="font-semibold text-foreground">
                         {formatMoney(previewPlan.lastCents)}
                       </span>{" "}
                       over {previewPlan.periods}{" "}
@@ -159,26 +159,26 @@ export default function GoalsPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             Allocated to goals
           </p>
-          <p className="mt-1 font-display text-2xl font-bold text-ink-900">
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">
             {formatMoney(totalSaved)}
           </p>
         </Card>
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             Combined target
           </p>
-          <p className="mt-1 font-display text-2xl font-bold text-ink-900">
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">
             {formatMoney(totalTarget)}
           </p>
         </Card>
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             Overall progress
           </p>
-          <p className="mt-1 font-display text-2xl font-bold text-jade-600">
+          <p className="mt-1 font-display text-2xl font-bold text-jade-600 dark:text-jade-400">
             {pct(totalSaved, totalTarget)}%
           </p>
         </Card>
@@ -193,7 +193,7 @@ export default function GoalsPage() {
           <Link key={g.id} href={`/goals/${g.id}`} className="group block">
             <Card className="h-full overflow-hidden p-0 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
               {g.imageUrl && (
-                <div className="h-32 w-full overflow-hidden bg-mist">
+                <div className="h-32 w-full overflow-hidden bg-background">
                   <img
                     src={avatarSrc(g.imageUrl)}
                     alt=""
@@ -203,7 +203,7 @@ export default function GoalsPage() {
               )}
               <div className="p-6">
               <div className="flex items-start justify-between">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-mist text-2xl">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background text-2xl">
                   {g.emoji || "🎯"}
                 </span>
                 {gNext && (
@@ -212,8 +212,8 @@ export default function GoalsPage() {
                   </Badge>
                 )}
               </div>
-              <h3 className="mt-4 font-display text-lg font-bold text-ink-900">{g.name}</h3>
-              <div className="mt-1 flex items-center gap-1.5 text-xs text-ink-500">
+              <h3 className="mt-4 font-display text-lg font-bold text-foreground">{g.name}</h3>
+              <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
                 by{" "}
                 {new Date(g.deadline).toLocaleDateString("en-US", { month: "long", day: "numeric" })}
@@ -221,18 +221,18 @@ export default function GoalsPage() {
 
               <div className="mt-5">
                 <div className="flex items-end justify-between">
-                  <p className="font-display text-xl font-bold text-ink-900">
+                  <p className="font-display text-xl font-bold text-foreground">
                     {formatMoney(g.savedCents)}
                   </p>
-                  <p className="text-sm text-ink-400">of {formatMoney(g.targetCents)}</p>
+                  <p className="text-sm text-muted-foreground">of {formatMoney(g.targetCents)}</p>
                 </div>
                 <ProgressBar value={g.savedCents} total={g.targetCents} className="mt-2" />
-                <p className="mt-2 text-xs font-medium text-jade-600">
+                <p className="mt-2 text-xs font-medium text-jade-600 dark:text-jade-400">
                   {pct(g.savedCents, g.targetCents)}% there
                 </p>
               </div>
 
-              <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600">
+              <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600 dark:text-jade-400">
                 Manage goal{" "}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </div>
@@ -244,20 +244,20 @@ export default function GoalsPage() {
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="flex min-h-[280px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-ink-900/12 p-6 text-ink-400 transition-[color,border-color,transform] duration-150 hover:border-jade-500/35 hover:text-jade-600 active:scale-[0.99] focus-ring"
+          className="flex min-h-[280px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-6 text-muted-foreground transition-[color,border-color,transform] duration-150 hover:border-jade-500/35 hover:text-jade-600 dark:hover:text-jade-400 active:scale-[0.99] focus-ring"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-ink-900/8 bg-white">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card">
             <Plus className="h-6 w-6" />
           </span>
           <span className="text-sm font-semibold">Create a goal</span>
         </button>
       </div>
 
-      <Card className="flex items-start gap-3 border-sky-500/15 bg-sky-50/50 p-5">
-        <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
-        <p className="text-sm text-ink-600">
+      <Card className="flex items-start gap-3 border-sky-500/15 bg-sky-50/50 p-5 dark:bg-sky-500/15">
+        <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-400" />
+        <p className="text-sm text-muted-foreground">
           You currently have{" "}
-          <span className="font-semibold text-ink-900">
+          <span className="font-semibold text-foreground">
             {formatMoney(wallet?.availableCents ?? 0)}
           </span>{" "}
           unallocated. Assign it to a goal to keep your saving on track — or opt in to yield so

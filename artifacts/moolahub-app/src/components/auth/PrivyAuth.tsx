@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui";
 import { usePrivyAuth, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "@/hooks/use-theme";
 
 function PrivyLoginButton() {
   const [, setLocation] = useLocation();
@@ -68,12 +69,12 @@ function PrivyLoginButton() {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <label className="flex items-center gap-2 text-sm text-ink-500">
+      <label className="flex items-center gap-2 text-sm text-muted-foreground">
         <input
           type="checkbox"
           checked={rememberMe}
           onChange={(e) => setRememberMe(e.target.checked)}
-          className="h-4 w-4 rounded border-ink-300"
+          className="h-4 w-4 rounded border-border"
         />
         Keep me logged in for 30 days
       </label>
@@ -85,12 +86,13 @@ function PrivyLoginButton() {
 }
 
 export function PrivyAuth({ appId }: { appId: string }) {
+  const { resolvedTheme } = useTheme();
   return (
     <PrivyProvider
       appId={appId}
       config={{
         appearance: { 
-          theme: "light", 
+          theme: resolvedTheme, 
           accentColor: "#0E9E6E", 
           logo: `${import.meta.env.BASE_URL}brand/moolahub_app_icon.png` 
         },

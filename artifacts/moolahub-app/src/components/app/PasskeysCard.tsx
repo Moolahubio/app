@@ -66,12 +66,12 @@ export function PasskeysCard() {
     <Card className="p-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ink-900/[0.06] text-ink-700">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
             <Fingerprint className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-ink-900">Passkeys</p>
-            <p className="text-xs text-ink-500">Sign in with Face ID, Touch ID, or a security key</p>
+            <p className="text-sm font-semibold text-foreground">Passkeys</p>
+            <p className="text-xs text-muted-foreground">Sign in with Face ID, Touch ID, or a security key</p>
           </div>
         </div>
         {supported && (
@@ -82,28 +82,28 @@ export function PasskeysCard() {
       </div>
 
       {!supported && (
-        <p className="mt-4 text-xs text-ink-500">
+        <p className="mt-4 text-xs text-muted-foreground">
           This browser does not support passkeys.
         </p>
       )}
 
       {error && (
-        <p className="mt-4 flex items-center gap-1.5 text-sm text-red-600" role="alert">
+        <p className="mt-4 flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
           <AlertCircle className="h-4 w-4 shrink-0" /> {error}
         </p>
       )}
 
       {isLoading ? (
-        <p className="mt-4 text-xs text-ink-400">Loading passkeys…</p>
+        <p className="mt-4 text-xs text-muted-foreground">Loading passkeys…</p>
       ) : passkeys.length === 0 ? (
-        <p className="mt-4 text-xs text-ink-500">No passkeys yet. Add one for faster, safer sign-in.</p>
+        <p className="mt-4 text-xs text-muted-foreground">No passkeys yet. Add one for faster, safer sign-in.</p>
       ) : (
-        <ul className="mt-4 divide-y divide-ink-900/[0.06]">
+        <ul className="mt-4 divide-y divide-border">
           {passkeys.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink-900">{p.deviceName ?? "Passkey"}</p>
-                <p className="text-xs text-ink-400">
+                <p className="truncate text-sm font-medium text-foreground">{p.deviceName ?? "Passkey"}</p>
+                <p className="text-xs text-muted-foreground">
                   Added {new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   {p.lastUsedAt
                     ? ` · Last used ${new Date(p.lastUsedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
@@ -113,7 +113,7 @@ export function PasskeysCard() {
               <button
                 onClick={() => handleRemove(p.id)}
                 disabled={deleteMutation.isPending}
-                className="flex h-9 w-9 items-center justify-center rounded-xl text-ink-400 transition-colors hover:bg-red-50 hover:text-red-600 focus-ring"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/15 dark:hover:text-red-400 focus-ring"
                 aria-label="Remove passkey"
               >
                 <Trash2 className="h-4 w-4" />

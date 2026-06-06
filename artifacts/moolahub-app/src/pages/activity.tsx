@@ -45,7 +45,7 @@ export default function ActivityPage() {
   const grouped = groupByDay(activity ?? []);
   const reminder = summary?.upcomingReminder;
 
-  if (isActivityLoading) return <div className="p-8 text-center text-ink-400">Loading activity...</div>;
+  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">Loading activity...</div>;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -58,38 +58,38 @@ export default function ActivityPage() {
       {reminder && (
         <Card className="p-6">
           <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-jade-600" />
-            <h2 className="font-display text-lg font-bold text-ink-900">Upcoming reminders</h2>
+            <Bell className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+            <h2 className="font-display text-lg font-bold text-foreground">Upcoming reminders</h2>
           </div>
           <ul className="mt-4 grid gap-3 sm:grid-cols-3">
-            <li className="rounded-2xl border border-ink-900/[0.06] bg-mist p-4">
+            <li className="rounded-2xl border border-border bg-background p-4">
               <div className="flex items-center justify-between">
                 <Badge tone="amber" className="capitalize">
                   reminder
                 </Badge>
-                <span className="font-mono text-[10px] uppercase tracking-wide text-jade-600">
+                <span className="font-mono text-[10px] uppercase tracking-wide text-jade-600 dark:text-jade-400">
                   {new Date(reminder.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </span>
               </div>
-              <p className="mt-3 text-sm font-semibold text-ink-900">{reminder.title}</p>
-              <p className="mt-2 text-sm font-bold text-ink-900">{formatMoney(reminder.amountCents)}</p>
+              <p className="mt-3 text-sm font-semibold text-foreground">{reminder.title}</p>
+              <p className="mt-2 text-sm font-bold text-foreground">{formatMoney(reminder.amountCents)}</p>
             </li>
           </ul>
         </Card>
       )}
 
       <Card className="p-6">
-        <h2 className="font-display text-lg font-bold text-ink-900">Transaction history</h2>
+        <h2 className="font-display text-lg font-bold text-foreground">Transaction history</h2>
         {grouped.length === 0 && (
-          <p className="mt-4 text-sm text-ink-400">No transactions yet.</p>
+          <p className="mt-4 text-sm text-muted-foreground">No transactions yet.</p>
         )}
         <div className="mt-4 space-y-6">
           {grouped.map(([day, items]) => (
             <div key={day}>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-400">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 {day}
               </p>
-              <ul className="mt-2 divide-y divide-ink-900/[0.06]">
+              <ul className="mt-2 divide-y divide-border">
                 {items.map((item) => {
                   const Icon = activityIcon[item.type] ?? ArrowUpRight;
                   const positive = (item.amountCents ?? 0) > 0;
@@ -99,14 +99,14 @@ export default function ActivityPage() {
                         <Icon className="h-5 w-5" />
                       </IconChip>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-ink-900">
+                        <p className="truncate text-sm font-semibold text-foreground">
                           {item.description}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-2">
                           {item.txHash ? (
                             <TxTag hash={item.txHash} confirmed={item.onchainStatus !== "failed"} />
                           ) : (
-                            <span className="font-mono text-[11px] text-ink-400">
+                            <span className="font-mono text-[11px] text-muted-foreground">
                               {item.onchainStatus === "pending" || item.onchainStatus === "queued"
                                 ? "settling on-chain…"
                                 : "off-chain"}
@@ -118,13 +118,13 @@ export default function ActivityPage() {
                         {item.amountCents != null && (
                           <p
                             className={`text-sm font-semibold ${
-                              positive ? "text-jade-600" : "text-ink-900"
+                              positive ? "text-jade-600 dark:text-jade-400" : "text-foreground"
                             }`}
                           >
                             {formatMoney(item.amountCents, { sign: true })}
                           </p>
                         )}
-                        <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                        <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                           {typeLabel[item.type] ?? item.type}
                         </p>
                       </div>

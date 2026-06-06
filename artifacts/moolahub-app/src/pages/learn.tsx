@@ -7,8 +7,8 @@ import { useListLessons } from "@workspace/api-client-react";
 export default function LearnPage() {
   const { data: lessons, isLoading } = useListLessons();
 
-  if (isLoading) return <div className="p-8 text-center text-ink-400">Loading lessons...</div>;
-  if (!lessons || lessons.length === 0) return <div className="p-8 text-center text-ink-400">No lessons available.</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lessons...</div>;
+  if (!lessons || lessons.length === 0) return <div className="p-8 text-center text-muted-foreground">No lessons available.</div>;
 
   const completed = lessons.filter((l) => l.completed).length;
   const featured = lessons[0];
@@ -24,21 +24,21 @@ export default function LearnPage() {
 
       <Card className="flex flex-wrap items-center justify-between gap-4 p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-jade-50 text-jade-600">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
             <GraduationCap className="h-6 w-6" />
           </span>
           <div>
-            <p className="font-semibold text-ink-900">
+            <p className="font-semibold text-foreground">
               {completed} of {lessons.length} lessons complete
             </p>
-            <p className="text-sm text-ink-500">Keep your streak going — one lesson at a time.</p>
+            <p className="text-sm text-muted-foreground">Keep your streak going — one lesson at a time.</p>
           </div>
         </div>
         <div className="flex gap-1.5">
           {lessons.map((l) => (
             <span
               key={l.slug}
-              className={`h-2 w-10 rounded-full ${l.completed ? "bg-jade-500" : "bg-ink-900/10"}`}
+              className={`h-2 w-10 rounded-full ${l.completed ? "bg-jade-500" : "bg-muted"}`}
             />
           ))}
         </div>
@@ -68,7 +68,7 @@ export default function LearnPage() {
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {rest.map((lesson) => (
           <Link key={lesson.slug} href={`/learn/${lesson.slug}`} className="group block">
-            <Card className="flex h-full flex-col p-6 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25 group-hover:bg-mist/50">
+            <Card className="flex h-full flex-col p-6 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25 group-hover:bg-accent">
               <div className="flex items-center justify-between">
                 <span className="text-3xl">{lesson.emoji}</span>
                 {lesson.completed ? (
@@ -81,11 +81,11 @@ export default function LearnPage() {
                   </Badge>
                 )}
               </div>
-              <h3 className="mt-4 font-display text-lg font-bold leading-snug text-ink-900">
+              <h3 className="mt-4 font-display text-lg font-bold leading-snug text-foreground">
                 {lesson.title}
               </h3>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-500">{lesson.summary}</p>
-              <p className="mt-4 font-mono text-xs uppercase tracking-[0.15em] text-ink-400">
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{lesson.summary}</p>
+              <p className="mt-4 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
                 {lesson.category} · {lesson.level}
               </p>
             </Card>

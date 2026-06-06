@@ -78,7 +78,7 @@ export default function CirclesPage() {
   };
 
   if (circlesLoading || invitesLoading) {
-    return <div className="p-8 text-center text-ink-400">Loading circles...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading circles...</div>;
   }
 
   const visible = circles?.filter((c) => c.status !== "completed") ?? [];
@@ -117,13 +117,13 @@ export default function CirclesPage() {
                       htmlFor="type-rotation"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
-                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60" : "border-ink-900/[0.08]",
+                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60" : "border-border",
                       )}
                     >
                       <RadioGroupItem value="rotation" id="type-rotation" className="mt-0.5" />
                       <span className="text-sm">
-                        <span className="font-semibold text-ink-900">Rotation</span>
-                        <span className="block text-xs text-ink-500">
+                        <span className="font-semibold text-foreground">Rotation</span>
+                        <span className="block text-xs text-muted-foreground">
                           Take turns — everyone pays each round and one member receives the full pot until all have had a turn.
                         </span>
                       </span>
@@ -132,13 +132,13 @@ export default function CirclesPage() {
                       htmlFor="type-accumulation"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
-                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60" : "border-ink-900/[0.08]",
+                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60" : "border-border",
                       )}
                     >
                       <RadioGroupItem value="accumulation" id="type-accumulation" className="mt-0.5" />
                       <span className="text-sm">
-                        <span className="font-semibold text-ink-900">Accumulation</span>
-                        <span className="block text-xs text-ink-500">
+                        <span className="font-semibold text-foreground">Accumulation</span>
+                        <span className="block text-xs text-muted-foreground">
                           Save together — everyone pays into one shared pot and gets their own savings back at the end.
                         </span>
                       </span>
@@ -179,16 +179,16 @@ export default function CirclesPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4">
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">You pay / round</p>
-                    <p className="font-semibold text-ink-900">{formatMoney(Math.round(contributionAmount * 100))}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You pay / round</p>
+                    <p className="font-semibold text-foreground">{formatMoney(Math.round(contributionAmount * 100))}</p>
                   </div>
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                       {type === "accumulation" ? "You receive at end" : "You receive"}
                     </p>
-                    <p className="font-semibold text-ink-900">{formatMoney(Math.round(receiveAmount * 100))}</p>
+                    <p className="font-semibold text-foreground">{formatMoney(Math.round(receiveAmount * 100))}</p>
                   </div>
-                  <p className="col-span-2 text-xs text-ink-500">
+                  <p className="col-span-2 text-xs text-muted-foreground">
                     {type === "accumulation"
                       ? `Your own savings back after ${roundsNum || 0} rounds.`
                       : "Estimate based on members so far — finalized when the circle starts."}
@@ -213,11 +213,11 @@ export default function CirclesPage() {
         <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-jade-500 text-white sm:flex">
           <ShieldCheck className="h-6 w-6" />
         </span>
-        <p className="text-sm text-ink-700">
-          <span className="font-semibold text-ink-900">How a Susu works:</span> everyone
-          contributes a fixed amount each round. In a <span className="font-medium text-ink-900">rotation</span>{" "}
+        <p className="text-sm text-foreground">
+          <span className="font-semibold text-foreground">How a Susu works:</span> everyone
+          contributes a fixed amount each round. In a <span className="font-medium text-foreground">rotation</span>{" "}
           circle, one member receives the full pot each round until everyone has had a turn. In an{" "}
-          <span className="font-medium text-ink-900">accumulation</span> circle, everyone saves into a shared
+          <span className="font-medium text-foreground">accumulation</span> circle, everyone saves into a shared
           pot and gets their own savings back at the end — all verifiable on Base.
         </p>
       </Card>
@@ -225,8 +225,8 @@ export default function CirclesPage() {
       {inviteList.length > 0 && (
         <Card className="border-jade-500/20 bg-jade-50/50 p-6">
           <div className="flex items-center gap-2">
-            <Inbox className="h-5 w-5 text-jade-600" />
-            <h2 className="font-display text-lg font-bold text-ink-900">
+            <Inbox className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+            <h2 className="font-display text-lg font-bold text-foreground">
               Invitations ({inviteList.length})
             </h2>
           </div>
@@ -234,11 +234,11 @@ export default function CirclesPage() {
             {inviteList.map((inv) => (
               <li
                 key={inv.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-ink-900/[0.06] bg-white p-4"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
               >
                 <div>
-                  <p className="font-semibold text-ink-900">{inv.circleName}</p>
-                  <p className="text-xs text-ink-500">
+                  <p className="font-semibold text-foreground">{inv.circleName}</p>
+                  <p className="text-xs text-muted-foreground">
                     {inv.inviterName} invited you · {formatMoney(inv.contributionCents)}/{inv.frequency}
                   </p>
                 </div>
@@ -283,7 +283,7 @@ export default function CirclesPage() {
           <Link key={circle.id} href={`/circles/${circle.id}`} className="group block">
             <Card className="h-full overflow-hidden p-0 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
               {circle.imageUrl && (
-                <div className="h-32 w-full overflow-hidden bg-mist">
+                <div className="h-32 w-full overflow-hidden bg-background">
                   <img
                     src={avatarSrc(circle.imageUrl)}
                     alt=""
@@ -298,8 +298,8 @@ export default function CirclesPage() {
                     <Users className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="font-semibold text-ink-900">{circle.name}</p>
-                    <p className="text-xs capitalize text-ink-500">
+                    <p className="font-semibold text-foreground">{circle.name}</p>
+                    <p className="text-xs capitalize text-muted-foreground">
                       {circle.frequency} · {circle.memberCount} members
                     </p>
                   </div>
@@ -315,23 +315,23 @@ export default function CirclesPage() {
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl bg-mist px-4 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                <div className="rounded-2xl bg-background px-4 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                     Per round
                   </p>
-                  <p className="font-semibold text-ink-900">
+                  <p className="font-semibold text-foreground">
                     {formatMoney(circle.contributionCents)}
                   </p>
                 </div>
-                <div className="rounded-2xl bg-mist px-4 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wide text-ink-400">You receive</p>
-                  <p className="font-semibold text-ink-900">{formatMoney(circle.payoutCents)}</p>
+                <div className="rounded-2xl bg-background px-4 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You receive</p>
+                  <p className="font-semibold text-foreground">{formatMoney(circle.payoutCents)}</p>
                 </div>
               </div>
 
               {circle.status === "active" ? (
                 <div className="mt-5">
-                  <div className="flex items-center justify-between text-xs text-ink-500">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
                       Round {circle.currentRound} of {circle.totalRounds}
                     </span>
@@ -340,11 +340,11 @@ export default function CirclesPage() {
                 </div>
               ) : (
                 <div className="mt-5 flex items-center gap-2">
-                  <span className="text-xs text-ink-500">Forming — waiting to start</span>
+                  <span className="text-xs text-muted-foreground">Forming — waiting to start</span>
                 </div>
               )}
 
-              <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600">
+              <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600 dark:text-jade-400">
                 View circle{" "}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </div>
@@ -355,9 +355,9 @@ export default function CirclesPage() {
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="flex min-h-[230px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-ink-900/12 p-6 text-ink-400 transition-[color,border-color,transform] duration-150 hover:border-jade-500/35 hover:text-jade-600 active:scale-[0.99] focus-ring"
+          className="flex min-h-[230px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-6 text-muted-foreground transition-[color,border-color,transform] duration-150 hover:border-jade-500/35 hover:text-jade-600 active:scale-[0.99] focus-ring"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-ink-900/8 bg-white">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card">
             <Plus className="h-6 w-6" />
           </span>
           <span className="text-sm font-semibold">Start a new circle</span>
@@ -367,7 +367,7 @@ export default function CirclesPage() {
         </button>
       </div>
 
-      <Eyebrow className="pt-4 text-center text-ink-300">Save Now · Grow Together</Eyebrow>
+      <Eyebrow className="pt-4 text-center text-muted-foreground">Save Now · Grow Together</Eyebrow>
     </div>
   );
 }

@@ -28,8 +28,8 @@ export default function CircleDetailPage() {
   const contributeMutation = useContributeToCircle();
   const inviteMutation = useInviteToCircle();
 
-  if (isLoading) return <div className="p-8 text-center text-ink-400">Loading circle...</div>;
-  if (!circle) return <div className="p-8 text-center text-ink-400">Circle not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading circle...</div>;
+  if (!circle) return <div className="p-8 text-center text-muted-foreground">Circle not found</div>;
 
   const isForming = circle.status === "forming";
   const isActive = circle.status === "active";
@@ -127,10 +127,10 @@ export default function CircleDetailPage() {
       {isForming && (
         <Card className="p-6">
           <div className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5 text-jade-600" />
-            <h2 className="font-display text-lg font-bold text-ink-900">Build your circle</h2>
+            <UserPlus className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+            <h2 className="font-display text-lg font-bold text-foreground">Build your circle</h2>
           </div>
-          <p className="mt-1 text-sm text-ink-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
               ? `Invite people by email. Everyone saves into one shared pot for ${circle.totalRounds} rounds, then gets their savings back. Start the circle once everyone's in.`
               : "Invite people by email. Rounds equal members — everyone gets exactly one payout. Start the circle once everyone's in."}
@@ -151,7 +151,7 @@ export default function CircleDetailPage() {
           )}
 
           {isCreator && (
-            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-ink-900/[0.06] pt-5">
+            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-5">
               {canStart ? (
                 <ActionButton
                   onClick={() => {
@@ -164,8 +164,8 @@ export default function CircleDetailPage() {
                   pending={startMutation.isPending}
                 />
               ) : (
-                <p className="inline-flex items-center gap-2 text-sm text-ink-500">
-                  <Rocket className="h-4 w-4 text-ink-400" />
+                <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <Rocket className="h-4 w-4 text-muted-foreground" />
                   Invite at least one more member to start the circle.
                 </p>
               )}
@@ -178,12 +178,12 @@ export default function CircleDetailPage() {
         {/* ------------------------------------------------ payout schedule */}
         <Card className="p-6 lg:col-span-3">
           <div className="flex items-center gap-2">
-            <CalendarClock className="h-5 w-5 text-jade-600" />
-            <h2 className="font-display text-lg font-bold text-ink-900">
+            <CalendarClock className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+            <h2 className="font-display text-lg font-bold text-foreground">
               {isAccumulation ? "Members" : "Payout schedule"}
             </h2>
           </div>
-          <p className="mt-1 text-sm text-ink-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
               ? `Everyone saves into one shared pot. After ${circle.totalRounds} rounds, each member gets their own savings back — locked on-chain.`
               : "The rotation is locked on-chain — everyone knows who receives the pot, and when."}
@@ -200,25 +200,25 @@ export default function CircleDetailPage() {
                   key={m.id}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                    current ? "border-jade-500/30 bg-jade-50" : "border-ink-900/[0.06] bg-white",
+                    current ? "border-jade-500/30 bg-jade-50" : "border-border bg-card",
                   )}
                 >
                   {!isAccumulation && (
-                    <span className="font-mono text-xs text-ink-400">{m.payoutRound}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{m.payoutRound}</span>
                   )}
                   {done ? (
                     <CheckCircle2 className="h-5 w-5 text-jade-500" />
                   ) : current ? (
-                    <Crown className="h-5 w-5 text-jade-600" />
+                    <Crown className="h-5 w-5 text-jade-600 dark:text-jade-400" />
                   ) : (
-                    <CircleIcon className="h-5 w-5 text-ink-300" />
+                    <CircleIcon className="h-5 w-5 text-muted-foreground" />
                   )}
                   <Avatar name={m.name} tone={isYou ? "jade" : "ink"} className="h-8 w-8" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-ink-900">
-                      {m.name} {isYou && <span className="text-jade-600">(you)</span>}
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {m.name} {isYou && <span className="text-jade-600 dark:text-jade-400">(you)</span>}
                     </p>
-                    <p className="text-xs text-ink-500 capitalize">
+                    <p className="text-xs text-muted-foreground capitalize">
                       {isAccumulation
                         ? done
                           ? "Savings returned"
@@ -240,8 +240,8 @@ export default function CircleDetailPage() {
         {/* ------------------------------------------ contribution history */}
         <div className="space-y-6 lg:col-span-2">
           <Card className="p-6">
-            <h2 className="font-display text-lg font-bold text-ink-900">Round progress</h2>
-            <p className="mt-3 text-sm text-ink-500">
+            <h2 className="font-display text-lg font-bold text-foreground">Round progress</h2>
+            <p className="mt-3 text-sm text-muted-foreground">
               {circle.currentRound} of {circle.totalRounds} rounds
             </p>
             <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
@@ -250,10 +250,10 @@ export default function CircleDetailPage() {
           {circle.contractAddress && (
             <Card className="p-6">
               <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-jade-600" />
-                <h2 className="font-display text-lg font-bold text-ink-900">On-chain escrow</h2>
+                <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+                <h2 className="font-display text-lg font-bold text-foreground">On-chain escrow</h2>
               </div>
-              <p className="mt-1 text-sm text-ink-500">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Contributions settle into this Susu escrow on Base. A{" "}
                 {((circle.feeBps ?? 0) / 100).toFixed(0)}% protocol fee is taken from each payout.
               </p>
@@ -261,7 +261,7 @@ export default function CircleDetailPage() {
                 href={`${circle.explorerUrl ?? "https://sepolia.basescan.org"}/address/${circle.contractAddress}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-ink-900/[0.08] bg-white px-3 py-2 font-mono text-xs text-ink-700 transition hover:border-jade-500/40 hover:text-jade-700"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700"
               >
                 {truncateAddress(circle.contractAddress)}
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -271,23 +271,23 @@ export default function CircleDetailPage() {
 
           {(circle.history?.length ?? 0) > 0 && (
             <Card className="p-6">
-              <h2 className="font-display text-lg font-bold text-ink-900">Your contributions</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Your contributions</h2>
               <ul className="mt-4 space-y-2">
                 {circle.history!.map((h) => (
                   <li
                     key={h.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-ink-900/[0.06] bg-white px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-ink-900">Round {h.round}</p>
-                      <p className="text-xs text-ink-500">{formatMoney(h.amountCents)}</p>
+                      <p className="text-sm font-semibold text-foreground">Round {h.round}</p>
+                      <p className="text-xs text-muted-foreground">{formatMoney(h.amountCents)}</p>
                     </div>
                     {h.txHash ? (
                       <a
                         href={`${circle.explorerUrl ?? "https://sepolia.basescan.org"}/tx/${h.txHash}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800"
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 dark:text-jade-300 transition hover:text-jade-800"
                       >
                         {truncateAddress(h.txHash)}
                         <ExternalLink className="h-3.5 w-3.5" />

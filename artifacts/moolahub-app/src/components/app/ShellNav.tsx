@@ -59,7 +59,7 @@ function ShellNavLink({
         className={cn(
           "relative flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors duration-150",
           "active:opacity-70",
-          active ? "text-jade-600" : "text-ink-400",
+          active ? "text-jade-600 dark:text-jade-400" : "text-muted-foreground",
         )}
       >
         {active && (
@@ -79,8 +79,8 @@ function ShellNavLink({
       href={item.href}
       className={cn(
         "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-150",
-        "active:bg-ink-900/[0.06]",
-        active ? "text-jade-800" : "text-ink-500 hover:bg-ink-900/[0.04] hover:text-ink-900",
+        "active:bg-accent",
+        active ? "text-jade-700 dark:text-jade-300" : "text-muted-foreground hover:bg-accent hover:text-foreground",
       )}
     >
       {active && (
@@ -92,7 +92,7 @@ function ShellNavLink({
       <Icon
         className={cn(
           "h-5 w-5 shrink-0 transition-colors duration-150",
-          active ? "text-jade-600" : "text-ink-400 group-hover:text-ink-600",
+          active ? "text-jade-600 dark:text-jade-400" : "text-muted-foreground group-hover:text-foreground",
         )}
         strokeWidth={active ? 2.25 : 2}
       />

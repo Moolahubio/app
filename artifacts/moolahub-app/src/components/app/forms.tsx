@@ -19,7 +19,7 @@ export function CopyButton({ value, className }: { value: string; className?: st
         }
       }}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/15 focus-ring",
+        "inline-flex items-center gap-1.5 rounded-full bg-ink-900/[0.06] px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-ink-900/[0.1] dark:bg-white/10 dark:hover:bg-white/15 focus-ring",
         className,
       )}
     >
@@ -57,7 +57,7 @@ export function AmountForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="flex items-center rounded-2xl border border-ink-900/10 bg-white px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+      <div className="flex items-center rounded-2xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
         <input
           name="amount"
           inputMode="decimal"
@@ -65,10 +65,10 @@ export function AmountForm({
           placeholder="0.00"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          className="h-12 w-full bg-transparent text-lg font-semibold text-ink-900 outline-none placeholder:text-ink-300"
+          className="h-12 w-full bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
           required
         />
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-ink-400">USDC</span>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">USDC</span>
       </div>
 
       {presets && (
@@ -78,7 +78,7 @@ export function AmountForm({
               key={p}
               type="button"
               onClick={() => setValue((p / 100).toString())}
-              className="cursor-pointer rounded-xl border border-ink-900/10 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition-[color,border-color,transform] duration-150 hover:border-jade-500/40 hover:text-jade-700 active:scale-[0.98] focus-ring"
+              className="cursor-pointer rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-[color,border-color,transform] duration-150 hover:border-jade-500/40 hover:text-jade-700 dark:hover:text-jade-300 active:scale-[0.98] focus-ring"
             >
               +{formatMoney(p, { compact: true })}
             </button>
@@ -92,7 +92,7 @@ export function AmountForm({
         </p>
       )}
       {ok && (
-        <p className="flex items-center gap-1.5 text-sm text-jade-600">
+        <p className="flex items-center gap-1.5 text-sm text-jade-600 dark:text-jade-400">
           <CheckCircle2 className="h-4 w-4" /> {ok}
         </p>
       )}
@@ -135,9 +135,9 @@ export function WithdrawForm({
         required
         value={destination}
         onChange={e => setDestination(e.target.value)}
-        className="h-12 w-full rounded-2xl border border-ink-900/10 bg-white px-4 font-mono text-sm text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
+        className="h-12 w-full rounded-2xl border border-border bg-card px-4 font-mono text-sm text-foreground outline-none focus:ring-2 focus:ring-jade-500/40"
       />
-      <div className="flex items-center rounded-2xl border border-ink-900/10 bg-white px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+      <div className="flex items-center rounded-2xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
         <input
           name="amount"
           inputMode="decimal"
@@ -146,9 +146,9 @@ export function WithdrawForm({
           required
           value={amount}
           onChange={e => setAmount(e.target.value)}
-          className="h-12 w-full bg-transparent text-lg font-semibold text-ink-900 outline-none placeholder:text-ink-300"
+          className="h-12 w-full bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
         />
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-ink-400">USDC</span>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">USDC</span>
       </div>
       {error && (
         <p className="flex items-center gap-1.5 text-sm text-red-600">
@@ -156,7 +156,7 @@ export function WithdrawForm({
         </p>
       )}
       {ok && (
-        <p className="flex items-center gap-1.5 text-sm text-jade-600">
+        <p className="flex items-center gap-1.5 text-sm text-jade-600 dark:text-jade-400">
           <CheckCircle2 className="h-4 w-4" /> {ok}
         </p>
       )}
@@ -212,7 +212,7 @@ export function InviteForm({ onSubmit, pending, ok, error }: { onSubmit: (email:
           required
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="h-11 w-full rounded-2xl border border-ink-900/10 bg-white px-4 text-sm text-ink-900 outline-none focus:ring-2 focus:ring-jade-500/40"
+          className="h-11 w-full rounded-2xl border border-border bg-card px-4 text-sm text-foreground outline-none focus:ring-2 focus:ring-jade-500/40"
         />
         <Button type="submit" disabled={pending || !email} size="sm">
           {pending ? "…" : "Invite"}
@@ -224,7 +224,7 @@ export function InviteForm({ onSubmit, pending, ok, error }: { onSubmit: (email:
         </p>
       )}
       {ok && (
-        <p className="flex items-center gap-1.5 text-sm text-jade-600">
+        <p className="flex items-center gap-1.5 text-sm text-jade-600 dark:text-jade-400">
           <CheckCircle2 className="h-4 w-4" /> {ok}
         </p>
       )}

@@ -65,7 +65,7 @@ export default function Login() {
       </section>
 
       {/* ----------------------------------------------------- form panel */}
-      <section className="flex flex-col justify-center bg-mist px-6 py-12 sm:px-12">
+      <section className="flex flex-col justify-center bg-background px-6 py-12 sm:px-12">
         <div className="mx-auto w-full max-w-sm">
           <div className="mb-8 lg:hidden">
             <Logo />

@@ -23,7 +23,7 @@ export function SegmentedControl<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex w-full rounded-xl border border-ink-900/10 bg-ink-900/[0.04] p-1",
+        "inline-flex w-full rounded-xl border border-border bg-muted p-1",
         className,
       )}
     >
@@ -40,8 +40,8 @@ export function SegmentedControl<T extends string>({
               "relative flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-[color,background-color,box-shadow] duration-200 ease-out",
               "focus-ring active:scale-[0.99]",
               active
-                ? "bg-white text-ink-900 shadow-[0_1px_2px_rgba(12,21,18,0.06)]"
-                : "text-ink-500 hover:text-ink-800",
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {opt.label}

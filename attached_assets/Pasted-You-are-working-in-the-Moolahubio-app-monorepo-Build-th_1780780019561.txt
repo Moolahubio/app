@@ -1,0 +1,67 @@
+You are working in the Moolahubio/app monorepo. Build the Savings Streaks feature per docs/product/STREAK_SYSTEM_PRD.md. This is a financial app and streaks are emotionally powerful — implement the guardrails exactly; do not invent a daily-pressure mechanic or any monetary reward.
+Ground rules
+
+Work on branch feat/savings-streaks; open a PR. Never touch main directly.
+Do not modify money/ledger logic. Streaks are a derived, non-financial projection. The only change to existing money code is adding a recordSave(...) call after the ledger commit in allocateToGoal() and contribute(). The double-entry ledger stays the source of truth.
+Additive DB only. New tables/columns; no changes to transactions/postings/contributions/goals/circles shape. Pause and ask me before running any DB migration (pnpm --filter @workspace/db run push).
+Secrets stay in Replit Secrets; never log/commit them. pnpm run typecheck must pass before you finish.
+Privacy & ethics are requirements, not polish: sharing is opt-in, amounts hidden by default, copy is never guilt-toned, streaks are never purchasable, and deposit→withdraw cannot farm a streak.
+
+The mechanic (implement exactly)
+
+A "save" = a goal allocation (transactions.type='goal_allocate') or a circle contribution (contributions row). Raw wallet deposits/withdrawals/releases/payouts do NOT count.
+Per-commitment, per-cadence streaks. Each goal and each circle membership has its own streak; the period is that commitment's frequency (goal frequency weekly/biweekly/monthly; circle period = its round cadence). One qualifying save anywhere in a period keeps the flame — amount is irrelevant.
+Headline = the user's longest currently-active commitment streak (the hero flame), plus lifetime best and total periods saved. Badge progress tracks that single longest continuous streak.
+Freezes — 1 per 3 months, max 4/year, ≤1 used per rolling 3-month window. Auto-consumed when a period closes unsatisfied; the period shows "frozen." Never purchasable. A second miss in the same 3-month window breaks the streak even with balance.
+Vacation — 1 per calendar year, up to 30 days. Pauses streak evaluation and badge-progress time (neither saves nor breaks). Refuse a second vacation in the same year. Allowance resets Jan 1 (user tz).
+Badges — calendar-time based, cadence-independent. A badge is earned for every 3 months of unbroken streak (4/year). A daily, weekly, and monthly saver earn the same badge for the same 3 months (measure elapsed time from the streak's startedAt, NOT period count). Each calendar year has a unique, collectible badge set. Earned badges persist forever on the profile even if the streak later breaks; a break resets progress toward the next badge only.
+Reminder — at most one opt-in nudge per period, before the period closes, only if enabled and unsaved, respecting quiet hours. Mirror the "Streak Alert" toggle.
+Rewards are cosmetic only (badges/tiers). No fee discount, yield, or cash in v1.
+Timezone: evaluate periods, badges, freezes, and vacation in the user's local timezone (store timezone on the user; default UTC).
+
+1. Data model (additive; Drizzle/Postgres)
+Add to lib/db/src/schema:
+
+streaks (per user+commitment): id, userId, commitmentType('goal'|'circle'), commitmentId, frequency, startedAt, currentCount, bestCount, status('active'|'frozen'|'paused'|'broken'), currentPeriodStart, currentPeriodEnd, currentPeriodSatisfied, lastSaveTxId, updatedAt.
+streak_periods (append-only outcome log, idempotent): id, streakId, periodStart, periodEnd, outcome('saved'|'frozen'|'paused'|'missed'), saveCount, createdAt. Unique (streakId, periodStart).
+streak_freezes: id, userId, balance, lastGrantedAt, lastUsedAt, grantedTotal, usedTotal, updatedAt.
+streak_badges: id, userId, badgeKey, year, quarterIndex(1–4), earnedAt, sourceCommitmentId. Unique (userId, year, quarterIndex).
+users columns: timezone, streak_reminder_opt_in, vacation_start, vacation_end, vacation_year_used.
+
+2. Backend (artifacts/api-server)
+
+lib/streaks.ts:
+
+recordSave(userId, commitment, txId) — call after the ledger commit in lib/goals.ts allocateToGoal() and lib/circles.ts contribute(). Marks the current period satisfied; increments the streak if it's the period's first qualifying save; idempotent.
+evaluateStreaks() — daily job: for each streak past currentPeriodEnd (user tz), roll forward if satisfied; else consume a freeze (respecting the rolling-window limit); else if on vacation, stay paused; else break (reset to 0, record bestCount). Award the next quarterly badge when now − startedAt crosses a 3-month boundary while unbroken (tag year,quarterIndex). Grant freezes (1/quarter, cap 4/yr). Enqueue ≤1 reminder per (streak, period) for opted-in users via the existing notify(). Idempotent via streak_periods.
+startStreakLoop() in index.ts (interval like the settlement loop) + recover on boot.
+
+
+routes/streaks.ts (all requireAuth, scoped by userId, errors via the sendError/AppError pattern): GET /streaks (hero + per-commitment + freezes + badges), POST /streaks/vacation (start; enforce 1/year ≤30d), POST /streaks/vacation/end, POST /streaks/reminders (toggle opt-in). Mount in routes/index.ts.
+Add the endpoints to lib/api-spec/openapi.yaml and run pnpm --filter @workspace/api-spec run codegen.
+
+3. Frontend (artifacts/moolahub-app)
+
+useStreak() hook (via the generated client).
+StreakFlame component: hero on the dashboard (flame + count + this-year's-badge), compact on each goal/circle detail (current/at-risk/frozen/paused + best).
+Milestone celebration modal at each 3-month badge, with a ShareCard generator: render a card to PNG client-side (flame, "N months saving", the year's badge, optional goal emoji, MoolaHub branding) — amounts hidden by default, with a toggle to reveal before sharing; share via native share sheet + download.
+Profile: badge collection (per-year sets), lifetime best.
+Settings/Streak screen: "Streak Alert" reminder toggle, freeze balance, and the once-a-year vacation control (disabled once used this year).
+Preserve MoolaHub branding; no guilt-toned copy; a broken streak shows "start a new streak" + lifetime best.
+
+4. Acceptance (prove it; see PRD §6 for given/when/then)
+
+Weekly, biweekly, and monthly goals each build a streak at their own cadence from real saves; amount doesn't matter.
+Two users (daily vs monthly saver) maintaining 3 unbroken months each earn the same badge; the 2027 badge differs from 2026.
+A missed period auto-consumes a freeze (≤1 per rolling 3 months); a second miss in that window breaks the streak.
+One vacation/year (≤30d) pauses without breaking; a second is refused that year.
+Reminder fires at most once per period and only when opted in.
+Sharing a card never shows amounts unless the user opts in; nothing is shared without an explicit action.
+Deposit→withdraw does not create or extend a streak. pnpm run typecheck passes.
+
+Hard stops — ask me first
+
+Before any DB migration/push. If a money/ledger file would need changes beyond the single recordSave hook. If a requirement seems to conflict with the PRD.
+
+Deliverable
+A PR on feat/savings-streaks: schema + migration (pending my OK), lib/streaks.ts + routes/streaks.ts wired in, frontend flame/share/vacation/reminder UI, OpenAPI + regenerated client, and a short test/QA checklist mapping each §4 item to how you verified it. End with anything you couldn't complete or that needs a decision (e.g., badge art, milestone copy).

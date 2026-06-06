@@ -14,7 +14,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-ink-900/[0.08] bg-white",
+        "rounded-2xl border border-card-border bg-card",
         className,
       )}
       {...props}
@@ -29,11 +29,11 @@ export function Card({
 type BadgeTone = "jade" | "ink" | "amber" | "neutral" | "sky";
 
 const badgeTones: Record<BadgeTone, string> = {
-  jade: "bg-jade-50 text-jade-700 ring-jade-500/20",
-  ink: "bg-ink-900 text-white ring-white/10",
-  amber: "bg-amber-50 text-amber-700 ring-amber-500/20",
-  neutral: "bg-ink-900/[0.05] text-ink-600 ring-ink-900/10",
-  sky: "bg-sky-50 text-sky-700 ring-sky-500/20",
+  jade: "bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300 dark:ring-jade-400/25",
+  ink: "bg-ink-900 text-white ring-white/10 dark:bg-white/10 dark:ring-white/15",
+  amber: "bg-amber-50 text-amber-700 ring-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/25",
+  neutral: "bg-muted text-muted-foreground ring-border",
+  sky: "bg-sky-50 text-sky-700 ring-sky-500/20 dark:bg-sky-500/15 dark:text-sky-300 dark:ring-sky-400/25",
 };
 
 export function Badge({
@@ -73,11 +73,11 @@ export function ProgressBar({
 }) {
   const percentage = pct(value, total);
   return (
-    <div className={cn("h-2 w-full overflow-hidden rounded-full bg-ink-900/[0.07]", className)}>
+    <div className={cn("h-2 w-full overflow-hidden rounded-full bg-muted", className)}>
       <div
         className={cn(
           "h-full rounded-full transition-all duration-700",
-          tone === "jade" ? "bg-jade-500" : "bg-ink-900",
+          tone === "jade" ? "bg-jade-500" : "bg-foreground",
         )}
         style={{ width: `${percentage}%` }}
       />
@@ -100,8 +100,8 @@ export function Eyebrow({
     <p
       className={cn(
         "eyebrow",
-        tone === "jade" && "text-jade-600",
-        tone === "muted" && "text-ink-400",
+        tone === "jade" && "text-jade-600 dark:text-jade-400",
+        tone === "muted" && "text-muted-foreground",
         tone === "light" && "text-jade-300",
         className,
       )}
@@ -131,10 +131,10 @@ export function Avatar({
     .join("")
     .toUpperCase();
   const tones: Record<string, string> = {
-    jade: "bg-jade-100 text-jade-700",
-    ink: "bg-ink-900 text-white",
-    amber: "bg-amber-100 text-amber-700",
-    sky: "bg-sky-100 text-sky-700",
+    jade: "bg-jade-100 text-jade-700 dark:bg-jade-500/20 dark:text-jade-200",
+    ink: "bg-ink-900 text-white dark:bg-white/10",
+    amber: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-200",
+    sky: "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-200",
   };
   if (src) {
     return (
@@ -173,10 +173,10 @@ export function IconChip({
   tone?: "jade" | "ink" | "amber" | "sky";
 }) {
   const tones: Record<string, string> = {
-    jade: "bg-jade-50 text-jade-600",
-    ink: "bg-ink-900/[0.06] text-ink-700",
-    amber: "bg-amber-50 text-amber-600",
-    sky: "bg-sky-50 text-sky-600",
+    jade: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300",
+    ink: "bg-muted text-foreground",
+    amber: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+    sky: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   };
   return (
     <span
@@ -196,7 +196,7 @@ export function IconChip({
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn("animate-pulse rounded-2xl bg-ink-900/[0.06]", className)}
+      className={cn("animate-pulse rounded-2xl bg-muted", className)}
       aria-hidden
     />
   );
@@ -214,9 +214,9 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-3xl border border-dashed border-ink-900/10 bg-white px-6 py-12 text-center">
-      <p className="font-display text-lg font-bold text-ink-900">{title}</p>
-      <p className="mt-2 max-w-sm text-sm text-ink-500">{description}</p>
+    <div className="flex flex-col items-center rounded-3xl border border-dashed border-border bg-card px-6 py-12 text-center">
+      <p className="font-display text-lg font-bold text-foreground">{title}</p>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );

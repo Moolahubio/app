@@ -17,6 +17,7 @@ import { Card, Avatar, Button, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
 import { PasskeysCard } from "@/components/app/PasskeysCard";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
 import {
   useGetMe,
   useGetDashboardSummary,
@@ -70,7 +71,7 @@ export default function ProfilePage() {
   });
 
   if (isUserLoading || isSummaryLoading)
-    return <div className="p-8 text-center text-ink-400">Loading profile...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
   if (!user || !summary) return null;
 
   const address = user.walletAddress ?? "Not provisioned";
@@ -214,51 +215,62 @@ export default function ProfilePage() {
       {/* balance snapshot */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">Balance</p>
-          <p className="mt-1 font-display text-2xl font-bold text-ink-900">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Balance</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">
             {formatMoney(summary.totalCents)}
           </p>
         </Card>
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
             Yield earned
           </p>
-          <p className="mt-1 font-display text-2xl font-bold text-jade-600">
+          <p className="mt-1 font-display text-2xl font-bold text-jade-600 dark:text-jade-400">
             {formatMoney(Math.floor(summary.totalCents * 0.041))}
           </p>
         </Card>
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-ink-400">Yield APY</p>
-          <p className="mt-1 font-display text-2xl font-bold text-ink-900">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Yield APY</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">
             {(summary.yieldApy * 100).toFixed(1)}%
           </p>
         </Card>
       </div>
+
+      {/* appearance */}
+      <Card className="p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground">Appearance</p>
+            <p className="text-xs text-muted-foreground">Choose light, dark, or match your device</p>
+          </div>
+          <ThemeToggle variant="full" className="w-full sm:w-auto" />
+        </div>
+      </Card>
 
       {/* passkeys */}
       <PasskeysCard />
 
       {/* settings list */}
       <Card className="overflow-hidden p-1">
-        <div className="divide-y divide-ink-900/[0.06]">
+        <div className="divide-y divide-border">
           {settings.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.label}
                 href={item.href}
-                className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-mist"
+                className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-accent"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ink-900/[0.06] text-ink-700">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-ink-900">{item.label}</p>
-                    <p className="text-xs text-ink-500">{item.detail}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.detail}</p>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-ink-300" />
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </Link>
             );
           })}
@@ -285,19 +297,19 @@ export default function ProfilePage() {
           });
         }}
         disabled={logoutMutation.isPending}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-ink-900/[0.08] bg-white py-3.5 text-sm font-semibold text-ink-600 transition-[color,background-color] duration-150 hover:bg-mist hover:text-ink-900 focus-ring"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-semibold text-muted-foreground transition-[color,background-color] duration-150 hover:bg-accent hover:text-foreground focus-ring"
       >
         <LogOut className="h-4 w-4" /> {logoutMutation.isPending ? "Signing out..." : "Sign out"}
       </button>
 
-      <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-center text-sm text-ink-400">
-        <Eyebrow className="text-ink-300">Save Now · Grow Together</Eyebrow>
-        <span className="text-ink-200">·</span>
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-center text-sm text-muted-foreground">
+        <Eyebrow className="text-muted-foreground">Save Now · Grow Together</Eyebrow>
+        <span className="text-muted-foreground">·</span>
         <a
           href="https://moolahub.io/"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-jade-600 hover:text-jade-700"
+          className="text-jade-600 hover:text-jade-700 dark:text-jade-400"
         >
           moolahub.io
         </a>

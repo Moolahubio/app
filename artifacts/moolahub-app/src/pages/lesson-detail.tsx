@@ -15,8 +15,8 @@ export default function LessonPage() {
   const { data: lessonsList } = useListLessons();
   const completeMutation = useCompleteLesson();
 
-  if (isLoading) return <div className="p-8 text-center text-ink-400">Loading lesson...</div>;
-  if (!lesson) return <div className="p-8 text-center text-ink-400">Lesson not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lesson...</div>;
+  if (!lesson) return <div className="p-8 text-center text-muted-foreground">Lesson not found</div>;
 
   const index = lessonsList?.findIndex((l) => l.slug === slug) ?? -1;
   const next = index !== -1 && lessonsList ? lessonsList[index + 1] : undefined;
@@ -28,10 +28,10 @@ export default function LessonPage() {
       <article>
         <div className="flex items-center gap-3">
           <Badge tone={lesson.level === "Beginner" ? "jade" : "sky"}>{lesson.level}</Badge>
-          <span className="inline-flex items-center gap-1.5 text-sm text-ink-500">
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" /> {lesson.minutes} min read
           </span>
-          <span className="font-mono text-xs uppercase tracking-[0.15em] text-ink-400">
+          <span className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
             {lesson.category}
           </span>
           {lesson.completed && (
@@ -43,24 +43,24 @@ export default function LessonPage() {
 
         <div className="mt-5 flex items-start gap-4">
           <span className="text-5xl">{lesson.emoji}</span>
-          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-ink-900">
+          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-foreground">
             {lesson.title}
           </h1>
         </div>
-        <p className="mt-4 text-lg leading-relaxed text-ink-500">{lesson.summary}</p>
+        <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{lesson.summary}</p>
 
         <div className="mt-8 space-y-8">
           {lesson.body.map((section) => (
             <section key={section.heading}>
-              <h2 className="font-display text-xl font-bold text-ink-900">{section.heading}</h2>
-              <p className="mt-2 leading-relaxed text-ink-600">{section.text}</p>
+              <h2 className="font-display text-xl font-bold text-foreground">{section.heading}</h2>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{section.text}</p>
             </section>
           ))}
         </div>
 
         {lesson.takeaways && lesson.takeaways.length > 0 && (
-          <Card className="mt-10 border-jade-500/15 bg-jade-50/50 p-6">
-            <div className="flex items-center gap-2 text-jade-700">
+          <Card className="mt-10 border-jade-500/15 bg-jade-50/50 p-6 dark:bg-jade-500/15">
+            <div className="flex items-center gap-2 text-jade-700 dark:text-jade-300">
               <Lightbulb className="h-5 w-5" />
               <h2 className="font-display text-lg font-bold">Key takeaways</h2>
             </div>
@@ -68,7 +68,7 @@ export default function LessonPage() {
               {lesson.takeaways.map((t) => (
                 <li key={t} className="flex items-start gap-2.5">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-jade-500" />
-                  <span className="text-ink-700">{t}</span>
+                  <span className="text-foreground">{t}</span>
                 </li>
               ))}
             </ul>
@@ -99,10 +99,10 @@ export default function LessonPage() {
           {next && (
             <Link
               href={`/learn/${next.slug}`}
-              className="group inline-flex items-center gap-2 text-sm font-medium text-ink-600 hover:text-ink-900"
+              className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               <span className="text-right">
-                <span className="block font-mono text-[10px] uppercase tracking-wide text-ink-400">
+                <span className="block font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                   Next lesson
                 </span>
                 {next.title}
