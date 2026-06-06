@@ -16,11 +16,9 @@ interface IMoolaHubGoalVault {
     event TreasurySet(address indexed treasury);
 
     function deposit(bytes32 goalId, uint256 amount) external;
-    function depositWithPermit(bytes32 goalId, uint256 amount, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
-        external;
     /// @notice Withdraw `grossAmount` from a goal; caller receives gross minus the 2% fee.
     function withdraw(bytes32 goalId, uint256 grossAmount) external;
-    function setUnlock(bytes32 goalId, uint64 unlockAt) external;
+    function setUnlock(bytes32 goalId, uint64 unlockAt_) external;
 
     function balanceOf(address owner, bytes32 goalId) external view returns (uint256);
     function unlockAt(address owner, bytes32 goalId) external view returns (uint64);

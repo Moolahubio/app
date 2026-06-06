@@ -14,16 +14,17 @@ interface IMoolaHubReputation {
     }
 
     event ReporterAuthorized(address indexed reporter, bool allowed);
-    event FactorySet(address indexed factory);
+    event AuthorizerSet(address indexed authorizer, bool allowed);
     event StrikeRecorded(
         address indexed user, bytes32 indexed circleId, uint256 round, uint8 reason, uint256 totalStrikes
     );
 
     function recordStrike(address user, bytes32 circleId, uint256 round, uint8 reason) external;
+    function recordStrikeBatch(address[] calldata users, bytes32 circleId, uint256 round, uint8 reason) external;
     function setReporter(address reporter, bool allowed) external;
-    function setFactory(address factory) external;
+    function setAuthorizer(address authorizer, bool allowed) external;
 
     function strikesOf(address user) external view returns (uint256);
     function isReporter(address reporter) external view returns (bool);
-    function factory() external view returns (address);
+    function isAuthorizer(address authorizer) external view returns (bool);
 }

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -98,62 +97,61 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
 
     // --- Contributions -------------------------------------------------------
 
+    /// @notice Contribute the round amount. The member must have approved this
+    ///         escrow for at least `contributionAmount` USDC. (No EIP-2612 permit
+    ///         path: ERC-4337 smart accounts can't produce a valid permit
+    ///         signature, so approve + contribute is the only flow.)
     function contribute() external nonReentrant {
         _contribute();
     }
 
-    /// @notice One-signature contribution using EIP-2612 permit (USDC supports it).
-    function contributeWithPermit(uint256 deadline, uint8 v, bytes32 r, bytes32 s) external nonReentrant {
-        // Permit may be front-run/already-consumed; ignore its revert and let the
-        // subsequent safeTransferFrom enforce the allowance requirement.
-        try IERC20Permit(address(usdc)).permit(msg.sender, address(this), contributionAmount, deadline, v, r, s)
-        {} catch {}
-        _contribute();
-    }
-
+    /// @dev Strict checks-effects-interactions: ALL state (including settlement's
+    ///      round advance / completion) is written before ANY token transfer. The
+    ///      member's pull happens first so the pot is funded before the payout.
     function _contribute() private {
         if (status != Status.Active || paused) revert NotActive();
         if (!isMember[msg.sender]) revert NotMember();
         uint256 round = currentRound;
         if (hasContributed[round][msg.sender]) revert AlreadyContributed();
 
-        // Effects before interaction (CEI).
+        // --- Effects ---
         hasContributed[round][msg.sender] = true;
-        roundContributions[round] += 1;
-
-        usdc.safeTransferFrom(msg.sender, address(this), contributionAmount);
+        uint256 filled = roundContributions[round] + 1;
+        roundContributions[round] = filled;
         emit Contributed(msg.sender, round, contributionAmount);
 
-        if (roundContributions[round] == totalRounds) {
-            _settleRound(round);
-        }
-    }
-
-    function _settleRound(uint256 round) private {
-        address recipient = _members[round - 1]; // positional, non-discretionary
-        uint256 pot = contributionAmount * totalRounds;
-        uint256 fee = (pot * feeBps) / BPS;
-        uint256 payout = pot - fee;
-
-        // Advance state before any transfer (CEI).
-        if (round == totalRounds) {
-            status = Status.Completed;
-        } else {
-            currentRound = round + 1;
-            roundDeadline = uint64(block.timestamp) + roundDuration;
+        bool settle = filled == totalRounds;
+        address recipient = address(0);
+        uint256 payout = 0;
+        uint256 fee = 0;
+        if (settle) {
+            recipient = _members[round - 1]; // positional, non-discretionary
+            uint256 pot = contributionAmount * totalRounds;
+            fee = (pot * feeBps) / BPS;
+            payout = pot - fee;
+            if (round == totalRounds) {
+                status = Status.Completed;
+            } else {
+                currentRound = round + 1;
+                roundDeadline = uint64(block.timestamp) + roundDuration;
+            }
         }
 
-        if (fee > 0) usdc.safeTransfer(treasury, fee);
-        usdc.safeTransfer(recipient, payout); // USDC has no transfer hook -> safe push
-        emit RoundSettled(round, recipient, payout, fee);
-        if (status == Status.Completed) emit CircleCompleted(totalRounds);
+        // --- Interactions (CEI): pull this contribution, then settle payouts ---
+        usdc.safeTransferFrom(msg.sender, address(this), contributionAmount);
+        if (settle) {
+            if (fee > 0) usdc.safeTransfer(treasury, fee);
+            usdc.safeTransfer(recipient, payout); // USDC has no transfer hook
+            emit RoundSettled(round, recipient, payout, fee);
+            if (status == Status.Completed) emit CircleCompleted(totalRounds);
+        }
     }
 
     // --- Delinquency / cancellation -----------------------------------------
 
     /// @notice Flag members who missed the current round once it is past
     ///         deadline + grace, without cancelling. Permissionless.
-    function flagDelinquents() external {
+    function flagDelinquents() external nonReentrant {
         if (status != Status.Active) revert NotActive();
         if (!_pastGrace() || roundContributions[currentRound] == totalRounds) revert NotStalled();
         _flagDelinquents(currentRound);
@@ -162,18 +160,21 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     /// @notice Cancel a stalled circle so contributors can reclaim the current
     ///         round's contributions. Permissionless once past deadline + grace;
     ///         the guardian may also cancel in an emergency.
-    function cancelStalled() external {
+    function cancelStalled() external nonReentrant {
         if (status != Status.Active) revert NotActive();
         bool stalled = _pastGrace() && roundContributions[currentRound] < totalRounds;
         if (!stalled && msg.sender != guardian) revert NotStalled();
 
-        if (stalled) _flagDelinquents(currentRound);
+        // Effects before the external (reputation) interaction — strict CEI.
         status = Status.Cancelled;
         _accrueRefunds(currentRound);
         emit CircleCancelled(currentRound, msg.sender);
+        if (stalled) _flagDelinquents(currentRound);
     }
 
     function _pastGrace() private view returns (bool) {
+        // Scheduling only; validator drift is negligible vs the round duration.
+        // slither-disable-next-line timestamp
         return block.timestamp > uint256(roundDeadline) + gracePeriod;
     }
 
@@ -184,16 +185,25 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
             emit DelinquentsFlagged(round, 0);
             return;
         }
-        uint256 count;
+        // Collect missed members, then report in ONE batched call (no external
+        // call inside the loop). try/guarded so a misbehaving registry can never
+        // block cancellation/refunds.
         uint256 n = _members.length;
+        address[] memory missed = new address[](n);
+        uint256 count = 0;
         for (uint256 i; i < n; ++i) {
             address m = _members[i];
             if (!hasContributed[round][m]) {
-                reputation.recordStrike(m, circleId, round, uint8(IMoolaHubReputation.Reason.MISSED_CONTRIBUTION));
+                missed[i] = m;
                 unchecked {
                     ++count;
                 }
             }
+        }
+        if (count > 0) {
+            try reputation.recordStrikeBatch(
+                missed, circleId, round, uint8(IMoolaHubReputation.Reason.MISSED_CONTRIBUTION)
+            ) {} catch {}
         }
         emit DelinquentsFlagged(round, count);
     }

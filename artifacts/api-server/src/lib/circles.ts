@@ -8,25 +8,14 @@ import {
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import { onchainEnabled, deployCircleEscrow, explorerUrl } from "./chain";
+import { onchainEnabled, platformAddress } from "./chain";
+import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
-
-// Platform fee on each rotation payout, mirroring the on-chain escrow's feeBps
-// (the deployed CircleFactory uses 200 = 2%). A recipient owed `pot` receives
-// `pot - fee`; the fee leaves the pool to the treasury on-chain.
-const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS) || 200;
-// Grace period after a round's deadline before it can be flagged/cancelled
-// on-chain. Generous so testnet circles never auto-stall.
-const GRACE_PERIOD_DAYS = 7;
-
-function feeCentsOf(potCents: number): number {
-  return Math.floor((potCents * FEE_BPS) / 10_000);
-}
 
 function addInterval(start: Date | null, frequency: string, rounds: number): Date {
   const d = new Date(start ?? Date.now());
@@ -194,10 +183,6 @@ export async function getCircleDetail(userId: string, circleId: string) {
     imageUrl: c.imageUrl ?? null,
     startDate: c.startDate ? c.startDate.toISOString() : null,
     contractAddress: c.contractAddress,
-    // Rotation circles settle on-chain through the escrow, which takes the same
-    // fee the ledger mirrors; accumulation stays ledger-only with no fee.
-    feeBps: c.type === "accumulation" ? 0 : FEE_BPS,
-    explorerUrl: c.contractAddress ? explorerUrl() : null,
     myPayoutRound: me?.payoutRound ?? null,
     myContributionStatus: contributedThisRound ? "paid" : "due",
     isCreator,
@@ -256,14 +241,9 @@ export async function contribute(userId: string, circleId: string) {
     throw new Error("Insufficient available balance");
   }
 
-  // On-chain settlement is member wallet → the circle's Susu escrow contract.
-  // Only rotation circles with a deployed escrow settle on-chain; accumulation
-  // and any ledger-only-fallback rotation circle stay ledger-only. Resolve the
-  // escrow address before the tx; null disables on-chain for this contribution.
-  const escrow =
-    circle.type !== "accumulation" && circle.contractAddress && onchainEnabled()
-      ? circle.contractAddress
-      : null;
+  // On-chain settlement is member wallet → platform escrow. Resolve the escrow
+  // address before the tx; null disables on-chain for this contribution.
+  const escrow = onchainEnabled() ? platformAddress() : null;
 
   // Reserve the contribution slot and move the money in ONE transaction so they
   // commit or roll back together. The unique (circle_id, user_id, round)
@@ -297,8 +277,6 @@ export async function contribute(userId: string, circleId: string) {
       amountCents: circle.contributionCents,
       onchain: escrow ? { onchainStatus: "pending" } : { onchainStatus: "none" },
       requireSufficientFrom: true,
-      circleId,
-      round,
       tx,
     });
     if (escrow) {
@@ -306,27 +284,17 @@ export async function contribute(userId: string, circleId: string) {
         {
           transactionId: t.id,
           contributionId: reserved[0].id,
-          kind: "escrow_contribute",
+          kind: "contribution",
           sourceUserId: userId,
           toAddress: escrow,
           amountCents: circle.contributionCents,
-          memo: `susu:${circleId}:${round}`,
+          memo: `susu:${circleId}`,
         },
         tx,
       );
     }
     return { txn: t, contributionId: reserved[0].id };
   });
-
-  // Create the round's payout/fee ledger rows BEFORE kicking the reconciler.
-  // The escrow settles the round on-chain when the last member contributes, and
-  // the reconciler stamps those payout/fee rows confirmed by (circleId, round)
-  // when it sees `RoundSettled`. If the rows didn't exist yet, that backfill
-  // would update 0 rows and the payout would be stranded as "pending" with no
-  // retry path. Building them first — and only then kicking the reconciler —
-  // guarantees they're present (the on-chain contribute also takes seconds,
-  // so even the live interval reconciler can't outrun this fast ledger write).
-  await maybeProcessPayout(circleId, round);
 
   if (escrow) kickReconciler();
 
@@ -341,6 +309,7 @@ export async function contribute(userId: string, circleId: string) {
     { email: true },
   );
 
+  await maybeProcessPayout(circleId, round);
   return txn;
 }
 
@@ -366,8 +335,8 @@ async function maybeProcessPayout(circleId: string, round: number) {
       for (const member of circle.members) {
         if (member.paidOut) continue;
 
-        // Accumulation circles stay ledger-only (no on-chain escrow), so the
-        // savings-return payout is a pure ledger move.
+        const memberWallet = (member.user as { wallet?: { address: string } | null }).wallet;
+        const canSettle = onchainEnabled() && !!memberWallet;
         // Claim and pay atomically in one transaction: flip paidOut false→true
         // alongside the ledger move so a concurrent caller can't double-pay
         // (the conditional update is the guard) and a failed transfer can't
@@ -379,22 +348,34 @@ async function maybeProcessPayout(circleId: string, round: number) {
             .where(and(eq(circleMembersTable.id, member.id), eq(circleMembersTable.paidOut, false)))
             .returning({ id: circleMembersTable.id });
           if (claimed.length === 0) return false;
-          await transfer({
+          const t = await transfer({
             type: "payout",
             description: `${circle.name} · savings returned`,
             userId: member.userId,
             fromKey: acct.pool(circleId),
             toKey: acct.wallet(member.userId),
             amountCents: shareCents,
-            onchain: { onchainStatus: "none" },
+            onchain: canSettle ? { onchainStatus: "pending" } : { onchainStatus: "none" },
             requireSufficientFrom: true,
-            circleId,
-            round,
             tx,
           });
+          if (canSettle && memberWallet) {
+            await enqueueOnchainTransfer(
+              {
+                transactionId: t.id,
+                kind: "payout",
+                sourceUserId: null,
+                toAddress: memberWallet.address,
+                amountCents: shareCents,
+                memo: `payout:${circleId}`,
+              },
+              tx,
+            );
+          }
           return true;
         });
         if (!paid) continue;
+        if (canSettle) kickReconciler();
         await notify(
           member.userId,
           {
@@ -436,52 +417,45 @@ async function maybeProcessPayout(circleId: string, round: number) {
     if (claimed.length === 0) return;
 
     const potCents = circle.contributionCents * circle.members.length;
-    // On-chain rotation: the escrow settles the round itself (pays the recipient
-    // their net and routes the fee to the treasury) atomically when the last
-    // member contributes. We do NOT enqueue an on-chain payout — we mirror the
-    // same economics in the ledger as "pending" and let the reconciler stamp the
-    // settlement tx hash by circle+round once the escrow's RoundSettled fires.
-    const onchainRotation = onchainEnabled() && !!circle.contractAddress;
-    const feeCents = onchainRotation ? feeCentsOf(potCents) : 0;
-    const netCents = potCents - feeCents;
 
+    // Payout is platform escrow → recipient wallet, settled out of band. Booked
+    // "pending" and enqueued atomically with the ledger move; the reconciler
+    // settles it on-chain (never silently ledger-only).
+    const recipientWallet = (recipient.user as { wallet?: { address: string } | null }).wallet;
+    const canSettle = onchainEnabled() && !!recipientWallet;
     await db.transaction(async (tx) => {
-      await transfer({
+      const t = await transfer({
         type: "payout",
         description: `${circle.name} · round ${round} payout`,
         userId: recipient.userId,
         fromKey: acct.pool(circleId),
         toKey: acct.wallet(recipient.userId),
-        amountCents: netCents,
-        onchain: onchainRotation ? { onchainStatus: "pending" } : { onchainStatus: "none" },
+        amountCents: potCents,
+        onchain: canSettle ? { onchainStatus: "pending" } : { onchainStatus: "none" },
         requireSufficientFrom: true,
-        circleId,
-        round,
         tx,
       });
-      if (feeCents > 0) {
-        // The fee leaves the pool to the treasury on-chain → ledger "external".
-        await transfer({
-          type: "fee",
-          description: `${circle.name} · round ${round} platform fee`,
-          userId: null,
-          fromKey: acct.pool(circleId),
-          toKey: acct.external,
-          amountCents: feeCents,
-          onchain: { onchainStatus: "pending" },
-          requireSufficientFrom: true,
-          circleId,
-          round,
+      if (canSettle && recipientWallet) {
+        await enqueueOnchainTransfer(
+          {
+            transactionId: t.id,
+            kind: "payout",
+            sourceUserId: null,
+            toAddress: recipientWallet.address,
+            amountCents: potCents,
+            memo: `payout:${circleId}`,
+          },
           tx,
-        });
+        );
       }
     });
+    if (canSettle) kickReconciler();
     await notify(
       recipient.userId,
       {
         type: "payout",
         title: "You received the pot! 🎉",
-        body: `${formatMoney(netCents)} from "${circle.name}" landed in your wallet.`,
+        body: `${formatMoney(potCents)} from "${circle.name}" landed in your wallet.`,
         link: `/circles/${circleId}`,
       },
       { email: true },
@@ -624,72 +598,32 @@ export async function declineInvite(userEmail: string, inviteId: string) {
 export async function startCircle(userId: string, circleId: string) {
   const circle = await db.query.circlesTable.findFirst({
     where: and(eq(circlesTable.id, circleId), eq(circlesTable.createdById, userId)),
-    with: { members: { with: { user: { with: { wallet: true } } } } },
+    with: { members: true },
   });
   if (!circle) throw new Error("Only the creator can start this circle.");
   if (circle.status !== "forming") throw new Error("This circle has already started.");
   if (circle.members.length < 2) throw new Error("Invite at least one more member first.");
+  // Rotation: lock rounds to the final member count and finalize each member's
+  // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
+  const startUpdate =
+    circle.type === "accumulation"
+      ? { status: "active", currentRound: 1, startDate: new Date() }
+      : {
+          status: "active",
+          currentRound: 1,
+          totalRounds: circle.members.length,
+          payoutCents: circle.contributionCents * circle.members.length,
+          startDate: new Date(),
+        };
+  await db.update(circlesTable).set(startUpdate).where(eq(circlesTable.id, circleId));
 
-  let startUpdate: Record<string, unknown>;
+  // Accumulation circles get their own on-chain contract (a per-circle clone with
+  // its own parameters), deployed once the roster is locked. Best-effort — the
+  // ledger remains the source of truth and the address is backfilled on retry.
   if (circle.type === "accumulation") {
-    // Accumulation stays ledger-only: rounds and payout were fixed at creation.
-    startUpdate = { status: "active", currentRound: 1, startDate: new Date() };
-  } else {
-    // Rotation: lock rounds to the final member count, then deploy the on-chain
-    // Susu escrow so contributions and payouts settle through the real contract.
-    // Members are passed in payout-round order so the escrow's positional
-    // settlement matches our schedule. If deployment can't happen (no platform
-    // key / RPC down / a member lacks a wallet) we fall back to ledger-only so
-    // the circle still runs — contractAddress stays null and contributions skip
-    // the on-chain rail.
-    const totalRounds = circle.members.length;
-    const potCents = circle.contributionCents * totalRounds;
-    const orderedMembers = [...circle.members].sort((a, b) => a.payoutRound - b.payoutRound);
-    const memberAddresses = orderedMembers.map(
-      (m) => (m.user as { wallet?: { address: string } | null }).wallet?.address ?? "",
-    );
-
-    let contractAddress: string | null = null;
-    let payoutCents = potCents;
-    if (onchainEnabled()) {
-      const roundDurationSecs = (INTERVAL_DAYS[circle.frequency] ?? 30) * 86_400;
-      const deployed = await deployCircleEscrow({
-        circleId: circle.id,
-        contributionCents: circle.contributionCents,
-        members: memberAddresses,
-        roundDurationSecs,
-        gracePeriodSecs: GRACE_PERIOD_DAYS * 86_400,
-      });
-      if (deployed.status === "confirmed") {
-        contractAddress = deployed.escrow;
-        // On-chain the escrow takes the platform fee out of each payout, so the
-        // recipient nets pot - fee. Mirror that in the stored payout estimate.
-        payoutCents = potCents - feeCentsOf(potCents);
-      }
-    }
-
-    startUpdate = {
-      status: "active",
-      currentRound: 1,
-      totalRounds,
-      payoutCents,
-      contractAddress,
-      startDate: new Date(),
-    };
+    await maybeDeployAccumulationContract(circleId);
   }
-  // Compare-and-set on `status='forming'`: the read-then-deploy above is a TOCTOU
-  // window (escrow deployment can take seconds), so two concurrent starts could
-  // otherwise both write — one with a confirmed contractAddress, the other with a
-  // null fallback that overwrites it. Conditioning the write on the still-forming
-  // status means only the first writer wins; a loser matches 0 rows and is a
-  // no-op. The factory keys escrows by circleId and returns the existing one, so
-  // a duplicate deploy is harmless and both writers carry the same address.
-  const activated = await db
-    .update(circlesTable)
-    .set(startUpdate)
-    .where(and(eq(circlesTable.id, circleId), eq(circlesTable.status, "forming")))
-    .returning({ id: circlesTable.id });
-  if (activated.length === 0) throw new Error("This circle has already started.");
+
   const others = circle.members.map((m) => m.userId).filter((id) => id !== userId);
   await notifyMany(
     others,
@@ -701,4 +635,39 @@ export async function startCircle(userId: string, circleId: string) {
     },
     { email: true },
   );
+}
+
+/**
+ * Best-effort: deploy the per-circle accumulation contract (its own clone with
+ * its own parameters) via the factory and store its address on the circle. Skips
+ * silently when on-chain is disabled, the circle already has a contract, or any
+ * member lacks an on-chain wallet. The ledger remains authoritative.
+ */
+async function maybeDeployAccumulationContract(circleId: string): Promise<void> {
+  if (!accumulationOnchainEnabled()) return;
+  const circle = await db.query.circlesTable.findFirst({
+    where: eq(circlesTable.id, circleId),
+    with: { members: { with: { user: { with: { wallet: true } } } } },
+  });
+  if (!circle || circle.type !== "accumulation" || circle.contractAddress) return;
+
+  const memberAddresses = circle.members.map(
+    (m) => (m.user as { wallet?: { address: string } | null }).wallet?.address ?? "",
+  );
+  if (memberAddresses.some((a) => !a)) return; // every member needs an on-chain wallet
+
+  const res = await deployAccumulationCircle({
+    circleUuid: circle.id,
+    contributionCents: circle.contributionCents,
+    memberAddresses,
+    frequency: circle.frequency,
+    totalRounds: circle.totalRounds,
+    lockUntilMaturity: true,
+  });
+  if (res) {
+    await db
+      .update(circlesTable)
+      .set({ contractAddress: res.address })
+      .where(eq(circlesTable.id, circleId));
+  }
 }

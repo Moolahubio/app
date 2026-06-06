@@ -37,7 +37,6 @@ interface IMoolaHubSusuEscrow {
     function initialize(InitParams calldata p) external;
 
     function contribute() external;
-    function contributeWithPermit(uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
     function flagDelinquents() external; // permissionless after deadline + grace
     function cancelStalled() external; // permissionless after deadline + grace
     function claimRefund() external; // contributor pulls unsettled contributions back

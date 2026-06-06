@@ -27,7 +27,7 @@ contract CircleFactoryTest is Test {
         factory = new MoolaHubCircleFactory(
             address(impl), address(usdc), treasury, guardian, address(rep), 200, owner
         );
-        rep.setFactory(address(factory));
+        rep.setAuthorizer(address(factory), true);
         vm.stopPrank();
     }
 

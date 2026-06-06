@@ -50,13 +50,13 @@ contract Deploy is Script {
         // 5. Goal vault.
         MoolaHubGoalVault goalVault = new MoolaHubGoalVault(usdc, address(treasury), feeBps, owner);
 
-        // 6. Wire the factory into the reputation registry so it can authorize
+        // 6. Authorize the factory on the reputation registry so it can register
         //    escrow reporters. Only works if the deployer is the reputation owner;
-        //    otherwise the multisig owner must call setFactory after deploy.
+        //    otherwise the multisig owner must call setAuthorizer(factory, true).
         if (owner == deployer) {
-            reputation.setFactory(address(factory));
+            reputation.setAuthorizer(address(factory), true);
         } else {
-            console2.log("ACTION REQUIRED: owner must call reputation.setFactory(factory)");
+            console2.log("ACTION REQUIRED: owner must call reputation.setAuthorizer(factory, true)");
         }
 
         vm.stopBroadcast();
