@@ -11,6 +11,7 @@ function PrivyLoginButton() {
   const privyAuthMutation = usePrivyAuth();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   // Tracks whether the user *intentionally* triggered a login. Privy fires
   // `onComplete` both on an explicit login AND when it silently restores a
   // persisted session on mount — without this guard, signing out (which drops
@@ -24,7 +25,7 @@ function PrivyLoginButton() {
       const token = await getAccessToken();
       if (token) {
         privyAuthMutation.mutate(
-          { data: { token } },
+          { data: { token, rememberMe } },
           {
             onSuccess: () => {
               queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
@@ -66,9 +67,20 @@ function PrivyLoginButton() {
   };
 
   return (
-    <Button onClick={handleClick} size="lg" className="w-full" disabled={busy || privyAuthMutation.isPending}>
-      {busy || privyAuthMutation.isPending ? "Signing in…" : "Continue with Privy"}
-    </Button>
+    <div className="flex w-full flex-col gap-3">
+      <label className="flex items-center gap-2 text-sm text-ink-500">
+        <input
+          type="checkbox"
+          checked={rememberMe}
+          onChange={(e) => setRememberMe(e.target.checked)}
+          className="h-4 w-4 rounded border-ink-300"
+        />
+        Keep me logged in for 30 days
+      </label>
+      <Button onClick={handleClick} size="lg" className="w-full" disabled={busy || privyAuthMutation.isPending}>
+        {busy || privyAuthMutation.isPending ? "Signing in…" : "Continue with Privy"}
+      </Button>
+    </div>
   );
 }
 

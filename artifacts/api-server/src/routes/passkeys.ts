@@ -23,18 +23,18 @@ import {
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
-import { requireAuth, createSession, type AuthRequest } from "../lib/auth";
+import { requireAuth, createSession, sessionTtlMs, type AuthRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 
 const RP_NAME = "MoolaHub";
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const COOKIE = "moolahub_session";
+// Base cookie attributes; `maxAge` is set per-login to match the session TTL.
 const cookieOpts = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
-  maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
 // Derive the WebAuthn Relying Party ID + expected origin from the request so the
@@ -142,7 +142,7 @@ router.post("/passkeys/register/verify", requireAuth, async (req, res): Promise<
   const user = (req as AuthRequest).user;
   const parsed = RegisterPasskeyVerifyBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -209,7 +209,7 @@ router.post("/passkeys/login/options", async (req, res): Promise<void> => {
 router.post("/passkeys/login/verify", async (req, res): Promise<void> => {
   const parsed = LoginPasskeyVerifyBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -271,8 +271,9 @@ router.post("/passkeys/login/verify", async (req, res): Promise<void> => {
   }
 
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id));
-  const token = await createSession(user.id);
-  res.cookie(COOKIE, token, cookieOpts);
+  const rememberMe = (req.body as { rememberMe?: unknown })?.rememberMe === true;
+  const token = await createSession(user.id, rememberMe);
+  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
 
   res.json(
     LoginPasskeyVerifyResponse.parse({

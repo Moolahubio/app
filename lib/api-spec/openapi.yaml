@@ -871,6 +871,9 @@ components:
           type: ["string", "null"]
         email:
           type: ["string", "null"]
+        rememberMe:
+          type: boolean
+          description: When true, the session lasts 30 days instead of the 7-day default.
 
     AuthUser:
       type: object

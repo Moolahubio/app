@@ -18,6 +18,7 @@ import {
   DeclineInviteResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { sendError } from "../lib/errors";
 import {
   createCircle,
   listCirclesForUser,
@@ -48,7 +49,7 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = CreateCircleBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -65,7 +66,7 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
     });
     circleId = circle.id;
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Could not create circle" });
+    sendError(res, e, "Could not create circle");
     return;
   }
 
@@ -78,7 +79,7 @@ router.get("/circles/:id", requireAuth, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = GetCircleParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -96,19 +97,19 @@ router.post("/circles/:id/invite", requireAuth, async (req, res): Promise<void> 
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = InviteToCircleParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
   const parsed = InviteToCircleBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await inviteToCircle(user.id, params.data.id, parsed.data.email);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Could not send invite" });
+    sendError(res, e, "Could not send invite");
     return;
   }
 
@@ -120,14 +121,14 @@ router.post("/circles/:id/start", requireAuth, async (req, res): Promise<void> =
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = StartCircleParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await startCircle(user.id, params.data.id);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Could not start circle" });
+    sendError(res, e, "Could not start circle");
     return;
   }
 
@@ -139,14 +140,14 @@ router.post("/circles/:id/contribute", requireAuth, async (req, res): Promise<vo
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = ContributeToCircleParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await contribute(user.id, params.data.id);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Contribution failed" });
+    sendError(res, e, "Contribution failed");
     return;
   }
 
@@ -158,14 +159,14 @@ router.post("/circles/invites/:id/accept", requireAuth, async (req, res): Promis
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = AcceptInviteParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await acceptInvite(user.id, user.email, params.data.id);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Could not accept invite" });
+    sendError(res, e, "Could not accept invite");
     return;
   }
 
@@ -177,14 +178,14 @@ router.post("/circles/invites/:id/decline", requireAuth, async (req, res): Promi
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeclineInviteParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await declineInvite(user.email, params.data.id);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Could not decline invite" });
+    sendError(res, e, "Could not decline invite");
     return;
   }
 

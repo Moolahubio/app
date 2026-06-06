@@ -60,7 +60,7 @@ router.post("/notifications/:id/read", requireAuth, async (req, res): Promise<vo
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = MarkNotificationReadParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 

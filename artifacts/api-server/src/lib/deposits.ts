@@ -1,4 +1,5 @@
 import { eq, and, inArray } from "drizzle-orm";
+import { AppError } from "./errors";
 import { db, transactionsTable } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
 import { onchainEnabled, getIncomingUsdc, isValidAddress } from "./chain";
@@ -30,9 +31,9 @@ function initialOnchainMeta() {
  */
 export async function faucetDeposit(userId: string, amountCents: number) {
   const wallet = await getWalletForUser(userId);
-  if (!wallet) throw new Error("Wallet not provisioned");
+  if (!wallet) throw new AppError("Wallet not provisioned");
   if (amountCents <= 0 || amountCents > 1_000_00) {
-    throw new Error("Enter an amount up to 1,000 test USDC.");
+    throw new AppError("Enter an amount up to 1,000 test USDC.");
   }
 
   const enabled = onchainEnabled();
@@ -124,14 +125,14 @@ export async function syncDeposits(
 /** Withdraw USDC on-chain to an external Base address. */
 export async function withdrawToAddress(userId: string, amountCents: number, destination: string) {
   if (!isValidAddress(destination)) {
-    throw new Error("Enter a valid Base address (starts with 0x).");
+    throw new AppError("Enter a valid Base address (starts with 0x).");
   }
-  if (amountCents <= 0) throw new Error("Enter a valid amount.");
+  if (amountCents <= 0) throw new AppError("Enter a valid amount.");
   if ((await accountBalance(acct.wallet(userId))) < amountCents) {
-    throw new Error("Insufficient available balance.");
+    throw new AppError("Insufficient available balance.");
   }
   const wallet = await getWalletForUser(userId);
-  if (!wallet) throw new Error("Wallet not provisioned");
+  if (!wallet) throw new AppError("Wallet not provisioned");
 
   const enabled = onchainEnabled();
   const txn = await db.transaction(async (tx) => {

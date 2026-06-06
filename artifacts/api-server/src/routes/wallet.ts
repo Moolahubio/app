@@ -8,6 +8,7 @@ import {
   SyncDepositsResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { sendError } from "../lib/errors";
 import { createWalletForUser } from "../lib/wallet";
 import { userBalances } from "../lib/ledger";
 import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
@@ -36,14 +37,14 @@ router.post("/wallet/deposit", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = DepositFaucetBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await faucetDeposit(user.id, parsed.data.amountCents);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Deposit failed" });
+    sendError(res, e, "Deposit failed");
     return;
   }
 
@@ -54,14 +55,14 @@ router.post("/wallet/withdraw", requireAuth, async (req, res): Promise<void> => 
   const user = (req as AuthRequest).user;
   const parsed = WithdrawFundsBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await withdrawToAddress(user.id, parsed.data.amountCents, parsed.data.destination);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Withdrawal failed" });
+    sendError(res, e, "Withdrawal failed");
     return;
   }
 

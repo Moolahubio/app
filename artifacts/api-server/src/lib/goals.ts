@@ -1,4 +1,5 @@
 import { eq, and, asc, desc, inArray } from "drizzle-orm";
+import { AppError } from "./errors";
 import {
   db,
   goalsTable,
@@ -150,9 +151,9 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
     .where(
       and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
     );
-  if (!goal) throw new Error("Goal not found");
+  if (!goal) throw new AppError("Goal not found");
   if ((await accountBalance(acct.wallet(userId))) < amountCents) {
-    throw new Error("Insufficient available balance");
+    throw new AppError("Insufficient available balance");
   }
 
   const onchain = goalVaultEnabled();
@@ -221,7 +222,7 @@ export async function releaseFromGoal(
     .where(
       and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
     );
-  if (!goal) throw new Error("Goal not found");
+  if (!goal) throw new AppError("Goal not found");
   return releaseFromGoalCore(userId, goalId, goal.name, amountCents, true);
 }
 
@@ -240,7 +241,7 @@ async function releaseFromGoalCore(
 ): Promise<ReleaseResult> {
   const goal = { name: goalName };
   const balances = await goalBalances(userId);
-  if ((balances[goalId] ?? 0) < amountCents) throw new Error("Insufficient goal balance");
+  if ((balances[goalId] ?? 0) < amountCents) throw new AppError("Insufficient goal balance");
 
   const onchain = goalVaultEnabled();
   const vault = goalVaultContract();
@@ -337,7 +338,7 @@ export async function deleteGoal(userId: string, goalId: string): Promise<Delete
       and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
     )
     .returning();
-  if (!goal) throw new Error("Goal not found");
+  if (!goal) throw new AppError("Goal not found");
 
   const balances = await goalBalances(userId);
   const balanceCents = balances[goalId] ?? 0;
