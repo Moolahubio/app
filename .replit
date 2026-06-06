@@ -91,3 +91,4 @@ ESCROW_IMPL_ADDRESS = "0xfd6EeE6a3D4208b877a95C19f348F1e7661Dc49A"
 
 [nix]
 channel = "stable-25_05"
+packages = ["solc"]
