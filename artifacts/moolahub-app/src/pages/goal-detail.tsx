@@ -12,6 +12,7 @@ import {
   getGetWalletQueryKey,
   getGetDashboardSummaryQueryKey,
   getListGoalsQueryKey,
+  getListNotificationsQueryKey,
 } from "@workspace/api-client-react";
 import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
@@ -55,6 +56,7 @@ export default function GoalDetailPage() {
     queryClient.invalidateQueries({ queryKey: getGetGoalQueryKey(goal.id) });
     queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
   };
 
   return (
@@ -317,6 +319,7 @@ export default function GoalDetailPage() {
                             queryClient.invalidateQueries({ queryKey: getListGoalsQueryKey() });
                             queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
                             queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                            queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey() });
                             navigate("/goals");
                           },
                         },

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "wouter";
 import {
   Bell,
   UserPlus,
@@ -45,8 +45,27 @@ export function NotificationBell({
   unreadCount: number;
 }) {
   const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const markAllRead = useMarkAllNotificationsRead();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   async function toggle() {
     const next = !open;
@@ -59,7 +78,7 @@ export function NotificationBell({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <button
         onClick={toggle}
         className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-ink-900/10 bg-white text-ink-600 transition-[color,background-color,transform] duration-150 hover:border-ink-900/16 hover:text-ink-900 active:scale-95 focus-ring"
@@ -74,13 +93,7 @@ export function NotificationBell({
       </button>
 
       {open && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-ink-950/20 backdrop-blur-[2px]"
-            aria-hidden
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute right-0 z-[70] mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-ink-900/10 bg-white">
+        <div className="absolute right-0 z-[70] mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-xl shadow-ink-950/10">
             <div className="flex items-center justify-between border-b border-ink-900/[0.06] px-4 py-3">
               <p className="font-display text-sm font-bold text-ink-900">Notifications</p>
               <Link
@@ -133,8 +146,7 @@ export function NotificationBell({
                 })}
               </ul>
             )}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );
