@@ -64,6 +64,22 @@ fallback that overwrites it, silently downgrading a circle that has a live escro
 The factory keys escrows by `circleId` and returns the existing one, so the
 duplicate deploy is harmless; the compare-and-set is what protects the address.
 
+## Platform fee sink is repointable; user wants it = recipient EOA (no withdraw fn)
+The 2% fee is transferred on-chain at disbursement via `usdc.safeTransfer(treasury, fee)`
+in escrow/vault/accumulation — `treasury` is just the configured fee-sink address, NOT
+necessarily the deployed Treasury contract. `CircleFactory`, `GoalVault`, and
+`AccumulationFactory` each expose owner-only `setTreasury(address)`. The sink was repointed
+from the Treasury contract to `FEE_RECIPIENT_ADDRESS` (a user-controlled EOA) so fees land
+directly in the recipient wallet automatically.
+**Why:** the user explicitly rejected a backend "withdraw from treasury" endpoint as a
+drain/security risk — fees must auto-transfer on-chain, never be moved by a privileged call.
+**Gotcha (clone-capture vs singleton):** escrow & accumulation CLONES capture `treasury` at
+creation (immutable per clone), so factory `setTreasury` only affects circles created AFTER
+the change; existing circles keep their old sink (sweepable once from the old Treasury
+contract by its owner). `GoalVault` is a singleton — its `setTreasury` applies to ALL future
+goal withdrawals immediately. Re-run `artifacts/api-server/scripts/set-fee-sink.mjs`
+(idempotent, mainnet-guarded) to repoint after any redeploy.
+
 ## Operational dependency
 The platform wallet must hold Base Sepolia ETH (gas) + test USDC. When unfunded,
 the reconciler attempt fails with `"gas required exceeds allowance (0)"` and the
