@@ -17,6 +17,7 @@ import {IMoolaHubReputation} from "../src/interfaces/IMoolaHubReputation.sol";
 ///   REPUTATION_ADDRESS    - the MoolaHubReputation you deployed
 /// Optional env (defaults):
 ///   USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e (Circle USDC, Base Sepolia)
+///   FEE_RECIPIENT_ADDRESS    - fee destination; defaults to TREASURY_ADDRESS
 ///   OWNER_ADDRESS=deployer   GUARDIAN_ADDRESS=owner   FEE_BPS=200
 ///
 /// Run:
@@ -32,13 +33,16 @@ contract DeployAccumulation is Script {
         address reputationAddr = vm.envAddress("REPUTATION_ADDRESS");
         address owner = vm.envOr("OWNER_ADDRESS", deployer);
         address guardian = vm.envOr("GUARDIAN_ADDRESS", owner);
+        // Default platform fees straight to the recipient EOA when set; otherwise
+        // fall back to the Treasury contract.
+        address feeSink = vm.envOr("FEE_RECIPIENT_ADDRESS", treasury);
         uint16 feeBps = uint16(vm.envOr("FEE_BPS", uint256(200)));
 
         vm.startBroadcast(pk);
 
         MoolaHubSusuAccumulation impl = new MoolaHubSusuAccumulation();
         MoolaHubAccumulationFactory factory =
-            new MoolaHubAccumulationFactory(address(impl), usdc, treasury, guardian, reputationAddr, feeBps, owner);
+            new MoolaHubAccumulationFactory(address(impl), usdc, feeSink, guardian, reputationAddr, feeBps, owner);
 
         // Authorize the new factory to register circle reporters (requires the
         // deployer to be the reputation owner — true if you deployed the stack).
@@ -52,6 +56,7 @@ contract DeployAccumulation is Script {
 
         console2.log("AccumulationImpl:    ", address(impl));
         console2.log("AccumulationFactory: ", address(factory));
+        console2.log("FeeSink:             ", feeSink);
         console2.log("Owner:               ", owner);
     }
 }

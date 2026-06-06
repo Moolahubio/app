@@ -16,6 +16,7 @@ import {MoolaHubTreasury} from "../src/MoolaHubTreasury.sol";
 ///   USDC_ADDRESS          - default 0x036CbD53842c5426634e7929541eC2318f3dCF7e (Circle, Base Sepolia)
 ///   OWNER_ADDRESS         - multisig owner; defaults to the deployer
 ///   GUARDIAN_ADDRESS      - circle guardian; defaults to the owner
+///   FEE_RECIPIENT_ADDRESS - destination for platform fees; defaults to the deployed Treasury
 ///   FEE_BPS               - default 200 (2%)
 ///
 /// Run:
@@ -33,8 +34,13 @@ contract Deploy is Script {
 
         vm.startBroadcast(pk);
 
-        // 1. Treasury (fee sink) — owner is the multisig.
+        // 1. Treasury (optional fee sink / fallback) — owner is the multisig.
         MoolaHubTreasury treasury = new MoolaHubTreasury(owner);
+
+        // Fee destination: when FEE_RECIPIENT_ADDRESS is set, fees go straight to
+        // that wallet on every disbursement (auto-transfer, no pooling, no
+        // withdrawal function). Falls back to the Treasury contract when unset.
+        address feeSink = vm.envOr("FEE_RECIPIENT_ADDRESS", address(treasury));
 
         // 2. Reputation registry.
         MoolaHubReputation reputation = new MoolaHubReputation(owner);
@@ -44,11 +50,11 @@ contract Deploy is Script {
 
         // 4. Circle factory.
         MoolaHubCircleFactory factory = new MoolaHubCircleFactory(
-            address(escrowImpl), usdc, address(treasury), guardian, address(reputation), feeBps, owner
+            address(escrowImpl), usdc, feeSink, guardian, address(reputation), feeBps, owner
         );
 
         // 5. Goal vault.
-        MoolaHubGoalVault goalVault = new MoolaHubGoalVault(usdc, address(treasury), feeBps, owner);
+        MoolaHubGoalVault goalVault = new MoolaHubGoalVault(usdc, feeSink, feeBps, owner);
 
         // 6. Authorize the factory on the reputation registry so it can register
         //    escrow reporters. Only works if the deployer is the reputation owner;
@@ -63,6 +69,7 @@ contract Deploy is Script {
 
         console2.log("USDC:            ", usdc);
         console2.log("Treasury:        ", address(treasury));
+        console2.log("FeeSink:         ", feeSink);
         console2.log("Reputation:      ", address(reputation));
         console2.log("EscrowImpl:      ", address(escrowImpl));
         console2.log("CircleFactory:   ", address(factory));
@@ -74,6 +81,7 @@ contract Deploy is Script {
         string memory json = "deployment";
         vm.serializeAddress(json, "usdc", usdc);
         vm.serializeAddress(json, "treasury", address(treasury));
+        vm.serializeAddress(json, "feeSink", feeSink);
         vm.serializeAddress(json, "reputation", address(reputation));
         vm.serializeAddress(json, "escrowImplementation", address(escrowImpl));
         vm.serializeAddress(json, "circleFactory", address(factory));
