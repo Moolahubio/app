@@ -23,6 +23,8 @@ export interface PrivyAuthInput {
   name?: string | null;
   /** @nullable */
   email?: string | null;
+  /** When true, the session lasts 30 days instead of the 7-day default. */
+  rememberMe?: boolean;
 }
 
 export interface AuthUser {

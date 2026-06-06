@@ -14,6 +14,7 @@ import {
   DeleteGoalResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { sendError } from "../lib/errors";
 import {
   listGoals,
   getGoal,
@@ -78,7 +79,7 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = CreateGoalBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -101,7 +102,7 @@ router.get("/goals/:id", requireAuth, async (req, res): Promise<void> => {
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = GetGoalParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -119,19 +120,19 @@ router.post("/goals/:id/allocate", requireAuth, async (req, res): Promise<void> 
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = AllocateToGoalParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
   const parsed = AllocateToGoalBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
   try {
     await allocateToGoal(user.id, params.data.id, parsed.data.amountCents);
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Allocation failed" });
+    sendError(res, e, "Allocation failed");
     return;
   }
 
@@ -143,12 +144,12 @@ router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> =
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = ReleaseFromGoalParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
   const parsed = ReleaseFromGoalBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -163,7 +164,7 @@ router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> =
       }),
     );
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Release failed" });
+    sendError(res, e, "Release failed");
   }
 });
 
@@ -172,7 +173,7 @@ router.post("/goals/:id/delete", requireAuth, async (req, res): Promise<void> =>
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeleteGoalParams.safeParse({ id: rawId });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -187,7 +188,7 @@ router.post("/goals/:id/delete", requireAuth, async (req, res): Promise<void> =>
       }),
     );
   } catch (e) {
-    res.status(400).json({ error: e instanceof Error ? e.message : "Delete failed" });
+    sendError(res, e, "Delete failed");
   }
 });
 

@@ -44,7 +44,7 @@ router.get("/learn/lessons/:slug", requireAuth, async (req, res): Promise<void> 
   const rawSlug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
   const params = GetLessonParams.safeParse({ slug: rawSlug });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -77,7 +77,7 @@ router.post("/learn/lessons/:slug/complete", requireAuth, async (req, res): Prom
   const rawSlug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
   const params = CompleteLessonParams.safeParse({ slug: rawSlug });
   if (!params.success) {
-    res.status(400).json({ error: params.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 

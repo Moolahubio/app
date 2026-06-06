@@ -10,6 +10,7 @@ import {
 import {
   requireAuth,
   createSession,
+  sessionTtlMs,
   type AuthRequest,
 } from "../lib/auth";
 import { createWalletForUser, getWalletForUser } from "../lib/wallet";
@@ -18,11 +19,12 @@ import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
 const router: IRouter = Router();
 
 const COOKIE = "moolahub_session";
+// Base cookie attributes; `maxAge` is set per-login to match the session TTL
+// (7 days by default, 30 with "keep me logged in").
 const cookieOpts = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
-  maxAge: 30 * 24 * 60 * 60 * 1000,
 };
 
 router.post("/auth/logout", async (req, res): Promise<void> => {
@@ -52,7 +54,7 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
 router.post("/auth/privy", async (req, res): Promise<void> => {
   const parsed = PrivyAuthBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    res.status(400).json({ error: "Invalid request" });
     return;
   }
 
@@ -90,9 +92,13 @@ router.post("/auth/privy", async (req, res): Promise<void> => {
     [user] = await db.insert(usersTable).values({ name, email, privyDid: did }).returning();
   }
 
+  // "Keep me logged in" — read defensively from the raw body so it works whether
+  // or not the generated client/schema includes it yet. Defaults to false (7d).
+  const rememberMe = (req.body as { rememberMe?: unknown })?.rememberMe === true;
+
   const wallet = await createWalletForUser(user.id);
-  const token = await createSession(user.id);
-  res.cookie(COOKIE, token, cookieOpts);
+  const token = await createSession(user.id, rememberMe);
+  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
 
   res.json(
     PrivyAuthResponse.parse({

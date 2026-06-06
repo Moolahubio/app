@@ -151,7 +151,8 @@ export const GetMeResponse = zod.object({
 export const PrivyAuthBody = zod.object({
   "token": zod.string(),
   "name": zod.string().nullish(),
-  "email": zod.string().nullish()
+  "email": zod.string().nullish(),
+  "rememberMe": zod.boolean().optional().describe('When true, the session lasts 30 days instead of the 7-day default.')
 })
 
 export const PrivyAuthResponse = zod.object({

@@ -60,9 +60,25 @@ function timingSafeEqualStr(a: string, b: string): boolean {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-export async function createSession(userId: string): Promise<string> {
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Default session lifetime (financial app — short by default). */
+export const SESSION_TTL_MS = 7 * DAY_MS;
+/** Extended lifetime when the user opts into "keep me logged in". */
+export const SESSION_TTL_REMEMBER_MS = 30 * DAY_MS;
+
+/** Session/cookie lifetime in ms, based on the "remember me" choice. */
+export function sessionTtlMs(rememberMe: boolean): number {
+  return rememberMe ? SESSION_TTL_REMEMBER_MS : SESSION_TTL_MS;
+}
+
+/**
+ * Create a session. Default expiry is 7 days; when the user selects "keep me
+ * logged in" (`rememberMe`), it extends to 30 days. The caller should set the
+ * cookie `maxAge` to the same value via `sessionTtlMs(rememberMe)`.
+ */
+export async function createSession(userId: string, rememberMe = false): Promise<string> {
   const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + sessionTtlMs(rememberMe));
   await db.insert(sessionsTable).values({ userId, token, expiresAt });
   return token;
 }

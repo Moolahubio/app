@@ -1,4 +1,5 @@
 import { eq, and, inArray, desc, asc, count } from "drizzle-orm";
+import { AppError } from "./errors";
 import {
   db,
   circlesTable,
@@ -8,7 +9,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import { onchainEnabled, platformAddress } from "./chain";
+import { onchainEnabled, platformAddress, explorerUrl, escrowEnabled } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { sendEmail, brandedEmail, appUrl } from "./email";
@@ -16,6 +17,7 @@ import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
+const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS) || 200;
 
 function addInterval(start: Date | null, frequency: string, rounds: number): Date {
   const d = new Date(start ?? Date.now());
@@ -67,8 +69,8 @@ export async function createCircle(
     imageUrl?: string | null;
   },
 ) {
-  if (!input.name?.trim()) throw new Error("Circle name is required.");
-  if (input.contributionCents <= 0) throw new Error("Enter a contribution amount.");
+  if (!input.name?.trim()) throw new AppError("Circle name is required.");
+  if (input.contributionCents <= 0) throw new AppError("Enter a contribution amount.");
   const type = input.type === "accumulation" ? "accumulation" : "rotation";
 
   // For accumulation circles the organizer chooses how many rounds the circle
@@ -79,7 +81,7 @@ export async function createCircle(
   let payoutCents: number | null = null;
   if (type === "accumulation") {
     const rounds = Math.floor(input.numRounds ?? 0);
-    if (rounds < 2) throw new Error("Choose at least 2 rounds for an accumulation circle.");
+    if (rounds < 2) throw new AppError("Choose at least 2 rounds for an accumulation circle.");
     totalRounds = rounds;
     payoutCents = input.contributionCents * rounds;
   }
@@ -183,6 +185,8 @@ export async function getCircleDetail(userId: string, circleId: string) {
     imageUrl: c.imageUrl ?? null,
     startDate: c.startDate ? c.startDate.toISOString() : null,
     contractAddress: c.contractAddress,
+    feeBps: escrowEnabled() && c.contractAddress ? FEE_BPS : 0,
+    explorerUrl: c.contractAddress ? explorerUrl() : null,
     myPayoutRound: me?.payoutRound ?? null,
     myContributionStatus: contributedThisRound ? "paid" : "due",
     isCreator,
@@ -217,10 +221,10 @@ export async function getCircleDetail(userId: string, circleId: string) {
 /** Make this round's contribution; trigger the payout when the round fills. */
 export async function contribute(userId: string, circleId: string) {
   const ids = await memberCircleIds(userId);
-  if (!ids.includes(circleId)) throw new Error("Circle not found");
+  if (!ids.includes(circleId)) throw new AppError("Circle not found");
   const [circle] = await db.select().from(circlesTable).where(eq(circlesTable.id, circleId));
-  if (!circle) throw new Error("Circle not found");
-  if (circle.status !== "active") throw new Error("Circle is not active");
+  if (!circle) throw new AppError("Circle not found");
+  if (circle.status !== "active") throw new AppError("Circle is not active");
   const round = circle.currentRound;
 
   // Non-authoritative pre-checks, purely for friendly error messages. The real
@@ -235,10 +239,10 @@ export async function contribute(userId: string, circleId: string) {
         eq(contributionsTable.round, round),
       ),
     );
-  if (already) throw new Error("You've already contributed this round");
+  if (already) throw new AppError("You've already contributed this round");
 
   if ((await accountBalance(acct.wallet(userId))) < circle.contributionCents) {
-    throw new Error("Insufficient available balance");
+    throw new AppError("Insufficient available balance");
   }
 
   // On-chain settlement is member wallet → platform escrow. Resolve the escrow
@@ -266,7 +270,7 @@ export async function contribute(userId: string, circleId: string) {
         target: [contributionsTable.circleId, contributionsTable.userId, contributionsTable.round],
       })
       .returning({ id: contributionsTable.id });
-    if (reserved.length === 0) throw new Error("You've already contributed this round");
+    if (reserved.length === 0) throw new AppError("You've already contributed this round");
 
     const t = await transfer({
       type: "contribution",
@@ -482,15 +486,15 @@ async function maybeProcessPayout(circleId: string, round: number) {
 
 export async function inviteToCircle(userId: string, circleId: string, emailRaw: string) {
   const email = emailRaw.trim().toLowerCase();
-  if (!email || !email.includes("@")) throw new Error("Enter a valid email address.");
+  if (!email || !email.includes("@")) throw new AppError("Enter a valid email address.");
   const circle = await db.query.circlesTable.findFirst({
     where: and(eq(circlesTable.id, circleId), eq(circlesTable.createdById, userId)),
     with: { members: { with: { user: true } } },
   });
-  if (!circle) throw new Error("Only the circle creator can invite members.");
-  if (circle.status !== "forming") throw new Error("This circle has already started.");
+  if (!circle) throw new AppError("Only the circle creator can invite members.");
+  if (circle.status !== "forming") throw new AppError("This circle has already started.");
   if (circle.members.some((m) => m.user.email === email)) {
-    throw new Error("That person is already a member.");
+    throw new AppError("That person is already a member.");
   }
   await db
     .insert(circleInvitesTable)
@@ -545,9 +549,9 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
     where: eq(circleInvitesTable.id, inviteId),
     with: { circle: { with: { members: true } } },
   });
-  if (!invite || invite.status !== "pending") throw new Error("Invitation not found.");
-  if (invite.email !== userEmail.toLowerCase()) throw new Error("This invitation isn't for you.");
-  if (invite.circle.status !== "forming") throw new Error("This circle has already started.");
+  if (!invite || invite.status !== "pending") throw new AppError("Invitation not found.");
+  if (invite.email !== userEmail.toLowerCase()) throw new AppError("This invitation isn't for you.");
+  if (invite.circle.status !== "forming") throw new AppError("This circle has already started.");
   if (invite.circle.members.some((m) => m.userId === userId)) {
     await db
       .update(circleInvitesTable)
@@ -590,7 +594,7 @@ export async function declineInvite(userEmail: string, inviteId: string) {
     .select()
     .from(circleInvitesTable)
     .where(eq(circleInvitesTable.id, inviteId));
-  if (!invite || invite.email !== userEmail.toLowerCase()) throw new Error("Invitation not found.");
+  if (!invite || invite.email !== userEmail.toLowerCase()) throw new AppError("Invitation not found.");
   await db.update(circleInvitesTable).set({ status: "declined" }).where(eq(circleInvitesTable.id, inviteId));
 }
 
@@ -600,9 +604,9 @@ export async function startCircle(userId: string, circleId: string) {
     where: and(eq(circlesTable.id, circleId), eq(circlesTable.createdById, userId)),
     with: { members: true },
   });
-  if (!circle) throw new Error("Only the creator can start this circle.");
-  if (circle.status !== "forming") throw new Error("This circle has already started.");
-  if (circle.members.length < 2) throw new Error("Invite at least one more member first.");
+  if (!circle) throw new AppError("Only the creator can start this circle.");
+  if (circle.status !== "forming") throw new AppError("This circle has already started.");
+  if (circle.members.length < 2) throw new AppError("Invite at least one more member first.");
   // Rotation: lock rounds to the final member count and finalize each member's
   // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
   const startUpdate =
