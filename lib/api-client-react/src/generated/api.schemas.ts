@@ -17,6 +17,78 @@ export interface OkResponse {
   ok: boolean;
 }
 
+export interface StreakHero {
+  count: number;
+  status: string;
+  /** @nullable */
+  commitmentName: string | null;
+  /** @nullable */
+  emoji: string | null;
+}
+
+export interface StreakCommitment {
+  id: string;
+  commitmentType: string;
+  commitmentId: string;
+  commitmentName: string;
+  /** @nullable */
+  emoji: string | null;
+  frequency: string;
+  currentCount: number;
+  bestCount: number;
+  status: string;
+  currentPeriodEnd: string;
+  currentPeriodSatisfied: boolean;
+}
+
+export interface StreakBadge {
+  badgeKey: string;
+  year: number;
+  quarterIndex: number;
+  earnedAt: string;
+}
+
+export interface StreakFreezes {
+  balance: number;
+  usedTotal: number;
+}
+
+export interface StreakVacation {
+  active: boolean;
+  /** @nullable */
+  start: string | null;
+  /** @nullable */
+  end: string | null;
+  usedThisYear: boolean;
+}
+
+export interface StreakOverview {
+  hero: StreakHero | null;
+  lifetimeBest: number;
+  totalPeriodsSaved: number;
+  commitments: StreakCommitment[];
+  freezes: StreakFreezes;
+  badges: StreakBadge[];
+  reminderOptIn: boolean;
+  vacation: StreakVacation;
+}
+
+export interface StreakReminderInput {
+  optIn: boolean;
+}
+
+export interface StreakReminderResponse {
+  optIn: boolean;
+}
+
+export interface StreakVacationInput {
+  /**
+     * @minimum 1
+     * @maximum 30
+     */
+  days: number;
+}
+
 export interface PrivyAuthInput {
   token: string;
   /** @nullable */

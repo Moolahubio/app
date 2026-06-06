@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { startSettlementLoop } from "./lib/settlement";
+import { startStreakLoop } from "./lib/streaks";
 
 const rawPort = process.env["PORT"];
 
@@ -24,4 +25,5 @@ app.listen(port, (err) => {
 
   logger.info({ port }, "Server listening");
   void startSettlementLoop();
+  void startStreakLoop();
 });

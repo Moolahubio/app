@@ -6,14 +6,16 @@ import {
   Users, 
   Target, 
   GraduationCap, 
-  Receipt, 
-  Plus 
+  Receipt,
 } from "lucide-react";
 import { Logo, MoolaMark } from "@/components/brand/Logo";
-import { Avatar, Button, Skeleton } from "@/components/ui";
+import { Avatar, Skeleton } from "@/components/ui";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { ShellNavList, type NavItem } from "@/components/app/ShellNav";
+import { StreakIndicator } from "@/components/app/StreakFlame";
+import { StreakMilestoneModal } from "@/components/app/StreakMilestoneModal";
+import { useStreak } from "@/hooks/use-streak";
 import { formatMoney, avatarSrc } from "@/lib/utils";
 import { useGetDashboardSummary, useListNotifications, getGetDashboardSummaryQueryKey, getListNotificationsQueryKey } from "@workspace/api-client-react";
 
@@ -35,6 +37,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { data: notifData } = useListNotifications({
     query: { enabled: isAuthenticated, queryKey: getListNotificationsQueryKey() }
   });
+  const { data: streak } = useStreak(isAuthenticated);
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -125,9 +128,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2">
               <ThemeToggle className="hidden sm:inline-flex" />
               <NotificationBell notifications={notifications} unreadCount={unreadCount} />
-              <Button href="/goals/new" size="sm" className="hidden sm:inline-flex">
-                <Plus className="h-4 w-4" /> New goal
-              </Button>
+              <StreakIndicator
+                count={streak?.hero?.count ?? 0}
+                status={streak?.hero?.status ?? "broken"}
+              />
             </div>
           </div>
         </header>
@@ -140,6 +144,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm lg:hidden">
         <ShellNavList items={nav} layout="bottom" />
       </nav>
+
+      <StreakMilestoneModal badges={streak?.badges} />
     </div>
   );
 }

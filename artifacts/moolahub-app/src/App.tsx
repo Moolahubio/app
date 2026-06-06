@@ -20,6 +20,7 @@ import LessonDetail from "@/pages/lesson-detail";
 import Activity from "@/pages/activity";
 import Notifications from "@/pages/notifications";
 import Profile from "@/pages/profile";
+import Streaks from "@/pages/streaks";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,9 @@ function Router() {
       </Route>
       <Route path="/profile">
         <ProtectedRoute component={Profile} />
+      </Route>
+      <Route path="/streaks">
+        <ProtectedRoute component={Streaks} />
       </Route>
       <Route path="/">
         <ProtectedRoute component={Dashboard} />

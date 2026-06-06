@@ -12,6 +12,7 @@ import profileRouter from "./profile";
 import storageRouter from "./storage";
 import passkeysRouter from "./passkeys";
 import operationsRouter from "./operations";
+import streaksRouter from "./streaks";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(profileRouter);
 router.use(storageRouter);
 router.use(passkeysRouter);
 router.use(operationsRouter);
+router.use(streaksRouter);
 
 export default router;

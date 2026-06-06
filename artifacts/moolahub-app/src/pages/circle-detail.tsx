@@ -16,12 +16,15 @@ import { BackLink } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
 import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, getGetCircleQueryKey } from "@workspace/api-client-react";
 import { formatMoney, truncateAddress, cn } from "@/lib/utils";
+import { useStreak } from "@/hooks/use-streak";
+import { StreakChip } from "@/components/app/StreakFlame";
 import { useQueryClient } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 
 export default function CircleDetailPage() {
   const { id } = useParams();
   const { data: circle, isLoading } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
+  const { data: streak } = useStreak(!!id);
   
   const queryClient = useQueryClient();
   const startMutation = useStartCircle();
@@ -37,6 +40,9 @@ export default function CircleDetailPage() {
   const isCreator = circle.isCreator ?? false;
   const canStart = circle.canStart ?? false;
   const canInvite = circle.canInvite ?? false;
+  const circleStreak = streak?.commitments.find(
+    (c) => c.commitmentType === "circle" && c.commitmentId === circle.id,
+  );
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -59,6 +65,15 @@ export default function CircleDetailPage() {
                   ? " · forming"
                   : ` · Round ${circle.currentRound} of ${circle.totalRounds}`}
               </p>
+              {circleStreak && circleStreak.currentCount > 0 && (
+                <Link
+                  href="/streaks"
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/15"
+                >
+                  <StreakChip count={circleStreak.currentCount} status={circleStreak.status} className="[&_*]:text-white" />
+                  <span className="text-white/70">streak</span>
+                </Link>
+              )}
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">

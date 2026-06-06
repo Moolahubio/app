@@ -15,6 +15,7 @@ import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
+import { recordSave } from "./streaks";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
 const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS) || 200;
@@ -310,6 +311,10 @@ export async function contribute(userId: string, circleId: string) {
     }
     return { txn: t, contributionId: reserved[0].id };
   });
+
+  // Streaks: a circle contribution is a qualifying save at the circle's cadence.
+  // Derived, non-financial — never throws and never affects the ledger above.
+  await recordSave(userId, { type: "circle", id: circleId, frequency: circle.frequency }, txn.id);
 
   await notify(
     userId,

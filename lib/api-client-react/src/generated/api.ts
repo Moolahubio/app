@@ -48,6 +48,10 @@ import type {
   ProfileUpdate,
   ReleaseFromGoalResult,
   SettlementOverviewResponse,
+  StreakOverview,
+  StreakReminderInput,
+  StreakReminderResponse,
+  StreakVacationInput,
   SyncResult,
   UploadUrlRequest,
   UploadUrlResponse,
@@ -3142,4 +3146,293 @@ export function useGetSettlementOverview<TData = Awaited<ReturnType<typeof getSe
 
 
 
+
+export const getGetStreaksUrl = () => {
+
+
+
+
+  return `/api/streaks`
+}
+
+/**
+ * @summary Get the user's savings streak overview
+ */
+export const getStreaks = async ( options?: RequestInit): Promise<StreakOverview> => {
+
+  return customFetch<StreakOverview>(getGetStreaksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStreaksQueryKey = () => {
+    return [
+    `/api/streaks`
+    ] as const;
+    }
+
+
+export const getGetStreaksQueryOptions = <TData = Awaited<ReturnType<typeof getStreaks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStreaksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStreaks>>> = ({ signal }) => getStreaks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStreaksQueryResult = NonNullable<Awaited<ReturnType<typeof getStreaks>>>
+export type GetStreaksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the user's savings streak overview
+ */
+
+export function useGetStreaks<TData = Awaited<ReturnType<typeof getStreaks>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStreaks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStreaksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetStreakRemindersUrl = () => {
+
+
+
+
+  return `/api/streaks/reminders`
+}
+
+/**
+ * @summary Opt in or out of streak reminders
+ */
+export const setStreakReminders = async (streakReminderInput: StreakReminderInput, options?: RequestInit): Promise<StreakReminderResponse> => {
+
+  return customFetch<StreakReminderResponse>(getSetStreakRemindersUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      streakReminderInput,)
+  }
+);}
+
+
+
+
+export const getSetStreakRemindersMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStreakReminders>>, TError,{data: BodyType<StreakReminderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setStreakReminders>>, TError,{data: BodyType<StreakReminderInput>}, TContext> => {
+
+const mutationKey = ['setStreakReminders'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setStreakReminders>>, {data: BodyType<StreakReminderInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setStreakReminders(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetStreakRemindersMutationResult = NonNullable<Awaited<ReturnType<typeof setStreakReminders>>>
+    export type SetStreakRemindersMutationBody = BodyType<StreakReminderInput>
+    export type SetStreakRemindersMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Opt in or out of streak reminders
+ */
+export const useSetStreakReminders = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStreakReminders>>, TError,{data: BodyType<StreakReminderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setStreakReminders>>,
+        TError,
+        {data: BodyType<StreakReminderInput>},
+        TContext
+      > => {
+      return useMutation(getSetStreakRemindersMutationOptions(options));
+    }
+
+export const getStartStreakVacationUrl = () => {
+
+
+
+
+  return `/api/streaks/vacation`
+}
+
+/**
+ * @summary Start the annual streak vacation (pauses streaks without breaking them)
+ */
+export const startStreakVacation = async (streakVacationInput: StreakVacationInput, options?: RequestInit): Promise<StreakOverview> => {
+
+  return customFetch<StreakOverview>(getStartStreakVacationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      streakVacationInput,)
+  }
+);}
+
+
+
+
+export const getStartStreakVacationMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startStreakVacation>>, TError,{data: BodyType<StreakVacationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startStreakVacation>>, TError,{data: BodyType<StreakVacationInput>}, TContext> => {
+
+const mutationKey = ['startStreakVacation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startStreakVacation>>, {data: BodyType<StreakVacationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  startStreakVacation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartStreakVacationMutationResult = NonNullable<Awaited<ReturnType<typeof startStreakVacation>>>
+    export type StartStreakVacationMutationBody = BodyType<StreakVacationInput>
+    export type StartStreakVacationMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Start the annual streak vacation (pauses streaks without breaking them)
+ */
+export const useStartStreakVacation = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startStreakVacation>>, TError,{data: BodyType<StreakVacationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startStreakVacation>>,
+        TError,
+        {data: BodyType<StreakVacationInput>},
+        TContext
+      > => {
+      return useMutation(getStartStreakVacationMutationOptions(options));
+    }
+
+export const getEndStreakVacationUrl = () => {
+
+
+
+
+  return `/api/streaks/vacation/end`
+}
+
+/**
+ * @summary End the active streak vacation early
+ */
+export const endStreakVacation = async ( options?: RequestInit): Promise<StreakOverview> => {
+
+  return customFetch<StreakOverview>(getEndStreakVacationUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getEndStreakVacationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endStreakVacation>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof endStreakVacation>>, TError,void, TContext> => {
+
+const mutationKey = ['endStreakVacation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof endStreakVacation>>, void> = () => {
+
+
+          return  endStreakVacation(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EndStreakVacationMutationResult = NonNullable<Awaited<ReturnType<typeof endStreakVacation>>>
+
+    export type EndStreakVacationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary End the active streak vacation early
+ */
+export const useEndStreakVacation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof endStreakVacation>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof endStreakVacation>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getEndStreakVacationMutationOptions(options));
+    }
 

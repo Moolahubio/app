@@ -769,3 +769,158 @@ export const GetSettlementOverviewResponse = zod.object({
 })
 
 
+/**
+ * @summary Get the user's savings streak overview
+ */
+export const GetStreaksResponse = zod.object({
+  "hero": zod.union([zod.object({
+  "count": zod.number(),
+  "status": zod.string(),
+  "commitmentName": zod.string().nullable(),
+  "emoji": zod.string().nullable()
+}),zod.null()]),
+  "lifetimeBest": zod.number(),
+  "totalPeriodsSaved": zod.number(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "commitmentType": zod.string(),
+  "commitmentId": zod.string(),
+  "commitmentName": zod.string(),
+  "emoji": zod.string().nullable(),
+  "frequency": zod.string(),
+  "currentCount": zod.number(),
+  "bestCount": zod.number(),
+  "status": zod.string(),
+  "currentPeriodEnd": zod.string(),
+  "currentPeriodSatisfied": zod.boolean()
+})),
+  "freezes": zod.object({
+  "balance": zod.number(),
+  "usedTotal": zod.number()
+}),
+  "badges": zod.array(zod.object({
+  "badgeKey": zod.string(),
+  "year": zod.number(),
+  "quarterIndex": zod.number(),
+  "earnedAt": zod.string()
+})),
+  "reminderOptIn": zod.boolean(),
+  "vacation": zod.object({
+  "active": zod.boolean(),
+  "start": zod.string().nullable(),
+  "end": zod.string().nullable(),
+  "usedThisYear": zod.boolean()
+})
+})
+
+
+/**
+ * @summary Opt in or out of streak reminders
+ */
+export const SetStreakRemindersBody = zod.object({
+  "optIn": zod.boolean()
+})
+
+export const SetStreakRemindersResponse = zod.object({
+  "optIn": zod.boolean()
+})
+
+
+/**
+ * @summary Start the annual streak vacation (pauses streaks without breaking them)
+ */
+export const startStreakVacationBodyDaysMax = 30;
+
+
+
+export const StartStreakVacationBody = zod.object({
+  "days": zod.number().min(1).max(startStreakVacationBodyDaysMax)
+})
+
+export const StartStreakVacationResponse = zod.object({
+  "hero": zod.union([zod.object({
+  "count": zod.number(),
+  "status": zod.string(),
+  "commitmentName": zod.string().nullable(),
+  "emoji": zod.string().nullable()
+}),zod.null()]),
+  "lifetimeBest": zod.number(),
+  "totalPeriodsSaved": zod.number(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "commitmentType": zod.string(),
+  "commitmentId": zod.string(),
+  "commitmentName": zod.string(),
+  "emoji": zod.string().nullable(),
+  "frequency": zod.string(),
+  "currentCount": zod.number(),
+  "bestCount": zod.number(),
+  "status": zod.string(),
+  "currentPeriodEnd": zod.string(),
+  "currentPeriodSatisfied": zod.boolean()
+})),
+  "freezes": zod.object({
+  "balance": zod.number(),
+  "usedTotal": zod.number()
+}),
+  "badges": zod.array(zod.object({
+  "badgeKey": zod.string(),
+  "year": zod.number(),
+  "quarterIndex": zod.number(),
+  "earnedAt": zod.string()
+})),
+  "reminderOptIn": zod.boolean(),
+  "vacation": zod.object({
+  "active": zod.boolean(),
+  "start": zod.string().nullable(),
+  "end": zod.string().nullable(),
+  "usedThisYear": zod.boolean()
+})
+})
+
+
+/**
+ * @summary End the active streak vacation early
+ */
+export const EndStreakVacationResponse = zod.object({
+  "hero": zod.union([zod.object({
+  "count": zod.number(),
+  "status": zod.string(),
+  "commitmentName": zod.string().nullable(),
+  "emoji": zod.string().nullable()
+}),zod.null()]),
+  "lifetimeBest": zod.number(),
+  "totalPeriodsSaved": zod.number(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "commitmentType": zod.string(),
+  "commitmentId": zod.string(),
+  "commitmentName": zod.string(),
+  "emoji": zod.string().nullable(),
+  "frequency": zod.string(),
+  "currentCount": zod.number(),
+  "bestCount": zod.number(),
+  "status": zod.string(),
+  "currentPeriodEnd": zod.string(),
+  "currentPeriodSatisfied": zod.boolean()
+})),
+  "freezes": zod.object({
+  "balance": zod.number(),
+  "usedTotal": zod.number()
+}),
+  "badges": zod.array(zod.object({
+  "badgeKey": zod.string(),
+  "year": zod.number(),
+  "quarterIndex": zod.number(),
+  "earnedAt": zod.string()
+})),
+  "reminderOptIn": zod.boolean(),
+  "vacation": zod.object({
+  "active": zod.boolean(),
+  "start": zod.string().nullable(),
+  "end": zod.string().nullable(),
+  "usedThisYear": zod.boolean()
+})
+})
+
+

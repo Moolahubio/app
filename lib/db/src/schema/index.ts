@@ -8,6 +8,7 @@ export * from "./transactions";
 export * from "./notifications";
 export * from "./lessons";
 export * from "./onchain";
+export * from "./streaks";
 
 import { usersTable } from "./users";
 import { walletsTable } from "./wallets";
@@ -16,6 +17,7 @@ import { circlesTable, circleMembersTable, circleInvitesTable, contributionsTabl
 import { ledgerAccountsTable, transactionsTable, postingsTable } from "./transactions";
 import { onchainTransfersTable } from "./onchain";
 import { notificationsTable } from "./notifications";
+import { streaksTable, streakPeriodsTable, streakFreezesTable, streakBadgesTable } from "./streaks";
 import { relations } from "drizzle-orm";
 
 export const usersRelations = relations(usersTable, ({ one, many }) => ({
@@ -23,6 +25,26 @@ export const usersRelations = relations(usersTable, ({ one, many }) => ({
   goals: many(goalsTable),
   circleMemberships: many(circleMembersTable),
   notifications: many(notificationsTable),
+  streaks: many(streaksTable),
+  streakBadges: many(streakBadgesTable),
+  streakFreeze: one(streakFreezesTable, { fields: [usersTable.id], references: [streakFreezesTable.userId] }),
+}));
+
+export const streaksRelations = relations(streaksTable, ({ one, many }) => ({
+  user: one(usersTable, { fields: [streaksTable.userId], references: [usersTable.id] }),
+  periods: many(streakPeriodsTable),
+}));
+
+export const streakPeriodsRelations = relations(streakPeriodsTable, ({ one }) => ({
+  streak: one(streaksTable, { fields: [streakPeriodsTable.streakId], references: [streaksTable.id] }),
+}));
+
+export const streakFreezesRelations = relations(streakFreezesTable, ({ one }) => ({
+  user: one(usersTable, { fields: [streakFreezesTable.userId], references: [usersTable.id] }),
+}));
+
+export const streakBadgesRelations = relations(streakBadgesTable, ({ one }) => ({
+  user: one(usersTable, { fields: [streakBadgesTable.userId], references: [usersTable.id] }),
 }));
 
 export const walletsRelations = relations(walletsTable, ({ one }) => ({

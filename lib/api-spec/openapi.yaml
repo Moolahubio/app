@@ -34,6 +34,8 @@ tags:
     description: WebAuthn passkey registration and login
   - name: operations
     description: Operator/admin read-only observability
+  - name: streaks
+    description: Savings streak operations
 
 paths:
   /storage/uploads/request-url:
@@ -837,6 +839,76 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /streaks:
+    get:
+      operationId: getStreaks
+      tags: [streaks]
+      summary: Get the user's savings streak overview
+      responses:
+        "200":
+          description: Streak overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakOverview"
+
+  /streaks/reminders:
+    post:
+      operationId: setStreakReminders
+      tags: [streaks]
+      summary: Opt in or out of streak reminders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StreakReminderInput"
+      responses:
+        "200":
+          description: Updated reminder preference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakReminderResponse"
+
+  /streaks/vacation:
+    post:
+      operationId: startStreakVacation
+      tags: [streaks]
+      summary: Start the annual streak vacation (pauses streaks without breaking them)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StreakVacationInput"
+      responses:
+        "200":
+          description: Streak overview after starting vacation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakOverview"
+        "400":
+          description: Invalid request or vacation already used this year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /streaks/vacation/end:
+    post:
+      operationId: endStreakVacation
+      tags: [streaks]
+      summary: End the active streak vacation early
+      responses:
+        "200":
+          description: Streak overview after ending vacation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakOverview"
+
 components:
   schemas:
     HealthStatus:
@@ -859,6 +931,132 @@ components:
       properties:
         ok:
           type: boolean
+
+    # ---- Streaks ----
+    StreakHero:
+      type: object
+      required: [count, status, commitmentName, emoji]
+      properties:
+        count:
+          type: integer
+        status:
+          type: string
+        commitmentName:
+          type: ["string", "null"]
+        emoji:
+          type: ["string", "null"]
+
+    StreakCommitment:
+      type: object
+      required: [id, commitmentType, commitmentId, commitmentName, emoji, frequency, currentCount, bestCount, status, currentPeriodEnd, currentPeriodSatisfied]
+      properties:
+        id:
+          type: string
+        commitmentType:
+          type: string
+        commitmentId:
+          type: string
+        commitmentName:
+          type: string
+        emoji:
+          type: ["string", "null"]
+        frequency:
+          type: string
+        currentCount:
+          type: integer
+        bestCount:
+          type: integer
+        status:
+          type: string
+        currentPeriodEnd:
+          type: string
+        currentPeriodSatisfied:
+          type: boolean
+
+    StreakBadge:
+      type: object
+      required: [badgeKey, year, quarterIndex, earnedAt]
+      properties:
+        badgeKey:
+          type: string
+        year:
+          type: integer
+        quarterIndex:
+          type: integer
+        earnedAt:
+          type: string
+
+    StreakFreezes:
+      type: object
+      required: [balance, usedTotal]
+      properties:
+        balance:
+          type: integer
+        usedTotal:
+          type: integer
+
+    StreakVacation:
+      type: object
+      required: [active, start, end, usedThisYear]
+      properties:
+        active:
+          type: boolean
+        start:
+          type: ["string", "null"]
+        end:
+          type: ["string", "null"]
+        usedThisYear:
+          type: boolean
+
+    StreakOverview:
+      type: object
+      required: [hero, lifetimeBest, totalPeriodsSaved, commitments, freezes, badges, reminderOptIn, vacation]
+      properties:
+        hero:
+          oneOf:
+            - $ref: "#/components/schemas/StreakHero"
+            - type: "null"
+        lifetimeBest:
+          type: integer
+        totalPeriodsSaved:
+          type: integer
+        commitments:
+          type: array
+          items:
+            $ref: "#/components/schemas/StreakCommitment"
+        freezes:
+          $ref: "#/components/schemas/StreakFreezes"
+        badges:
+          type: array
+          items:
+            $ref: "#/components/schemas/StreakBadge"
+        reminderOptIn:
+          type: boolean
+        vacation:
+          $ref: "#/components/schemas/StreakVacation"
+
+    StreakReminderInput:
+      type: object
+      required: [optIn]
+      properties:
+        optIn:
+          type: boolean
+
+    StreakReminderResponse:
+      type: object
+      required: [optIn]
+      properties:
+        optIn:
+          type: boolean
+
+    StreakVacationInput:
+      type: object
+      required: [days]
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          maximum: 30
 
     # ---- Auth ----
     PrivyAuthInput:

@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
@@ -16,6 +16,8 @@ import {
 } from "@workspace/api-client-react";
 import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
+import { useStreak } from "@/hooks/use-streak";
+import { StreakChip } from "@/components/app/StreakFlame";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -25,6 +27,7 @@ export default function GoalDetailPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { data: goal, isLoading } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
+  const { data: streak } = useStreak(!!id);
 
   const queryClient = useQueryClient();
   const allocateMutation = useAllocateToGoal();
@@ -45,6 +48,10 @@ export default function GoalDetailPage() {
   const next = nextContribution(goalPlan.plan, goal.savedCents);
   const periodsLeft = next ? goalPlan.plan.length - next.index + 1 : 0;
   const circumference = 2 * Math.PI * 52;
+
+  const goalStreak = streak?.commitments.find(
+    (c) => c.commitmentType === "goal" && c.commitmentId === goal.id,
+  );
 
   const onchain = goal.onchain ?? false;
   const feeBps = goal.feeBps ?? 0;
@@ -95,6 +102,13 @@ export default function GoalDetailPage() {
           <p className="text-sm text-muted-foreground">
             {formatMoney(goal.savedCents)} of {formatMoney(goal.targetCents)}
           </p>
+          {goalStreak && goalStreak.currentCount > 0 && (
+            <Link href="/streaks" className="mt-3">
+              <Badge tone="amber">
+                <StreakChip count={goalStreak.currentCount} status={goalStreak.status} /> streak
+              </Badge>
+            </Link>
+          )}
           {onchain && (
             <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300">
               <Link2 className="h-3.5 w-3.5" /> On-chain
