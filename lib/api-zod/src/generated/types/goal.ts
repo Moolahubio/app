@@ -5,6 +5,7 @@
  * MoolaHub API — social savings platform on Base blockchain
  * OpenAPI spec version: 0.1.0
  */
+import type { GoalHistoryItem } from './goalHistoryItem';
 
 export interface Goal {
   id: string;
@@ -20,4 +21,13 @@ export interface Goal {
   createdAt: string;
   /** @nullable */
   imageUrl?: string | null;
+  onchain?: boolean;
+  /** @nullable */
+  vaultAddress?: string | null;
+  /** @nullable */
+  explorerUrl?: string | null;
+  /** @nullable */
+  network?: string | null;
+  feeBps?: number;
+  history?: GoalHistoryItem[];
 }

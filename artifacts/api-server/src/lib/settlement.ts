@@ -6,7 +6,7 @@ import {
   contributionsTable,
   type OnchainTransfer,
 } from "@workspace/db";
-import { onchainEnabled, sendUsdc, mintUsdc, escrowContribute } from "./chain";
+import { onchainEnabled, sendUsdc, mintUsdc, escrowContribute, goalDeposit, goalWithdraw } from "./chain";
 import { getSigningSecret } from "./wallet";
 import { logger } from "./logger";
 
@@ -162,8 +162,20 @@ export type QueueParams = {
   // - faucet: platform mints MockUSDC to a wallet.
   // - escrow_contribute: a member approves + contributes to the circle's escrow;
   //   the escrow auto-settles the round on the last contribution.
+  // - goal_deposit: user approves + deposits USDC into their goal vault balance
+  //   (free). memo carries the goal id: `goal:<goalId>`.
+  // - goal_withdraw: user withdraws gross from their goal vault balance; the
+  //   vault takes the 2% fee on-chain. memo carries the goal id and the ledger
+  //   fee transaction id to confirm: `goal:<goalId>:<feeTxnId>`.
   // - withdrawal (and legacy contribution/payout): a direct ERC20 USDC transfer.
-  kind: "faucet" | "withdrawal" | "contribution" | "payout" | "escrow_contribute";
+  kind:
+    | "faucet"
+    | "withdrawal"
+    | "contribution"
+    | "payout"
+    | "escrow_contribute"
+    | "goal_deposit"
+    | "goal_withdraw";
   // null => the platform distributor wallet is the source.
   sourceUserId: string | null;
   toAddress: string;
@@ -247,6 +259,56 @@ function circleIdFromMemo(memo: string | null): string | null {
   return parts[0] === "susu" && parts[1] ? parts[1] : null;
 }
 
+/**
+ * Parse `goal:<goalId>[:<feeTxnId>]` memos. `goalId` is the on-chain key; the
+ * optional `feeTxnId` is the ledger fee transaction a withdraw must confirm
+ * alongside its net release (carried per-row so concurrent withdraws on the
+ * same goal each confirm exactly their own fee posting).
+ */
+function goalFromMemo(memo: string | null): { goalId: string; feeTxnId: string | null } | null {
+  if (!memo) return null;
+  const parts = memo.split(":");
+  if (parts[0] !== "goal" || !parts[1]) return null;
+  return { goalId: parts[1], feeTxnId: parts[2] || null };
+}
+
+/** Stamp a specific pending ledger transaction confirmed with `hash`. */
+async function confirmTxnById(txnId: string, hash: string): Promise<void> {
+  await db
+    .update(transactionsTable)
+    .set({ txHash: hash, onchainStatus: "confirmed" })
+    .where(and(eq(transactionsTable.id, txnId), eq(transactionsTable.onchainStatus, "pending")));
+}
+
+/**
+ * Confirm a goal withdrawal atomically: the queue row, the net release txn, and
+ * the fee txn all settle on the SAME on-chain withdrawal, so stamp them with the
+ * tx hash in one DB transaction. This guarantees the fee txn can never be left
+ * pending after the net release confirms.
+ */
+async function confirmGoalWithdraw(
+  row: OnchainTransfer,
+  hash: string,
+  feeTxnId: string | null,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(onchainTransfersTable)
+      .set({ status: "confirmed", txHash: hash, lastError: null })
+      .where(eq(onchainTransfersTable.id, row.id));
+    await tx
+      .update(transactionsTable)
+      .set({ txHash: hash, onchainStatus: "confirmed" })
+      .where(eq(transactionsTable.id, row.transactionId));
+    if (feeTxnId) {
+      await tx
+        .update(transactionsTable)
+        .set({ txHash: hash, onchainStatus: "confirmed" })
+        .where(and(eq(transactionsTable.id, feeTxnId), eq(transactionsTable.onchainStatus, "pending")));
+    }
+  });
+}
+
 async function requeue(rowId: string, reason: string): Promise<void> {
   await db
     .update(onchainTransfersTable)
@@ -305,6 +367,14 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
       .update(onchainTransfersTable)
       .set({ status: "confirmed", txHash: txn.txHash ?? row.txHash, lastError: null })
       .where(eq(onchainTransfersTable.id, row.id));
+    // Crash-recovery: a goal_withdraw confirms both the net release txn (this
+    // row) and the fee txn (id in memo). If a prior pass confirmed the net txn
+    // but died before the fee txn, backfill it now so the fee can't stay pending
+    // forever even though it settled in the same on-chain withdrawal.
+    if (row.kind === "goal_withdraw") {
+      const parsed = goalFromMemo(row.memo);
+      if (parsed?.feeTxnId) await confirmTxnById(parsed.feeTxnId, txn.txHash ?? row.txHash ?? "");
+    }
     return false;
   }
 
@@ -345,6 +415,53 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
           await backfillPayoutSettlement(circleId, result.settledRound, result.hash);
         }
       }
+      return true;
+    }
+    await requeueOrFail(row, result.reason);
+    return false;
+  }
+
+  // A user deposits into their on-chain goal vault balance (free). Signed by
+  // the user's key; the memo carries the goal id used to derive the vault key.
+  if (row.kind === "goal_deposit") {
+    const parsed = goalFromMemo(row.memo);
+    if (!parsed) {
+      await markFailed(row, "goal_deposit missing goal id in memo");
+      return false;
+    }
+    const result = await goalDeposit({
+      fromPrivateKey,
+      goalId: parsed.goalId,
+      amountCents: row.amountCents,
+    });
+    if (result.status === "confirmed") {
+      await markConfirmed(row, result.hash);
+      return true;
+    }
+    await requeueOrFail(row, result.reason);
+    return false;
+  }
+
+  // A user withdraws gross from their goal vault balance; the vault routes the
+  // 2% fee to the treasury on-chain. We stamp the net release (this row's
+  // transaction) and the matching ledger fee transaction (id from the memo)
+  // with the same settlement tx hash.
+  if (row.kind === "goal_withdraw") {
+    const parsed = goalFromMemo(row.memo);
+    if (!parsed) {
+      await markFailed(row, "goal_withdraw missing goal id in memo");
+      return false;
+    }
+    const result = await goalWithdraw({
+      fromPrivateKey,
+      goalId: parsed.goalId,
+      grossCents: row.amountCents,
+    });
+    if (result.status === "confirmed") {
+      // One on-chain withdrawal settles both the net release and the fee, so
+      // confirm the queue row, the net release txn, and the fee txn together in
+      // a single DB transaction — a crash can't leave the fee txn dangling.
+      await confirmGoalWithdraw(row, result.hash, parsed.feeTxnId);
       return true;
     }
     await requeueOrFail(row, result.reason);

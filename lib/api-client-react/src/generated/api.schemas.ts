@@ -48,6 +48,16 @@ export interface ActivityItem {
   createdAt: string;
 }
 
+export interface GoalHistoryItem {
+  id: string;
+  type: string;
+  amountCents: number;
+  /** @nullable */
+  txHash?: string | null;
+  onchainStatus: string;
+  createdAt: string;
+}
+
 export interface Goal {
   id: string;
   name: string;
@@ -62,6 +72,15 @@ export interface Goal {
   createdAt: string;
   /** @nullable */
   imageUrl?: string | null;
+  onchain?: boolean;
+  /** @nullable */
+  vaultAddress?: string | null;
+  /** @nullable */
+  explorerUrl?: string | null;
+  /** @nullable */
+  network?: string | null;
+  feeBps?: number;
+  history?: GoalHistoryItem[];
 }
 
 export interface CircleSummary {
@@ -206,6 +225,20 @@ export interface CircleInput {
 
 export interface InviteInput {
   email: string;
+}
+
+export interface ReleaseFromGoalResult {
+  ok: boolean;
+  grossCents: number;
+  netCents: number;
+  feeCents: number;
+}
+
+export interface DeleteGoalResult {
+  ok: boolean;
+  withdrawnGrossCents: number;
+  withdrawnNetCents: number;
+  feeCents: number;
 }
 
 export interface GoalInput {

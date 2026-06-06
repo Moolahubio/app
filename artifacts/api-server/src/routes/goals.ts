@@ -10,6 +10,8 @@ import {
   GetGoalResponse,
   AllocateToGoalResponse,
   ReleaseFromGoalResponse,
+  DeleteGoalParams,
+  DeleteGoalResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import {
@@ -18,6 +20,8 @@ import {
   createGoal,
   allocateToGoal,
   releaseFromGoal,
+  deleteGoal,
+  type GoalHistoryItem,
 } from "../lib/goals";
 
 const router: IRouter = Router();
@@ -34,6 +38,12 @@ type GoalRow = {
   frequency: string;
   autoSaveCents: number | null;
   createdAt: Date;
+  onchain?: boolean;
+  vaultAddress?: string | null;
+  explorerUrl?: string | null;
+  network?: string;
+  feeBps?: number;
+  history?: GoalHistoryItem[];
 };
 
 function goalToJson(g: GoalRow) {
@@ -49,6 +59,12 @@ function goalToJson(g: GoalRow) {
     frequency: g.frequency,
     autoSaveCents: g.autoSaveCents ?? null,
     createdAt: g.createdAt.toISOString(),
+    onchain: g.onchain ?? false,
+    vaultAddress: g.vaultAddress ?? null,
+    explorerUrl: g.explorerUrl ?? null,
+    network: g.network ?? null,
+    feeBps: g.feeBps ?? 0,
+    history: g.history ?? [],
   };
 }
 
@@ -137,13 +153,42 @@ router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> =
   }
 
   try {
-    await releaseFromGoal(user.id, params.data.id, parsed.data.amountCents);
+    const result = await releaseFromGoal(user.id, params.data.id, parsed.data.amountCents);
+    res.json(
+      ReleaseFromGoalResponse.parse({
+        ok: true,
+        grossCents: result.grossCents,
+        netCents: result.netCents,
+        feeCents: result.feeCents,
+      }),
+    );
   } catch (e) {
     res.status(400).json({ error: e instanceof Error ? e.message : "Release failed" });
+  }
+});
+
+router.post("/goals/:id/delete", requireAuth, async (req, res): Promise<void> => {
+  const user = (req as AuthRequest).user;
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const params = DeleteGoalParams.safeParse({ id: rawId });
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
     return;
   }
 
-  res.json(ReleaseFromGoalResponse.parse({ ok: true }));
+  try {
+    const result = await deleteGoal(user.id, params.data.id);
+    res.json(
+      DeleteGoalResponse.parse({
+        ok: true,
+        withdrawnGrossCents: result.withdrawnGrossCents,
+        withdrawnNetCents: result.withdrawnNetCents,
+        feeCents: result.feeCents,
+      }),
+    );
+  } catch (e) {
+    res.status(400).json({ error: e instanceof Error ? e.message : "Delete failed" });
+  }
 });
 
 export default router;

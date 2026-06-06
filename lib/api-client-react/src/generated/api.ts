@@ -29,6 +29,7 @@ import type {
   CircleInvite,
   CircleSummary,
   DashboardSummary,
+  DeleteGoalResult,
   Goal,
   GoalInput,
   HealthStatus,
@@ -45,6 +46,7 @@ import type {
   PasskeySummary,
   PrivyAuthInput,
   ProfileUpdate,
+  ReleaseFromGoalResult,
   SettlementOverviewResponse,
   SyncResult,
   UploadUrlRequest,
@@ -2190,9 +2192,9 @@ export const getReleaseFromGoalUrl = (id: string,) => {
  * @summary Release funds from a goal back to wallet
  */
 export const releaseFromGoal = async (id: string,
-    amountInput: AmountInput, options?: RequestInit): Promise<OkResponse> => {
+    amountInput: AmountInput, options?: RequestInit): Promise<ReleaseFromGoalResult> => {
 
-  return customFetch<OkResponse>(getReleaseFromGoalUrl(id),
+  return customFetch<ReleaseFromGoalResult>(getReleaseFromGoalUrl(id),
   {
     ...options,
     method: 'POST',
@@ -2248,6 +2250,76 @@ export const useReleaseFromGoal = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getReleaseFromGoalMutationOptions(options));
+    }
+
+export const getDeleteGoalUrl = (id: string,) => {
+
+
+
+
+  return `/api/goals/${id}/delete`
+}
+
+/**
+ * @summary Delete a goal, auto-withdrawing all funds (net of the 2% fee)
+ */
+export const deleteGoal = async (id: string, options?: RequestInit): Promise<DeleteGoalResult> => {
+
+  return customFetch<DeleteGoalResult>(getDeleteGoalUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteGoalMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteGoal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGoal>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteGoal(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGoalMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGoal>>>
+
+    export type DeleteGoalMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Delete a goal, auto-withdrawing all funds (net of the 2% fee)
+ */
+export const useDeleteGoal = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGoal>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteGoalMutationOptions(options));
     }
 
 export const getListLessonsUrl = () => {

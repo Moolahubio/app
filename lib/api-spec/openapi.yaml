@@ -610,7 +610,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OkResponse"
+                $ref: "#/components/schemas/ReleaseFromGoalResult"
+
+  /goals/{id}/delete:
+    post:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a goal, auto-withdrawing all funds (net of the 2% fee)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteGoalResult"
+        "400":
+          description: Delete failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   # ---- Learn ----
   /learn/lessons:
@@ -1164,6 +1189,63 @@ components:
           type: string
         imageUrl:
           type: ["string", "null"]
+        onchain:
+          type: boolean
+        vaultAddress:
+          type: ["string", "null"]
+        explorerUrl:
+          type: ["string", "null"]
+        network:
+          type: ["string", "null"]
+        feeBps:
+          type: integer
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/GoalHistoryItem"
+
+    GoalHistoryItem:
+      type: object
+      required: [id, type, amountCents, onchainStatus, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        amountCents:
+          type: integer
+        txHash:
+          type: ["string", "null"]
+        onchainStatus:
+          type: string
+        createdAt:
+          type: string
+
+    ReleaseFromGoalResult:
+      type: object
+      required: [ok, grossCents, netCents, feeCents]
+      properties:
+        ok:
+          type: boolean
+        grossCents:
+          type: integer
+        netCents:
+          type: integer
+        feeCents:
+          type: integer
+
+    DeleteGoalResult:
+      type: object
+      required: [ok, withdrawnGrossCents, withdrawnNetCents, feeCents]
+      properties:
+        ok:
+          type: boolean
+        withdrawnGrossCents:
+          type: integer
+        withdrawnNetCents:
+          type: integer
+        feeCents:
+          type: integer
 
     GoalInput:
       type: object

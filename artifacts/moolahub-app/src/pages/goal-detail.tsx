@@ -1,24 +1,38 @@
-import { useParams } from "wouter";
-import { Repeat, Calendar, Target, Sparkles } from "lucide-react";
+import { useParams, useLocation } from "wouter";
+import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
 import { AmountForm } from "@/components/app/forms";
-import { useGetGoal, useAllocateToGoal, useReleaseFromGoal, getGetGoalQueryKey, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
-import { formatMoney, pct, apiErrorMessage } from "@/lib/utils";
+import {
+  useGetGoal,
+  useAllocateToGoal,
+  useReleaseFromGoal,
+  useDeleteGoal,
+  getGetGoalQueryKey,
+  getGetWalletQueryKey,
+  getGetDashboardSummaryQueryKey,
+  getListGoalsQueryKey,
+} from "@workspace/api-client-react";
+import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
+const EXPLORER_FALLBACK = "https://sepolia.basescan.org";
+
 export default function GoalDetailPage() {
   const { id } = useParams();
+  const [, navigate] = useLocation();
   const { data: goal, isLoading } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
-  
+
   const queryClient = useQueryClient();
   const allocateMutation = useAllocateToGoal();
   const releaseMutation = useReleaseFromGoal();
+  const deleteMutation = useDeleteGoal();
 
   const [allocOk, setAllocOk] = useState<string | null>(null);
   const [releaseOk, setReleaseOk] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (isLoading) return <div className="p-8 text-center text-ink-400">Loading goal...</div>;
   if (!goal) return <div className="p-8 text-center text-ink-400">Goal not found</div>;
@@ -30,6 +44,18 @@ export default function GoalDetailPage() {
   const next = nextContribution(goalPlan.plan, goal.savedCents);
   const periodsLeft = next ? goalPlan.plan.length - next.index + 1 : 0;
   const circumference = 2 * Math.PI * 52;
+
+  const onchain = goal.onchain ?? false;
+  const feeBps = goal.feeBps ?? 0;
+  const feePct = (feeBps / 100).toFixed(feeBps % 100 === 0 ? 0 : 2);
+  const explorer = goal.explorerUrl ?? EXPLORER_FALLBACK;
+  const history = goal.history ?? [];
+
+  const refreshGoal = () => {
+    queryClient.invalidateQueries({ queryKey: getGetGoalQueryKey(goal.id) });
+    queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -67,6 +93,11 @@ export default function GoalDetailPage() {
           <p className="text-sm text-ink-500">
             {formatMoney(goal.savedCents)} of {formatMoney(goal.targetCents)}
           </p>
+          {onchain && (
+            <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20">
+              <Link2 className="h-3.5 w-3.5" /> On-chain
+            </Badge>
+          )}
         </Card>
 
         {/* details + actions */}
@@ -74,7 +105,9 @@ export default function GoalDetailPage() {
           <Card className="p-6">
             <h2 className="font-display text-lg font-bold text-ink-900">Add to this goal</h2>
             <p className="mt-1 text-sm text-ink-500">
-              Move funds from your available balance into this allocation.
+              {onchain
+                ? "Move funds from your available balance into this goal's on-chain vault. Deposits are free."
+                : "Move funds from your available balance into this allocation."}
             </p>
             <div className="mt-4">
               <AmountForm
@@ -82,9 +115,7 @@ export default function GoalDetailPage() {
                   setAllocOk(null);
                   allocateMutation.mutate({ id: goal.id, data: { amountCents } }, {
                     onSuccess: () => {
-                      queryClient.invalidateQueries({ queryKey: getGetGoalQueryKey(goal.id) });
-                      queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                      refreshGoal();
                       setAllocOk("Funds added to goal");
                     }
                   });
@@ -97,16 +128,23 @@ export default function GoalDetailPage() {
               />
             </div>
             <div className="mt-5 border-t border-ink-900/[0.06] pt-5">
-              <p className="mb-3 text-sm font-medium text-ink-700">Withdraw from this goal</p>
+              <p className="mb-1 text-sm font-medium text-ink-700">Withdraw from this goal</p>
+              {onchain && feeBps > 0 && (
+                <p className="mb-3 text-xs text-ink-500">
+                  A {feePct}% withdrawal fee is taken on-chain. You receive the amount net of the fee.
+                </p>
+              )}
               <AmountForm
                 onSubmit={(amountCents) => {
                   setReleaseOk(null);
                   releaseMutation.mutate({ id: goal.id, data: { amountCents } }, {
-                    onSuccess: () => {
-                      queryClient.invalidateQueries({ queryKey: getGetGoalQueryKey(goal.id) });
-                      queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-                      setReleaseOk("Funds released to available");
+                    onSuccess: (res) => {
+                      refreshGoal();
+                      setReleaseOk(
+                        res.feeCents > 0
+                          ? `${formatMoney(res.netCents)} released (after a ${formatMoney(res.feeCents)} fee)`
+                          : `${formatMoney(res.netCents)} released to available`,
+                      );
                     }
                   });
                 }}
@@ -188,6 +226,119 @@ export default function GoalDetailPage() {
               of rising contributions left to reach your target.
             </p>
           )}
+
+          {onchain && goal.vaultAddress && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-jade-600" />
+                <h2 className="font-display text-lg font-bold text-ink-900">On-chain vault</h2>
+              </div>
+              <p className="mt-1 text-sm text-ink-500">
+                Funds you allocate are deposited into this vault on Base. A {feePct}% protocol fee is
+                taken on each withdrawal.
+              </p>
+              <a
+                href={`${explorer}/address/${goal.vaultAddress}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-ink-900/[0.08] bg-white px-3 py-2 font-mono text-xs text-ink-700 transition hover:border-jade-500/40 hover:text-jade-700"
+              >
+                {truncateAddress(goal.vaultAddress)}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Card>
+          )}
+
+          {history.length > 0 && (
+            <Card className="p-6">
+              <h2 className="font-display text-lg font-bold text-ink-900">Activity</h2>
+              <ul className="mt-4 space-y-2">
+                {history.map((h) => (
+                  <li
+                    key={h.id}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-ink-900/[0.06] bg-white px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold capitalize text-ink-900">
+                        {h.type.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-xs text-ink-500">{formatMoney(h.amountCents)}</p>
+                    </div>
+                    {h.txHash ? (
+                      <a
+                        href={`${explorer}/tx/${h.txHash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800"
+                      >
+                        {truncateAddress(h.txHash)}
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    ) : (
+                      <Badge tone="neutral" className="capitalize">{h.onchainStatus}</Badge>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          <Card className="border-rose-500/20 p-6">
+            <h2 className="font-display text-lg font-bold text-ink-900">Delete goal</h2>
+            <p className="mt-1 text-sm text-ink-500">
+              {goal.savedCents > 0
+                ? onchain && feeBps > 0
+                  ? `This withdraws the full ${formatMoney(goal.savedCents)} balance back to your available funds (minus the ${feePct}% withdrawal fee) and closes the goal.`
+                  : `This returns the full ${formatMoney(goal.savedCents)} balance to your available funds and closes the goal.`
+                : "This permanently closes the goal."}
+            </p>
+            {deleteMutation.error && (
+              <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
+            )}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {!confirmDelete ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete goal
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    disabled={deleteMutation.isPending}
+                    onClick={() =>
+                      deleteMutation.mutate(
+                        { id: goal.id },
+                        {
+                          onSuccess: () => {
+                            queryClient.invalidateQueries({ queryKey: getListGoalsQueryKey() });
+                            queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                            queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                            navigate("/goals");
+                          },
+                        },
+                      )
+                    }
+                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {deleteMutation.isPending ? "Deleting…" : "Confirm delete"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-xl border border-ink-900/[0.08] bg-white px-4 py-2 text-sm font-medium text-ink-600 transition hover:bg-mist"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
     </div>

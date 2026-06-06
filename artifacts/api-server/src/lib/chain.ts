@@ -30,6 +30,7 @@ const RPC_URL =
   process.env.BASE_RPC_URL || (IS_MAINNET ? "https://mainnet.base.org" : "https://sepolia.base.org");
 const USDC_ADDRESS = (process.env.USDC_CONTRACT_ADDRESS || "") as string;
 const FACTORY_ADDRESS = (process.env.CIRCLE_FACTORY_ADDRESS || "") as string;
+const GOAL_VAULT_ADDRESS = (process.env.GOAL_VAULT_ADDRESS || "") as string;
 
 function platformKey(): Hex | undefined {
   const raw = process.env.PLATFORM_PRIVATE_KEY;
@@ -69,6 +70,20 @@ const ESCROW_ABI = parseAbi([
   "function hasContributed(uint256 round, address member) view returns (bool)",
   "event Contributed(address indexed member, uint256 indexed round, uint256 amount)",
   "event RoundSettled(uint256 indexed round, address indexed recipient, uint256 payout, uint256 fee)",
+]);
+
+// Singleton GoalVault: holds USDC per (owner, goalId). Deposits are free;
+// withdrawals charge a 2% fee to the treasury, collected on-chain. Strictly
+// non-custodial — only the owning account can withdraw, so every goal action is
+// signed by the user's key (the platform only pays gas).
+const GOAL_VAULT_ABI = parseAbi([
+  "function deposit(bytes32 goalId, uint256 amount)",
+  "function withdraw(bytes32 goalId, uint256 grossAmount)",
+  "function balanceOf(address owner, bytes32 goalId) view returns (uint256)",
+  "function quoteWithdraw(uint256 grossAmount) view returns (uint256 net, uint256 fee)",
+  "function feeBps() view returns (uint16)",
+  "event GoalDeposited(address indexed owner, bytes32 indexed goalId, uint256 amount)",
+  "event GoalWithdrawn(address indexed owner, bytes32 indexed goalId, uint256 grossAmount, uint256 fee)",
 ]);
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -479,6 +494,168 @@ export async function escrowContribute(params: {
       /* event decode best-effort; settlement is also visible on-chain */
     }
     return { status: "confirmed", hash, settledRound };
+  } catch (e) {
+    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+  }
+}
+
+// ---- Goal vault (on-chain savings goals) --------------------------------
+
+/** The singleton GoalVault address, if configured & valid. */
+export function goalVaultContract(): Address | null {
+  return GOAL_VAULT_ADDRESS && isAddress(GOAL_VAULT_ADDRESS)
+    ? getAddress(GOAL_VAULT_ADDRESS)
+    : null;
+}
+
+/**
+ * Whether goals can settle on-chain. The vault is non-custodial (the user signs
+ * their own deposit/withdraw), so we only need the vault + USDC configured and a
+ * platform key to fund the user's gas top-ups.
+ */
+export function goalVaultEnabled(): boolean {
+  return Boolean(platformKey() && goalVaultContract() && usdcContract());
+}
+
+/**
+ * Deterministic on-chain id for a goal. The vault keys balances by
+ * (owner, goalId), so this must be stable and unique per goal — we derive it
+ * from the goal's UUID, mirroring how circles derive their escrow id.
+ */
+export function goalIdToBytes32(goalId: string): Hex {
+  return keccak256(toHex(goalId));
+}
+
+/** Read a user's on-chain goal balance, in cents. 0 when RPC unreachable. */
+export async function goalVaultBalance(owner: string, goalId: string): Promise<number> {
+  const vault = goalVaultContract();
+  if (!vault || !isValidAddress(owner)) return 0;
+  try {
+    const units = await publicClient().readContract({
+      address: vault,
+      abi: GOAL_VAULT_ABI,
+      functionName: "balanceOf",
+      args: [getAddress(owner), goalIdToBytes32(goalId)],
+    });
+    return unitsToCents(units as bigint);
+  } catch {
+    return 0;
+  }
+}
+
+export type GoalWithdrawResult =
+  | { status: "confirmed"; hash: string; feeCents: number; netCents: number }
+  | { status: "skipped"; reason: string };
+
+/**
+ * Deposit USDC into a user's goal balance in the vault. Deposits are free. The
+ * vault pulls funds via `transferFrom`, so we approve it first when the
+ * allowance is short, then call `deposit`. Signed by the user's key.
+ */
+export async function goalDeposit(params: {
+  fromPrivateKey: string;
+  goalId: string;
+  amountCents: number;
+}): Promise<OnchainResult> {
+  const vault = goalVaultContract();
+  const usdc = usdcContract();
+  if (!vault || !usdc) return { status: "skipped", reason: "goal vault not configured" };
+  try {
+    const pk = (params.fromPrivateKey.startsWith("0x")
+      ? params.fromPrivateKey
+      : `0x${params.fromPrivateKey}`) as Hex;
+    const account = privateKeyToAccount(pk);
+    const amount = centsToUnits(params.amountCents);
+    const goalId = goalIdToBytes32(params.goalId);
+    await ensureGas(account.address);
+    const wallet = walletClientFor(pk);
+    const pub = publicClient();
+
+    const allowance = (await pub.readContract({
+      address: usdc,
+      abi: MOCK_USDC_ABI,
+      functionName: "allowance",
+      args: [account.address, vault],
+    })) as bigint;
+    if (allowance < amount) {
+      const approveHash = await wallet.writeContract({
+        address: usdc,
+        abi: MOCK_USDC_ABI,
+        functionName: "approve",
+        args: [vault, amount],
+      });
+      await pub.waitForTransactionReceipt({ hash: approveHash });
+    }
+
+    const hash = await wallet.writeContract({
+      address: vault,
+      abi: GOAL_VAULT_ABI,
+      functionName: "deposit",
+      args: [goalId, amount],
+    });
+    const receipt = await pub.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") {
+      return { status: "skipped", reason: `goal deposit reverted (tx ${hash})` };
+    }
+    return { status: "confirmed", hash };
+  } catch (e) {
+    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+  }
+}
+
+/**
+ * Withdraw `grossCents` from a user's goal balance. The vault sends the caller
+ * `gross - 2% fee` and routes the fee to the treasury, all in one tx. Returns
+ * the fee/net (in cents) parsed from the `GoalWithdrawn` event. Signed by the
+ * user's key — only the owning account can withdraw its own balance.
+ */
+export async function goalWithdraw(params: {
+  fromPrivateKey: string;
+  goalId: string;
+  grossCents: number;
+}): Promise<GoalWithdrawResult> {
+  const vault = goalVaultContract();
+  if (!vault) return { status: "skipped", reason: "goal vault not configured" };
+  try {
+    const pk = (params.fromPrivateKey.startsWith("0x")
+      ? params.fromPrivateKey
+      : `0x${params.fromPrivateKey}`) as Hex;
+    const account = privateKeyToAccount(pk);
+    const gross = centsToUnits(params.grossCents);
+    const goalId = goalIdToBytes32(params.goalId);
+    await ensureGas(account.address);
+    const wallet = walletClientFor(pk);
+    const pub = publicClient();
+
+    const hash = await wallet.writeContract({
+      address: vault,
+      abi: GOAL_VAULT_ABI,
+      functionName: "withdraw",
+      args: [goalId, gross],
+    });
+    const receipt = await pub.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") {
+      return { status: "skipped", reason: `goal withdraw reverted (tx ${hash})` };
+    }
+
+    let feeUnits = 0n;
+    try {
+      const events = parseEventLogs({
+        abi: GOAL_VAULT_ABI,
+        eventName: "GoalWithdrawn",
+        logs: receipt.logs,
+      });
+      if (events.length > 0) feeUnits = (events[0].args.fee ?? 0n) as bigint;
+    } catch {
+      /* event decode best-effort; the withdraw still settled on-chain */
+    }
+    const feeCents = unitsToCents(feeUnits);
+    return {
+      status: "confirmed",
+      hash,
+      feeCents,
+      netCents: params.grossCents - feeCents,
+    };
   } catch (e) {
     return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
   }

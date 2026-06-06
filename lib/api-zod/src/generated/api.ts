@@ -193,7 +193,20 @@ export const GetDashboardSummaryResponse = zod.object({
   "frequency": zod.string(),
   "autoSaveCents": zod.number().nullish(),
   "createdAt": zod.string(),
-  "imageUrl": zod.string().nullish()
+  "imageUrl": zod.string().nullish(),
+  "onchain": zod.boolean().optional(),
+  "vaultAddress": zod.string().nullish(),
+  "explorerUrl": zod.string().nullish(),
+  "network": zod.string().nullish(),
+  "feeBps": zod.number().optional(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.string(),
+  "amountCents": zod.number(),
+  "txHash": zod.string().nullish(),
+  "onchainStatus": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })),
   "activeCircles": zod.array(zod.object({
   "id": zod.string(),
@@ -450,7 +463,20 @@ export const ListGoalsResponseItem = zod.object({
   "frequency": zod.string(),
   "autoSaveCents": zod.number().nullish(),
   "createdAt": zod.string(),
-  "imageUrl": zod.string().nullish()
+  "imageUrl": zod.string().nullish(),
+  "onchain": zod.boolean().optional(),
+  "vaultAddress": zod.string().nullish(),
+  "explorerUrl": zod.string().nullish(),
+  "network": zod.string().nullish(),
+  "feeBps": zod.number().optional(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.string(),
+  "amountCents": zod.number(),
+  "txHash": zod.string().nullish(),
+  "onchainStatus": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })
 export const ListGoalsResponse = zod.array(ListGoalsResponseItem)
 
@@ -488,7 +514,20 @@ export const GetGoalResponse = zod.object({
   "frequency": zod.string(),
   "autoSaveCents": zod.number().nullish(),
   "createdAt": zod.string(),
-  "imageUrl": zod.string().nullish()
+  "imageUrl": zod.string().nullish(),
+  "onchain": zod.boolean().optional(),
+  "vaultAddress": zod.string().nullish(),
+  "explorerUrl": zod.string().nullish(),
+  "network": zod.string().nullish(),
+  "feeBps": zod.number().optional(),
+  "history": zod.array(zod.object({
+  "id": zod.string(),
+  "type": zod.string(),
+  "amountCents": zod.number(),
+  "txHash": zod.string().nullish(),
+  "onchainStatus": zod.string(),
+  "createdAt": zod.string()
+})).optional()
 })
 
 
@@ -520,7 +559,25 @@ export const ReleaseFromGoalBody = zod.object({
 })
 
 export const ReleaseFromGoalResponse = zod.object({
-  "ok": zod.boolean()
+  "ok": zod.boolean(),
+  "grossCents": zod.number(),
+  "netCents": zod.number(),
+  "feeCents": zod.number()
+})
+
+
+/**
+ * @summary Delete a goal, auto-withdrawing all funds (net of the 2% fee)
+ */
+export const DeleteGoalParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteGoalResponse = zod.object({
+  "ok": zod.boolean(),
+  "withdrawnGrossCents": zod.number(),
+  "withdrawnNetCents": zod.number(),
+  "feeCents": zod.number()
 })
 
 
