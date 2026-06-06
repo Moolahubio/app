@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:susu": "tsx src/lib/circles.e2e.ts",
     "test:susu-accumulation": "tsx src/lib/circles-accumulation.e2e.ts",
-    "test:susu-http": "tsx src/lib/circles-http.e2e.ts"
+    "test:susu-http": "tsx src/lib/circles-http.e2e.ts",
+    "test:susu-http-authz": "tsx src/lib/circles-http-authz.e2e.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",
