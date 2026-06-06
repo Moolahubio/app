@@ -5,6 +5,9 @@ import {
   isAddress,
   getAddress,
   parseAbi,
+  parseEventLogs,
+  keccak256,
+  toHex,
   formatEther,
   type Hex,
   type Address,
@@ -26,6 +29,7 @@ const CHAIN = IS_MAINNET ? base : baseSepolia;
 const RPC_URL =
   process.env.BASE_RPC_URL || (IS_MAINNET ? "https://mainnet.base.org" : "https://sepolia.base.org");
 const USDC_ADDRESS = (process.env.USDC_CONTRACT_ADDRESS || "") as string;
+const FACTORY_ADDRESS = (process.env.CIRCLE_FACTORY_ADDRESS || "") as string;
 
 function platformKey(): Hex | undefined {
   const raw = process.env.PLATFORM_PRIVATE_KEY;
@@ -42,6 +46,32 @@ const ERC20_ABI = parseAbi([
   "function transfer(address to, uint256 amount) returns (bool)",
   "event Transfer(address indexed from, address indexed to, uint256 value)",
 ]);
+
+// MockUSDC (test USDC): 6 decimals, EIP-2612 permit, and a permissionless mint
+// used by the faucet. The escrow pulls contributions via transferFrom, so each
+// member approves the escrow before contributing.
+const MOCK_USDC_ABI = parseAbi([
+  "function mint(address to, uint256 amount)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+]);
+
+const FACTORY_ABI = parseAbi([
+  "function createCircle(bytes32 circleId, uint256 contributionAmount, address[] members, uint64 roundDuration, uint64 gracePeriod) returns (address)",
+  "function escrowOf(bytes32 circleId) view returns (address)",
+  "function predictAddress(bytes32 circleId) view returns (address)",
+]);
+
+const ESCROW_ABI = parseAbi([
+  "function contribute()",
+  "function currentRound() view returns (uint256)",
+  "function status() view returns (uint8)",
+  "function hasContributed(uint256 round, address member) view returns (bool)",
+  "event Contributed(address indexed member, uint256 indexed round, uint256 amount)",
+  "event RoundSettled(uint256 indexed round, address indexed recipient, uint256 payout, uint256 fee)",
+]);
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export type OnchainResult =
   | { status: "confirmed"; hash: string }
@@ -254,6 +284,201 @@ export async function sendUsdc(params: {
     });
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
+  } catch (e) {
+    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+  }
+}
+
+// ---- Susu escrow (on-chain rotation circles) ----------------------------
+
+/** The CircleFactory address, if configured & valid. */
+export function factoryContract(): Address | null {
+  return FACTORY_ADDRESS && isAddress(FACTORY_ADDRESS) ? getAddress(FACTORY_ADDRESS) : null;
+}
+
+/** Whether on-chain Susu escrows can be deployed (platform key + factory). */
+export function escrowEnabled(): boolean {
+  return Boolean(platformKey() && factoryContract() && usdcContract());
+}
+
+/**
+ * Deterministic on-chain id for a circle. The factory uses it as the clone salt
+ * (one escrow per id), so it must be stable and unique per circle — we derive it
+ * from the circle's UUID.
+ */
+export function circleIdToBytes32(circleId: string): Hex {
+  return keccak256(toHex(circleId));
+}
+
+export type DeployEscrowResult =
+  | { status: "confirmed"; hash: string; escrow: string }
+  | { status: "skipped"; reason: string };
+
+/**
+ * Deploy (or look up) the on-chain Susu escrow for a rotation circle. The
+ * platform is the factory owner, so it signs `createCircle`. `members` MUST be
+ * ordered by payout round (index 0 → round 1 recipient) to match the contract's
+ * positional settlement. Idempotent: if an escrow already exists for this
+ * circle id, returns it without redeploying.
+ */
+export async function deployCircleEscrow(params: {
+  circleId: string;
+  contributionCents: number;
+  members: string[];
+  roundDurationSecs: number;
+  gracePeriodSecs: number;
+}): Promise<DeployEscrowResult> {
+  const factory = factoryContract();
+  const pk = platformKey();
+  if (!factory || !pk) return { status: "skipped", reason: "factory not configured" };
+  if (params.members.length < 2) return { status: "skipped", reason: "need at least 2 members" };
+  if (params.members.some((m) => !isValidAddress(m)))
+    return { status: "skipped", reason: "a member has no valid wallet" };
+  try {
+    const pub = publicClient();
+    const id = circleIdToBytes32(params.circleId);
+
+    const existing = (await pub.readContract({
+      address: factory,
+      abi: FACTORY_ABI,
+      functionName: "escrowOf",
+      args: [id],
+    })) as Address;
+    if (existing && existing !== ZERO_ADDRESS) {
+      return { status: "confirmed", hash: "", escrow: getAddress(existing) };
+    }
+
+    const wallet = walletClientFor(pk);
+    const hash = await wallet.writeContract({
+      address: factory,
+      abi: FACTORY_ABI,
+      functionName: "createCircle",
+      args: [
+        id,
+        centsToUnits(params.contributionCents),
+        params.members.map((m) => getAddress(m)),
+        BigInt(Math.max(1, Math.floor(params.roundDurationSecs))),
+        BigInt(Math.max(0, Math.floor(params.gracePeriodSecs))),
+      ],
+    });
+    const receipt = await pub.waitForTransactionReceipt({ hash });
+    if (receipt.status === "reverted") {
+      return { status: "skipped", reason: `createCircle reverted (tx ${hash})` };
+    }
+
+    // The public RPC is load-balanced, so an `escrowOf` read immediately after
+    // the receipt can hit a node that hasn't yet caught up to the deploy block
+    // and return the zero address. Poll a few times before giving up.
+    let escrow = ZERO_ADDRESS as Address;
+    for (let i = 0; i < 6; i++) {
+      escrow = (await pub.readContract({
+        address: factory,
+        abi: FACTORY_ABI,
+        functionName: "escrowOf",
+        args: [id],
+      })) as Address;
+      if (escrow && escrow !== ZERO_ADDRESS) break;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    if (!escrow || escrow === ZERO_ADDRESS) {
+      return { status: "skipped", reason: "escrow address not found after deploy" };
+    }
+    return { status: "confirmed", hash, escrow: getAddress(escrow) };
+  } catch (e) {
+    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+  }
+}
+
+/**
+ * Faucet: mint test USDC straight to a wallet (MockUSDC.mint is permissionless;
+ * the platform just pays gas). Returns the mint tx hash or "skipped".
+ */
+export async function mintUsdc(params: { to: string; amountCents: number }): Promise<OnchainResult> {
+  const usdc = usdcContract();
+  const pk = platformKey();
+  if (!usdc || !pk) return { status: "skipped", reason: "USDC/platform not configured" };
+  if (!isValidAddress(params.to)) return { status: "skipped", reason: "invalid destination" };
+  try {
+    const wallet = walletClientFor(pk);
+    const pub = publicClient();
+    const hash = await wallet.writeContract({
+      address: usdc,
+      abi: MOCK_USDC_ABI,
+      functionName: "mint",
+      args: [getAddress(params.to), centsToUnits(params.amountCents)],
+    });
+    await pub.waitForTransactionReceipt({ hash });
+    return { status: "confirmed", hash };
+  } catch (e) {
+    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+  }
+}
+
+export type EscrowContributeResult =
+  | { status: "confirmed"; hash: string; settledRound: number | null }
+  | { status: "skipped"; reason: string };
+
+/**
+ * A member contributes to the on-chain escrow: approve the escrow to pull the
+ * contribution (if the allowance is short) then call `contribute()`. The escrow
+ * auto-settles the round when the last member contributes — when that happens
+ * the receipt carries a `RoundSettled` event, whose round we return so the
+ * caller can confirm the matching ledger payout.
+ */
+export async function escrowContribute(params: {
+  fromPrivateKey: string;
+  escrow: string;
+  amountCents: number;
+}): Promise<EscrowContributeResult> {
+  const usdc = usdcContract();
+  if (!usdc) return { status: "skipped", reason: "USDC contract not configured" };
+  if (!isValidAddress(params.escrow)) return { status: "skipped", reason: "invalid escrow address" };
+  try {
+    const pk = (params.fromPrivateKey.startsWith("0x")
+      ? params.fromPrivateKey
+      : `0x${params.fromPrivateKey}`) as Hex;
+    const account = privateKeyToAccount(pk);
+    const escrow = getAddress(params.escrow);
+    const amount = centsToUnits(params.amountCents);
+    await ensureGas(account.address);
+    const wallet = walletClientFor(pk);
+    const pub = publicClient();
+
+    const allowance = (await pub.readContract({
+      address: usdc,
+      abi: MOCK_USDC_ABI,
+      functionName: "allowance",
+      args: [account.address, escrow],
+    })) as bigint;
+    if (allowance < amount) {
+      const approveHash = await wallet.writeContract({
+        address: usdc,
+        abi: MOCK_USDC_ABI,
+        functionName: "approve",
+        args: [escrow, amount],
+      });
+      await pub.waitForTransactionReceipt({ hash: approveHash });
+    }
+
+    const hash = await wallet.writeContract({
+      address: escrow,
+      abi: ESCROW_ABI,
+      functionName: "contribute",
+    });
+    const receipt = await pub.waitForTransactionReceipt({ hash });
+
+    let settledRound: number | null = null;
+    try {
+      const settled = parseEventLogs({
+        abi: ESCROW_ABI,
+        eventName: "RoundSettled",
+        logs: receipt.logs,
+      });
+      if (settled.length > 0) settledRound = Number(settled[0].args.round);
+    } catch {
+      /* event decode best-effort; settlement is also visible on-chain */
+    }
+    return { status: "confirmed", hash, settledRound };
   } catch (e) {
     return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
   }

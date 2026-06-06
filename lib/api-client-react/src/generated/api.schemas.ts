@@ -130,10 +130,21 @@ export interface SyncResult {
 export interface CircleMember {
   id: string;
   name: string;
+  position?: number;
   payoutRound: number;
   state: string;
   paidOut: boolean;
   contributedThisRound?: boolean;
+}
+
+export interface CircleContribution {
+  id: string;
+  round: number;
+  amountCents: number;
+  /** @nullable */
+  txHash?: string | null;
+  status: string;
+  createdAt: string;
 }
 
 export interface CirclePendingInvite {
@@ -150,11 +161,18 @@ export interface CircleDetail {
   contributionCents: number;
   payoutCents: number;
   potCents: number;
+  memberCount?: number;
   currentRound: number;
   totalRounds: number;
   /** @nullable */
   startDate: string | null;
+  /** @nullable */
+  contractAddress?: string | null;
+  feeBps?: number;
+  /** @nullable */
+  explorerUrl?: string | null;
   members: CircleMember[];
+  history?: CircleContribution[];
   /** @nullable */
   myContributionStatus?: string | null;
   /** @nullable */

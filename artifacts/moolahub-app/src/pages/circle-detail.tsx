@@ -7,10 +7,12 @@ import {
   Crown,
   Mail,
   UserPlus,
-  Rocket
+  Rocket,
+  Link2,
+  ExternalLink
 } from "lucide-react";
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
-import { BackLink, TxTag } from "@/components/app/bits";
+import { BackLink } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
 import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, getGetCircleQueryKey } from "@workspace/api-client-react";
 import { formatMoney, truncateAddress, cn } from "@/lib/utils";
@@ -66,6 +68,11 @@ export default function CircleDetailPage() {
             <Badge tone="neutral" className="bg-white/10 text-white/70 ring-white/15">
               {isAccumulation ? "Accumulation" : "Rotation"}
             </Badge>
+            {circle.contractAddress && (
+              <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
+                <Link2 className="h-3.5 w-3.5" /> On-chain
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -239,6 +246,60 @@ export default function CircleDetailPage() {
             </p>
             <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
           </Card>
+
+          {circle.contractAddress && (
+            <Card className="p-6">
+              <div className="flex items-center gap-2">
+                <Link2 className="h-5 w-5 text-jade-600" />
+                <h2 className="font-display text-lg font-bold text-ink-900">On-chain escrow</h2>
+              </div>
+              <p className="mt-1 text-sm text-ink-500">
+                Contributions settle into this Susu escrow on Base. A{" "}
+                {((circle.feeBps ?? 0) / 100).toFixed(0)}% protocol fee is taken from each payout.
+              </p>
+              <a
+                href={`${circle.explorerUrl ?? "https://sepolia.basescan.org"}/address/${circle.contractAddress}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-ink-900/[0.08] bg-white px-3 py-2 font-mono text-xs text-ink-700 transition hover:border-jade-500/40 hover:text-jade-700"
+              >
+                {truncateAddress(circle.contractAddress)}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </Card>
+          )}
+
+          {(circle.history?.length ?? 0) > 0 && (
+            <Card className="p-6">
+              <h2 className="font-display text-lg font-bold text-ink-900">Your contributions</h2>
+              <ul className="mt-4 space-y-2">
+                {circle.history!.map((h) => (
+                  <li
+                    key={h.id}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-ink-900/[0.06] bg-white px-4 py-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-ink-900">Round {h.round}</p>
+                      <p className="text-xs text-ink-500">{formatMoney(h.amountCents)}</p>
+                    </div>
+                    {h.txHash ? (
+                      <a
+                        href={`${circle.explorerUrl ?? "https://sepolia.basescan.org"}/tx/${h.txHash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800"
+                      >
+                        {truncateAddress(h.txHash)}
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    ) : (
+                      <Badge tone="neutral" className="capitalize">{h.status}</Badge>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
         </div>
       </div>
     </div>

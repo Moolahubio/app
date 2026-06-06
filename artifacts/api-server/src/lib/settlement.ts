@@ -6,7 +6,7 @@ import {
   contributionsTable,
   type OnchainTransfer,
 } from "@workspace/db";
-import { onchainEnabled, sendUsdc } from "./chain";
+import { onchainEnabled, sendUsdc, mintUsdc, escrowContribute } from "./chain";
 import { getSigningSecret } from "./wallet";
 import { logger } from "./logger";
 
@@ -159,7 +159,11 @@ export async function getSettlementOverview(): Promise<SettlementOverview> {
 
 export type QueueParams = {
   transactionId: string;
-  kind: "faucet" | "withdrawal" | "contribution" | "payout";
+  // - faucet: platform mints MockUSDC to a wallet.
+  // - escrow_contribute: a member approves + contributes to the circle's escrow;
+  //   the escrow auto-settles the round on the last contribution.
+  // - withdrawal (and legacy contribution/payout): a direct ERC20 USDC transfer.
+  kind: "faucet" | "withdrawal" | "contribution" | "payout" | "escrow_contribute";
   // null => the platform distributor wallet is the source.
   sourceUserId: string | null;
   toAddress: string;
@@ -212,6 +216,35 @@ async function markConfirmed(row: OnchainTransfer, hash: string): Promise<void> 
         .where(eq(contributionsTable.id, row.contributionId));
     }
   });
+}
+
+/**
+ * Stamp a rotation circle's payout (and fee) ledger transactions as confirmed
+ * with the escrow's settlement tx hash. The escrow settles a round atomically
+ * when its last member contributes (emitting RoundSettled); we mirror that by
+ * confirming the matching pending payout/fee rows for this circle + round. The
+ * payout rows are always created before the round can settle on-chain, so a
+ * normal run finds them; the WHERE clause makes it idempotent.
+ */
+async function backfillPayoutSettlement(circleId: string, round: number, hash: string): Promise<void> {
+  await db
+    .update(transactionsTable)
+    .set({ txHash: hash, onchainStatus: "confirmed" })
+    .where(
+      and(
+        eq(transactionsTable.circleId, circleId),
+        eq(transactionsTable.round, round),
+        inArray(transactionsTable.type, ["payout", "fee"]),
+        eq(transactionsTable.onchainStatus, "pending"),
+      ),
+    );
+}
+
+/** Parse `susu:<circleId>:<round>` memos into their circle id. */
+function circleIdFromMemo(memo: string | null): string | null {
+  if (!memo) return null;
+  const parts = memo.split(":");
+  return parts[0] === "susu" && parts[1] ? parts[1] : null;
 }
 
 async function requeue(rowId: string, reason: string): Promise<void> {
@@ -275,6 +308,18 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
     return false;
   }
 
+  // Faucet mints test USDC straight to the wallet; the platform signs internally
+  // (mint is permissionless), so no per-row signing key is needed.
+  if (row.kind === "faucet") {
+    const result = await mintUsdc({ to: row.toAddress, amountCents: row.amountCents });
+    if (result.status === "confirmed") {
+      await markConfirmed(row, result.hash);
+      return true;
+    }
+    await requeueOrFail(row, result.reason);
+    return false;
+  }
+
   const fromPrivateKey = await resolveSourceKey(row);
   if (!fromPrivateKey) {
     // No usable signing key: this can't be settled on-chain. Don't block the
@@ -283,6 +328,30 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
     return false;
   }
 
+  // A member contributes to the circle's escrow. When their contribution is the
+  // one that fills the round, the escrow auto-settles it (RoundSettled) — we
+  // then stamp the matching ledger payout/fee rows with this settlement tx hash.
+  if (row.kind === "escrow_contribute") {
+    const result = await escrowContribute({
+      fromPrivateKey,
+      escrow: row.toAddress,
+      amountCents: row.amountCents,
+    });
+    if (result.status === "confirmed") {
+      await markConfirmed(row, result.hash);
+      if (result.settledRound != null) {
+        const circleId = circleIdFromMemo(row.memo);
+        if (circleId) {
+          await backfillPayoutSettlement(circleId, result.settledRound, result.hash);
+        }
+      }
+      return true;
+    }
+    await requeueOrFail(row, result.reason);
+    return false;
+  }
+
+  // Default (withdrawal and any legacy direct transfers): a plain ERC20 send.
   const result = await sendUsdc({
     fromPrivateKey,
     to: row.toAddress,

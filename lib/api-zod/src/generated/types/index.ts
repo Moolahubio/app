@@ -10,6 +10,7 @@ export * from './activityItem';
 export * from './amountInput';
 export * from './apiError';
 export * from './authUser';
+export * from './circleContribution';
 export * from './circleDetail';
 export * from './circleInput';
 export * from './circleInvite';

@@ -5,6 +5,7 @@
  * MoolaHub API — social savings platform on Base blockchain
  * OpenAPI spec version: 0.1.0
  */
+import type { CircleContribution } from './circleContribution';
 import type { CircleMember } from './circleMember';
 import type { CirclePendingInvite } from './circlePendingInvite';
 
@@ -17,11 +18,18 @@ export interface CircleDetail {
   contributionCents: number;
   payoutCents: number;
   potCents: number;
+  memberCount?: number;
   currentRound: number;
   totalRounds: number;
   /** @nullable */
   startDate: string | null;
+  /** @nullable */
+  contractAddress?: string | null;
+  feeBps?: number;
+  /** @nullable */
+  explorerUrl?: string | null;
   members: CircleMember[];
+  history?: CircleContribution[];
   /** @nullable */
   myContributionStatus?: string | null;
   /** @nullable */

@@ -6,12 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CircleMember {
+export interface CircleContribution {
   id: string;
-  name: string;
-  position?: number;
-  payoutRound: number;
-  state: string;
-  paidOut: boolean;
-  contributedThisRound?: boolean;
+  round: number;
+  amountCents: number;
+  /** @nullable */
+  txHash?: string | null;
+  status: string;
+  createdAt: string;
 }

@@ -33,6 +33,11 @@ export const transactionsTable = pgTable("transactions", {
   type: text("type").notNull(),
   description: text("description").notNull(),
   userId: uuid("user_id").references(() => usersTable.id, { onDelete: "set null" }),
+  // Circle + round context, set on circle contributions/payouts/fees so the
+  // reconciler can confirm a rotation payout against the on-chain RoundSettled
+  // event (which settles atomically with the final contribution) by circle+round.
+  circleId: uuid("circle_id").references(() => circlesTable.id, { onDelete: "set null" }),
+  round: integer("round"),
   txHash: text("tx_hash"),
   onchainStatus: text("onchain_status").notNull().default("none"),
   onchainXdr: text("onchain_xdr"),

@@ -42,6 +42,28 @@ it confirms, so once the platform wallet is funded everything self-heals.
   returned from the claim holds the PRE-increment value — the attempt just made
   is `row.attempts + 1`. Use that when comparing to a max, or you're off by one.
 
+## Rotation payout settlement is backfill-by-(circleId, round), not a queue row
+Rotation payout/fee transactions are NOT enqueued. The escrow settles the round
+on-chain itself when the last member contributes; the reconciler stamps the
+payout/fee ledger rows confirmed by matching `(circleId, round)` when it sees
+`RoundSettled` while processing that contribution (`backfillPayoutSettlement`).
+- **Ordering invariant:** the payout/fee rows MUST exist before the reconciler
+  can detect `RoundSettled`, or the backfill updates 0 rows and the payout is
+  stranded `pending` forever (no retry path — they're not queued).
+  `contribute()` therefore runs `maybeProcessPayout()` BEFORE `kickReconciler()`.
+  **Why:** the on-chain contribute takes seconds while the ledger payout write is
+  sub-second, so even the independent 15s interval reconciler can't outrun it —
+  but only if the rows are created first. Do not move the kick before the payout.
+
+## startCircle escrow deploy is a TOCTOU — write must be compare-and-set
+`startCircle` reads `status='forming'`, deploys the escrow (seconds), then writes.
+The final update is conditioned on `status='forming'` (returning rows; 0 → throw
+"already started"). **Why:** without it, two concurrent starts could both write —
+one with the confirmed `contractAddress`, the other with a null ledger-only
+fallback that overwrites it, silently downgrading a circle that has a live escrow.
+The factory keys escrows by `circleId` and returns the existing one, so the
+duplicate deploy is harmless; the compare-and-set is what protects the address.
+
 ## Operational dependency
 The platform wallet must hold Base Sepolia ETH (gas) + test USDC. When unfunded,
 the reconciler attempt fails with `"gas required exceeds allowance (0)"` and the

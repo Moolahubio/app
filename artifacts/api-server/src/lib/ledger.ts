@@ -98,6 +98,9 @@ type TransferParams = {
   amountCents: number;
   onchain?: OnchainMeta;
   requireSufficientFrom?: boolean;
+  /** Circle context, for rotation contributions/payouts/fees. */
+  circleId?: string | null;
+  round?: number | null;
 };
 
 async function runTransfer(tx: Executor, params: TransferParams) {
@@ -119,6 +122,8 @@ async function runTransfer(tx: Executor, params: TransferParams) {
       type: params.type,
       description: params.description,
       userId: params.userId ?? null,
+      circleId: params.circleId ?? null,
+      round: params.round ?? null,
       txHash: params.onchain?.txHash ?? null,
       onchainStatus: params.onchain?.onchainStatus ?? "none",
       onchainXdr: params.onchain?.onchainXdr ?? null,

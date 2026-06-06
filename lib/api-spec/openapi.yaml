@@ -1008,16 +1008,28 @@ components:
           type: integer
         potCents:
           type: integer
+        memberCount:
+          type: integer
         currentRound:
           type: integer
         totalRounds:
           type: integer
         startDate:
           type: ["string", "null"]
+        contractAddress:
+          type: ["string", "null"]
+        feeBps:
+          type: integer
+        explorerUrl:
+          type: ["string", "null"]
         members:
           type: array
           items:
             $ref: "#/components/schemas/CircleMember"
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/CircleContribution"
         myContributionStatus:
           type: ["string", "null"]
         myPayoutRound:
@@ -1054,6 +1066,8 @@ components:
           type: string
         name:
           type: string
+        position:
+          type: integer
         payoutRound:
           type: integer
         state:
@@ -1062,6 +1076,23 @@ components:
           type: boolean
         contributedThisRound:
           type: boolean
+
+    CircleContribution:
+      type: object
+      required: [id, round, amountCents, status, createdAt]
+      properties:
+        id:
+          type: string
+        round:
+          type: integer
+        amountCents:
+          type: integer
+        txHash:
+          type: ["string", "null"]
+        status:
+          type: string
+        createdAt:
+          type: string
 
     CircleInvite:
       type: object
