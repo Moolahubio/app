@@ -1,7 +1,7 @@
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import { eq, lt } from "drizzle-orm";
+import { and, eq, gt, lt } from "drizzle-orm";
 import { db, twoFactorChallengesTable } from "@workspace/db";
 import { encryptSecret, decryptSecret } from "./crypto";
 
@@ -119,6 +119,23 @@ export async function getTwoFactorChallenge(
 /** Consume the challenge once the second factor has been verified. */
 export async function deleteTwoFactorChallenge(id: string): Promise<void> {
   await db.delete(twoFactorChallengesTable).where(eq(twoFactorChallengesTable.id, id));
+}
+
+/**
+ * Atomically consume a live challenge: deletes the row and returns it only if it
+ * still existed and had not expired. Two concurrent logins racing the same
+ * challenge can't both succeed — exactly one delete returns a row, the other gets
+ * null. Call this only after the second factor has been verified.
+ */
+export async function consumeTwoFactorChallenge(
+  id: string,
+): Promise<{ userId: string; rememberMe: boolean } | null> {
+  const [row] = await db
+    .delete(twoFactorChallengesTable)
+    .where(and(eq(twoFactorChallengesTable.id, id), gt(twoFactorChallengesTable.expiresAt, new Date())))
+    .returning();
+  if (!row) return null;
+  return { userId: row.userId, rememberMe: row.rememberMe };
 }
 
 /**

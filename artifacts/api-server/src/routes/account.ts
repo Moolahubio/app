@@ -7,6 +7,7 @@ import {
   passkeysTable,
   circlesTable,
   circleMembersTable,
+  goalsTable,
 } from "@workspace/db";
 import { DeactivateAccountResponse, DeleteAccountBody, DeleteAccountResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
@@ -60,6 +61,17 @@ router.delete("/account", requireAuth, async (req, res): Promise<void> => {
   if (activeCircles.length) {
     res.status(409).json({
       error: "Leave or complete your active circles before deleting your account.",
+    });
+    return;
+  }
+
+  const activeGoals = await db
+    .select({ id: goalsTable.id })
+    .from(goalsTable)
+    .where(and(eq(goalsTable.userId, user.id), eq(goalsTable.status, "active")));
+  if (activeGoals.length) {
+    res.status(409).json({
+      error: "Release your active goals before deleting your account.",
     });
     return;
   }

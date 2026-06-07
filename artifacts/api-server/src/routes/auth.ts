@@ -21,6 +21,7 @@ import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
   deleteTwoFactorChallenge,
+  consumeTwoFactorChallenge,
   verifyTwoFactorCode,
 } from "../lib/twofactor";
 
@@ -161,8 +162,15 @@ router.post("/auth/2fa/login", async (req, res): Promise<void> => {
     return;
   }
 
-  // Success — consume the challenge and persist any backup-code usage.
-  await deleteTwoFactorChallenge(parsed.data.challengeId);
+  // Success — atomically consume the challenge so it can be used exactly once.
+  // If a concurrent request already consumed it, this returns null and we reject
+  // rather than mint a second session from the same challenge.
+  const consumed = await consumeTwoFactorChallenge(parsed.data.challengeId);
+  if (!consumed) {
+    res.status(400).json({ error: "Your verification session expired. Please sign in again." });
+    return;
+  }
+
   if (result.remainingBackupHashes) {
     await db
       .update(usersTable)
@@ -174,8 +182,8 @@ router.post("/auth/2fa/login", async (req, res): Promise<void> => {
   }
 
   const wallet = await createWalletForUser(user.id);
-  const token = await createSession(user.id, challenge.rememberMe);
-  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(challenge.rememberMe) });
+  const token = await createSession(user.id, consumed.rememberMe);
+  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(consumed.rememberMe) });
 
   res.json(
     TwoFactorLoginResponse.parse({
