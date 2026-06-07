@@ -215,7 +215,7 @@ export default function CircleDetailPage() {
                   key={m.id}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                    current ? "border-jade-500/30 bg-jade-50" : "border-border bg-card",
+                    current ? "border-jade-500/30 bg-jade-50 dark:border-jade-500/20 dark:bg-jade-500/10" : "border-border bg-card",
                   )}
                 >
                   {!isAccumulation && (

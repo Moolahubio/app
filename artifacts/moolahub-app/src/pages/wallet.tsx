@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, Clock } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
-import { PageHeader } from "@/components/app/bits";
+import { PageHeader, BackLink } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
 import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatMoney, apiErrorMessage } from "@/lib/utils";
@@ -27,6 +27,7 @@ export default function WalletPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <BackLink href="/profile" label="Account" />
       <PageHeader
         eyebrow="Wallet"
         title="Deposit & withdraw USDC"

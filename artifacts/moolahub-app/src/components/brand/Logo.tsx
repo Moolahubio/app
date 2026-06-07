@@ -1,17 +1,20 @@
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/hooks/use-theme";
 
 type Tone = "ink" | "light";
 
 export function MoolaMark({
   className,
-  tone = "ink",
+  tone,
   title = "MoolaHub",
 }: {
   className?: string;
   tone?: Tone;
   title?: string;
 }) {
-  const ring = tone === "light" ? "#FFFFFF" : "#0E9E6E";
+  const { resolvedTheme } = useTheme();
+  const effectiveTone: Tone = tone ?? (resolvedTheme === "dark" ? "light" : "ink");
+  const ring = effectiveTone === "light" ? "#FFFFFF" : "#0E9E6E";
   const star = "#0E9E6E";
   return (
     <svg
@@ -53,7 +56,7 @@ export function MoolaMark({
 
 export function Logo({
   className,
-  tone = "ink",
+  tone,
   markClassName,
 }: {
   className?: string;
@@ -61,8 +64,10 @@ export function Logo({
   markClassName?: string;
   showWordmark?: boolean;
 }) {
+  const { resolvedTheme } = useTheme();
+  const effectiveTone: Tone = tone ?? (resolvedTheme === "dark" ? "light" : "ink");
   const src =
-    tone === "light"
+    effectiveTone === "light"
       ? `${import.meta.env.BASE_URL}brand/moolahub_logo_horizontal_dark.svg`
       : `${import.meta.env.BASE_URL}brand/moolahub_logo_horizontal.svg`;
   return (
