@@ -19,6 +19,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { sendError } from "../lib/errors";
+import { ObjectStorageService } from "../lib/objectStorage";
 import {
   createCircle,
   listCirclesForUser,
@@ -53,6 +54,18 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const imageUrl = parsed.data.imageUrl;
+  if (imageUrl != null && imageUrl !== "") {
+    // Only a real, allowlisted internal uploaded image may be stored — never an
+    // arbitrary external URL (which would be fetched in other members' browsers:
+    // tracking / SSRF) nor a disguised non-image upload.
+    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
+    if (!usable) {
+      res.status(400).json({ error: "Invalid circle image." });
+      return;
+    }
+  }
+
   let circleId: string;
   try {
     const circle = await createCircle(user.id, {
@@ -62,7 +75,7 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
       numRounds: parsed.data.numRounds,
       frequency: parsed.data.frequency,
       memberEmails: parsed.data.memberEmails,
-      imageUrl: parsed.data.imageUrl ?? null,
+      imageUrl: imageUrl ?? null,
     });
     circleId = circle.id;
   } catch (e) {

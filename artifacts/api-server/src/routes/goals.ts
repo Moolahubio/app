@@ -15,6 +15,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { sendError } from "../lib/errors";
+import { ObjectStorageService } from "../lib/objectStorage";
 import {
   listGoals,
   getGoal,
@@ -83,6 +84,18 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const imageUrl = parsed.data.imageUrl;
+  if (imageUrl != null && imageUrl !== "") {
+    // Only a real, allowlisted internal uploaded image may be stored — never an
+    // arbitrary external URL (fetched in the user's browser: tracking / SSRF)
+    // nor a disguised non-image upload.
+    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
+    if (!usable) {
+      res.status(400).json({ error: "Invalid goal image." });
+      return;
+    }
+  }
+
   const goal = await createGoal(user.id, {
     name: parsed.data.name,
     emoji: parsed.data.emoji,
@@ -91,7 +104,7 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
     deadline: new Date(parsed.data.deadline),
     frequency: parsed.data.frequency,
     autoSaveCents: parsed.data.autoSaveCents ?? null,
-    imageUrl: parsed.data.imageUrl ?? null,
+    imageUrl: imageUrl ?? null,
   });
 
   res.status(201).json(GetGoalResponse.parse(goalToJson(goal)));
