@@ -51,13 +51,13 @@ export function pct(part: number, whole: number) {
 }
 
 /** Resolve a stored avatar value to a displayable URL. Stored avatars are object
- * storage paths (e.g. "/objects/<id>") served through the storage route; absolute
- * URLs are returned unchanged. */
+ * storage paths (e.g. "/objects/<id>") served through the storage route. Only
+ * internal object paths are honored; arbitrary external URLs are ignored so a
+ * crafted value can't load third-party content in other users' browsers. */
 export function avatarSrc(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
-  if (/^https?:\/\//.test(value)) return value;
   if (value.startsWith("/objects/")) return `/api/storage${value}`;
-  return value;
+  return undefined;
 }
 
 /** Extract a human-readable message from an API error (ErrorType<ApiError> or unknown). */

@@ -3,6 +3,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { db, usersTable, walletsTable } from "@workspace/db";
 import { UpdateProfileBody, GetProfileResponse, UpdateProfileResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { ObjectStorageService } from "../lib/objectStorage";
 
 const router: IRouter = Router();
 
@@ -46,7 +47,20 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
     }
     updates.name = name;
   }
-  if (parsed.data.avatarUrl !== undefined) updates.avatarUrl = parsed.data.avatarUrl;
+  if (parsed.data.avatarUrl !== undefined) {
+    const a = parsed.data.avatarUrl;
+    if (a !== null && a !== "") {
+      // Only a real, allowlisted internal uploaded image is allowed — never an
+      // arbitrary external URL (rendered in other users' browsers) nor a
+      // disguised non-image upload.
+      const usable = await new ObjectStorageService().isUsableImageObject(a);
+      if (!usable) {
+        res.status(400).json({ error: "Invalid profile image." });
+        return;
+      }
+    }
+    updates.avatarUrl = a || null;
+  }
   if (parsed.data.dateOfBirth !== undefined) updates.dateOfBirth = parsed.data.dateOfBirth || null;
   if (parsed.data.nationality !== undefined) updates.nationality = parsed.data.nationality || null;
 

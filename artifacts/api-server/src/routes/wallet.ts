@@ -12,7 +12,7 @@ import { sendError } from "../lib/errors";
 import { createWalletForUser } from "../lib/wallet";
 import { userBalances } from "../lib/ledger";
 import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
-import { onchainEnabled, networkName } from "../lib/chain";
+import { onchainEnabled, networkName, faucetEnabled } from "../lib/chain";
 
 const router: IRouter = Router();
 
@@ -35,6 +35,13 @@ router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/wallet/deposit", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
+  // The faucet mints test balance with no real funding source. Refuse it
+  // outright on mainnet / when disabled so it can't be used to conjure
+  // spendable funds in production.
+  if (!faucetEnabled()) {
+    res.status(403).json({ error: "The test faucet is not available." });
+    return;
+  }
   const parsed = DepositFaucetBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request" });

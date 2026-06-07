@@ -8,6 +8,7 @@
 - [MoolaHub Goals on-chain](moolahub-goals-onchain.md) — deposits free, every withdrawal (release+delete) 2% fee; deleteGoal flips status BEFORE drain; goal_withdraw confirms net+fee atomically; degradation config-gated (mirrors circles).
 - [MoolaHub backend tests](moolahub-backend-tests.md) — run flow tests via tsx against real DB; delete USDC/PLATFORM/RESEND env BEFORE imports (snapshotted at load) for offline determinism; clean up in finally.
 - [API responses filtered by schema](openapi-response-parse-strips-fields.md) — route .parse() strips fields not in openapi.yaml response schema, so backend-returned fields silently never reach the client until declared + codegen'd.
+- [Image upload hardening](moolahub-image-upload-hardening.md) — signed PUT URLs don't bind type/size; every image-field write must isUsableImageObject() (verify stored metadata) + keep sanitized serve.
 - [pnpm transitive-vuln overrides](pnpm-transitive-vuln-overrides.md) — fix flagged CVEs with version-TARGETED root pnpm.overrides keys (`pkg@badver`), never blanket names which downgrade healthy newer copies.
 - [drizzle-kit push TTY block](drizzle-push-tty.md) — `push` errors on no-TTY when prompting (e.g. UNIQUE on populated table); apply additive DDL via direct SQL with the exact constraint name drizzle expects.
 - [Fixed overlays + backdrop-filter](moolahub-overlay-backdrop-filter.md) — app shell header uses backdrop-blur, so `fixed inset-0` resolves to the header box not the viewport; use a document pointerdown listener (or a body portal) for click-outside/modals.

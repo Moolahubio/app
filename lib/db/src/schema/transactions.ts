@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, integer, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -42,7 +43,16 @@ export const transactionsTable = pgTable("transactions", {
   onchainStatus: text("onchain_status").notNull().default("none"),
   onchainXdr: text("onchain_xdr"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // A given on-chain deposit (tx hash) can only ever be credited once. This is
+  // the authoritative guard against concurrent /wallet/sync calls double-
+  // crediting the same incoming USDC payment: the second insert fails on this
+  // unique index and is skipped. Partial so it ignores faucet/other rows whose
+  // tx_hash is null and only applies to deposit credits.
+  uniqueIndex("transactions_deposit_tx_hash_uniq")
+    .on(t.txHash)
+    .where(sql`${t.type} = 'deposit' and ${t.txHash} is not null`),
+]);
 
 export const postingsTable = pgTable("postings", {
   id: uuid("id").primaryKey().defaultRandom(),

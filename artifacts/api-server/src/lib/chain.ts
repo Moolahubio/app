@@ -117,6 +117,19 @@ export function onchainEnabled(): boolean {
   return Boolean(platformKey() && USDC_ADDRESS);
 }
 
+/**
+ * Whether the test-USDC faucet may mint balances. The faucet is a *testnet
+ * convenience only* — it credits the ledger without a real funding source, so
+ * it must never be reachable on mainnet (where it would let any user mint
+ * spendable balance from nothing). On a test network it is enabled by default
+ * but can be turned off with `ENABLE_TEST_FAUCET=false` as an operator kill
+ * switch.
+ */
+export function faucetEnabled(): boolean {
+  if (IS_MAINNET) return false;
+  return process.env.ENABLE_TEST_FAUCET !== "false";
+}
+
 export function usdcContract(): Address | null {
   return USDC_ADDRESS && isAddress(USDC_ADDRESS) ? getAddress(USDC_ADDRESS) : null;
 }

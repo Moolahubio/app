@@ -9,6 +9,7 @@ import {
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
+import { ObjectStorageService } from "./objectStorage";
 import { onchainEnabled, explorerUrl, escrowEnabled, deployCircleEscrow } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
@@ -78,6 +79,15 @@ export async function createCircle(
   if (input.contributionCents <= 0) throw new AppError("Enter a contribution amount.");
   const type = input.type === "accumulation" ? "accumulation" : "rotation";
 
+  // Only accept an internal uploaded image reference, verified to be a real,
+  // allowlisted image within the size cap. Rejects arbitrary external URLs (which
+  // would be rendered in every member's browser) and disguised non-image uploads.
+  const imageUrl = input.imageUrl ?? null;
+  if (imageUrl !== null) {
+    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
+    if (!usable) throw new AppError("Invalid circle image.");
+  }
+
   // For accumulation circles the organizer chooses how many rounds the circle
   // runs, and each member receives their own savings back (contribution × rounds)
   // at the end. For rotation, rounds are derived from member count at start, and
@@ -96,7 +106,7 @@ export async function createCircle(
     .values({
       name: input.name.trim(),
       createdById: userId,
-      imageUrl: input.imageUrl ?? null,
+      imageUrl,
       type,
       contributionCents: input.contributionCents,
       payoutCents,

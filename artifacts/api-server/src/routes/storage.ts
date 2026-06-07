@@ -4,11 +4,18 @@ import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from "@workspace/api-zod";
-import { ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
+import {
+  ObjectStorageService,
+  ObjectNotFoundError,
+  ALLOWED_IMAGE_TYPES,
+} from "../lib/objectStorage";
 import { requireAuth } from "../lib/auth";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+
+/** Hard cap on uploads (avatars / circle images are small). */
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 /**
  * POST /storage/uploads/request-url
@@ -24,9 +31,22 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: Request, re
     return;
   }
 
-  try {
-    const { name, size, contentType } = parsed.data;
+  const { name, size, contentType } = parsed.data;
 
+  // Only images may be uploaded into the private namespace, and only up to a
+  // sane size. This (together with sanitized serving below) prevents the bucket
+  // from being used to host arbitrary HTML/JS that would execute from our
+  // origin.
+  if (!contentType || !ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
+    res.status(400).json({ error: "Only PNG, JPEG, WebP, or GIF images can be uploaded." });
+    return;
+  }
+  if (typeof size === "number" && size > MAX_UPLOAD_BYTES) {
+    res.status(400).json({ error: "Image is too large (max 10MB)." });
+    return;
+  }
+
+  try {
     const uploadURL = await objectStorageService.getObjectEntityUploadURL();
     const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
 
@@ -93,7 +113,10 @@ router.get("/storage/objects/*path", requireAuth, async (req: Request, res: Resp
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
 
-    const response = await objectStorageService.downloadObject(objectFile);
+    // These are user-uploaded, untrusted files. Serve them with content-type
+    // sanitization (nosniff + non-image → octet-stream attachment) so a
+    // disguised HTML/JS upload can never execute from our origin.
+    const response = await objectStorageService.downloadObject(objectFile, { sanitize: true });
 
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));

@@ -37,6 +37,26 @@ export class ObjectNotFoundError extends Error {
   }
 }
 
+/** Content types we accept as user-uploaded images and serve inline. SVG is
+ * deliberately excluded — it can carry executable script. */
+export const ALLOWED_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
+
+/**
+ * Whether a value is a safe internal object-storage reference (e.g. an avatar
+ * or circle image previously uploaded through this app). Used to reject
+ * arbitrary absolute/external URLs from being stored as image fields, which
+ * would otherwise be rendered in other users' browsers (tracking / SSRF / mixed
+ * content). Only our own `/objects/<id>` paths are allowed.
+ */
+export function isStoredObjectPath(value: string): boolean {
+  return /^\/objects\/[A-Za-z0-9._/-]+$/.test(value);
+}
+
 export class ObjectStorageService {
   constructor() {}
 
@@ -87,7 +107,11 @@ export class ObjectStorageService {
     return null;
   }
 
-  async downloadObject(file: File, cacheTtlSec: number = 3600): Promise<Response> {
+  async downloadObject(
+    file: File,
+    opts: { cacheTtlSec?: number; sanitize?: boolean } = {},
+  ): Promise<Response> {
+    const cacheTtlSec = opts.cacheTtlSec ?? 3600;
     const [metadata] = await file.getMetadata();
     const aclPolicy = await getObjectAclPolicy(file);
     const isPublic = aclPolicy?.visibility === "public";
@@ -95,10 +119,25 @@ export class ObjectStorageService {
     const nodeStream = file.createReadStream();
     const webStream = Readable.toWeb(nodeStream) as ReadableStream;
 
+    let contentType = (metadata.contentType as string) || "application/octet-stream";
+
     const headers: Record<string, string> = {
-      "Content-Type": (metadata.contentType as string) || "application/octet-stream",
       "Cache-Control": `${isPublic ? "public" : "private"}, max-age=${cacheTtlSec}`,
     };
+
+    // For user-uploaded (untrusted) objects, never let the file be interpreted
+    // as active content from our own origin. Stop MIME sniffing, and downgrade
+    // anything that isn't a known-safe image to an octet-stream attachment so a
+    // disguised HTML/JS upload can't execute when fetched.
+    if (opts.sanitize) {
+      headers["X-Content-Type-Options"] = "nosniff";
+      if (!ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
+        contentType = "application/octet-stream";
+        headers["Content-Disposition"] = "attachment";
+      }
+    }
+
+    headers["Content-Type"] = contentType;
     if (metadata.size) {
       headers["Content-Length"] = String(metadata.size);
     }
@@ -126,6 +165,34 @@ export class ObjectStorageService {
       method: "PUT",
       ttlSec: 900,
     });
+  }
+
+  /**
+   * Verify an uploaded object path points to a real, allowlisted image within
+   * the size cap. The signed PUT URL itself is not constrained, so the upload
+   * content-type/size policy is actually *enforced here* — at the moment an
+   * object is accepted as an avatar / circle image — by inspecting the stored
+   * object's real metadata. Returns false (rather than throwing) so callers can
+   * reject with a friendly message.
+   */
+  async isUsableImageObject(
+    objectPath: string,
+    maxBytes: number = 10 * 1024 * 1024,
+  ): Promise<boolean> {
+    if (!isStoredObjectPath(objectPath)) return false;
+    try {
+      const file = await this.getObjectEntityFile(objectPath);
+      const [metadata] = await file.getMetadata();
+      const contentType = (metadata.contentType as string | undefined)?.toLowerCase();
+      if (!contentType || !ALLOWED_IMAGE_TYPES.has(contentType)) return false;
+      // Fail closed: missing or non-finite size metadata is treated as invalid
+      // rather than passing the cap check.
+      const size = Number(metadata.size);
+      if (!Number.isFinite(size) || size <= 0 || size > maxBytes) return false;
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async getObjectEntityFile(objectPath: string): Promise<File> {

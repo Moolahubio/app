@@ -13,6 +13,7 @@ import { formatMoney } from "./money";
 import { goalVaultEnabled, goalVaultContract, explorerUrl, networkName } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { recordSave } from "./streaks";
+import { ObjectStorageService } from "./objectStorage";
 
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
 // feeBps (2%). Deposits are free. When the vault isn't configured/reachable,
@@ -121,6 +122,15 @@ export async function createGoal(
     imageUrl?: string | null;
   },
 ) {
+  // Only accept a real, allowlisted internal uploaded image within the size cap.
+  // The signed PUT URL isn't constrained, so this is the enforcement point —
+  // rejecting external URLs and disguised non-image uploads.
+  const imageUrl = input.imageUrl ?? null;
+  if (imageUrl !== null) {
+    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
+    if (!usable) throw new AppError("Invalid goal image.");
+  }
+
   const [goal] = await db
     .insert(goalsTable)
     .values({
@@ -132,7 +142,7 @@ export async function createGoal(
       frequency: input.frequency || "weekly",
       autoSaveCents: input.autoSaveCents ?? null,
       color: input.color || "jade",
-      imageUrl: input.imageUrl ?? null,
+      imageUrl,
     })
     .returning();
   return { ...goal, savedCents: 0, ...goalOnchainMeta(), history: [] as GoalHistoryItem[] };
