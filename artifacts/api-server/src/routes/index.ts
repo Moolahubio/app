@@ -11,6 +11,8 @@ import notificationsRouter from "./notifications";
 import profileRouter from "./profile";
 import storageRouter from "./storage";
 import passkeysRouter from "./passkeys";
+import securityRouter from "./security";
+import accountRouter from "./account";
 import operationsRouter from "./operations";
 import streaksRouter from "./streaks";
 
@@ -28,6 +30,8 @@ router.use(notificationsRouter);
 router.use(profileRouter);
 router.use(storageRouter);
 router.use(passkeysRouter);
+router.use(securityRouter);
+router.use(accountRouter);
 router.use(operationsRouter);
 router.use(streaksRouter);
 

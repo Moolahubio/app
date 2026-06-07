@@ -11,6 +11,12 @@ export interface UserProfile {
   name: string;
   email: string;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  dateOfBirth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   /** @nullable */
   walletAddress: string | null;

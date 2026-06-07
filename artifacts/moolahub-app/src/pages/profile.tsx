@@ -2,22 +2,21 @@ import { useRef, useState } from "react";
 import {
   Wallet as WalletIcon,
   Bell,
-  Globe,
   LogOut,
-  TrendingUp,
   ChevronRight,
   Camera,
   Pencil,
   Check,
   X,
   ShieldCheck,
+  UserCircle,
+  Receipt,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { Card, Avatar, Button, Eyebrow } from "@/components/ui";
+import { Card, Avatar, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
-import { PasskeysCard } from "@/components/app/PasskeysCard";
-import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { ManageAccountCard } from "@/components/app/ManageAccountCard";
 import {
   useGetMe,
   useGetDashboardSummary,
@@ -31,13 +30,61 @@ import { formatMoney, truncateAddress, avatarSrc, apiErrorMessage } from "@/lib/
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 
-const settings = [
-  { icon: WalletIcon, label: "View wallet", detail: "Balance & address on Base", href: "/wallet" },
-  { icon: Bell, label: "Notifications", detail: "Reminders and activity", href: "/notifications" },
-  { icon: TrendingUp, label: "Activity & yield", detail: "Ledger and earnings", href: "/activity" },
-  { icon: Globe, label: "Learn", detail: "Financial empowerment", href: "/learn" },
-  { icon: ShieldCheck, label: "Wallet security", detail: "Deposits on Base", href: "/wallet" },
-] as const;
+type Item = {
+  icon: typeof WalletIcon;
+  label: string;
+  detail: string;
+  href: string;
+};
+
+const accountItems: Item[] = [
+  { icon: UserCircle, label: "Profile information", detail: "Name, username, date of birth", href: "/profile/information" },
+  { icon: WalletIcon, label: "Wallets", detail: "Balance & address on Base", href: "/wallet" },
+];
+
+const settingsItems: Item[] = [
+  { icon: ShieldCheck, label: "Security", detail: "Passkeys & two-factor", href: "/profile/security" },
+  { icon: Bell, label: "Notifications", detail: "Choose what reaches you", href: "/profile/notifications" },
+  { icon: Receipt, label: "Activity & yield", detail: "Ledger and earnings", href: "/activity" },
+];
+
+function SettingsList({ items }: { items: Item[] }) {
+  return (
+    <Card className="overflow-hidden p-1">
+      <div className="divide-y divide-border">
+        {items.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-accent"
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.detail}</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Link>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      {children}
+    </p>
+  );
+}
 
 export default function ProfilePage() {
   const { data: user, isLoading: isUserLoading } = useGetMe();
@@ -110,8 +157,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <PageHeader eyebrow="Profile" title="Account & settings" />
+    <div className="mx-auto max-w-2xl space-y-6">
+      <PageHeader eyebrow="Profile" title="Account" />
 
       {/* identity card */}
       <Card className="relative overflow-hidden border-ink-900 bg-ink-950 p-6 text-white lg:p-8">
@@ -236,46 +283,23 @@ export default function ProfilePage() {
         </Card>
       </div>
 
-      {/* appearance */}
-      <Card className="p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-foreground">Appearance</p>
-            <p className="text-xs text-muted-foreground">Choose light, dark, or match your device</p>
-          </div>
-          <ThemeToggle variant="full" className="w-full sm:w-auto" />
-        </div>
-      </Card>
+      {/* account */}
+      <div className="space-y-2">
+        <SectionLabel>Account</SectionLabel>
+        <SettingsList items={accountItems} />
+      </div>
 
-      {/* passkeys */}
-      <PasskeysCard />
+      {/* settings */}
+      <div className="space-y-2">
+        <SectionLabel>Settings</SectionLabel>
+        <SettingsList items={settingsItems} />
+      </div>
 
-      {/* settings list */}
-      <Card className="overflow-hidden p-1">
-        <div className="divide-y divide-border">
-          {settings.map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-accent"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                    <p className="text-xs text-muted-foreground">{item.detail}</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </Link>
-            );
-          })}
-        </div>
-      </Card>
+      {/* manage account */}
+      <div className="space-y-2">
+        <SectionLabel>Manage account</SectionLabel>
+        <ManageAccountCard />
+      </div>
 
       <button
         onClick={() => {

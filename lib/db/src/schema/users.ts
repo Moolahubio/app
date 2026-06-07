@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, boolean, integer, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -8,6 +8,21 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   privyDid: text("privy_did").unique(),
   avatarUrl: text("avatar_url"),
+  // Profile information the member can edit.
+  username: text("username").unique(),
+  dateOfBirth: text("date_of_birth"),
+  nationality: text("nationality"),
+  // Notification preference tier + optional per-category custom map.
+  notificationPreference: text("notification_preference").notNull().default("everything"),
+  notificationPrefs: jsonb("notification_prefs").$type<Record<string, boolean>>(),
+  // Account lifecycle: deactivation is reversible (cleared on next login); a set
+  // deletedAt means the account was deleted (PII cleared, access revoked).
+  deactivatedAt: timestamp("deactivated_at", { withTimezone: true }),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  // Authenticator-app 2FA (TOTP). Secret is stored encrypted; backup codes hashed.
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+  twoFactorSecret: text("two_factor_secret"),
+  twoFactorBackupCodes: jsonb("two_factor_backup_codes").$type<string[]>(),
   // Streaks: evaluate periods/badges/freezes/vacation in the user's local tz.
   timezone: text("timezone").notNull().default("UTC"),
   streakReminderOptIn: boolean("streak_reminder_opt_in").notNull().default(false),

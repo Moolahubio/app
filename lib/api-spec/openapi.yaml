@@ -177,11 +177,11 @@ paths:
               $ref: "#/components/schemas/PasskeyLoginVerifyInput"
       responses:
         "200":
-          description: Logged in
+          description: Logged in (or a 2FA challenge when the account requires it)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthUser"
+                $ref: "#/components/schemas/LoginResult"
         "400":
           description: Verification failed
           content:
@@ -247,11 +247,195 @@ paths:
               $ref: "#/components/schemas/PrivyAuthInput"
       responses:
         "200":
-          description: Logged in via Privy
+          description: Logged in via Privy (or a 2FA challenge when the account requires it)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+
+  /auth/2fa/login:
+    post:
+      operationId: twoFactorLogin
+      tags: [auth]
+      summary: Complete login by verifying a 2FA code (TOTP or backup code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorLoginInput"
+      responses:
+        "200":
+          description: Logged in
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ---- Security (2FA) ----
+  /security/2fa:
+    get:
+      operationId: getTwoFactorStatus
+      tags: [security]
+      summary: Get authenticator-app 2FA status
+      responses:
+        "200":
+          description: 2FA status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorStatus"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /security/2fa/setup:
+    post:
+      operationId: setupTwoFactor
+      tags: [security]
+      summary: Begin 2FA setup (returns secret + QR to scan)
+      responses:
+        "200":
+          description: Setup material
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorSetup"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /security/2fa/enable:
+    post:
+      operationId: enableTwoFactor
+      tags: [security]
+      summary: Confirm a code to enable 2FA (returns one-time backup codes)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorCodeInput"
+      responses:
+        "200":
+          description: Enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupCodes"
+        "400":
+          description: Invalid code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /security/2fa/disable:
+    post:
+      operationId: disableTwoFactor
+      tags: [security]
+      summary: Disable 2FA (requires a current TOTP or backup code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorCodeInput"
+      responses:
+        "200":
+          description: Disabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Invalid code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /security/2fa/backup-codes:
+    post:
+      operationId: regenerateBackupCodes
+      tags: [security]
+      summary: Regenerate backup codes (requires a current TOTP or backup code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorCodeInput"
+      responses:
+        "200":
+          description: New backup codes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackupCodes"
+        "400":
+          description: Invalid code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  # ---- Account ----
+  /account/deactivate:
+    post:
+      operationId: deactivateAccount
+      tags: [account]
+      summary: Deactivate the account (reversible; signs the user out)
+      responses:
+        "200":
+          description: Deactivated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /account:
+    delete:
+      operationId: deleteAccount
+      tags: [account]
+      summary: Permanently delete the account (clears personal data, revokes access)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountInput"
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "409":
+          description: Cannot delete while funds or active commitments remain
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   # ---- Dashboard ----
   /dashboard/summary:
@@ -746,6 +930,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/OkResponse"
 
+  /notifications/preferences:
+    get:
+      operationId: getNotificationPreferences
+      tags: [notifications]
+      summary: Get notification preferences
+      responses:
+        "200":
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+    patch:
+      operationId: updateNotificationPreferences
+      tags: [notifications]
+      summary: Update notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferencesUpdate"
+      responses:
+        "200":
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+
   /notifications/read-all:
     post:
       operationId: markAllNotificationsRead
@@ -1089,6 +1303,118 @@ components:
           type: boolean
         walletAddress:
           type: ["string", "null"]
+
+    LoginResult:
+      type: object
+      required: [twoFactorRequired]
+      description: >-
+        Result of a primary-auth login. When the account has 2FA enabled, only
+        `twoFactorRequired` + `challengeId` are returned and the caller must
+        complete /auth/2fa/login. Otherwise the authenticated user is returned.
+      properties:
+        twoFactorRequired:
+          type: boolean
+        challengeId:
+          type: ["string", "null"]
+        id:
+          type: ["string", "null"]
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        hasWallet:
+          type: ["boolean", "null"]
+        walletAddress:
+          type: ["string", "null"]
+
+    TwoFactorLoginInput:
+      type: object
+      required: [challengeId, code]
+      properties:
+        challengeId:
+          type: string
+        code:
+          type: string
+          description: A 6-digit TOTP code or a backup code.
+
+    TwoFactorStatus:
+      type: object
+      required: [enabled, backupCodesRemaining]
+      properties:
+        enabled:
+          type: boolean
+        backupCodesRemaining:
+          type: integer
+
+    TwoFactorSetup:
+      type: object
+      required: [secret, otpauthUrl, qrDataUrl]
+      properties:
+        secret:
+          type: string
+          description: Base32 secret to type into an authenticator app manually.
+        otpauthUrl:
+          type: string
+        qrDataUrl:
+          type: string
+          description: PNG data URL of the QR code to scan.
+
+    TwoFactorCodeInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: A 6-digit TOTP code or a backup code.
+
+    BackupCodes:
+      type: object
+      required: [backupCodes]
+      properties:
+        backupCodes:
+          type: array
+          items:
+            type: string
+
+    DeleteAccountInput:
+      type: object
+      required: [confirm]
+      properties:
+        confirm:
+          type: string
+          description: Must equal "DELETE" to confirm.
+
+    NotificationPreferences:
+      type: object
+      required: [preference, categories]
+      properties:
+        preference:
+          type: string
+          description: One of everything | essential | minimal | custom.
+        categories:
+          $ref: "#/components/schemas/NotificationCategories"
+
+    NotificationCategories:
+      type: object
+      required: [money, social, engagement]
+      properties:
+        money:
+          type: boolean
+        social:
+          type: boolean
+        engagement:
+          type: boolean
+
+    NotificationPreferencesUpdate:
+      type: object
+      required: [preference]
+      properties:
+        preference:
+          type: string
+        categories:
+          $ref: "#/components/schemas/NotificationCategories"
 
     # ---- Dashboard ----
     DashboardSummary:
@@ -1591,6 +1917,12 @@ components:
           type: string
         email:
           type: string
+        username:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
         walletAddress:
@@ -1603,6 +1935,12 @@ components:
       properties:
         name:
           type: string
+        username:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+        nationality:
+          type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
 

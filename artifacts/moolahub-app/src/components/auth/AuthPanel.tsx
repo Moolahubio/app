@@ -1,10 +1,22 @@
+import { useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { PasskeySignIn } from "./AuthForm";
 import { PrivyAuth } from "./PrivyAuth";
+import { TwoFactorStep } from "./TwoFactorStep";
 
 export function AuthPanel() {
   const appId = import.meta.env.VITE_PRIVY_APP_ID;
   const privyReady = Boolean(appId && appId.length >= 10);
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+
+  if (challengeId) {
+    return (
+      <TwoFactorStep
+        challengeId={challengeId}
+        onCancel={() => setChallengeId(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -18,7 +30,7 @@ export function AuthPanel() {
       </div>
 
       {privyReady ? (
-        <PrivyAuth appId={appId} />
+        <PrivyAuth appId={appId} onTwoFactorRequired={setChallengeId} />
       ) : (
         <p className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-400/25 dark:bg-amber-500/15 dark:text-amber-300" role="alert">
           <AlertCircle className="h-4 w-4 shrink-0" /> Sign-in is not configured yet.
@@ -33,7 +45,7 @@ export function AuthPanel() {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      <PasskeySignIn />
+      <PasskeySignIn onTwoFactorRequired={setChallengeId} />
     </div>
   );
 }

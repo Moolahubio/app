@@ -1,4 +1,4 @@
-import { eq, and, desc, count } from "drizzle-orm";
+import { eq, and, desc, count, inArray } from "drizzle-orm";
 import { db, notificationsTable, usersTable } from "@workspace/db";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 
@@ -11,15 +11,77 @@ export type NotifyInput = {
 
 type NotifyOpts = { email?: boolean };
 
-async function maybeEmail(userId: string, n: NotifyInput, opts?: NotifyOpts) {
+/**
+ * Notification categories drive the per-user preference tiers. Money movements are
+ * the most important (kept even at "minimal"); social activity is added at
+ * "essential"; engagement nudges (streak reminders) only at "everything"/custom.
+ */
+export type NotificationCategory = "money" | "social" | "engagement";
+
+const CATEGORY_BY_TYPE: Record<string, NotificationCategory> = {
+  deposit: "money",
+  withdrawal: "money",
+  payout: "money",
+  refund: "money",
+  contribution: "money",
+  fee: "money",
+  goal_allocate: "money",
+  goal_release: "money",
+  accumulation: "money",
+  invite: "social",
+  invite_accepted: "social",
+  circle_started: "social",
+  rotation: "social",
+  circle: "social",
+  goal: "social",
+  streak_reminder: "engagement",
+};
+
+export function categoryForType(type: string): NotificationCategory {
+  return CATEGORY_BY_TYPE[type] ?? "social";
+}
+
+export const DEFAULT_CATEGORIES: Record<NotificationCategory, boolean> = {
+  money: true,
+  social: true,
+  engagement: true,
+};
+
+/** Resolve the effective per-category switches for a preference tier. */
+export function categoriesForPreference(
+  preference: string | null | undefined,
+  custom: Record<string, boolean> | null | undefined,
+): Record<NotificationCategory, boolean> {
+  switch (preference) {
+    case "minimal":
+      return { money: true, social: false, engagement: false };
+    case "essential":
+      return { money: true, social: true, engagement: false };
+    case "custom":
+      return {
+        money: custom?.money !== false,
+        social: custom?.social !== false,
+        engagement: custom?.engagement !== false,
+      };
+    case "everything":
+    default:
+      return { money: true, social: true, engagement: true };
+  }
+}
+
+function passesPreference(
+  type: string,
+  preference: string | null | undefined,
+  custom: Record<string, boolean> | null | undefined,
+): boolean {
+  return categoriesForPreference(preference, custom)[categoryForType(type)];
+}
+
+async function maybeEmail(email: string | null | undefined, n: NotifyInput, opts?: NotifyOpts) {
   if (!opts?.email) return;
-  const [user] = await db
-    .select({ email: usersTable.email })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-  if (!user?.email || user.email.endsWith("@privy.moolahub")) return;
+  if (!email || email.endsWith("@privy.moolahub")) return;
   await sendEmail({
-    to: user.email,
+    to: email,
     subject: n.title,
     html: brandedEmail({
       heading: n.title,
@@ -30,9 +92,23 @@ async function maybeEmail(userId: string, n: NotifyInput, opts?: NotifyOpts) {
   });
 }
 
-/** Create an in-app notification (and optionally email it). Never throws. */
+/**
+ * Create an in-app notification (and optionally email it), respecting the user's
+ * notification preference. Never throws.
+ */
 export async function notify(userId: string, n: NotifyInput, opts?: NotifyOpts) {
   try {
+    const [user] = await db
+      .select({
+        email: usersTable.email,
+        preference: usersTable.notificationPreference,
+        prefs: usersTable.notificationPrefs,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    if (!user) return;
+    if (!passesPreference(n.type, user.preference, user.prefs)) return;
+
     await db.insert(notificationsTable).values({
       userId,
       type: n.type,
@@ -40,7 +116,7 @@ export async function notify(userId: string, n: NotifyInput, opts?: NotifyOpts) 
       body: n.body,
       link: n.link ?? null,
     });
-    await maybeEmail(userId, n, opts);
+    await maybeEmail(user.email, n, opts);
   } catch (e) {
     console.error("[notify] failed:", e);
   }
@@ -50,16 +126,29 @@ export async function notifyMany(userIds: string[], n: NotifyInput, opts?: Notif
   const ids = userIds.filter(Boolean);
   if (!ids.length) return;
   try {
+    const users = await db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        preference: usersTable.notificationPreference,
+        prefs: usersTable.notificationPrefs,
+      })
+      .from(usersTable)
+      .where(inArray(usersTable.id, ids));
+
+    const recipients = users.filter((u) => passesPreference(n.type, u.preference, u.prefs));
+    if (!recipients.length) return;
+
     await db.insert(notificationsTable).values(
-      ids.map((userId) => ({
-        userId,
+      recipients.map((u) => ({
+        userId: u.id,
         type: n.type,
         title: n.title,
         body: n.body,
         link: n.link ?? null,
       })),
     );
-    if (opts?.email) await Promise.all(ids.map((id) => maybeEmail(id, n, opts)));
+    if (opts?.email) await Promise.all(recipients.map((u) => maybeEmail(u.email, n, opts)));
   } catch (e) {
     console.error("[notify] bulk failed:", e);
   }

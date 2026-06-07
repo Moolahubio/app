@@ -12,7 +12,11 @@ import { apiErrorMessage } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function PasskeySignIn() {
+export function PasskeySignIn({
+  onTwoFactorRequired,
+}: {
+  onTwoFactorRequired: (challengeId: string) => void;
+}) {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
@@ -28,9 +32,13 @@ export function PasskeySignIn() {
       const response = await startAuthentication({
         optionsJSON: options as unknown as PublicKeyCredentialRequestOptionsJSON,
       });
-      await passkeyVerify.mutateAsync({
+      const result = await passkeyVerify.mutateAsync({
         data: { flowId, response: response as unknown as Record<string, unknown> },
       });
+      if (result.twoFactorRequired && result.challengeId) {
+        onTwoFactorRequired(result.challengeId);
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {

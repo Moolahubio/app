@@ -6,7 +6,11 @@ import { usePrivyAuth, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 
-function PrivyLoginButton() {
+function PrivyLoginButton({
+  onTwoFactorRequired,
+}: {
+  onTwoFactorRequired: (challengeId: string) => void;
+}) {
   const [, setLocation] = useLocation();
   const { getAccessToken, authenticated } = usePrivy();
   const privyAuthMutation = usePrivyAuth();
@@ -28,7 +32,11 @@ function PrivyLoginButton() {
         privyAuthMutation.mutate(
           { data: { token, rememberMe } },
           {
-            onSuccess: () => {
+            onSuccess: (res) => {
+              if (res.twoFactorRequired && res.challengeId) {
+                onTwoFactorRequired(res.challengeId);
+                return;
+              }
               queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
               setLocation("/");
             },
@@ -85,7 +93,13 @@ function PrivyLoginButton() {
   );
 }
 
-export function PrivyAuth({ appId }: { appId: string }) {
+export function PrivyAuth({
+  appId,
+  onTwoFactorRequired,
+}: {
+  appId: string;
+  onTwoFactorRequired: (challengeId: string) => void;
+}) {
   const { resolvedTheme } = useTheme();
   return (
     <PrivyProvider
@@ -98,7 +112,7 @@ export function PrivyAuth({ appId }: { appId: string }) {
         },
       }}
     >
-      <PrivyLoginButton />
+      <PrivyLoginButton onTwoFactorRequired={onTwoFactorRequired} />
     </PrivyProvider>
   );
 }

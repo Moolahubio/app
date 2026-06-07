@@ -94,7 +94,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           )}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">{user?.name ?? "..."}</p>
-            <p className="truncate text-xs text-muted-foreground">{user?.email ?? ""}</p>
+            <p className="truncate text-xs text-muted-foreground">View profile</p>
           </div>
         </Link>
 

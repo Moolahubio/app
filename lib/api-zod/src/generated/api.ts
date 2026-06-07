@@ -107,13 +107,15 @@ export const LoginPasskeyVerifyBody = zod.object({
 })
 
 export const LoginPasskeyVerifyResponse = zod.object({
-  "id": zod.string(),
-  "name": zod.string(),
-  "email": zod.string(),
+  "twoFactorRequired": zod.boolean(),
+  "challengeId": zod.string().nullish(),
+  "id": zod.string().nullish(),
+  "name": zod.string().nullish(),
+  "email": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "hasWallet": zod.boolean(),
+  "hasWallet": zod.boolean().nullish(),
   "walletAddress": zod.string().nullish()
-})
+}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. Otherwise the authenticated user is returned.')
 
 
 /**
@@ -156,12 +158,107 @@ export const PrivyAuthBody = zod.object({
 })
 
 export const PrivyAuthResponse = zod.object({
+  "twoFactorRequired": zod.boolean(),
+  "challengeId": zod.string().nullish(),
+  "id": zod.string().nullish(),
+  "name": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "hasWallet": zod.boolean().nullish(),
+  "walletAddress": zod.string().nullish()
+}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. Otherwise the authenticated user is returned.')
+
+
+/**
+ * @summary Complete login by verifying a 2FA code (TOTP or backup code)
+ */
+export const TwoFactorLoginBody = zod.object({
+  "challengeId": zod.string(),
+  "code": zod.string().describe('A 6-digit TOTP code or a backup code.')
+})
+
+export const TwoFactorLoginResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean(),
   "walletAddress": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get authenticator-app 2FA status
+ */
+export const GetTwoFactorStatusResponse = zod.object({
+  "enabled": zod.boolean(),
+  "backupCodesRemaining": zod.number()
+})
+
+
+/**
+ * @summary Begin 2FA setup (returns secret + QR to scan)
+ */
+export const SetupTwoFactorResponse = zod.object({
+  "secret": zod.string().describe('Base32 secret to type into an authenticator app manually.'),
+  "otpauthUrl": zod.string(),
+  "qrDataUrl": zod.string().describe('PNG data URL of the QR code to scan.')
+})
+
+
+/**
+ * @summary Confirm a code to enable 2FA (returns one-time backup codes)
+ */
+export const EnableTwoFactorBody = zod.object({
+  "code": zod.string().describe('A 6-digit TOTP code or a backup code.')
+})
+
+export const EnableTwoFactorResponse = zod.object({
+  "backupCodes": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Disable 2FA (requires a current TOTP or backup code)
+ */
+export const DisableTwoFactorBody = zod.object({
+  "code": zod.string().describe('A 6-digit TOTP code or a backup code.')
+})
+
+export const DisableTwoFactorResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Regenerate backup codes (requires a current TOTP or backup code)
+ */
+export const RegenerateBackupCodesBody = zod.object({
+  "code": zod.string().describe('A 6-digit TOTP code or a backup code.')
+})
+
+export const RegenerateBackupCodesResponse = zod.object({
+  "backupCodes": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Deactivate the account (reversible; signs the user out)
+ */
+export const DeactivateAccountResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Permanently delete the account (clears personal data, revokes access)
+ */
+export const DeleteAccountBody = zod.object({
+  "confirm": zod.string().describe('Must equal \"DELETE\" to confirm.')
+})
+
+export const DeleteAccountResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 
@@ -681,6 +778,41 @@ export const ClearNotificationsResponse = zod.object({
 
 
 /**
+ * @summary Get notification preferences
+ */
+export const GetNotificationPreferencesResponse = zod.object({
+  "preference": zod.string().describe('One of everything | essential | minimal | custom.'),
+  "categories": zod.object({
+  "money": zod.boolean(),
+  "social": zod.boolean(),
+  "engagement": zod.boolean()
+})
+})
+
+
+/**
+ * @summary Update notification preferences
+ */
+export const UpdateNotificationPreferencesBody = zod.object({
+  "preference": zod.string(),
+  "categories": zod.object({
+  "money": zod.boolean(),
+  "social": zod.boolean(),
+  "engagement": zod.boolean()
+}).optional()
+})
+
+export const UpdateNotificationPreferencesResponse = zod.object({
+  "preference": zod.string().describe('One of everything | essential | minimal | custom.'),
+  "categories": zod.object({
+  "money": zod.boolean(),
+  "social": zod.boolean(),
+  "engagement": zod.boolean()
+})
+})
+
+
+/**
  * @summary Mark all notifications as read
  */
 export const MarkAllNotificationsReadResponse = zod.object({
@@ -707,6 +839,9 @@ export const GetProfileResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
+  "username": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
+  "nationality": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "walletAddress": zod.string().nullable(),
   "createdAt": zod.string()
@@ -718,6 +853,9 @@ export const GetProfileResponse = zod.object({
  */
 export const UpdateProfileBody = zod.object({
   "name": zod.string().optional(),
+  "username": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
+  "nationality": zod.string().nullish(),
   "avatarUrl": zod.string().nullish()
 })
 
@@ -725,6 +863,9 @@ export const UpdateProfileResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
+  "username": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
+  "nationality": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "walletAddress": zod.string().nullable(),
   "createdAt": zod.string()

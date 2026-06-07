@@ -9,5 +9,11 @@
 export interface ProfileUpdate {
   name?: string;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  dateOfBirth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
 }

@@ -110,6 +110,77 @@ export interface AuthUser {
   walletAddress?: string | null;
 }
 
+/**
+ * Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete /auth/2fa/login. Otherwise the authenticated user is returned.
+ */
+export interface LoginResult {
+  twoFactorRequired: boolean;
+  /** @nullable */
+  challengeId?: string | null;
+  /** @nullable */
+  id?: string | null;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  email?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  hasWallet?: boolean | null;
+  /** @nullable */
+  walletAddress?: string | null;
+}
+
+export interface TwoFactorLoginInput {
+  challengeId: string;
+  /** A 6-digit TOTP code or a backup code. */
+  code: string;
+}
+
+export interface TwoFactorStatus {
+  enabled: boolean;
+  backupCodesRemaining: number;
+}
+
+export interface TwoFactorSetup {
+  /** Base32 secret to type into an authenticator app manually. */
+  secret: string;
+  otpauthUrl: string;
+  /** PNG data URL of the QR code to scan. */
+  qrDataUrl: string;
+}
+
+export interface TwoFactorCodeInput {
+  /** A 6-digit TOTP code or a backup code. */
+  code: string;
+}
+
+export interface BackupCodes {
+  backupCodes: string[];
+}
+
+export interface DeleteAccountInput {
+  /** Must equal "DELETE" to confirm. */
+  confirm: string;
+}
+
+export interface NotificationCategories {
+  money: boolean;
+  social: boolean;
+  engagement: boolean;
+}
+
+export interface NotificationPreferences {
+  /** One of everything | essential | minimal | custom. */
+  preference: string;
+  categories: NotificationCategories;
+}
+
+export interface NotificationPreferencesUpdate {
+  preference: string;
+  categories?: NotificationCategories;
+}
+
 export interface ActivityItem {
   id: string;
   type: string;
@@ -377,6 +448,12 @@ export interface UserProfile {
   name: string;
   email: string;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  dateOfBirth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   /** @nullable */
   walletAddress: string | null;
@@ -385,6 +462,12 @@ export interface UserProfile {
 
 export interface ProfileUpdate {
   name?: string;
+  /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  dateOfBirth?: string | null;
+  /** @nullable */
+  nationality?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
 }

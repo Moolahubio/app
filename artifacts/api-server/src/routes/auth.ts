@@ -4,6 +4,8 @@ import { db, usersTable, sessionsTable } from "@workspace/db";
 import {
   PrivyAuthBody,
   PrivyAuthResponse,
+  TwoFactorLoginBody,
+  TwoFactorLoginResponse,
   LogoutResponse,
   GetMeResponse,
 } from "@workspace/api-zod";
@@ -15,6 +17,12 @@ import {
 } from "../lib/auth";
 import { createWalletForUser, getWalletForUser } from "../lib/wallet";
 import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
+import {
+  createTwoFactorChallenge,
+  getTwoFactorChallenge,
+  deleteTwoFactorChallenge,
+  verifyTwoFactorCode,
+} from "../lib/twofactor";
 
 const router: IRouter = Router();
 
@@ -96,12 +104,81 @@ router.post("/auth/privy", async (req, res): Promise<void> => {
   // or not the generated client/schema includes it yet. Defaults to false (7d).
   const rememberMe = (req.body as { rememberMe?: unknown })?.rememberMe === true;
 
+  // When 2FA is enabled, primary auth alone does not establish a session: issue a
+  // short-lived challenge and require the second factor via /auth/2fa/login.
+  if (user.twoFactorEnabled) {
+    const challengeId = await createTwoFactorChallenge(user.id, rememberMe);
+    res.json(PrivyAuthResponse.parse({ twoFactorRequired: true, challengeId }));
+    return;
+  }
+
+  if (user.deactivatedAt) {
+    await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
+  }
+
   const wallet = await createWalletForUser(user.id);
   const token = await createSession(user.id, rememberMe);
   res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
 
   res.json(
     PrivyAuthResponse.parse({
+      twoFactorRequired: false,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatarUrl: user.avatarUrl ?? null,
+      hasWallet: true,
+      walletAddress: wallet.address,
+    }),
+  );
+});
+
+// Second step of a 2FA-gated login: verify the authenticator/backup code against
+// the pending challenge, then establish the session.
+router.post("/auth/2fa/login", async (req, res): Promise<void> => {
+  const parsed = TwoFactorLoginBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  const challenge = await getTwoFactorChallenge(parsed.data.challengeId);
+  if (!challenge) {
+    res.status(400).json({ error: "Your verification session expired. Please sign in again." });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, challenge.userId));
+  if (!user || !user.twoFactorEnabled) {
+    await deleteTwoFactorChallenge(parsed.data.challengeId);
+    res.status(400).json({ error: "Two-factor authentication is not active for this account." });
+    return;
+  }
+
+  const result = verifyTwoFactorCode(parsed.data.code, user.twoFactorSecret, user.twoFactorBackupCodes ?? null);
+  if (!result.ok) {
+    res.status(401).json({ error: "That code didn't match. Try a current code or a backup code." });
+    return;
+  }
+
+  // Success — consume the challenge and persist any backup-code usage.
+  await deleteTwoFactorChallenge(parsed.data.challengeId);
+  if (result.remainingBackupHashes) {
+    await db
+      .update(usersTable)
+      .set({ twoFactorBackupCodes: result.remainingBackupHashes })
+      .where(eq(usersTable.id, user.id));
+  }
+  if (user.deactivatedAt) {
+    await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
+  }
+
+  const wallet = await createWalletForUser(user.id);
+  const token = await createSession(user.id, challenge.rememberMe);
+  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(challenge.rememberMe) });
+
+  res.json(
+    TwoFactorLoginResponse.parse({
       id: user.id,
       name: user.name,
       email: user.email,

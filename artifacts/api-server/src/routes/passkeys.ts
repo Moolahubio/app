@@ -24,6 +24,7 @@ import {
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { requireAuth, createSession, sessionTtlMs, type AuthRequest } from "../lib/auth";
+import { createTwoFactorChallenge } from "../lib/twofactor";
 
 const router: IRouter = Router();
 
@@ -270,13 +271,26 @@ router.post("/passkeys/login/verify", async (req, res): Promise<void> => {
     return;
   }
 
-  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id));
   const rememberMe = (req.body as { rememberMe?: unknown })?.rememberMe === true;
+
+  // 2FA gate: a verified passkey is the first factor; require the second factor.
+  if (user.twoFactorEnabled) {
+    const challengeId = await createTwoFactorChallenge(user.id, rememberMe);
+    res.json(LoginPasskeyVerifyResponse.parse({ twoFactorRequired: true, challengeId }));
+    return;
+  }
+
+  if (user.deactivatedAt) {
+    await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
+  }
+
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id));
   const token = await createSession(user.id, rememberMe);
   res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
 
   res.json(
     LoginPasskeyVerifyResponse.parse({
+      twoFactorRequired: false,
       id: user.id,
       name: user.name,
       email: user.email,
