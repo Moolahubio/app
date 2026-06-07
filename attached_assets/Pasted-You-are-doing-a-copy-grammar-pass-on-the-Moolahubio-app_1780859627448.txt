@@ -1,0 +1,50 @@
+You are doing a copy/grammar pass on the Moolahubio/app MoolaHub app. MoolaHub is a financial app — the copy must read like a real, human-written fintech/bank, not AI-generated. Review EVERY user-facing string and rewrite weak ones. This is text-only work: do not change logic, types, routing, or behavior — only the wording inside strings, JSX text, labels, placeholders, notifications, emails, and lesson titles.
+Ground rules
+
+Branch fix/copy-grammar; open a PR. Never touch main directly.
+Copy-only. Do not alter variables, interpolation, JSX structure, imports, or props. Keep all ${...} / {...} placeholders intact and in the same positions.
+If docs/brand/BRAND_VOICE.md and docs/brand/UX_COPY_REVIEW.md exist in the repo, read them first and follow them exactly. If they don't, follow the rules below.
+When done, node scripts/check-copy.mjs (if present) must pass, and pnpm run typecheck must pass.
+
+The voice
+A trustworthy fintech written by people: clear, calm, warm but not chirpy, confident. Explain money plainly; never hype; be genuinely glad when someone reaches a goal.
+Hard rules (apply to every string)
+
+Sentence case everywhere — labels, headings, buttons, toasts, dialog titles. Never Title Case. ("Goal name", not "Goal Name".)
+No em-dash as a connector. Use a period or comma. (The em-dash-as-connector is the #1 AI tell.) A lone "—" as an empty-value placeholder is fine.
+No emoji in money or transactional copy — especially notify()/toast titles and bodies, and emails. (A celebratory emoji on a share image is the only allowed exception.)
+Exclamation marks are rare and never on a money movement.
+Verb-first, consistent CTAs: "Create goal", "Start a circle", "Add money", "Send", "Withdraw". One verb per action across the whole app.
+Real ellipsis: "Loading your goals…" with the … character, never "Loading...".
+No filler: "Simply", "Let's…", "one X at a time", "in minutes" (unless literally true), "chase", "rally".
+No growth/return claims: never "grow your money", "grow together", or imply returns. Talk about saving and reaching goals. Don't show a bare APY/yield number without a "variable" + disclosure (flag for me if you find one).
+No false claims: don't say contracts are "audited" unless they've had an external audit.
+Currency/numbers consistent: $1,000, 100 USDC, 2%.
+
+Microcopy patterns
+
+Empty state: what's here + the one action. "No goals yet. Create your first one."
+Money confirmation: specific + past tense, calm. "$980 from {circle} is now in your available balance."
+Error: blame-free + next step, generic about internals. "We couldn't sign you in. Please try again."
+Loading: "Loading your goals…"
+
+Where to look (cover ALL of it)
+
+Every file in artifacts/moolahub-app/src/pages/ — including login, register, dashboard, goals, goal-detail, circles, circle-detail, wallet, activity, notifications, learn, lesson-detail, not-found, streaks, and the split profile pages profile, profile-information, profile-notifications, profile-security.
+Every component in artifacts/moolahub-app/src/components/ — especially auth/* and app/* (account/settings/2FA/passkeys/notification cards, nav, streak components).
+Backend user-facing strings in artifacts/api-server/src/: notify() titles/bodies, email subjects/bodies (lib/email.ts, lib/circles.ts), the streak reminder in lib/streaks.ts, and lesson titles/summaries in lib/lessons-data.ts. (Leave long-form lesson article bodies alone unless a sentence is clearly broken — they're editorial.)
+
+How to work
+
+Sweep each screen and list the strings you'll change as before → after (so I can review intent).
+Apply the rewrites (copy-only).
+Run node scripts/check-copy.mjs (if present) and fix anything it flags; otherwise self-check against the hard rules.
+Run pnpm run typecheck.
+Open the PR with the before→after list in the description, and call out anything you were unsure about (especially possible compliance claims like yield/APY) for my decision — don't guess on those.
+
+Don't
+
+Don't restructure components or change behavior to "improve" copy.
+Don't translate or add i18n.
+Don't touch money/ledger/contract logic.
+Don't remove the lesson emoji icons or the goal default emoji (those are UI icons, not sentence copy).
