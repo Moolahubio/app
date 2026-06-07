@@ -127,7 +127,7 @@ export default function DashboardPage() {
         {/* --------------------------------------------------- Reminders */}
         <Card className="flex flex-col p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-foreground">Coming up</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">Up next</h2>
             <IconChip tone="jade" className="h-9 w-9">
               <Bell className="h-4 w-4" />
             </IconChip>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
           </div>
           <div className="mt-5 space-y-4">
             {activeGoals.length === 0 && (
-              <p className="text-sm text-muted-foreground">No goals yet — create your first one.</p>
+              <p className="text-sm text-muted-foreground">No goals yet. Create your first one.</p>
             )}
             {activeGoals.slice(0, 3).map((g) => (
               <Link key={g.id} href={`/goals/${g.id}`} className="block group">
@@ -229,7 +229,7 @@ export default function DashboardPage() {
           </div>
           <div className="mt-5 flex-1">
             <span className="text-3xl">⛓️</span>
-            <p className="mt-3 font-semibold leading-snug text-foreground">Understanding Blockchain (Simply)</p>
+            <p className="mt-3 font-semibold leading-snug text-foreground">Blockchain, explained simply</p>
             <p className="mt-1 font-mono text-xs uppercase tracking-wide text-muted-foreground">
               5 min · Beginner
             </p>

@@ -7,7 +7,7 @@ import { useListLessons } from "@workspace/api-client-react";
 export default function LearnPage() {
   const { data: lessons, isLoading } = useListLessons();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lessons...</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lessons…</div>;
   if (!lessons || lessons.length === 0) return <div className="p-8 text-center text-muted-foreground">No lessons available.</div>;
 
   const completed = lessons.filter((l) => l.completed).length;
@@ -19,7 +19,7 @@ export default function LearnPage() {
       <PageHeader
         eyebrow="Learn"
         title="Financial empowerment"
-        description="Short, practical lessons to build confidence with your money — and make the most of MoolaHub."
+        description="Short, practical lessons to build confidence with your money."
       />
 
       <Card className="flex flex-wrap items-center justify-between gap-4 p-5">
@@ -31,7 +31,7 @@ export default function LearnPage() {
             <p className="font-semibold text-foreground">
               {completed} of {lessons.length} lessons complete
             </p>
-            <p className="text-sm text-muted-foreground">Keep your streak going — one lesson at a time.</p>
+            <p className="text-sm text-muted-foreground">Keep your streak going.</p>
           </div>
         </div>
         <div className="flex gap-1.5">

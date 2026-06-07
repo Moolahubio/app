@@ -1,4 +1,4 @@
-import { useParams, useLocation, Link } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
@@ -16,8 +16,6 @@ import {
 } from "@workspace/api-client-react";
 import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
-import { useStreak } from "@/hooks/use-streak";
-import { StreakChip } from "@/components/app/StreakFlame";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -27,7 +25,6 @@ export default function GoalDetailPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { data: goal, isLoading } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
-  const { data: streak } = useStreak(!!id);
 
   const queryClient = useQueryClient();
   const allocateMutation = useAllocateToGoal();
@@ -38,8 +35,8 @@ export default function GoalDetailPage() {
   const [releaseOk, setReleaseOk] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading goal...</div>;
-  if (!goal) return <div className="p-8 text-center text-muted-foreground">Goal not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading goal…</div>;
+  if (!goal) return <div className="p-8 text-center text-muted-foreground">We couldn't find that goal.</div>;
 
   const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
@@ -48,10 +45,6 @@ export default function GoalDetailPage() {
   const next = nextContribution(goalPlan.plan, goal.savedCents);
   const periodsLeft = next ? goalPlan.plan.length - next.index + 1 : 0;
   const circumference = 2 * Math.PI * 52;
-
-  const goalStreak = streak?.commitments.find(
-    (c) => c.commitmentType === "goal" && c.commitmentId === goal.id,
-  );
 
   const onchain = goal.onchain ?? false;
   const feeBps = goal.feeBps ?? 0;
@@ -102,13 +95,6 @@ export default function GoalDetailPage() {
           <p className="text-sm text-muted-foreground">
             {formatMoney(goal.savedCents)} of {formatMoney(goal.targetCents)}
           </p>
-          {goalStreak && goalStreak.currentCount > 0 && (
-            <Link href="/streaks" className="mt-3">
-              <Badge tone="amber">
-                <StreakChip count={goalStreak.currentCount} status={goalStreak.status} /> streak
-              </Badge>
-            </Link>
-          )}
           {onchain && (
             <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300">
               <Link2 className="h-3.5 w-3.5" /> On-chain
@@ -119,7 +105,7 @@ export default function GoalDetailPage() {
         {/* details + actions */}
         <div className="space-y-6 md:col-span-3">
           <Card className="p-6">
-            <h2 className="font-display text-lg font-bold text-foreground">Add to this goal</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">Add money</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {onchain
                 ? "Move funds from your available balance into this goal's on-chain vault. Deposits are free."
@@ -144,7 +130,7 @@ export default function GoalDetailPage() {
               />
             </div>
             <div className="mt-5 border-t border-border pt-5">
-              <p className="mb-1 text-sm font-medium text-foreground">Withdraw from this goal</p>
+              <p className="mb-1 text-sm font-medium text-foreground">Withdraw</p>
               {onchain && feeBps > 0 && (
                 <p className="mb-3 text-xs text-muted-foreground">
                   A {feePct}% withdrawal fee is taken on-chain. You receive the amount net of the fee.
@@ -235,11 +221,11 @@ export default function GoalDetailPage() {
           {next && remaining > 0 && (
             <p className="flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 text-jade-500" />
-              Keep going {FREQUENCY_ADVERB[frequency]} — about{" "}
+              Keep going {FREQUENCY_ADVERB[frequency]}. About{" "}
               <span className="font-semibold text-foreground">
                 {periodsLeft} {FREQUENCY_NOUN[frequency]}{periodsLeft === 1 ? "" : "s"}
               </span>{" "}
-              of rising contributions left to reach your target.
+              of contributions left to reach your target.
             </p>
           )}
 

@@ -32,9 +32,11 @@ function PrivyLoginButton({
         privyAuthMutation.mutate(
           { data: { token, rememberMe } },
           {
-            onSuccess: (res) => {
-              if (res.twoFactorRequired && res.challengeId) {
-                onTwoFactorRequired(res.challengeId);
+            onSuccess: (result) => {
+              // When 2FA is required, never establish the session here — defer
+              // to the challenge step. (challengeId is always present in practice.)
+              if (result.twoFactorRequired) {
+                if (result.challengeId) onTwoFactorRequired(result.challengeId);
                 return;
               }
               queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
@@ -87,7 +89,7 @@ function PrivyLoginButton({
         Keep me logged in for 30 days
       </label>
       <Button onClick={handleClick} size="lg" className="w-full" disabled={busy || privyAuthMutation.isPending}>
-        {busy || privyAuthMutation.isPending ? "Signing in…" : "Continue with Privy"}
+        {busy || privyAuthMutation.isPending ? "Signing in…" : "Continue with email or phone"}
       </Button>
     </div>
   );

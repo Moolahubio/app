@@ -35,17 +35,21 @@ export function PasskeySignIn({
       const result = await passkeyVerify.mutateAsync({
         data: { flowId, response: response as unknown as Record<string, unknown> },
       });
-      if (result.twoFactorRequired && result.challengeId) {
-        onTwoFactorRequired(result.challengeId);
+      if (result.twoFactorRequired) {
+        if (result.challengeId) {
+          onTwoFactorRequired(result.challengeId);
+        } else {
+          setPasskeyError("We couldn't start two-factor verification. Please try again.");
+        }
         return;
       }
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
       if (err instanceof Error && err.name === "NotAllowedError") {
-        setPasskeyError("Passkey sign-in was cancelled.");
+        setPasskeyError("Sign-in cancelled.");
       } else {
-        setPasskeyError(apiErrorMessage(err) ?? "Could not sign in with passkey.");
+        setPasskeyError(apiErrorMessage(err) ?? "We couldn't sign you in. Please try again.");
       }
     }
   };

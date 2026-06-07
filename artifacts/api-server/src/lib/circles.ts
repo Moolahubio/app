@@ -9,14 +9,12 @@ import {
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import { ObjectStorageService } from "./objectStorage";
 import { onchainEnabled, explorerUrl, escrowEnabled, deployCircleEscrow } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
-import { recordSave } from "./streaks";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
 const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS) || 200;
@@ -79,15 +77,6 @@ export async function createCircle(
   if (input.contributionCents <= 0) throw new AppError("Enter a contribution amount.");
   const type = input.type === "accumulation" ? "accumulation" : "rotation";
 
-  // Only accept an internal uploaded image reference, verified to be a real,
-  // allowlisted image within the size cap. Rejects arbitrary external URLs (which
-  // would be rendered in every member's browser) and disguised non-image uploads.
-  const imageUrl = input.imageUrl ?? null;
-  if (imageUrl !== null) {
-    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
-    if (!usable) throw new AppError("Invalid circle image.");
-  }
-
   // For accumulation circles the organizer chooses how many rounds the circle
   // runs, and each member receives their own savings back (contribution × rounds)
   // at the end. For rotation, rounds are derived from member count at start, and
@@ -106,7 +95,7 @@ export async function createCircle(
     .values({
       name: input.name.trim(),
       createdById: userId,
-      imageUrl,
+      imageUrl: input.imageUrl ?? null,
       type,
       contributionCents: input.contributionCents,
       payoutCents,
@@ -322,16 +311,12 @@ export async function contribute(userId: string, circleId: string) {
     return { txn: t, contributionId: reserved[0].id };
   });
 
-  // Streaks: a circle contribution is a qualifying save at the circle's cadence.
-  // Derived, non-financial — never throws and never affects the ledger above.
-  await recordSave(userId, { type: "circle", id: circleId, frequency: circle.frequency }, txn.id);
-
   await notify(
     userId,
     {
       type: "contribution",
-      title: `Contributed to ${circle.name}`,
-      body: `You paid ${formatMoney(circle.contributionCents)} for round ${round}.`,
+      title: "Contribution confirmed",
+      body: `You contributed ${formatMoney(circle.contributionCents)} to ${circle.name}, round ${round}.`,
       link: `/circles/${circleId}`,
     },
     { email: true },
@@ -412,8 +397,8 @@ async function maybeProcessPayout(circleId: string, round: number) {
           member.userId,
           {
             type: "payout",
-            title: "Your savings are back! 🎉",
-            body: `${formatMoney(shareCents)} from "${circle.name}" landed in your wallet.`,
+            title: "Your savings are back",
+            body: `${formatMoney(shareCents)} from ${circle.name} is now in your available balance.`,
             link: `/circles/${circleId}`,
           },
           { email: true },
@@ -493,8 +478,8 @@ async function maybeProcessPayout(circleId: string, round: number) {
       recipient.userId,
       {
         type: "payout",
-        title: "You received the pot! 🎉",
-        body: `${formatMoney(netCents)} from "${circle.name}" landed in your wallet.`,
+        title: "You received the pot",
+        body: `${formatMoney(netCents)} from ${circle.name} is now in your available balance.`,
         link: `/circles/${circleId}`,
       },
       { email: true },
@@ -542,12 +527,12 @@ export async function inviteToCircle(userId: string, circleId: string, emailRaw:
   const inviter = circle.members.find((m) => m.userId === userId)?.user.name ?? "A MoolaHub member";
   await sendEmail({
     to: email,
-    subject: `${inviter} invited you to a Susu circle on MoolaHub`,
+    subject: `${inviter} invited you to a savings circle on MoolaHub`,
     html: brandedEmail({
-      heading: `Join "${circle.name}"`,
-      body: `${inviter} invited you to save together in the "${circle.name}" Susu circle — ${formatMoney(
+      heading: `Join ${circle.name}`,
+      body: `${inviter} invited you to save together in the ${circle.name} savings circle (a Susu): ${formatMoney(
         circle.contributionCents,
-      )} per ${circle.frequency} round. Sign in to accept and join the rotation.`,
+      )} per ${circle.frequency} round. Sign in to accept and join.`,
       cta: { label: "View invitation", href: appUrl("/circles") },
     }),
     text: `${inviter} invited you to join "${circle.name}" on MoolaHub. Visit ${appUrl("/circles")} to accept.`,
@@ -671,7 +656,7 @@ export async function startCircle(userId: string, circleId: string) {
     {
       type: "circle_started",
       title: "Circle started",
-      body: `"${circle.name}" is now active — round 1 has begun.`,
+      body: `${circle.name} is now active. Round 1 has begun.`,
       link: `/circles/${circleId}`,
     },
     { email: true },

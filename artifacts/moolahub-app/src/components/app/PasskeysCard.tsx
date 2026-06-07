@@ -45,9 +45,9 @@ export function PasskeysCard() {
       await invalidate();
     } catch (err) {
       if (err instanceof Error && err.name === "NotAllowedError") {
-        setError("Passkey setup was cancelled.");
+        setError("Setup cancelled.");
       } else {
-        setError(apiErrorMessage(err) ?? "Could not add passkey.");
+        setError(apiErrorMessage(err) ?? "We couldn't add that passkey. Please try again.");
       }
     }
   };
@@ -58,7 +58,7 @@ export function PasskeysCard() {
       await deleteMutation.mutateAsync({ id });
       await invalidate();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not remove passkey.");
+      setError(apiErrorMessage(err) ?? "We couldn't remove that passkey. Please try again.");
     }
   };
 

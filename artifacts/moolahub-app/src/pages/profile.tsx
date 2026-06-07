@@ -118,7 +118,7 @@ export default function ProfilePage() {
   });
 
   if (isUserLoading || isSummaryLoading)
-    return <div className="p-8 text-center text-muted-foreground">Loading profile...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your profile…</div>;
   if (!user || !summary) return null;
 
   const address = user.walletAddress ?? "Not provisioned";
@@ -323,11 +323,11 @@ export default function ProfilePage() {
         disabled={logoutMutation.isPending}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-semibold text-muted-foreground transition-[color,background-color] duration-150 hover:bg-accent hover:text-foreground focus-ring"
       >
-        <LogOut className="h-4 w-4" /> {logoutMutation.isPending ? "Signing out..." : "Sign out"}
+        <LogOut className="h-4 w-4" /> {logoutMutation.isPending ? "Signing out…" : "Sign out"}
       </button>
 
       <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-center text-sm text-muted-foreground">
-        <Eyebrow className="text-muted-foreground">Save Now · Grow Together</Eyebrow>
+        <Eyebrow className="text-muted-foreground">Save today · Reach it together</Eyebrow>
         <span className="text-muted-foreground">·</span>
         <a
           href="https://moolahub.io/"

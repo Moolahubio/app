@@ -32,19 +32,19 @@ export default function Login() {
 
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
-            Connecting People Through Savings
+            Saving, made social
           </p>
           <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
             Built on Base
           </p>
           <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
-            Save Now.
+            Save today.
             <br />
-            <span className="text-jade-400">Grow Together.</span>
+            <span className="text-jade-400">Reach it together.</span>
           </h1>
           <p className="mt-5 max-w-sm text-lg text-white/60">
-            Open a non-custodial wallet in minutes. No bank account needed — just
-            you, your goals, and your circle.
+            Open a secure wallet in minutes. No bank account needed. Set a goal
+            and save with people you trust.
           </p>
           <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5">
             <AscendingChart className="max-h-32" />
@@ -53,13 +53,13 @@ export default function Login() {
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/50">
           <span className="inline-flex items-center gap-2">
-            <Lock className="h-4 w-4 text-jade-400" /> Non-custodial
+            <Lock className="h-4 w-4 text-jade-400" /> You hold the keys
           </span>
           <span className="inline-flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-jade-400" /> On-chain verified
+            <ShieldCheck className="h-4 w-4 text-jade-400" /> Verified on Base
           </span>
           <span className="inline-flex items-center gap-2">
-            <Users className="h-4 w-4 text-jade-400" /> Trusted circles
+            <Users className="h-4 w-4 text-jade-400" /> People you trust
           </span>
         </div>
       </section>

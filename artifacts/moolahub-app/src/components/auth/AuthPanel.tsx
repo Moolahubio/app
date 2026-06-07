@@ -25,7 +25,7 @@ export function AuthPanel() {
           Welcome to MoolaHub
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Save smarter, together. Open a wallet in minutes, chase your goals, and grow your money with circles you trust.
+          Save smarter, together. Open a wallet in minutes, set your goals, and save with people you trust.
         </p>
       </div>
 

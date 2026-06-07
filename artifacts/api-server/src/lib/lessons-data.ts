@@ -47,7 +47,7 @@ export const LESSONS: LessonDef[] = [
   },
   {
     slug: "understanding-usdc",
-    title: "Understanding USDC",
+    title: "What is USDC?",
     summary: "USDC is a dollar-pegged digital currency built for speed and transparency. Learn why MoolaHub uses it for savings.",
     minutes: 4,
     level: "beginner",
@@ -76,7 +76,7 @@ export const LESSONS: LessonDef[] = [
   },
   {
     slug: "setting-savings-goals",
-    title: "Setting Savings Goals That Stick",
+    title: "Savings goals that actually stick",
     summary: "The science and art of setting savings goals that you actually achieve — and how automation makes it easier.",
     minutes: 6,
     level: "beginner",
@@ -105,7 +105,7 @@ export const LESSONS: LessonDef[] = [
   },
   {
     slug: "building-an-emergency-fund",
-    title: "Building Your Emergency Fund",
+    title: "Building an emergency fund",
     summary: "Your emergency fund is the foundation of financial resilience. Here's exactly how to build one, even on a tight budget.",
     minutes: 7,
     level: "beginner",
@@ -134,7 +134,7 @@ export const LESSONS: LessonDef[] = [
   },
   {
     slug: "understanding-blockchain",
-    title: "Understanding Blockchain (Simply)",
+    title: "Blockchain, explained simply",
     summary: "What blockchain actually is, why it matters for savings, and how to think about it without the hype.",
     minutes: 5,
     level: "beginner",
@@ -163,7 +163,7 @@ export const LESSONS: LessonDef[] = [
   },
   {
     slug: "sending-money-internationally",
-    title: "Sending Money Internationally",
+    title: "Sending money abroad",
     summary: "Compare remittance options and understand why crypto rails are changing the cost of sending money home.",
     minutes: 6,
     level: "intermediate",

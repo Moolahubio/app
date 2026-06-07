@@ -16,23 +16,20 @@ import { BackLink } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
 import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, getGetCircleQueryKey } from "@workspace/api-client-react";
 import { formatMoney, truncateAddress, cn } from "@/lib/utils";
-import { useStreak } from "@/hooks/use-streak";
-import { StreakChip } from "@/components/app/StreakFlame";
 import { useQueryClient } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams } from "wouter";
 
 export default function CircleDetailPage() {
   const { id } = useParams();
   const { data: circle, isLoading } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
-  const { data: streak } = useStreak(!!id);
   
   const queryClient = useQueryClient();
   const startMutation = useStartCircle();
   const contributeMutation = useContributeToCircle();
   const inviteMutation = useInviteToCircle();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading circle...</div>;
-  if (!circle) return <div className="p-8 text-center text-muted-foreground">Circle not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading circle…</div>;
+  if (!circle) return <div className="p-8 text-center text-muted-foreground">We couldn't find that circle.</div>;
 
   const isForming = circle.status === "forming";
   const isActive = circle.status === "active";
@@ -40,9 +37,6 @@ export default function CircleDetailPage() {
   const isCreator = circle.isCreator ?? false;
   const canStart = circle.canStart ?? false;
   const canInvite = circle.canInvite ?? false;
-  const circleStreak = streak?.commitments.find(
-    (c) => c.commitmentType === "circle" && c.commitmentId === circle.id,
-  );
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -65,15 +59,6 @@ export default function CircleDetailPage() {
                   ? " · forming"
                   : ` · Round ${circle.currentRound} of ${circle.totalRounds}`}
               </p>
-              {circleStreak && circleStreak.currentCount > 0 && (
-                <Link
-                  href="/streaks"
-                  className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white ring-1 ring-inset ring-white/15"
-                >
-                  <StreakChip count={circleStreak.currentCount} status={circleStreak.status} className="[&_*]:text-white" />
-                  <span className="text-white/70">streak</span>
-                </Link>
-              )}
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
@@ -133,7 +118,7 @@ export default function CircleDetailPage() {
               <CheckCircle2 className="h-3.5 w-3.5" /> Contributed this round
             </Badge>
           ) : (
-            <Badge tone="amber">Circle is still forming</Badge>
+            <Badge tone="amber">This circle hasn't started yet</Badge>
           )}
         </div>
       </Card>
@@ -148,7 +133,7 @@ export default function CircleDetailPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
               ? `Invite people by email. Everyone saves into one shared pot for ${circle.totalRounds} rounds, then gets their savings back. Start the circle once everyone's in.`
-              : "Invite people by email. Rounds equal members — everyone gets exactly one payout. Start the circle once everyone's in."}
+              : "Invite people by email. Rounds equal members, so everyone gets exactly one payout. Start the circle once everyone's in."}
           </p>
 
           {canInvite && (
@@ -200,8 +185,8 @@ export default function CircleDetailPage() {
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
-              ? `Everyone saves into one shared pot. After ${circle.totalRounds} rounds, each member gets their own savings back — locked on-chain.`
-              : "The rotation is locked on-chain — everyone knows who receives the pot, and when."}
+              ? `Everyone saves into one shared pot. After ${circle.totalRounds} rounds, each member gets their own savings back, locked on-chain.`
+              : "The rotation is locked on-chain, so everyone knows who receives the pot, and when."}
           </p>
 
           <ol className="mt-5 space-y-2">
@@ -215,7 +200,7 @@ export default function CircleDetailPage() {
                   key={m.id}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                    current ? "border-jade-500/30 bg-jade-50 dark:border-jade-500/20 dark:bg-jade-500/10" : "border-border bg-card",
+                    current ? "border-jade-500/30 bg-jade-50" : "border-border bg-card",
                   )}
                 >
                   {!isAccumulation && (

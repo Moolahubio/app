@@ -93,7 +93,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Skeleton className="h-9 w-9 rounded-full" />
           )}
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{user?.name ?? "..."}</p>
+            <p className="truncate text-sm font-semibold text-foreground">{user?.name ?? "…"}</p>
             <p className="truncate text-xs text-muted-foreground">View profile</p>
           </div>
         </Link>
@@ -121,7 +121,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 Balance
               </span>
               <span className="text-sm font-bold tabular-nums text-foreground">
-                {isSummaryLoading ? "..." : formatMoney(summary?.totalCents ?? 0)}
+                {isSummaryLoading ? "…" : formatMoney(summary?.totalCents ?? 0)}
               </span>
             </Link>
 
