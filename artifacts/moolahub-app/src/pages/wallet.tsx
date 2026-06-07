@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, Clock } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
-import { PageHeader, BackLink } from "@/components/app/bits";
+import { PageHeader } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
 import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatMoney, apiErrorMessage } from "@/lib/utils";
@@ -22,16 +22,15 @@ export default function WalletPage() {
   const [syncOk, setSyncOk] = useState<string | null>(null);
 
   if (isLoading || !wallet) {
-    return <div className="p-8 text-center text-muted-foreground">Loading wallet...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your wallet…</div>;
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <BackLink href="/profile" label="Account" />
       <PageHeader
         eyebrow="Wallet"
         title="Deposit & withdraw USDC"
-        description="MoolaHub runs on USDC over Base. Receive crypto into your wallet, or send it to any Base address."
+        description="MoolaHub runs on USDC over Base. Add USDC to your wallet, or send it to any Base wallet address."
       />
 
       {/* balance + receive address */}
@@ -80,7 +79,7 @@ export default function WalletPage() {
             </span>
             <div>
               <h2 className="font-display text-lg font-bold text-foreground">Receive</h2>
-              <p className="text-xs text-muted-foreground">Deposit USDC on-chain</p>
+              <p className="text-xs text-muted-foreground">Add USDC</p>
             </div>
           </div>
 
@@ -174,7 +173,7 @@ export default function WalletPage() {
       <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-muted-foreground">
-          MoolaHub is non-custodial — funds settle to your own Base wallet, and every movement
+          MoolaHub is non-custodial: funds settle to your own Base wallet, and every movement
           is recorded on the ledger with an on-chain reference.{" "}
           <Badge tone="jade" className="ml-1">Built on Base</Badge>
         </p>
@@ -183,7 +182,7 @@ export default function WalletPage() {
       <Card className="flex items-start gap-3 border-border bg-card p-5">
         <Clock className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">Local currency (GHS · NGN) is coming soon.</span>{" "}
+          <span className="font-semibold text-foreground">Local currency (GHS, NGN) is coming soon.</span>{" "}
           Cash deposits and withdrawals via a licensed on/off-ramp partner will arrive in a later
           release. For now, MoolaHub runs entirely on USDC.
         </p>

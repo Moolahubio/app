@@ -77,7 +77,7 @@ export function ManageAccountCard() {
             <div>
               <p className="text-sm font-semibold text-foreground">Deactivate account</p>
               <p className="text-xs text-muted-foreground">
-                Temporarily disable — sign back in anytime to restore
+                Temporarily disable. Sign back in anytime to restore.
               </p>
             </div>
           </div>
@@ -115,7 +115,7 @@ export function ManageAccountCard() {
             <DialogTitle>Deactivate your account?</DialogTitle>
             <DialogDescription>
               Your account will be temporarily disabled and you'll be signed out. Your
-              data, balances, and circles stay safe — just sign back in any time to
+              data, balances, and circles stay safe. Sign back in any time to
               reactivate.
             </DialogDescription>
           </DialogHeader>

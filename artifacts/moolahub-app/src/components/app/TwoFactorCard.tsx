@@ -45,7 +45,7 @@ function BackupCodesPanel({ codes }: { codes: string[] }) {
         </button>
       </div>
       <p className="mt-1 text-xs text-amber-700 dark:text-amber-400/90">
-        Each code works once. Store them somewhere safe — they let you sign in if you
+        Each code works once. Store them somewhere safe. They let you sign in if you
         lose your authenticator.
       </p>
       <div className="mt-3 grid grid-cols-2 gap-2 font-mono text-sm text-amber-900 dark:text-amber-200">
@@ -173,7 +173,7 @@ export function TwoFactorCard() {
       {setup && (
         <form onSubmit={confirmEnable} className="mt-5 space-y-4">
           <p className="text-sm text-muted-foreground">
-            Scan this QR code with Google Authenticator, 1Password, or any TOTP app —
+            Scan this QR code with Google Authenticator, 1Password, or any TOTP app,
             then enter the 6-digit code it shows.
           </p>
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-muted/40 p-4">

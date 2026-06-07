@@ -24,7 +24,7 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const markOneMutation = useMarkNotificationRead();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading notifications...</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading notifications…</div>;
 
   const notifications = data?.notifications ?? [];
 
@@ -33,7 +33,7 @@ export default function NotificationsPage() {
       <PageHeader
         eyebrow="Notifications"
         title="Everything that's happened"
-        description="Invitations, contributions, payouts and more — your full MoolaHub activity."
+        description="Invitations, contributions, payouts, and everything happening in your account."
       />
 
       <Card className="overflow-hidden p-0">

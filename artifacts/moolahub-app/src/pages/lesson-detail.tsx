@@ -15,8 +15,8 @@ export default function LessonPage() {
   const { data: lessonsList } = useListLessons();
   const completeMutation = useCompleteLesson();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lesson...</div>;
-  if (!lesson) return <div className="p-8 text-center text-muted-foreground">Lesson not found</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lesson…</div>;
+  if (!lesson) return <div className="p-8 text-center text-muted-foreground">We couldn't find that lesson.</div>;
 
   const index = lessonsList?.findIndex((l) => l.slug === slug) ?? -1;
   const next = index !== -1 && lessonsList ? lessonsList[index + 1] : undefined;

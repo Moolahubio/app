@@ -451,7 +451,7 @@ async function sendReminders(now: Date): Promise<void> {
       await notify(s.userId, {
         type: "streak_reminder",
         title: "Keep your streak going",
-        body: "A small save before this period closes keeps your flame alive. No rush — whatever works for you.",
+        body: "A small save before this period closes keeps your flame alive. No rush, whatever works for you.",
         link,
       });
       await db
