@@ -18,6 +18,16 @@ import { formatMoney, truncateAddress } from "./money";
  * leaves the transfer "pending" rather than silently ledger-only.
  */
 
+/** Postgres unique-violation SQLSTATE, used to detect a lost dedupe race. */
+function isUniqueViolation(e: unknown): boolean {
+  return (
+    typeof e === "object" &&
+    e !== null &&
+    "code" in e &&
+    (e as { code?: unknown }).code === "23505"
+  );
+}
+
 /** Initial on-chain meta for a movement: pending when settlement is configured. */
 function initialOnchainMeta() {
   return onchainEnabled()
@@ -101,15 +111,26 @@ export async function syncDeposits(
         ),
       );
     if (seen) continue;
-    await transfer({
-      type: "deposit",
-      description: `USDC deposit from ${truncateAddress(p.from, 4, 4)}`,
-      userId,
-      fromKey: acct.external,
-      toKey: acct.wallet(userId),
-      amountCents: p.amountCents,
-      onchain: { txHash: p.hash, onchainStatus: "confirmed" },
-    });
+    try {
+      await transfer({
+        type: "deposit",
+        description: `USDC deposit from ${truncateAddress(p.from, 4, 4)}`,
+        userId,
+        fromKey: acct.external,
+        toKey: acct.wallet(userId),
+        amountCents: p.amountCents,
+        onchain: { txHash: p.hash, onchainStatus: "confirmed" },
+      });
+    } catch (e) {
+      // Authoritative dedupe guard: the partial unique index on
+      // transactions(tx_hash) WHERE type='deposit' rejects a second credit for
+      // the same on-chain payment. The pre-check above is only a fast path; two
+      // concurrent /wallet/sync calls can both pass it, so the index is what
+      // actually prevents double-crediting. Treat the rejection as "already
+      // credited" and skip — never re-throw it as a request failure or count it.
+      if (isUniqueViolation(e)) continue;
+      throw e;
+    }
     await notify(userId, {
       type: "deposit",
       title: "USDC received",
