@@ -8,6 +8,7 @@ import {
   ContributeToCircleParams,
   AcceptInviteParams,
   DeclineInviteParams,
+  DeleteCircleParams,
   ListCirclesResponse,
   ListInvitesResponse,
   GetCircleResponse,
@@ -16,6 +17,7 @@ import {
   ContributeToCircleResponse,
   AcceptInviteResponse,
   DeclineInviteResponse,
+  DeleteCircleResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { sendError } from "../lib/errors";
@@ -30,6 +32,7 @@ import {
   acceptInvite,
   declineInvite,
   startCircle,
+  deleteCircle,
 } from "../lib/circles";
 
 const router: IRouter = Router();
@@ -161,6 +164,25 @@ router.post("/circles/:id/start", requireAuth, async (req, res): Promise<void> =
   }
 
   res.json(StartCircleResponse.parse({ ok: true }));
+});
+
+router.post("/circles/:id/delete", requireAuth, async (req, res): Promise<void> => {
+  const user = (req as AuthRequest).user;
+  const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const params = DeleteCircleParams.safeParse({ id: rawId });
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  try {
+    await deleteCircle(user.id, params.data.id);
+  } catch (e) {
+    sendError(res, e, "Could not delete circle");
+    return;
+  }
+
+  res.json(DeleteCircleResponse.parse({ ok: true }));
 });
 
 router.post("/circles/:id/contribute", requireAuth, async (req, res): Promise<void> => {

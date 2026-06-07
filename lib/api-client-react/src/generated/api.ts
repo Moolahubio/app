@@ -2258,6 +2258,76 @@ export const useStartCircle = <TError = ErrorType<unknown>,
       return useMutation(getStartCircleMutationOptions(options));
     }
 
+export const getDeleteCircleUrl = (id: string,) => {
+
+
+
+
+  return `/api/circles/${id}/delete`
+}
+
+/**
+ * @summary Delete an idle circle (creator only, before anyone else joins)
+ */
+export const deleteCircle = async (id: string, options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getDeleteCircleUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteCircleMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCircle>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCircle>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteCircle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCircle>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCircle(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCircleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCircle>>>
+
+    export type DeleteCircleMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Delete an idle circle (creator only, before anyone else joins)
+ */
+export const useDeleteCircle = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCircle>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCircle>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteCircleMutationOptions(options));
+    }
+
 export const getContributeToCircleUrl = (id: string,) => {
 
 

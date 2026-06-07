@@ -475,6 +475,7 @@ export const GetCircleResponse = zod.object({
   "isCreator": zod.boolean().optional(),
   "canInvite": zod.boolean().optional(),
   "canStart": zod.boolean().optional(),
+  "canDelete": zod.boolean().optional(),
   "canContribute": zod.boolean().optional(),
   "pendingInvites": zod.array(zod.object({
   "id": zod.string(),
@@ -507,6 +508,18 @@ export const StartCircleParams = zod.object({
 })
 
 export const StartCircleResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Delete an idle circle (creator only, before anyone else joins)
+ */
+export const DeleteCircleParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteCircleResponse = zod.object({
   "ok": zod.boolean()
 })
 

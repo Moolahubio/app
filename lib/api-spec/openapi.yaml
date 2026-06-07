@@ -633,6 +633,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/OkResponse"
 
+  /circles/{id}/delete:
+    post:
+      operationId: deleteCircle
+      tags: [circles]
+      summary: Delete an idle circle (creator only, before anyone else joins)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Delete failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /circles/{id}/contribute:
     post:
       operationId: contributeToCircle
@@ -1593,6 +1618,8 @@ components:
         canInvite:
           type: boolean
         canStart:
+          type: boolean
+        canDelete:
           type: boolean
         canContribute:
           type: boolean

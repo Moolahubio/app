@@ -9,24 +9,29 @@ import {
   UserPlus,
   Rocket,
   Link2,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from "lucide-react";
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
-import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, getGetCircleQueryKey } from "@workspace/api-client-react";
-import { formatMoney, truncateAddress, cn } from "@/lib/utils";
+import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey } from "@workspace/api-client-react";
+import { formatMoney, truncateAddress, apiErrorMessage, cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
+import { useState } from "react";
 
 export default function CircleDetailPage() {
   const { id } = useParams();
+  const [, navigate] = useLocation();
   const { data: circle, isLoading } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
   
   const queryClient = useQueryClient();
   const startMutation = useStartCircle();
   const contributeMutation = useContributeToCircle();
   const inviteMutation = useInviteToCircle();
+  const deleteMutation = useDeleteCircle();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading circle…</div>;
   if (!circle) return <div className="p-8 text-center text-muted-foreground">We couldn't find that circle.</div>;
@@ -37,6 +42,7 @@ export default function CircleDetailPage() {
   const isCreator = circle.isCreator ?? false;
   const canStart = circle.canStart ?? false;
   const canInvite = circle.canInvite ?? false;
+  const canDelete = circle.canDelete ?? false;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -171,6 +177,61 @@ export default function CircleDetailPage() {
               )}
             </div>
           )}
+        </Card>
+      )}
+
+      {/* ----------------------------------------------------- delete circle */}
+      {canDelete && (
+        <Card className="border-rose-500/20 p-6">
+          <h2 className="font-display text-lg font-bold text-foreground">Delete circle</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            No one else has joined yet, so you can delete this circle. Once another member
+            joins, it can't be deleted. This permanently removes the circle and any pending invites.
+          </p>
+          {deleteMutation.error && (
+            <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
+          )}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {!confirmDelete ? (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-card px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+              >
+                <Trash2 className="h-4 w-4" /> Delete circle
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={deleteMutation.isPending}
+                  onClick={() =>
+                    deleteMutation.mutate(
+                      { id: circle.id },
+                      {
+                        onSuccess: () => {
+                          queryClient.invalidateQueries({ queryKey: getListCirclesQueryKey() });
+                          navigate("/circles");
+                        },
+                      },
+                    )
+                  }
+                  className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteMutation.isPending ? "Deleting…" : "Confirm delete"}
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+          </div>
         </Card>
       )}
 

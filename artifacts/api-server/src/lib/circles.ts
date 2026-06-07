@@ -196,6 +196,7 @@ export async function getCircleDetail(userId: string, circleId: string) {
     isCreator,
     canInvite: isCreator && c.status === "forming",
     canStart: isCreator && c.status === "forming" && memberCount >= 2,
+    canDelete: isCreator && c.status === "forming" && memberCount <= 1,
     canContribute: c.status === "active" && !contributedThisRound && !!me,
     pendingInvites: pendingInvites.map((i) => ({ id: i.id, email: i.email })),
     members: c.members.map((m) => ({
@@ -580,6 +581,10 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
     return invite.circleId;
   }
   const nextPos = invite.circle.members.length + 1;
+  // This insert takes a FK row-lock on the parent circles row, which conflicts
+  // with the SELECT ... FOR UPDATE in deleteCircle. That serializes the two:
+  // a join and a delete can't interleave, so a circle is never deleted out from
+  // under a member who just accepted.
   await db.insert(circleMembersTable).values({
     circleId: invite.circleId,
     userId,
@@ -607,6 +612,38 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
     { email: true },
   );
   return invite.circleId;
+}
+
+/**
+ * Delete an idle circle. Only the creator may delete it, and only while it is
+ * still "forming" with no one else having joined (member count <= 1, i.e. just
+ * the creator). Such a circle has no contributions, transactions, or on-chain
+ * contract, so a hard delete is safe — circle_members and circle_invites
+ * cascade-delete with the circle row. The circle row is locked FOR UPDATE so a
+ * concurrent invite acceptance can't slip a new member in between the count and
+ * the delete.
+ */
+export async function deleteCircle(userId: string, circleId: string) {
+  return db.transaction(async (tx) => {
+    const [circle] = await tx
+      .select()
+      .from(circlesTable)
+      .where(eq(circlesTable.id, circleId))
+      .for("update");
+    if (!circle) throw new AppError("Circle not found.");
+    if (circle.createdById !== userId)
+      throw new AppError("Only the circle creator can delete this circle.");
+    if (circle.status !== "forming")
+      throw new AppError("This circle has already started and can't be deleted.");
+    const members = await tx
+      .select({ id: circleMembersTable.id })
+      .from(circleMembersTable)
+      .where(eq(circleMembersTable.circleId, circleId));
+    if (members.length > 1)
+      throw new AppError("Someone has already joined this circle, so it can't be deleted.");
+    await tx.delete(circlesTable).where(eq(circlesTable.id, circleId));
+    return { ok: true as const };
+  });
 }
 
 export async function declineInvite(userEmail: string, inviteId: string) {

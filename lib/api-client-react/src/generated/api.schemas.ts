@@ -346,6 +346,7 @@ export interface CircleDetail {
   isCreator?: boolean;
   canInvite?: boolean;
   canStart?: boolean;
+  canDelete?: boolean;
   canContribute?: boolean;
   pendingInvites?: CirclePendingInvite[];
 }
