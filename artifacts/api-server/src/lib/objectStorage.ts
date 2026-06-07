@@ -256,6 +256,33 @@ export class ObjectStorageService {
     return normalizedPath;
   }
 
+  /**
+   * Claim ownership of an uploaded object and set its ACL policy, but ONLY if it
+   * is not already owned by someone else. This prevents one authenticated user
+   * from rebinding (and thereby hijacking, exposing, or denying) another user's
+   * object just by knowing its path — see canAccessObjectEntity on the read path.
+   * Returns false if the object is already owned by a different user.
+   */
+  async claimObjectEntityForOwner(
+    rawPath: string,
+    ownerId: string,
+    visibility: "public" | "private"
+  ): Promise<boolean> {
+    const normalizedPath = this.normalizeObjectEntityPath(rawPath);
+    if (!normalizedPath.startsWith("/")) {
+      return false;
+    }
+
+    const objectFile = await this.getObjectEntityFile(normalizedPath);
+    const existing = await getObjectAclPolicy(objectFile);
+    if (existing && existing.owner !== ownerId) {
+      return false;
+    }
+
+    await setObjectAclPolicy(objectFile, { owner: ownerId, visibility });
+    return true;
+  }
+
   async canAccessObjectEntity({
     userId,
     objectFile,

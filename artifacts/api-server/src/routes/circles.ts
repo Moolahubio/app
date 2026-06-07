@@ -59,8 +59,23 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
     // Only a real, allowlisted internal uploaded image may be stored — never an
     // arbitrary external URL (which would be fetched in other members' browsers:
     // tracking / SSRF) nor a disguised non-image upload.
-    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
+    const objectStorage = new ObjectStorageService();
+    const usable = await objectStorage.isUsableImageObject(imageUrl);
     if (!usable) {
+      res.status(400).json({ error: "Invalid circle image." });
+      return;
+    }
+    // A circle cover image is shared with every circle member, so it is a
+    // public display asset. Binding an ACL policy is still required: the serving
+    // route refuses to read any object that has no policy (e.g. a raw upload
+    // that was never attached to anything). Claiming fails if the object is
+    // already owned by someone else, preventing object takeover by path.
+    const claimed = await objectStorage.claimObjectEntityForOwner(
+      imageUrl,
+      user.id,
+      "public",
+    );
+    if (!claimed) {
       res.status(400).json({ error: "Invalid circle image." });
       return;
     }

@@ -89,8 +89,22 @@ router.post("/goals", requireAuth, async (req, res): Promise<void> => {
     // Only a real, allowlisted internal uploaded image may be stored — never an
     // arbitrary external URL (fetched in the user's browser: tracking / SSRF)
     // nor a disguised non-image upload.
-    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
+    const objectStorage = new ObjectStorageService();
+    const usable = await objectStorage.isUsableImageObject(imageUrl);
     if (!usable) {
+      res.status(400).json({ error: "Invalid goal image." });
+      return;
+    }
+    // Goals are personal: the image is only ever displayed back to its owner, so
+    // lock the object to the owner. Until bound here an object has no ACL policy
+    // and the serving route refuses to read it. Claiming fails if the object is
+    // already owned by someone else, preventing object takeover by path.
+    const claimed = await objectStorage.claimObjectEntityForOwner(
+      imageUrl,
+      user.id,
+      "private",
+    );
+    if (!claimed) {
       res.status(400).json({ error: "Invalid goal image." });
       return;
     }

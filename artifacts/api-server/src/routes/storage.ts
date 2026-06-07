@@ -9,7 +9,8 @@ import {
   ObjectNotFoundError,
   ALLOWED_IMAGE_TYPES,
 } from "../lib/objectStorage";
-import { requireAuth } from "../lib/auth";
+import { ObjectPermission } from "../lib/objectAcl";
+import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -112,6 +113,22 @@ router.get("/storage/objects/*path", requireAuth, async (req: Request, res: Resp
     const wildcardPath = Array.isArray(raw) ? raw.join("/") : raw;
     const objectPath = `/objects/${wildcardPath}`;
     const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
+
+    // Object-level authorization: never stream a private object to a user who
+    // isn't allowed to read it. Objects carry an ACL policy set when they are
+    // bound to an avatar / circle / goal; anything without a policy (e.g. a raw
+    // upload that was never attached) is denied. This stops one logged-in user
+    // from fetching another user's object just by knowing its path.
+    const requester = (req as AuthRequest).user;
+    const canRead = await objectStorageService.canAccessObjectEntity({
+      userId: requester.id,
+      objectFile,
+      requestedPermission: ObjectPermission.READ,
+    });
+    if (!canRead) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
 
     // These are user-uploaded, untrusted files. Serve them with content-type
     // sanitization (nosniff + non-image → octet-stream attachment) so a

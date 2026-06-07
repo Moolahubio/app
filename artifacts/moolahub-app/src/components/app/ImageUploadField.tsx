@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { Label } from "@/components/ui/label";
@@ -17,13 +17,26 @@ type ImageUploadFieldProps = {
 export function ImageUploadField({ label, hint, value, onChange, disabled }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
+  // A just-uploaded object has no ACL policy until the parent form is submitted,
+  // so the serving route would refuse to read it. Preview the local file blob
+  // until then, and only fall back to the stored object path for saved values.
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (localPreview) URL.revokeObjectURL(localPreview);
+    };
+  }, [localPreview]);
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (res) => {
       setError(null);
       onChange(res.objectPath);
     },
-    onError: () => setError("Could not upload image."),
+    onError: () => {
+      setError("Could not upload image.");
+      setLocalPreview(null);
+    },
   });
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,10 +48,11 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
       return;
     }
     setError(null);
+    setLocalPreview(URL.createObjectURL(file));
     void uploadFile(file);
   };
 
-  const preview = avatarSrc(value);
+  const preview = localPreview ?? avatarSrc(value);
   const busy = isUploading || disabled;
 
   return (
@@ -70,7 +84,10 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
           {value && !isUploading && (
             <button
               type="button"
-              onClick={() => onChange(null)}
+              onClick={() => {
+                setLocalPreview(null);
+                onChange(null);
+              }}
               className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
               <X className="h-3 w-3" /> Remove

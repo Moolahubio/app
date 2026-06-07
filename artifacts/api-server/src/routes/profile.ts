@@ -53,8 +53,22 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
       // Only a real, allowlisted internal uploaded image is allowed — never an
       // arbitrary external URL (rendered in other users' browsers) nor a
       // disguised non-image upload.
-      const usable = await new ObjectStorageService().isUsableImageObject(a);
+      const objectStorage = new ObjectStorageService();
+      const usable = await objectStorage.isUsableImageObject(a);
       if (!usable) {
+        res.status(400).json({ error: "Invalid profile image." });
+        return;
+      }
+      // Avatars are only ever displayed back to their owner, so lock the object
+      // down to the owner. Until an object is bound here it has no ACL policy
+      // and the serving route refuses to read it. Claiming fails if the object
+      // is already owned by someone else, preventing object takeover by path.
+      const claimed = await objectStorage.claimObjectEntityForOwner(
+        a,
+        user.id,
+        "private",
+      );
+      if (!claimed) {
         res.status(400).json({ error: "Invalid profile image." });
         return;
       }
