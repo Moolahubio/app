@@ -78,7 +78,7 @@ export default function CirclesPage() {
   };
 
   if (circlesLoading || invitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading circles...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your circles…</div>;
   }
 
   const visible = circles?.filter((c) => c.status !== "completed") ?? [];
@@ -89,7 +89,7 @@ export default function CirclesPage() {
       <PageHeader
         eyebrow="Susu Circles"
         title="Your circles"
-        description="Rotating savings with people you trust — every round held by an audited on-chain contract, not a person."
+        description="Rotating savings with people you trust. Every round is held by an on-chain contract, not a person."
         action={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
@@ -99,12 +99,12 @@ export default function CirclesPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create new Susu Circle</DialogTitle>
+                <DialogTitle>New circle</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>Name</Label>
-                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder="Family Savings" />
+                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Family savings" />
                 </div>
                 <div className="space-y-2">
                   <Label>Circle type</Label>
@@ -117,14 +117,14 @@ export default function CirclesPage() {
                       htmlFor="type-rotation"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
-                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60 dark:bg-jade-500/10" : "border-border",
+                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60" : "border-border",
                       )}
                     >
                       <RadioGroupItem value="rotation" id="type-rotation" className="mt-0.5" />
                       <span className="text-sm">
                         <span className="font-semibold text-foreground">Rotation</span>
                         <span className="block text-xs text-muted-foreground">
-                          Take turns — everyone pays each round and one member receives the full pot until all have had a turn.
+                          Take turns. Everyone pays each round, and one member receives the full pot until all have had a turn.
                         </span>
                       </span>
                     </label>
@@ -132,21 +132,21 @@ export default function CirclesPage() {
                       htmlFor="type-accumulation"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
-                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60 dark:bg-jade-500/10" : "border-border",
+                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60" : "border-border",
                       )}
                     >
                       <RadioGroupItem value="accumulation" id="type-accumulation" className="mt-0.5" />
                       <span className="text-sm">
                         <span className="font-semibold text-foreground">Accumulation</span>
                         <span className="block text-xs text-muted-foreground">
-                          Save together — everyone pays into one shared pot and gets their own savings back at the end.
+                          Save together. Everyone pays into one shared pot and gets their own savings back at the end.
                         </span>
                       </span>
                     </label>
                   </RadioGroup>
                 </div>
                 <div className="space-y-2">
-                  <Label>Each person pays per round (USDC)</Label>
+                  <Label>Contribution per round (USDC)</Label>
                   <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
                 </div>
                 {type === "accumulation" && (
@@ -174,12 +174,12 @@ export default function CirclesPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Member Emails (comma separated)</Label>
+                  <Label>Member emails</Label>
                   <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder="friend@example.com, cousin@example.com" />
                 </div>
-                <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4 dark:border-jade-500/20 dark:bg-jade-500/10">
+                <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4">
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You pay / round</p>
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You pay per round</p>
                     <p className="font-semibold text-foreground">{formatMoney(Math.round(contributionAmount * 100))}</p>
                   </div>
                   <div>
@@ -191,7 +191,7 @@ export default function CirclesPage() {
                   <p className="col-span-2 text-xs text-muted-foreground">
                     {type === "accumulation"
                       ? `Your own savings back after ${roundsNum || 0} rounds.`
-                      : "Estimate based on members so far — finalized when the circle starts."}
+                      : "Estimate based on members so far. Finalized when the circle starts."}
                   </p>
                 </div>
                 <ImageUploadField
@@ -201,7 +201,7 @@ export default function CirclesPage() {
                   onChange={setImageUrl}
                 />
                 <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating…" : "Create Circle"}
+                  {createMutation.isPending ? "Creating…" : "Create circle"}
                 </Button>
               </form>
             </DialogContent>
@@ -209,7 +209,7 @@ export default function CirclesPage() {
         }
       />
 
-      <Card className="flex items-center gap-4 border-jade-500/15 bg-jade-50/60 p-5 dark:border-jade-500/20 dark:bg-jade-500/10">
+      <Card className="flex items-center gap-4 border-jade-500/15 bg-jade-50/60 p-5">
         <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-jade-500 text-white sm:flex">
           <ShieldCheck className="h-6 w-6" />
         </span>
@@ -218,12 +218,12 @@ export default function CirclesPage() {
           contributes a fixed amount each round. In a <span className="font-medium text-foreground">rotation</span>{" "}
           circle, one member receives the full pot each round until everyone has had a turn. In an{" "}
           <span className="font-medium text-foreground">accumulation</span> circle, everyone saves into a shared
-          pot and gets their own savings back at the end — all verifiable on Base.
+          pot and gets their own savings back at the end. Everything is verifiable on Base.
         </p>
       </Card>
 
       {inviteList.length > 0 && (
-        <Card className="border-jade-500/20 bg-jade-50/50 p-6 dark:bg-jade-500/10">
+        <Card className="border-jade-500/20 bg-jade-50/50 p-6">
           <div className="flex items-center gap-2">
             <Inbox className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">
@@ -340,7 +340,7 @@ export default function CirclesPage() {
                 </div>
               ) : (
                 <div className="mt-5 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Forming — waiting to start</span>
+                  <span className="text-xs text-muted-foreground">Forming. Waiting to start.</span>
                 </div>
               )}
 
@@ -360,14 +360,14 @@ export default function CirclesPage() {
           <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card">
             <Plus className="h-6 w-6" />
           </span>
-          <span className="text-sm font-semibold">Start a new circle</span>
+          <span className="text-sm font-semibold">Start a circle</span>
           <span className="max-w-[200px] text-center text-xs">
             Invite friends or family and set your contribution
           </span>
         </button>
       </div>
 
-      <Eyebrow className="pt-4 text-center text-muted-foreground">Save Now · Grow Together</Eyebrow>
+      <Eyebrow className="pt-4 text-center text-muted-foreground">Save today · Reach it together</Eyebrow>
     </div>
   );
 }

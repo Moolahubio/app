@@ -12,8 +12,6 @@ import { notify } from "./notifications";
 import { formatMoney } from "./money";
 import { goalVaultEnabled, goalVaultContract, explorerUrl, networkName } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
-import { recordSave } from "./streaks";
-import { ObjectStorageService } from "./objectStorage";
 
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
 // feeBps (2%). Deposits are free. When the vault isn't configured/reachable,
@@ -122,15 +120,6 @@ export async function createGoal(
     imageUrl?: string | null;
   },
 ) {
-  // Only accept a real, allowlisted internal uploaded image within the size cap.
-  // The signed PUT URL isn't constrained, so this is the enforcement point —
-  // rejecting external URLs and disguised non-image uploads.
-  const imageUrl = input.imageUrl ?? null;
-  if (imageUrl !== null) {
-    const usable = await new ObjectStorageService().isUsableImageObject(imageUrl);
-    if (!usable) throw new AppError("Invalid goal image.");
-  }
-
   const [goal] = await db
     .insert(goalsTable)
     .values({
@@ -142,7 +131,7 @@ export async function createGoal(
       frequency: input.frequency || "weekly",
       autoSaveCents: input.autoSaveCents ?? null,
       color: input.color || "jade",
-      imageUrl,
+      imageUrl: input.imageUrl ?? null,
     })
     .returning();
   return { ...goal, savedCents: 0, ...goalOnchainMeta(), history: [] as GoalHistoryItem[] };
@@ -200,14 +189,10 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
 
   if (onchain) kickReconciler();
 
-  // Streaks: a goal allocation is a qualifying save. Derived, non-financial —
-  // never throws and never affects the ledger above.
-  await recordSave(userId, { type: "goal", id: goalId, frequency: goal.frequency }, txn.id);
-
   await notify(userId, {
     type: "goal",
     title: `Added to ${goal.name}`,
-    body: `${formatMoney(amountCents)} ${goal.emoji} moved into your ${goal.name} goal.`,
+    body: `${formatMoney(amountCents)} moved into ${goal.name}.`,
     link: `/goals/${goalId}`,
   });
   return txn;

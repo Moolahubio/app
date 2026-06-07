@@ -1,0 +1,33 @@
+name: copy-lint
+
+# Catches "AI-default" copy tells (em-dashes, emojis in notifications, "Loading…"
+# three-dots, Title-Case labels, growth claims) before they merge.
+# Rules live in scripts/check-copy.mjs; voice guide in docs/brand/BRAND_VOICE.md.
+
+on:
+  pull_request:
+    paths:
+      - "artifacts/moolahub-app/src/**"
+      - "artifacts/api-server/src/**"
+      - "scripts/check-copy.mjs"
+      - ".github/workflows/copy-lint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "artifacts/moolahub-app/src/**"
+      - "artifacts/api-server/src/**"
+      - "scripts/check-copy.mjs"
+
+permissions:
+  contents: read
+
+jobs:
+  copy-lint:
+    name: Copy voice lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: node scripts/check-copy.mjs

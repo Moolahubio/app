@@ -170,7 +170,7 @@ export default function StreaksPage() {
             <div>
               <p className="font-semibold text-foreground">Gentle reminders</p>
               <p className="text-sm text-muted-foreground">
-                A single nudge before a period closes — only if you want it. Off by default.
+                A single nudge before a period closes, only if you want it. Off by default.
               </p>
             </div>
           </div>

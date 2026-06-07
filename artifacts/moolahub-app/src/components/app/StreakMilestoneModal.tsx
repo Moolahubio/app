@@ -68,7 +68,7 @@ export function StreakMilestoneModal({ badges }: { badges?: StreakBadge[] }) {
             <Sparkles className="h-5 w-5 text-amber-500" /> New badge earned
           </DialogTitle>
           <DialogDescription>
-            Three months of steady saving. That consistency is the whole game — nicely done.
+            Three months of steady saving. That consistency is the whole game. Nicely done.
           </DialogDescription>
         </DialogHeader>
         {active && (

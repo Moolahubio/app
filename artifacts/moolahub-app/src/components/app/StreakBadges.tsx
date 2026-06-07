@@ -17,7 +17,7 @@ export function StreakBadges({ badges }: { badges: StreakBadge[] }) {
     return (
       <p className="text-sm text-muted-foreground">
         Keep a streak alive for three months to earn your first badge. There are four to collect each
-        year — one for every season.
+        year, one for every season.
       </p>
     );
   }

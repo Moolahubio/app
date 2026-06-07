@@ -12,11 +12,7 @@ import { apiErrorMessage } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 
-export function PasskeySignIn({
-  onTwoFactorRequired,
-}: {
-  onTwoFactorRequired: (challengeId: string) => void;
-}) {
+export function PasskeySignIn() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
@@ -32,20 +28,16 @@ export function PasskeySignIn({
       const response = await startAuthentication({
         optionsJSON: options as unknown as PublicKeyCredentialRequestOptionsJSON,
       });
-      const result = await passkeyVerify.mutateAsync({
+      await passkeyVerify.mutateAsync({
         data: { flowId, response: response as unknown as Record<string, unknown> },
       });
-      if (result.twoFactorRequired && result.challengeId) {
-        onTwoFactorRequired(result.challengeId);
-        return;
-      }
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
       if (err instanceof Error && err.name === "NotAllowedError") {
-        setPasskeyError("Passkey sign-in was cancelled.");
+        setPasskeyError("Sign-in cancelled.");
       } else {
-        setPasskeyError(apiErrorMessage(err) ?? "Could not sign in with passkey.");
+        setPasskeyError(apiErrorMessage(err) ?? "We couldn't sign you in. Please try again.");
       }
     }
   };

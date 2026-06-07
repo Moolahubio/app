@@ -45,14 +45,14 @@ export default function ActivityPage() {
   const grouped = groupByDay(activity ?? []);
   const reminder = summary?.upcomingReminder;
 
-  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">Loading activity...</div>;
+  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">Loading activity…</div>;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         eyebrow="Activity"
         title="Your money, on the record"
-        description="Every deposit, contribution and payout — each linked to its proof on Base."
+        description="Every deposit, contribution, and payout. Each one is linked to its proof on Base."
       />
 
       {reminder && (

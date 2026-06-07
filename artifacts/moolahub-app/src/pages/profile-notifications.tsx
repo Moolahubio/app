@@ -24,7 +24,7 @@ const TIERS: {
     key: "everything",
     label: "Everything",
     description:
-      "All notifications — circle activity, goal milestones, deposits, reminders, and tips.",
+      "All notifications: circle activity, goal milestones, deposits, reminders, and tips.",
     recommended: true,
   },
   {

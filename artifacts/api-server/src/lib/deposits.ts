@@ -25,15 +25,6 @@ function initialOnchainMeta() {
     : { onchainStatus: "none" as const };
 }
 
-/** Postgres unique-violation (SQLSTATE 23505), surfaced by node-postgres. */
-function isUniqueViolation(e: unknown): boolean {
-  return (
-    typeof e === "object" &&
-    e !== null &&
-    (e as { code?: string }).code === "23505"
-  );
-}
-
 /**
  * Testnet faucet: the platform distributor sends test USDC to the user's
  * wallet. Credits the ledger; settles on-chain where the platform is funded.
@@ -76,7 +67,7 @@ export async function faucetDeposit(userId: string, amountCents: number) {
   await notify(userId, {
     type: "deposit",
     title: "USDC received",
-    body: `${formatMoney(amountCents)} is now in your wallet.`,
+    body: `${formatMoney(amountCents)} was added to your wallet.`,
     link: "/activity",
   });
   return txn;
@@ -110,28 +101,19 @@ export async function syncDeposits(
         ),
       );
     if (seen) continue;
-    try {
-      await transfer({
-        type: "deposit",
-        description: `USDC deposit from ${truncateAddress(p.from, 4, 4)}`,
-        userId,
-        fromKey: acct.external,
-        toKey: acct.wallet(userId),
-        amountCents: p.amountCents,
-        onchain: { txHash: p.hash, onchainStatus: "confirmed" },
-      });
-    } catch (e) {
-      // A concurrent /wallet/sync already credited this exact tx hash: the
-      // partial unique index on (tx_hash) WHERE type='deposit' rejected the
-      // duplicate insert. Skip without re-crediting — this is the race-safe
-      // guard against double-crediting the same on-chain deposit.
-      if (isUniqueViolation(e)) continue;
-      throw e;
-    }
+    await transfer({
+      type: "deposit",
+      description: `USDC deposit from ${truncateAddress(p.from, 4, 4)}`,
+      userId,
+      fromKey: acct.external,
+      toKey: acct.wallet(userId),
+      amountCents: p.amountCents,
+      onchain: { txHash: p.hash, onchainStatus: "confirmed" },
+    });
     await notify(userId, {
       type: "deposit",
       title: "USDC received",
-      body: `${formatMoney(p.amountCents)} arrived in your wallet.`,
+      body: `${formatMoney(p.amountCents)} was added to your wallet.`,
       link: "/activity",
     });
     credited += 1;

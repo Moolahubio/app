@@ -71,7 +71,7 @@ export default function GoalsPage() {
   };
 
   if (goalsLoading || walletLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading goals...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your goals…</div>;
   }
 
   const goalsList = goals ?? [];
@@ -83,7 +83,7 @@ export default function GoalsPage() {
       <PageHeader
         eyebrow="Savings Goals"
         title="Your goals"
-        description="Name a target, automate a weekly amount, and climb toward it. Goals are allocations over your one wallet — not separate accounts."
+        description="Set a target and a date, and we'll track your progress. Goals are pots within your one wallet, not separate accounts."
         action={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
@@ -93,19 +93,19 @@ export default function GoalsPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create a savings goal</DialogTitle>
+                <DialogTitle>Create a goal</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Goal Name</Label>
-                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder="Emergency Fund" />
+                  <Label>Goal name</Label>
+                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Emergency fund" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Target Amount (USDC)</Label>
+                  <Label>Target amount (USDC)</Label>
                   <Input type="number" value={target} onChange={e => setTarget(e.target.value)} required placeholder="1000" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Target Date</Label>
+                  <Label>Target date</Label>
                   <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
@@ -260,8 +260,7 @@ export default function GoalsPage() {
           <span className="font-semibold text-foreground">
             {formatMoney(wallet?.availableCents ?? 0)}
           </span>{" "}
-          unallocated. Assign it to a goal to keep your saving on track — or opt in to yield so
-          idle balances can grow while you wait.
+          unallocated. Assign it to a goal to keep your saving on track.
         </p>
       </Card>
     </div>
