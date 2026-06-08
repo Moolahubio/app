@@ -49,6 +49,13 @@ export const transactionsTable = pgTable("transactions", {
   // crediting the same incoming USDC payment: the second insert fails on this
   // unique index and is skipped. Partial so it ignores faucet/other rows whose
   // tx_hash is null and only applies to deposit credits.
+  //
+  // NOTE: other transaction types (goal_withdraw net+fee, circle payout+fee)
+  // intentionally share the same hash across multiple rows (one on-chain event
+  // produces several ledger postings). The index must stay deposit-scoped so it
+  // does not block those legitimate multi-row settlements. The application-level
+  // cross-type hash check in syncDeposits() is what prevents an already-
+  // recorded hash from being re-imported as a new deposit.
   uniqueIndex("transactions_deposit_tx_hash_uniq")
     .on(t.txHash)
     .where(sql`${t.type} = 'deposit' and ${t.txHash} is not null`),

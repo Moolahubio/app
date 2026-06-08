@@ -2,7 +2,14 @@ import { eq, and, inArray } from "drizzle-orm";
 import { AppError } from "./errors";
 import { db, transactionsTable } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import { onchainEnabled, getIncomingUsdc, isValidAddress } from "./chain";
+import {
+  onchainEnabled,
+  getIncomingUsdc,
+  isValidAddress,
+  platformAddress,
+  goalVaultContract,
+  factoryContract,
+} from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { getWalletForUser } from "./wallet";
 import { notify } from "./notifications";
@@ -86,6 +93,11 @@ export async function faucetDeposit(userId: string, amountCents: number) {
 /**
  * Detect real incoming USDC payments to the user's wallet and credit any not
  * already recorded. Returns the number of new deposits credited.
+ *
+ * Only transfers from addresses that are NOT internal platform contracts are
+ * eligible. Transfers from the platform distributor, goal vault, or circle
+ * factory are already booked under other transaction types (payout, goal_release,
+ * etc.) and must never be re-imported as fresh deposits.
  */
 export async function syncDeposits(
   userId: string,
@@ -93,23 +105,35 @@ export async function syncDeposits(
   const wallet = await getWalletForUser(userId);
   if (!wallet) return { credited: 0, totalCents: 0 };
 
+  // Collect all known internal sender addresses (lower-cased for comparison).
+  // These are platform-controlled contracts whose outgoing USDC transfers to
+  // user wallets represent already-booked ledger entries (payouts, goal
+  // withdrawals, etc.) and must never be imported as external deposits.
+  const internalAddresses = new Set<string>(
+    [platformAddress(), goalVaultContract(), factoryContract()]
+      .filter((a): a is string => Boolean(a))
+      .map((a) => a.toLowerCase()),
+  );
+
   const payments = await getIncomingUsdc(wallet.address);
   let credited = 0;
   let totalCents = 0;
   for (const p of payments) {
+    // Reject transfers originating from internal platform addresses. These are
+    // app-generated outflows (payouts, goal withdrawals, faucet sends) that
+    // already have a ledger entry under another transaction type. Importing them
+    // again would create duplicate balance.
+    if (internalAddresses.has(p.from.toLowerCase())) continue;
+
     // The bare on-chain tx hash is the canonical dedupe key shared by every
-    // deposit source (faucet records `p.hash` too), so a faucet send can't be
-    // re-imported by sync. We also match the legacy `hash:logIndex` form for
-    // any rows written before this canonicalization.
+    // transaction type. We check across all types (not just 'deposit') so that
+    // a hash already recorded as goal_withdraw, payout, faucet, etc. is not
+    // re-imported as a new deposit. We also match the legacy `hash:logIndex`
+    // form for any rows written before this canonicalization.
     const [seen] = await db
       .select({ id: transactionsTable.id })
       .from(transactionsTable)
-      .where(
-        and(
-          eq(transactionsTable.type, "deposit"),
-          inArray(transactionsTable.txHash, [p.hash, p.opId]),
-        ),
-      );
+      .where(inArray(transactionsTable.txHash, [p.hash, p.opId]));
     if (seen) continue;
     try {
       await transfer({
@@ -122,12 +146,12 @@ export async function syncDeposits(
         onchain: { txHash: p.hash, onchainStatus: "confirmed" },
       });
     } catch (e) {
-      // Authoritative dedupe guard: the partial unique index on
-      // transactions(tx_hash) WHERE type='deposit' rejects a second credit for
-      // the same on-chain payment. The pre-check above is only a fast path; two
-      // concurrent /wallet/sync calls can both pass it, so the index is what
-      // actually prevents double-crediting. Treat the rejection as "already
-      // credited" and skip — never re-throw it as a request failure or count it.
+      // Authoritative dedupe guard: the unique index on transactions(tx_hash)
+      // WHERE tx_hash IS NOT NULL rejects any second insert for the same hash,
+      // regardless of transaction type. The pre-check above is only a fast
+      // path; two concurrent /wallet/sync calls can both pass it, so the index
+      // is what actually prevents double-crediting. Treat the rejection as
+      // "already credited" and skip.
       if (isUniqueViolation(e)) continue;
       throw e;
     }
