@@ -411,7 +411,7 @@ export const CreateCircleBody = zod.object({
   "contributionCents": zod.number(),
   "numRounds": zod.number().optional(),
   "frequency": zod.string(),
-  "memberEmails": zod.array(zod.string()),
+  "memberEmails": zod.array(zod.string()).max(19, "A circle can have at most 20 members (including the organizer)"),
   "imageUrl": zod.string().optional()
 })
 

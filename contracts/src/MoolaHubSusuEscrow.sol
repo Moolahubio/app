@@ -26,6 +26,10 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
 
     uint16 public constant MAX_FEE_BPS = 500; // hard cap 5%; MoolaHub uses 200 (2%)
     uint256 private constant BPS = 10_000;
+    /// @dev Hard cap on roster size. Bounding members prevents the stall-recovery
+    ///      loops in cancelStalled() (_accrueRefunds + _flagDelinquents) from
+    ///      exceeding block gas limits, which would permanently lock contributions.
+    uint256 public constant MAX_MEMBERS = 20;
 
     IERC20 public usdc;
     uint256 public contributionAmount;
@@ -67,6 +71,7 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     function initialize(InitParams calldata p) external initializer {
         if (p.usdc == address(0) || p.treasury == address(0)) revert BadConfig();
         if (p.members.length < 2) revert BadConfig();
+        if (p.members.length > MAX_MEMBERS) revert BadConfig();
         if (p.contributionAmount == 0) revert BadConfig();
         if (p.feeBps > MAX_FEE_BPS) revert BadConfig();
         if (p.roundDuration == 0) revert BadConfig();

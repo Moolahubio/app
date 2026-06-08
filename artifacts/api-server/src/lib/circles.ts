@@ -18,6 +18,10 @@ import { formatMoney } from "./money";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
 const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS) || 200;
+/** Must match MAX_MEMBERS in MoolaHubSusuEscrow.sol. Bounding roster size prevents
+ *  the stall-recovery loops (cancelStalled → _accrueRefunds + _flagDelinquents)
+ *  from exceeding block gas, which would permanently lock member contributions. */
+const MAX_CIRCLE_MEMBERS = 20;
 
 /** Protocol fee in cents for a gross amount, mirroring the escrow's on-chain
  * integer math (`amount * feeBps / 10000`, truncated). */
@@ -75,6 +79,10 @@ export async function createCircle(
 ) {
   if (!input.name?.trim()) throw new AppError("Circle name is required.");
   if (input.contributionCents <= 0) throw new AppError("Enter a contribution amount.");
+  const inviteCount = (input.memberEmails ?? []).filter((e) => e?.includes("@")).length;
+  if (inviteCount > MAX_CIRCLE_MEMBERS - 1) {
+    throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} members (including the organizer).`);
+  }
   const type = input.type === "accumulation" ? "accumulation" : "rotation";
 
   // For accumulation circles the organizer chooses how many rounds the circle
@@ -664,6 +672,9 @@ export async function startCircle(userId: string, circleId: string) {
   if (!circle) throw new AppError("Only the creator can start this circle.");
   if (circle.status !== "forming") throw new AppError("This circle has already started.");
   if (circle.members.length < 2) throw new AppError("Invite at least one more member first.");
+  if (circle.members.length > MAX_CIRCLE_MEMBERS) {
+    throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} members. Remove some members before starting.`);
+  }
   // Rotation: lock rounds to the final member count and finalize each member's
   // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
   const startUpdate =

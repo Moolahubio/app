@@ -174,8 +174,13 @@ export default function CirclesPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Member emails</Label>
+                  <Label>Member emails <span className="text-xs font-normal text-muted-foreground">(up to 19, comma-separated)</span></Label>
                   <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder="friend@example.com, cousin@example.com" />
+                  {emailCount > 19 && (
+                    <p className="text-xs text-destructive">
+                      Too many members — a circle can have at most 20 people (you + 19 invitees).
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4">
                   <div>
@@ -200,7 +205,7 @@ export default function CirclesPage() {
                   value={imageUrl}
                   onChange={setImageUrl}
                 />
-                <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+                <Button type="submit" className="w-full" disabled={createMutation.isPending || emailCount > 19}>
                   {createMutation.isPending ? "Creating…" : "Create circle"}
                 </Button>
               </form>
