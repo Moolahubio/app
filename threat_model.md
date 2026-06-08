@@ -30,11 +30,11 @@ This scan is production-scoped. `artifacts/mockup-sandbox`, e2e test files, cont
 ## Scan Anchors
 
 - **Production entry points**: `artifacts/api-server/src/app.ts`, `artifacts/api-server/src/routes/*`, `artifacts/moolahub-app/src/main.tsx`, `contracts/src/*`.
-- **Highest-risk code areas**: `artifacts/api-server/src/lib/auth.ts`, `routes/auth.ts`, `routes/passkeys.ts`, `routes/security.ts`, `lib/deposits.ts`, `lib/ledger.ts`, `lib/settlement.ts`, `routes/storage.ts`, `lib/objectStorage.ts`, `lib/circles.ts`, `lib/goals.ts`, `lib/crypto.ts`.
+- **Highest-risk code areas**: `artifacts/api-server/src/lib/auth.ts`, `routes/auth.ts`, `routes/passkeys.ts`, `routes/security.ts`, `lib/deposits.ts`, `lib/ledger.ts`, `lib/settlement.ts`, `routes/storage.ts`, `lib/objectStorage.ts`, `lib/circles.ts`, `lib/goals.ts`, `lib/email.ts`, `lib/crypto.ts`, `contracts/src/*`.
 - **Public surfaces**: health, Privy login bootstrap, passkey login bootstrap.
 - **Authenticated surfaces**: wallet, goals, circles, profile, notifications, storage objects, on-chain config, account management.
 - **Operator-only surfaces**: `routes/operations.ts` guarded by `OPERATOR_TOKEN`.
-- **Production-relevant testnet posture**: `artifacts/api-server/src/lib/chain.ts`, `routes/wallet.ts`, `routes/onchain.ts`, `contracts/deployments/base-sepolia.json`, and contract paths whose safety depends on unbounded member lists or test-token behavior.
+- **Production-relevant testnet posture**: `artifacts/api-server/src/lib/chain.ts`, `routes/wallet.ts`, `routes/onchain.ts`, `contracts/deployments/base-sepolia.json`, `contracts/deployments/latest.json`, and contract paths whose safety depends on unbounded member lists, privileged roles, or test-token behavior.
 - **Usually dev-only**: `artifacts/mockup-sandbox/**`, `artifacts/api-server/src/**/*.e2e.ts`, `contracts/out/**`, `contracts/cache/**`, `attached_assets/**`.
 
 ## Threat Categories
