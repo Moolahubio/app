@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui";
-import { PageHeader } from "@/components/app/bits";
+import { PageHeader, BackLink } from "@/components/app/bits";
 import { useListNotifications, useMarkNotificationRead, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Bell, UserPlus, Users, ArrowDownLeft, ArrowUpRight, Target, PartyPopper, Sparkles } from "lucide-react";
@@ -30,6 +30,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <BackLink href="/" label="Home" />
       <PageHeader
         eyebrow="Notifications"
         title="Everything that's happened"

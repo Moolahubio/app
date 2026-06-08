@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { AlertCircle, Eye, EyeOff, Check, Loader2 } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Check, Loader2, LogOut } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { authInputClass } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui";
@@ -9,6 +9,7 @@ import {
   useUpdateProfile,
   useChangePassword,
   useUsernameAvailable,
+  useLogout,
   getUsernameAvailableQueryKey,
   getGetMeQueryKey,
   getGetProfileQueryKey,
@@ -22,8 +23,21 @@ export default function CompleteProfile() {
   const { data: user, isLoading } = useGetMe();
   const updateProfile = useUpdateProfile();
   const changePassword = useChangePassword();
+  const logout = useLogout();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+
+  const handleSignOut = () => {
+    logout.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.setQueryData(getGetMeQueryKey(), null);
+        queryClient.removeQueries({
+          predicate: (q) => q.queryKey[0] !== getGetMeQueryKey()[0],
+        });
+        setLocation("/login");
+      },
+    });
+  };
 
   const needsUsername = !!user && !user.username;
   const needsPassword = !!user && !user.hasPassword;
@@ -110,6 +124,14 @@ export default function CompleteProfile() {
   return (
     <AuthShell>
       <div className="space-y-5">
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={logout.isPending}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-ring disabled:opacity-60"
+        >
+          <LogOut className="h-4 w-4" /> {logout.isPending ? "Signing out…" : "Sign out"}
+        </button>
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
             Finish setting up

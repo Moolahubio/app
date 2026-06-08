@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Flame, Snowflake, Plane, Bell, Share2, Trophy, ChevronRight } from "lucide-react";
 import { Card, Badge, Button, Eyebrow } from "@/components/ui";
 import { Switch } from "@/components/ui/switch";
-import { PageHeader } from "@/components/app/bits";
+import { PageHeader, BackLink } from "@/components/app/bits";
 import {
   StreakFlameHero,
   StreakChip,
@@ -56,6 +56,7 @@ export default function StreaksPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <BackLink href="/" label="Home" />
       <PageHeader eyebrow="Streaks" title="Savings streaks" />
 
       {/* Hero */}

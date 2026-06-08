@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { ArrowLeft } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerifyEmailStep } from "@/components/auth/VerifyEmailStep";
@@ -42,6 +43,12 @@ export default function Register() {
         />
       ) : (
         <div className="space-y-5">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to sign in
+          </Link>
           <div>
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
               Create your account
