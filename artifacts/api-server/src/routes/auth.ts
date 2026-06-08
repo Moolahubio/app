@@ -33,6 +33,7 @@ import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
+import { isUniqueViolation } from "../lib/dbErrors";
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -218,19 +219,30 @@ router.post("/auth/register", requireJsonAndAllowedOrigin, async (req, res): Pro
   const passwordHash = await hashPassword(password);
 
   let user: UserRow;
-  if (existing) {
-    // Re-registering an account that never finished email verification: refresh
-    // its details and issue a new code.
-    [user] = await db
-      .update(usersTable)
-      .set({ name, username, passwordHash, dateOfBirth, referralSource })
-      .where(eq(usersTable.id, existing.id))
-      .returning();
-  } else {
-    [user] = await db
-      .insert(usersTable)
-      .values({ name, email, username, passwordHash, dateOfBirth, referralSource })
-      .returning();
+  try {
+    if (existing) {
+      // Re-registering an account that never finished email verification: refresh
+      // its details and issue a new code.
+      [user] = await db
+        .update(usersTable)
+        .set({ name, username, passwordHash, dateOfBirth, referralSource })
+        .where(eq(usersTable.id, existing.id))
+        .returning();
+    } else {
+      [user] = await db
+        .insert(usersTable)
+        .values({ name, email, username, passwordHash, dateOfBirth, referralSource })
+        .returning();
+    }
+  } catch (err) {
+    // The case-insensitive unique index is the source of truth — the pre-check
+    // above is just UX. A concurrent registration that wins the race surfaces
+    // here as a unique violation and must map to a clean 409, not a 500.
+    if (isUniqueViolation(err)) {
+      res.status(409).json({ error: "That username is already taken." });
+      return;
+    }
+    throw err;
   }
 
   await issueVerificationCode(user.id, email, name);

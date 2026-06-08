@@ -4,6 +4,7 @@ import { db, usersTable, walletsTable } from "@workspace/db";
 import { UpdateProfileBody, GetProfileResponse, UpdateProfileResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { isUniqueViolation } from "../lib/dbErrors";
 
 const router: IRouter = Router();
 
@@ -102,11 +103,23 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
     }
   }
 
-  const [updated] = await db
-    .update(usersTable)
-    .set(updates)
-    .where(eq(usersTable.id, user.id))
-    .returning();
+  let updated: typeof usersTable.$inferSelect;
+  try {
+    [updated] = await db
+      .update(usersTable)
+      .set(updates)
+      .where(eq(usersTable.id, user.id))
+      .returning();
+  } catch (err) {
+    // DB-level CI unique index is the source of truth; the pre-check above is
+    // just UX. A concurrent rename that wins the race lands here as a unique
+    // violation and maps to a clean 409 instead of a 500.
+    if (isUniqueViolation(err)) {
+      res.status(409).json({ error: "That username is already taken." });
+      return;
+    }
+    throw err;
+  }
 
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id));
 

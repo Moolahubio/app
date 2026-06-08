@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, uuid, boolean, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, boolean, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -19,7 +20,9 @@ export const usersTable = pgTable("users", {
   // "How did you hear about MoolaHub?" — onboarding attribution.
   referralSource: text("referral_source"),
   // Public-facing handle, shown to other members instead of the legal name.
-  username: text("username").unique(),
+  // Uniqueness is enforced case-insensitively via a functional unique index
+  // (see below), not a plain UNIQUE column, so "Alice" and "alice" can't coexist.
+  username: text("username"),
   dateOfBirth: text("date_of_birth"),
   nationality: text("nationality"),
   // Notification preference tier + optional per-category custom map.
@@ -42,7 +45,11 @@ export const usersTable = pgTable("users", {
   vacationYearUsed: integer("vacation_year_used"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  // Case-insensitive uniqueness guarantee for public handles. NULLs are allowed
+  // (legacy accounts without a username yet) since NULLs don't collide.
+  usernameLowerUniq: uniqueIndex("users_username_lower_unique").on(sql`lower(${t.username})`),
+}));
 
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
