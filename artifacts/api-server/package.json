@@ -21,7 +21,8 @@
     "test:twofactor-http": "tsx src/lib/twofactor-http.e2e.ts",
     "test:auth-http": "tsx src/lib/auth-http.e2e.ts",
     "test:reset-http": "tsx src/lib/password-reset-http.e2e.ts",
-    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http && pnpm run test:reset-http"
+    "test:reset-throttle-http": "tsx src/lib/password-reset-throttle-http.e2e.ts",
+    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http && pnpm run test:reset-http && pnpm run test:reset-throttle-http"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",

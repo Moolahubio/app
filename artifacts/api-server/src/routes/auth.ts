@@ -38,6 +38,7 @@ import { hashPassword, verifyPassword } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
 import { issuePasswordResetCode, consumePasswordResetCode } from "../lib/passwordReset";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
+import { resetThrottleRemaining, recordResetRequest } from "../lib/resetThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
 import {
   createTwoFactorChallenge,
@@ -361,6 +362,18 @@ router.post("/auth/forgot-password", requireJsonAndAllowedOrigin, async (req, re
     return;
   }
   const email = parsed.data.email.trim().toLowerCase();
+  const ip = req.ip || "unknown";
+
+  // Throttle per IP + per email to stop email-bombing (flooding reset emails by
+  // rotating addresses), on top of the per-user resend cooldown. The 429 is
+  // generic and identical for any email, so it never reveals account existence.
+  const locked = resetThrottleRemaining("forgot", ip, email);
+  if (locked !== null) {
+    res.status(429).json({ error: "Too many requests. Please try again later." });
+    return;
+  }
+  recordResetRequest("forgot", ip, email);
+
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
   // Only password accounts can reset a password — and never reveal whether an
   // account exists / has a password. Privy-only accounts sign in with Privy.
@@ -382,6 +395,17 @@ router.post("/auth/reset-password", requireJsonAndAllowedOrigin, async (req, res
   }
 
   const email = parsed.data.email.trim().toLowerCase();
+  const ip = req.ip || "unknown";
+
+  // Per-IP throttle to slow probing of this endpoint (code brute-forcing itself
+  // is already capped by the per-code attempt burn). Generic 429, no enumeration.
+  const locked = resetThrottleRemaining("reset", ip, email);
+  if (locked !== null) {
+    res.status(429).json({ error: "Too many requests. Please try again later." });
+    return;
+  }
+  recordResetRequest("reset", ip, email);
+
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
   // A reset code is only ever issued to a password account, so a non-password /
   // missing account can never hold one — fail with the same generic message.
