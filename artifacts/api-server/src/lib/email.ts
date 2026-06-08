@@ -95,3 +95,20 @@ export function brandedEmail(opts: {
   </td></tr></table>
 </body></html>`;
 }
+
+/**
+ * Security heads-up sent after a password reset or change. Carries no code or
+ * link to act on — it only confirms the change happened and tells the user what
+ * to do if it wasn't them. No-ops without RESEND_API_KEY via sendEmail.
+ */
+export async function sendPasswordChangedEmail(to: string, name: string): Promise<void> {
+  const body =
+    `Hi ${name}, your MoolaHub password was just changed. If this was you, no action is needed. ` +
+    `If you didn't make this change, your email may be compromised — please contact support right away.`;
+  await sendEmail({
+    to,
+    subject: "Your MoolaHub password was changed",
+    html: brandedEmail({ heading: "Your password was changed", body }),
+    text: body,
+  });
+}

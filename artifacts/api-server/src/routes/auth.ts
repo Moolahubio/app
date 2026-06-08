@@ -37,6 +37,7 @@ import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
 import { issuePasswordResetCode, consumePasswordResetCode } from "../lib/passwordReset";
+import { sendPasswordChangedEmail } from "../lib/email";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
 import { resetThrottleRemaining, recordResetRequest } from "../lib/resetThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
@@ -431,6 +432,11 @@ router.post("/auth/reset-password", requireJsonAndAllowedOrigin, async (req, res
   // may be compromised, so force a fresh sign-in everywhere.
   await db.delete(sessionsTable).where(eq(sessionsTable.userId, user.id));
 
+  // Security heads-up. Best-effort: never block or fail the reset on a send error.
+  void sendPasswordChangedEmail(user.email, user.name).catch((e) =>
+    console.error("[auth] password-changed email failed:", e),
+  );
+
   res.json(ResetPasswordResponse.parse({ ok: true }));
 });
 
@@ -486,6 +492,11 @@ router.post("/auth/password", requireJsonAndAllowedOrigin, requireAuth, async (r
     updates.emailVerifiedAt = new Date();
   }
   await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id));
+
+  // Security heads-up. Best-effort: never block or fail the change on a send error.
+  void sendPasswordChangedEmail(user.email, user.name).catch((e) =>
+    console.error("[auth] password-changed email failed:", e),
+  );
 
   res.json(ChangePasswordResponse.parse({ ok: true }));
 });
