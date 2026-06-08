@@ -574,52 +574,79 @@ export async function listInvitesForUser(email: string) {
 }
 
 export async function acceptInvite(userId: string, userEmail: string, inviteId: string) {
-  const invite = await db.query.circleInvitesTable.findFirst({
-    where: eq(circleInvitesTable.id, inviteId),
-    with: { circle: { with: { members: true } } },
-  });
-  if (!invite || invite.status !== "pending") throw new AppError("Invitation not found.");
-  if (invite.email !== userEmail.toLowerCase()) throw new AppError("This invitation isn't for you.");
-  if (invite.circle.status !== "forming") throw new AppError("This circle has already started.");
-  if (invite.circle.members.some((m) => m.userId === userId)) {
-    await db
-      .update(circleInvitesTable)
-      .set({ status: "accepted" })
+  // All reads and writes are inside a single transaction. The circle row is
+  // locked FOR UPDATE so that concurrent acceptances and a racing startCircle
+  // are fully serialized: only one of them holds the lock at a time, and every
+  // subsequent accessor re-reads fresh data (not the stale snapshot that caused
+  // the original race). The unique constraints on (circle_id, position) and
+  // (circle_id, payout_round) are a belt-and-suspenders backstop that turns
+  // any surviving race into a hard error rather than silent corruption.
+  const result = await db.transaction(async (tx) => {
+    const [invite] = await tx
+      .select()
+      .from(circleInvitesTable)
       .where(eq(circleInvitesTable.id, inviteId));
-    return invite.circleId;
-  }
-  const nextPos = invite.circle.members.length + 1;
-  // This insert takes a FK row-lock on the parent circles row, which conflicts
-  // with the SELECT ... FOR UPDATE in deleteCircle. That serializes the two:
-  // a join and a delete can't interleave, so a circle is never deleted out from
-  // under a member who just accepted.
-  await db.insert(circleMembersTable).values({
-    circleId: invite.circleId,
-    userId,
-    position: nextPos,
-    payoutRound: nextPos,
-  });
-  // Rotation rounds track member count; accumulation rounds are fixed at creation.
-  if (invite.circle.type !== "accumulation") {
-    await db.update(circlesTable).set({ totalRounds: nextPos }).where(eq(circlesTable.id, invite.circleId));
-  }
-  await db.update(circleInvitesTable).set({ status: "accepted" }).where(eq(circleInvitesTable.id, inviteId));
+    if (!invite || invite.status !== "pending") throw new AppError("Invitation not found.");
+    if (invite.email !== userEmail.toLowerCase()) throw new AppError("This invitation isn't for you.");
 
-  const [accepter] = await db
-    .select({ name: usersTable.name })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-  await notify(
-    invite.circle.createdById,
-    {
-      type: "invite_accepted",
-      title: "New circle member",
-      body: `${accepter?.name ?? "Someone"} joined "${invite.circle.name}".`,
-      link: `/circles/${invite.circleId}`,
-    },
-    { email: true },
-  );
-  return invite.circleId;
+    // Lock the circle row so no concurrent accept or startCircle can run
+    // against this circle until we commit.
+    const [circle] = await tx
+      .select()
+      .from(circlesTable)
+      .where(eq(circlesTable.id, invite.circleId))
+      .for("update");
+    if (!circle) throw new AppError("Circle not found.");
+    if (circle.status !== "forming") throw new AppError("This circle has already started.");
+
+    // Re-read member count from within the locked transaction — never from a
+    // stale pre-lock snapshot.
+    const members = await tx
+      .select()
+      .from(circleMembersTable)
+      .where(eq(circleMembersTable.circleId, invite.circleId));
+
+    if (members.some((m) => m.userId === userId)) {
+      await tx
+        .update(circleInvitesTable)
+        .set({ status: "accepted" })
+        .where(eq(circleInvitesTable.id, inviteId));
+      return { circleId: invite.circleId, alreadyMember: true, createdById: circle.createdById, circleName: circle.name };
+    }
+
+    const nextPos = members.length + 1;
+    await tx.insert(circleMembersTable).values({
+      circleId: invite.circleId,
+      userId,
+      position: nextPos,
+      payoutRound: nextPos,
+    });
+    // Rotation rounds track member count; accumulation rounds are fixed at creation.
+    if (circle.type !== "accumulation") {
+      await tx.update(circlesTable).set({ totalRounds: nextPos }).where(eq(circlesTable.id, invite.circleId));
+    }
+    await tx.update(circleInvitesTable).set({ status: "accepted" }).where(eq(circleInvitesTable.id, inviteId));
+
+    return { circleId: invite.circleId, alreadyMember: false, createdById: circle.createdById, circleName: circle.name };
+  });
+
+  if (!result.alreadyMember) {
+    const [accepter] = await db
+      .select({ name: usersTable.name })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    await notify(
+      result.createdById,
+      {
+        type: "invite_accepted",
+        title: "New circle member",
+        body: `${accepter?.name ?? "Someone"} joined "${result.circleName}".`,
+        link: `/circles/${result.circleId}`,
+      },
+      { email: true },
+    );
+  }
+  return result.circleId;
 }
 
 /**
@@ -665,29 +692,45 @@ export async function declineInvite(userEmail: string, inviteId: string) {
 
 /** Creator locks the rotation and activates the circle (rounds = members). */
 export async function startCircle(userId: string, circleId: string) {
-  const circle = await db.query.circlesTable.findFirst({
-    where: and(eq(circlesTable.id, circleId), eq(circlesTable.createdById, userId)),
-    with: { members: true },
+  // Lock the circle row FOR UPDATE so a concurrent acceptInvite cannot slip a
+  // new member in between our member-count read and the status update. After
+  // the commit, any in-flight acceptInvite that already passed the status check
+  // will re-read "active" inside its own transaction and abort cleanly.
+  const { circle, memberIds } = await db.transaction(async (tx) => {
+    const [circle] = await tx
+      .select()
+      .from(circlesTable)
+      .where(and(eq(circlesTable.id, circleId), eq(circlesTable.createdById, userId)))
+      .for("update");
+    if (!circle) throw new AppError("Only the creator can start this circle.");
+    if (circle.status !== "forming") throw new AppError("This circle has already started.");
+
+    const members = await tx
+      .select()
+      .from(circleMembersTable)
+      .where(eq(circleMembersTable.circleId, circleId));
+
+    if (members.length < 2) throw new AppError("Invite at least one more member first.");
+    if (members.length > MAX_CIRCLE_MEMBERS) {
+      throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} members. Remove some members before starting.`);
+    }
+
+    // Rotation: lock rounds to the final member count and finalize each member's
+    // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
+    const startUpdate =
+      circle.type === "accumulation"
+        ? { status: "active", currentRound: 1, startDate: new Date() }
+        : {
+            status: "active",
+            currentRound: 1,
+            totalRounds: members.length,
+            payoutCents: circle.contributionCents * members.length,
+            startDate: new Date(),
+          };
+    await tx.update(circlesTable).set(startUpdate).where(eq(circlesTable.id, circleId));
+
+    return { circle, memberIds: members.map((m) => m.userId) };
   });
-  if (!circle) throw new AppError("Only the creator can start this circle.");
-  if (circle.status !== "forming") throw new AppError("This circle has already started.");
-  if (circle.members.length < 2) throw new AppError("Invite at least one more member first.");
-  if (circle.members.length > MAX_CIRCLE_MEMBERS) {
-    throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} members. Remove some members before starting.`);
-  }
-  // Rotation: lock rounds to the final member count and finalize each member's
-  // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
-  const startUpdate =
-    circle.type === "accumulation"
-      ? { status: "active", currentRound: 1, startDate: new Date() }
-      : {
-          status: "active",
-          currentRound: 1,
-          totalRounds: circle.members.length,
-          payoutCents: circle.contributionCents * circle.members.length,
-          startDate: new Date(),
-        };
-  await db.update(circlesTable).set(startUpdate).where(eq(circlesTable.id, circleId));
 
   // Each circle type gets its own per-circle on-chain contract (a clone with its
   // own parameters), deployed once the roster is locked. Best-effort — the ledger
@@ -698,7 +741,7 @@ export async function startCircle(userId: string, circleId: string) {
     await maybeDeployRotationEscrow(circleId);
   }
 
-  const others = circle.members.map((m) => m.userId).filter((id) => id !== userId);
+  const others = memberIds.filter((id) => id !== userId);
   await notifyMany(
     others,
     {

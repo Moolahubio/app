@@ -33,6 +33,8 @@ export const circleMembersTable = pgTable("circle_members", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => ({
   uniqMember: unique().on(t.circleId, t.userId),
+  uniqPosition: unique("circle_members_circle_id_position_unique").on(t.circleId, t.position),
+  uniqPayoutRound: unique("circle_members_circle_id_payout_round_unique").on(t.circleId, t.payoutRound),
 }));
 
 export const circleInvitesTable = pgTable("circle_invites", {

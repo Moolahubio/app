@@ -46,21 +46,48 @@ export async function sendEmail(params: {
   }
 }
 
+/** Escape user-controlled strings before embedding them in HTML email markup. */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
+/**
+ * Sanitize a URL for use in email href attributes.
+ * Only http and https schemes are allowed; anything else is replaced with a
+ * safe fallback so injected `javascript:` or `data:` URIs cannot execute.
+ */
+function sanitizeHref(href: string): string {
+  try {
+    const url = new URL(href);
+    if (url.protocol === "http:" || url.protocol === "https:") return href;
+  } catch {
+    // fall through to safe fallback
+  }
+  return "#";
+}
+
 export function brandedEmail(opts: {
   heading: string;
   body: string;
   cta?: { label: string; href: string };
 }): string {
+  const safeHeading = escapeHtml(opts.heading);
+  const safeBody = escapeHtml(opts.body);
   const button = opts.cta
-    ? `<a href="${opts.cta.href}" style="display:inline-block;background:#0E9E6E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;font-family:Inter,Arial,sans-serif;">${opts.cta.label}</a>`
+    ? `<a href="${sanitizeHref(opts.cta.href)}" style="display:inline-block;background:#0E9E6E;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;font-family:Inter,Arial,sans-serif;">${escapeHtml(opts.cta.label)}</a>`
     : "";
   return `<!doctype html><html><body style="margin:0;background:#F5F8F6;padding:32px 0;font-family:Inter,Arial,sans-serif;color:#0C1512;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E4ECE8;">
       <tr><td style="background:#0C1512;padding:20px 28px;color:#fff;font-weight:700;font-size:18px;letter-spacing:-0.01em;">MoolaHub</td></tr>
       <tr><td style="padding:28px;">
-        <h1 style="margin:0 0 12px;font-size:20px;color:#0C1512;">${opts.heading}</h1>
-        <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#3A4A44;">${opts.body}</p>
+        <h1 style="margin:0 0 12px;font-size:20px;color:#0C1512;">${safeHeading}</h1>
+        <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#3A4A44;">${safeBody}</p>
         ${button}
       </td></tr>
       <tr><td style="padding:18px 28px;border-top:1px solid #E4ECE8;font-size:12px;color:#8A9A93;">Social savings on Base. You're receiving this because you have a MoolaHub account.</td></tr>
