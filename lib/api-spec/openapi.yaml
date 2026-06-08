@@ -1849,7 +1849,7 @@ components:
     # ---- Wallet ----
     WalletInfo:
       type: object
-      required: [availableCents, totalCents, goalAllocatedCents, address, network, onchainEnabled]
+      required: [availableCents, totalCents, goalAllocatedCents, network, onchainEnabled, hasWallet, faucetEnabled, syncEnabled]
       properties:
         availableCents:
           type: integer
@@ -1858,11 +1858,21 @@ components:
         goalAllocatedCents:
           type: integer
         address:
-          type: string
+          type: ["string", "null"]
+          description: The user's Base wallet address, or null when no wallet has been set up yet.
         network:
           type: string
         onchainEnabled:
           type: boolean
+        hasWallet:
+          type: boolean
+          description: Whether the user has provisioned a wallet (via "Continue with Privy").
+        faucetEnabled:
+          type: boolean
+          description: Whether the testnet faucet is available on this deployment.
+        syncEnabled:
+          type: boolean
+          description: Whether on-chain deposit sync is available on this deployment.
 
     AmountInput:
       type: object

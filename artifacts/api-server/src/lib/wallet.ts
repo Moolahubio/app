@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db, walletsTable } from "@workspace/db";
+import { AppError } from "./errors";
 import { encryptSecret, decryptSecret } from "./crypto";
 import { generateAccount, ensureGas, onchainEnabled, networkName } from "./chain";
 
@@ -35,6 +36,20 @@ export async function createWalletForUser(userId: string) {
 export async function getWalletForUser(userId: string) {
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   return wallet ?? null;
+}
+
+/**
+ * Guard for money-movement: wallets are no longer auto-created, so any flow that
+ * spends or settles funds must fail clearly when the user hasn't set one up yet
+ * (via "Continue with Privy" in the Wallet section) rather than surfacing a
+ * confusing "insufficient balance" or hitting a missing signing key.
+ */
+export async function requireWalletForUser(userId: string) {
+  const wallet = await getWalletForUser(userId);
+  if (!wallet) {
+    throw new AppError("Set up your wallet first to move money.");
+  }
+  return wallet;
 }
 
 /** Server-only: decrypt a user's signing key for an on-chain operation. */

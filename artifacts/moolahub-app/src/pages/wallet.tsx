@@ -2,6 +2,7 @@ import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkle
 import { Card, Badge } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
+import { WalletSetupCard } from "@/components/app/WalletSetupCard";
 import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatMoney, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -23,6 +24,19 @@ export default function WalletPage() {
 
   if (isLoading || !wallet) {
     return <div className="p-8 text-center text-muted-foreground">Loading your wallet…</div>;
+  }
+
+  if (!wallet.hasWallet) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <PageHeader
+          eyebrow="Wallet"
+          title="Get your wallet ready"
+          description="MoolaHub runs on USDC over Base. Set up your wallet to deposit, save, and withdraw."
+        />
+        <WalletSetupCard />
+      </div>
+    );
   }
 
   return (
@@ -84,59 +98,64 @@ export default function WalletPage() {
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground">
-            Send USDC to your address above from any Base wallet, then check for it:
+            Send USDC to your address above from any Base wallet
+            {wallet.syncEnabled ? ", then check for it:" : "."}
           </p>
-          <div className="mt-3">
-            <ActionButton
-              onClick={() => {
-                setSyncOk(null);
-                syncMutation.mutate(undefined, {
-                  onSuccess: (res) => {
-                    queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-                    setSyncOk(
-                      res.credited > 0
-                        ? `Credited ${res.credited} deposit${res.credited === 1 ? "" : "s"} totaling ${formatMoney(res.totalCents ?? 0)}`
-                        : "No new deposits found",
-                    );
-                  }
-                });
-              }}
-              label="Check for deposits"
-              pendingLabel="Checking…"
-              variant="secondary"
-              className="w-full [&>button]:w-full"
-              pending={syncMutation.isPending}
-              error={apiErrorMessage(syncMutation.error)}
-            />
-            {syncOk && <p className="mt-2 text-sm text-jade-600 dark:text-jade-400 font-medium">{syncOk}</p>}
-          </div>
+          {wallet.syncEnabled && (
+            <div className="mt-3">
+              <ActionButton
+                onClick={() => {
+                  setSyncOk(null);
+                  syncMutation.mutate(undefined, {
+                    onSuccess: (res) => {
+                      queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                      setSyncOk(
+                        res.credited > 0
+                          ? `Credited ${res.credited} deposit${res.credited === 1 ? "" : "s"} totaling ${formatMoney(res.totalCents ?? 0)}`
+                          : "No new deposits found",
+                      );
+                    }
+                  });
+                }}
+                label="Check for deposits"
+                pendingLabel="Checking…"
+                variant="secondary"
+                className="w-full [&>button]:w-full"
+                pending={syncMutation.isPending}
+                error={apiErrorMessage(syncMutation.error)}
+              />
+              {syncOk && <p className="mt-2 text-sm text-jade-600 dark:text-jade-400 font-medium">{syncOk}</p>}
+            </div>
+          )}
 
-          <div className="mt-5 border-t border-border pt-5">
-            <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
-              <Sparkles className="h-4 w-4 text-jade-500" /> Testnet faucet
-            </p>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Grab test USDC to try things out before real funds.
-            </p>
-            <AmountForm 
-              onSubmit={(amountCents) => {
-                setDepositOk(null);
-                depositMutation.mutate({ data: { amountCents } }, {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-                    setDepositOk("Test USDC received");
-                  }
-                });
-              }}
-              presets={[10000, 25000, 50000]} 
-              submitLabel="Receive test USDC" 
-              pending={depositMutation.isPending}
-              error={apiErrorMessage(depositMutation.error)}
-              ok={depositOk}
-            />
-          </div>
+          {wallet.faucetEnabled && (
+            <div className="mt-5 border-t border-border pt-5">
+              <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <Sparkles className="h-4 w-4 text-jade-500" /> Testnet faucet
+              </p>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Grab test USDC to try things out before real funds.
+              </p>
+              <AmountForm 
+                onSubmit={(amountCents) => {
+                  setDepositOk(null);
+                  depositMutation.mutate({ data: { amountCents } }, {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                      setDepositOk("Test USDC received");
+                    }
+                  });
+                }}
+                presets={[10000, 25000, 50000]} 
+                submitLabel="Receive test USDC" 
+                pending={depositMutation.isPending}
+                error={apiErrorMessage(depositMutation.error)}
+                ok={depositOk}
+              />
+            </div>
+          )}
         </Card>
 
         {/* withdraw */}

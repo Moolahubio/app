@@ -6,6 +6,7 @@
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.
 - [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; book pending (not none) on failure; no double-send via SKIP LOCKED + in-proc guard.
+- [MoolaHub wallet provisioning](moolahub-wallet-provisioning.md) — wallets explicit-only (Privy-gated /auth/privy/link); never auto-create; money-movement calls requireWalletForUser; GET /wallet tolerates no wallet.
 - [MoolaHub Goals on-chain](moolahub-goals-onchain.md) — deposits free, every withdrawal (release+delete) 2% fee; deleteGoal flips status BEFORE drain; goal_withdraw confirms net+fee atomically; degradation config-gated (mirrors circles).
 - [MoolaHub backend tests](moolahub-backend-tests.md) — run flow tests via tsx against real DB; delete USDC/PLATFORM/RESEND env BEFORE imports (snapshotted at load) for offline determinism; clean up in finally.
 - [API responses filtered by schema](openapi-response-parse-strips-fields.md) — route .parse() strips fields not in openapi.yaml response schema, so backend-returned fields silently never reach the client until declared + codegen'd.

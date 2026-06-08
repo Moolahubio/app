@@ -12,6 +12,7 @@ import { acct, transfer, accountBalance } from "./ledger";
 import { onchainEnabled, explorerUrl, escrowEnabled, deployCircleEscrow } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
+import { requireWalletForUser } from "./wallet";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
@@ -254,6 +255,7 @@ export async function contribute(userId: string, circleId: string) {
     );
   if (already) throw new AppError("You've already contributed this round");
 
+  await requireWalletForUser(userId);
   if ((await accountBalance(acct.wallet(userId))) < circle.contributionCents) {
     throw new AppError("Insufficient available balance");
   }

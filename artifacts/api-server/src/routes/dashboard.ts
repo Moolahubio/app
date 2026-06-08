@@ -4,7 +4,6 @@ import { db, lessonProgressTable } from "@workspace/db";
 import { GetDashboardSummaryResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { LESSONS } from "../lib/lessons-data";
-import { createWalletForUser } from "../lib/wallet";
 import { userBalances, userActivity } from "../lib/ledger";
 import { listGoals } from "../lib/goals";
 import { listCirclesForUser } from "../lib/circles";
@@ -14,7 +13,6 @@ const router: IRouter = Router();
 router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
 
-  await createWalletForUser(user.id);
   const bal = await userBalances(user.id);
   const goals = await listGoals(user.id);
   const circles = await listCirclesForUser(user.id);

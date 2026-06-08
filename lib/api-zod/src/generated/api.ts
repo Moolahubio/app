@@ -522,9 +522,12 @@ export const GetWalletResponse = zod.object({
   "availableCents": zod.number(),
   "totalCents": zod.number(),
   "goalAllocatedCents": zod.number(),
-  "address": zod.string(),
+  "address": zod.string().nullish().describe('The user\'s Base wallet address, or null when no wallet has been set up yet.'),
   "network": zod.string(),
-  "onchainEnabled": zod.boolean()
+  "onchainEnabled": zod.boolean(),
+  "hasWallet": zod.boolean().describe('Whether the user has provisioned a wallet (via \"Continue with Privy\").'),
+  "faucetEnabled": zod.boolean().describe('Whether the testnet faucet is available on this deployment.'),
+  "syncEnabled": zod.boolean().describe('Whether on-chain deposit sync is available on this deployment.')
 })
 
 

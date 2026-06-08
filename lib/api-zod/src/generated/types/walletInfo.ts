@@ -10,7 +10,17 @@ export interface WalletInfo {
   availableCents: number;
   totalCents: number;
   goalAllocatedCents: number;
-  address: string;
+  /**
+     * The user's Base wallet address, or null when no wallet has been set up yet.
+     * @nullable
+     */
+  address?: string | null;
   network: string;
   onchainEnabled: boolean;
+  /** Whether the user has provisioned a wallet (via "Continue with Privy"). */
+  hasWallet: boolean;
+  /** Whether the testnet faucet is available on this deployment. */
+  faucetEnabled: boolean;
+  /** Whether on-chain deposit sync is available on this deployment. */
+  syncEnabled: boolean;
 }

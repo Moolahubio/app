@@ -9,7 +9,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { sendError } from "../lib/errors";
-import { createWalletForUser } from "../lib/wallet";
+import { getWalletForUser } from "../lib/wallet";
 import { userBalances } from "../lib/ledger";
 import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
 import { onchainEnabled, networkName, faucetEnabled, depositSyncEnabled } from "../lib/chain";
@@ -18,7 +18,10 @@ const router: IRouter = Router();
 
 router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
-  const wallet = await createWalletForUser(user.id);
+  // No wallet is auto-created. Until the user explicitly sets one up (via the
+  // "Continue with Privy" flow in the Wallet section), this returns an empty
+  // state with hasWallet=false; the client renders the setup card.
+  const wallet = await getWalletForUser(user.id);
   const bal = await userBalances(user.id);
 
   res.json(
@@ -26,9 +29,12 @@ router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
       availableCents: bal.availableCents,
       totalCents: bal.totalCents,
       goalAllocatedCents: bal.allocatedCents,
-      address: wallet.address,
+      address: wallet?.address ?? null,
       network: networkName(),
       onchainEnabled: onchainEnabled(),
+      hasWallet: !!wallet,
+      faucetEnabled: faucetEnabled(),
+      syncEnabled: depositSyncEnabled(),
     }),
   );
 });

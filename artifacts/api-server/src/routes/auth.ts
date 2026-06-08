@@ -120,18 +120,22 @@ function authUserFields(user: UserRow, walletAddress: string | null) {
 }
 
 /**
- * Complete a primary-auth login: clear any deactivation, ensure a wallet,
- * mint a session + cookie, and return the LoginResult payload. Callers must
- * already have verified credentials (and any 2FA second factor).
+ * Complete a primary-auth login: clear any deactivation, mint a session +
+ * cookie, and return the LoginResult payload. Callers must already have
+ * verified credentials (and any 2FA second factor).
+ *
+ * No wallet is provisioned here. A wallet is created only when the user
+ * explicitly opts in via the "Continue with Privy" flow (POST /auth/privy/link)
+ * from the Wallet section, so accounts start without one.
  */
 async function finishLogin(res: Response, user: UserRow, rememberMe: boolean) {
   if (user.deactivatedAt) {
     await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
   }
-  const wallet = await createWalletForUser(user.id);
+  const wallet = await getWalletForUser(user.id);
   const token = await createSession(user.id, rememberMe);
   res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
-  return { twoFactorRequired: false, ...authUserFields(user, wallet.address) };
+  return { twoFactorRequired: false, ...authUserFields(user, wallet?.address ?? null) };
 }
 
 /** Case-insensitive username clash check, optionally excluding one user id. */

@@ -12,6 +12,7 @@ import { notify } from "./notifications";
 import { formatMoney } from "./money";
 import { goalVaultEnabled, goalVaultContract, explorerUrl, networkName } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
+import { requireWalletForUser } from "./wallet";
 
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
 // feeBps (2%). Deposits are free. When the vault isn't configured/reachable,
@@ -152,6 +153,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
       and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
     );
   if (!goal) throw new AppError("Goal not found");
+  await requireWalletForUser(userId);
   if ((await accountBalance(acct.wallet(userId))) < amountCents) {
     throw new AppError("Insufficient available balance");
   }

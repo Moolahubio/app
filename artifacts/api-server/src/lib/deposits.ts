@@ -149,11 +149,11 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
     throw new AppError("Enter a valid Base address (starts with 0x).");
   }
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
+  const wallet = await getWalletForUser(userId);
+  if (!wallet) throw new AppError("Set up your wallet first to withdraw.");
   if ((await accountBalance(acct.wallet(userId))) < amountCents) {
     throw new AppError("Insufficient available balance.");
   }
-  const wallet = await getWalletForUser(userId);
-  if (!wallet) throw new AppError("Wallet not provisioned");
 
   const enabled = onchainEnabled();
   const txn = await db.transaction(async (tx) => {
