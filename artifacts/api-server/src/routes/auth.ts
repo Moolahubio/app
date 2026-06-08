@@ -41,6 +41,7 @@ import { sendPasswordChangedEmail } from "../lib/email";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
 import { resetThrottleRemaining, recordResetRequest } from "../lib/resetThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
+import { isAllowedOrigin, isSameOrigin } from "../lib/origins";
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -51,12 +52,6 @@ import {
 
 const router: IRouter = Router();
 
-// Allowlisted origins (same source of truth as the CORS config in app.ts).
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
-
 /**
  * CSRF guard for session-establishing endpoints.
  *
@@ -64,9 +59,11 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
  *  1. Content-Type must be `application/json`.  HTML forms can only submit
  *     application/x-www-form-urlencoded, multipart/form-data, or text/plain —
  *     never JSON — so this alone blocks every cross-site form attack.
- *  2. If an `Origin` header is present (browsers always include it on
- *     cross-site requests) it must appear in ALLOWED_ORIGINS.  This closes
- *     the gap for any future path that could accept non-JSON bodies.
+ *  2. If an `Origin` header is present (browsers always include it on POSTs,
+ *     even same-origin ones) it must either match the host the request was
+ *     served on (same-origin) or appear in the allowlist (ALLOWED_ORIGINS +
+ *     REPLIT_DOMAINS). This closes the gap for any future path that could
+ *     accept non-JSON bodies, without requiring manual origin configuration.
  */
 function requireJsonAndAllowedOrigin(req: Request, res: Response, next: NextFunction): void {
   if (!req.is("application/json")) {
@@ -75,7 +72,7 @@ function requireJsonAndAllowedOrigin(req: Request, res: Response, next: NextFunc
   }
 
   const origin = req.headers["origin"];
-  if (origin && !allowedOrigins.includes(origin)) {
+  if (origin && !isSameOrigin(req) && !isAllowedOrigin(origin)) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }

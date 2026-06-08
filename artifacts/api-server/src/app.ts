@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { isAllowedOrigin } from "./lib/origins";
 
 const app: Express = express();
 
@@ -31,18 +32,14 @@ app.use(
 // Security headers (CSP, HSTS, X-Content-Type-Options, frameguard, etc.).
 app.use(helmet());
 
-// CORS: only allow credentialed requests from explicitly allowlisted origins
-// (ALLOWED_ORIGINS, comma-separated). Requests with no Origin header
-// (same-origin, server-to-server, health checks) are allowed. Never reflect an
-// arbitrary origin while credentials are enabled.
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+// CORS: only allow credentialed requests from allowlisted origins
+// (ALLOWED_ORIGINS + REPLIT_DOMAINS — the domains this server is served on).
+// Requests with no Origin header (same-origin, server-to-server, health checks)
+// are allowed. Never reflect an arbitrary origin while credentials are enabled.
 app.use(
   cors({
     origin(origin, cb) {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      if (isAllowedOrigin(origin)) return cb(null, true);
       // Don't throw — just omit CORS headers so the browser blocks it.
       return cb(null, false);
     },

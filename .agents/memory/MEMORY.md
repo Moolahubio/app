@@ -15,4 +15,5 @@
 - [Fixed overlays + backdrop-filter](moolahub-overlay-backdrop-filter.md) — app shell header uses backdrop-blur, so `fixed inset-0` resolves to the header box not the viewport; use a document pointerdown listener (or a body portal) for click-outside/modals.
 - [Notifications need client invalidation](moolahub-notifications-invalidation.md) — bell reads getListNotifications; backend notifies on most activities, but mutations must invalidate that key or new notifications won't appear until refocus/remount.
 - [Circle deletion](circles-delete.md) — idle forming+<=1-member circles hard-delete safely; FK row-lock serializes acceptInvite vs deleteCircle FOR UPDATE.
+- [CSRF/CORS origin allowlist](moolahub-csrf-origin.md) — prod ALLOWED_ORIGINS is unset; derive origins from REPLIT_DOMAINS + same-origin (x-forwarded-host/proto), else all POST auth 403s in prod.
 - [Auth throttle layering](moolahub-auth-throttle.md) — targeted per-IP/email auth throttles sit under the global express limiter (20/IP, plain-text 429); in-process e2e share that budget, so tolerate either 429 body.
