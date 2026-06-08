@@ -198,7 +198,7 @@ export async function getCircleDetail(userId: string, circleId: string) {
     canStart: isCreator && c.status === "forming" && memberCount >= 2,
     canDelete: isCreator && c.status === "forming" && memberCount <= 1,
     canContribute: c.status === "active" && !contributedThisRound && !!me,
-    pendingInvites: pendingInvites.map((i) => ({ id: i.id, email: i.email })),
+    pendingInvites: isCreator ? pendingInvites.map((i) => ({ id: i.id, email: i.email })) : [],
     members: c.members.map((m) => ({
       id: m.id,
       name: m.user.name,
