@@ -1,6 +1,6 @@
-import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, Clock } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
-import { PageHeader } from "@/components/app/bits";
+import { PageHeader, BackLink } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
 import { WalletSetupCard } from "@/components/app/WalletSetupCard";
 import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
@@ -29,6 +29,7 @@ export default function WalletPage() {
   if (!wallet.hasWallet) {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
+        <BackLink href="/dashboard" label="Back" />
         <PageHeader
           eyebrow="Wallet"
           title="Get your wallet ready"
@@ -41,6 +42,7 @@ export default function WalletPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <BackLink href="/dashboard" label="Back" />
       <PageHeader
         eyebrow="Wallet"
         title="Deposit & withdraw USDC"
@@ -195,15 +197,6 @@ export default function WalletPage() {
           MoolaHub is non-custodial: funds settle to your own Base wallet, and every movement
           is recorded on the ledger with an on-chain reference.{" "}
           <Badge tone="jade" className="ml-1">Built on Base</Badge>
-        </p>
-      </Card>
-
-      <Card className="flex items-start gap-3 border-border bg-card p-5">
-        <Clock className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">Local currency (GHS, NGN) is coming soon.</span>{" "}
-          Cash deposits and withdrawals via a licensed on/off-ramp partner will arrive in a later
-          release. For now, MoolaHub runs entirely on USDC.
         </p>
       </Card>
     </div>

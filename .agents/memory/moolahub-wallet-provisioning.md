@@ -28,3 +28,23 @@ provisioning*, not the custody layer. Full Privy-custodied signing is out of sco
   `contribute`, and `withdrawToAddress`.
 - Adding a new WalletInfo field requires updating openapi.yaml WalletInfo + codegen,
   or `.parse()` strips it (see openapi-response-parse-strips-fields memory).
+
+## Testnet faucet is intentionally ENABLED for this deployment
+
+`ENABLE_TEST_FAUCET=true` is set in **shared** env. The product ships on Base
+Sepolia (BASE_NETWORK=base-sepolia), so the faucet (permissionless MockUSDC.mint)
+is wanted so users can grab test USDC. Do **not** "fix" the faucet by removing the
+flag — its earlier 403 was only because the flag was unset.
+**Why:** faucetEnabled() is hard-false on mainnet regardless of the flag, so this
+is safe; it only mints fabricated balance on testnet, which is the intent.
+**How to apply:** if BASE_NETWORK ever flips to mainnet, the flag becomes a no-op
+(no code change needed). Deposit sync stays OFF (ENABLE_DEPOSIT_SYNC unset) because
+MockUSDC is mintable — do not enable sync on a mintable-token testnet.
+Shared env changes require **re-publishing** before production reflects them.
+
+## Privy login email is prefilled with the account email
+
+WalletSetupCard reads useGetMe().email and calls
+`login({ prefill: { type: "email", value } })` so the wallet links under the same
+email the user registered with, avoiding an Email-A-account / Email-B-Privy split.
+Prefill is a UX nudge, not hard enforcement.

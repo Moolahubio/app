@@ -4,6 +4,7 @@ import { Wallet, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import {
   useLinkPrivy,
+  useGetMe,
   getGetMeQueryKey,
   getGetWalletQueryKey,
   getGetDashboardSummaryQueryKey,
@@ -16,6 +17,7 @@ const NETWORK = import.meta.env.VITE_BASE_NETWORK === "mainnet" ? "Base" : "Base
 
 function SetupButton() {
   const { getAccessToken, authenticated } = usePrivy();
+  const { data: me } = useGetMe();
   const linkPrivy = useLinkPrivy();
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -63,7 +65,11 @@ function SetupButton() {
       void provision();
     } else {
       intentionalRef.current = true;
-      login();
+      // Prefill the Privy email with the account email so the wallet is linked
+      // to the same email the user registered with (avoids signing up under a
+      // different address).
+      const email = me?.email?.trim();
+      login(email ? { prefill: { type: "email", value: email } } : undefined);
     }
   };
 
