@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { EmailPasswordForm } from "./EmailPasswordForm";
 import { PasskeySignIn } from "./AuthForm";
-import { PrivyLegacySignIn } from "./PrivyLegacySignIn";
 import { TwoFactorStep } from "./TwoFactorStep";
 import { VerifyEmailStep } from "./VerifyEmailStep";
 
@@ -59,12 +58,6 @@ export function AuthPanel() {
       </div>
 
       <PasskeySignIn onTwoFactorRequired={(challengeId) => setStep({ kind: "twofactor", challengeId })} />
-
-      <PrivyLegacySignIn onTwoFactorRequired={(challengeId) => setStep({ kind: "twofactor", challengeId })} />
-
-      <p className="text-center text-xs text-muted-foreground">
-        Joined with a wallet before? Use “Sign in with Privy”, then set a password to finish.
-      </p>
 
       <p className="text-center text-sm text-muted-foreground">
         New to MoolaHub?{" "}
