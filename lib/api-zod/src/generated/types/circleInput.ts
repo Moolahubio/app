@@ -9,8 +9,10 @@
 export interface CircleInput {
   name: string;
   type?: string;
-  contributionCents: number;
+  contributionCents?: number;
   numRounds?: number;
+  targetPayoutCents?: number;
+  groupSize?: number;
   frequency: string;
   /** @maxItems 19 */
   memberEmails: string[];

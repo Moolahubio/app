@@ -16,6 +16,9 @@ export interface CircleSummary {
   payoutCents: number;
   potCents: number;
   memberCount: number;
+  /** @nullable */
+  targetMembers?: number | null;
+  feeBps?: number;
   myPayoutRound: number;
   currentRound: number;
   totalRounds: number;

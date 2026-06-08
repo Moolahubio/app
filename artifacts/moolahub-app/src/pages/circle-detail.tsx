@@ -139,7 +139,9 @@ export default function CircleDetailPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
               ? `Invite people by email. Everyone saves into one shared pot for ${circle.totalRounds} rounds, then gets their savings back. Start the circle once everyone's in.`
-              : "Invite people by email. Rounds equal members, so everyone gets exactly one payout. Start the circle once everyone's in."}
+              : circle.targetMembers
+                ? `Invite people by email. ${circle.members.length} of ${circle.targetMembers} have joined — the circle starts automatically the moment the last person joins.`
+                : "Invite people by email. Rounds equal members, so everyone gets exactly one payout. Start the circle once everyone's in."}
           </p>
 
           {canInvite && (

@@ -325,6 +325,9 @@ export interface CircleSummary {
   payoutCents: number;
   potCents: number;
   memberCount: number;
+  /** @nullable */
+  targetMembers?: number | null;
+  feeBps?: number;
   myPayoutRound: number;
   currentRound: number;
   totalRounds: number;
@@ -423,6 +426,8 @@ export interface CircleDetail {
   payoutCents: number;
   potCents: number;
   memberCount?: number;
+  /** @nullable */
+  targetMembers?: number | null;
   currentRound: number;
   totalRounds: number;
   /** @nullable */
@@ -459,8 +464,10 @@ export interface CircleInvite {
 export interface CircleInput {
   name: string;
   type?: string;
-  contributionCents: number;
+  contributionCents?: number;
   numRounds?: number;
+  targetPayoutCents?: number;
+  groupSize?: number;
   frequency: string;
   /** @maxItems 19 */
   memberEmails: string[];

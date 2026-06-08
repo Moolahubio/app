@@ -92,6 +92,8 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
       type: parsed.data.type,
       contributionCents: parsed.data.contributionCents,
       numRounds: parsed.data.numRounds,
+      targetPayoutCents: parsed.data.targetPayoutCents,
+      groupSize: parsed.data.groupSize,
       frequency: parsed.data.frequency,
       memberEmails: parsed.data.memberEmails,
       imageUrl: imageUrl ?? null,

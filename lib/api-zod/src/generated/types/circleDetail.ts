@@ -19,6 +19,8 @@ export interface CircleDetail {
   payoutCents: number;
   potCents: number;
   memberCount?: number;
+  /** @nullable */
+  targetMembers?: number | null;
   currentRound: number;
   totalRounds: number;
   /** @nullable */

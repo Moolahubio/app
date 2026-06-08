@@ -35,33 +35,58 @@ export default function CirclesPage() {
   const [type, setType] = useState<"rotation" | "accumulation">("rotation");
   const [contribution, setContribution] = useState("");
   const [numRounds, setNumRounds] = useState("6");
+  const [targetPayout, setTargetPayout] = useState("");
+  const [groupSize, setGroupSize] = useState("4");
   const [frequency, setFrequency] = useState("weekly");
   const [emails, setEmails] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const contributionAmount = parseFloat(contribution) || 0;
+  const FEE_RATE = 0.02; // 2% added on top of each member's base contribution
   const emailCount = emails.split(",").map((e) => e.trim()).filter(Boolean).length;
-  const estMembers = emailCount + 1; // organizer + invitees
+
+  // Rotation (target-payout): owner sets the payout each member receives and the
+  // group size; everyone pays an equal base + 2% fee so the recipient nets the target.
+  const targetNum = parseFloat(targetPayout) || 0;
+  const groupNum = Math.max(0, parseInt(groupSize, 10) || 0);
+  const baseCents = type === "rotation" && groupNum >= 1 ? Math.round((targetNum * 100) / groupNum) : 0;
+  const perPersonCents = baseCents + Math.round(baseCents * FEE_RATE);
+  const rotationFeeCents = perPersonCents - baseCents;
+  const rotationReceiveCents = baseCents * groupNum;
+
+  // Accumulation: fixed contribution; get your own savings back at the end.
+  const contributionAmount = parseFloat(contribution) || 0;
   const roundsNum = Math.max(0, parseInt(numRounds, 10) || 0);
-  // Rotation: receive the full pot when it's your turn (pay × members).
-  // Accumulation: get your own savings back at the end (pay × rounds).
-  const receiveAmount =
-    type === "accumulation" ? contributionAmount * roundsNum : contributionAmount * estMembers;
+
+  const maxInvites = type === "rotation" ? Math.max(0, groupNum - 1) : 19;
+  const payPerRoundCents = type === "rotation" ? perPersonCents : Math.round(contributionAmount * 100);
+  const receiveCents = type === "rotation" ? rotationReceiveCents : Math.round(contributionAmount * 100) * roundsNum;
+  const rotationInvalid = type === "rotation" && (targetNum <= 0 || groupNum < 2);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
+    const memberEmails = emails.split(",").map((s) => s.trim()).filter(Boolean);
+    const data =
+      type === "rotation"
+        ? {
+            name,
+            type,
+            targetPayoutCents: Math.round(targetNum * 100),
+            groupSize: groupNum,
+            frequency,
+            memberEmails,
+            imageUrl: imageUrl ?? undefined,
+          }
+        : {
+            name,
+            type,
+            contributionCents: Math.round(contributionAmount * 100),
+            numRounds: roundsNum,
+            frequency,
+            memberEmails,
+            imageUrl: imageUrl ?? undefined,
+          };
     createMutation.mutate(
-      { 
-        data: { 
-          name, 
-          type,
-          contributionCents: Math.floor(contributionAmount * 100), 
-          numRounds: type === "accumulation" ? roundsNum : undefined,
-          frequency, 
-          memberEmails: emails.split(",").map(e => e.trim()).filter(Boolean),
-          imageUrl: imageUrl ?? undefined,
-        } 
-      },
+      { data },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListCirclesQueryKey() });
@@ -70,6 +95,8 @@ export default function CirclesPage() {
           setType("rotation");
           setContribution("");
           setNumRounds("6");
+          setTargetPayout("");
+          setGroupSize("4");
           setEmails("");
           setImageUrl(null);
         }
@@ -145,22 +172,53 @@ export default function CirclesPage() {
                     </label>
                   </RadioGroup>
                 </div>
-                <div className="space-y-2">
-                  <Label>Contribution per round (USDC)</Label>
-                  <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
-                </div>
-                {type === "accumulation" && (
-                  <div className="space-y-2">
-                    <Label>Number of rounds</Label>
-                    <Input
-                      type="number"
-                      min={2}
-                      value={numRounds}
-                      onChange={(e) => setNumRounds(e.target.value)}
-                      required
-                      placeholder="6"
-                    />
-                  </div>
+                {type === "rotation" ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Target payout per person (USDC)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={targetPayout}
+                        onChange={(e) => setTargetPayout(e.target.value)}
+                        required
+                        placeholder="20000"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        What each member receives when it's their turn.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Number of people (including you)</Label>
+                      <Input
+                        type="number"
+                        min={2}
+                        max={20}
+                        value={groupSize}
+                        onChange={(e) => setGroupSize(e.target.value)}
+                        required
+                        placeholder="4"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Contribution per round (USDC)</Label>
+                      <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Number of rounds</Label>
+                      <Input
+                        type="number"
+                        min={2}
+                        value={numRounds}
+                        onChange={(e) => setNumRounds(e.target.value)}
+                        required
+                        placeholder="6"
+                      />
+                    </div>
+                  </>
                 )}
                 <div className="space-y-2">
                   <Label>Frequency</Label>
@@ -174,30 +232,45 @@ export default function CirclesPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Member emails <span className="text-xs font-normal text-muted-foreground">(up to 19, comma-separated)</span></Label>
+                  <Label>
+                    Member emails{" "}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {type === "rotation"
+                        ? `(invite up to ${maxInvites}, comma-separated)`
+                        : "(up to 19, comma-separated)"}
+                    </span>
+                  </Label>
                   <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder="friend@example.com, cousin@example.com" />
-                  {emailCount > 19 && (
+                  {emailCount > maxInvites && (
                     <p className="text-xs text-destructive">
-                      Too many members — a circle can have at most 20 people (you + 19 invitees).
+                      {type === "rotation"
+                        ? `Too many invites — a circle of ${groupNum} has room for ${maxInvites} besides you.`
+                        : "Too many members — a circle can have at most 20 people (you + 19 invitees)."}
                     </p>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4">
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You pay per round</p>
-                    <p className="font-semibold text-foreground">{formatMoney(Math.round(contributionAmount * 100))}</p>
+                    <p className="font-semibold text-foreground">{formatMoney(payPerRoundCents)}</p>
                   </div>
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                       {type === "accumulation" ? "You receive at end" : "You receive"}
                     </p>
-                    <p className="font-semibold text-foreground">{formatMoney(Math.round(receiveAmount * 100))}</p>
+                    <p className="font-semibold text-foreground">{formatMoney(receiveCents)}</p>
                   </div>
-                  <p className="col-span-2 text-xs text-muted-foreground">
-                    {type === "accumulation"
-                      ? `Your own savings back after ${roundsNum || 0} rounds.`
-                      : "Estimate based on members so far. Finalized when the circle starts."}
-                  </p>
+                  {type === "rotation" ? (
+                    <p className="col-span-2 text-xs text-muted-foreground">
+                      Each of the {groupNum || 0} members pays {formatMoney(baseCents)} base{" "}
+                      + {formatMoney(rotationFeeCents)} fee (2%). When it's your turn you receive{" "}
+                      {formatMoney(rotationReceiveCents)}. The circle starts automatically once everyone joins.
+                    </p>
+                  ) : (
+                    <p className="col-span-2 text-xs text-muted-foreground">
+                      Your own savings back after {roundsNum || 0} rounds.
+                    </p>
+                  )}
                 </div>
                 <ImageUploadField
                   label="Circle picture (optional)"
@@ -205,7 +278,11 @@ export default function CirclesPage() {
                   value={imageUrl}
                   onChange={setImageUrl}
                 />
-                <Button type="submit" className="w-full" disabled={createMutation.isPending || emailCount > 19}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={createMutation.isPending || emailCount > maxInvites || rotationInvalid}
+                >
                   {createMutation.isPending ? "Creating…" : "Create circle"}
                 </Button>
               </form>
@@ -345,7 +422,11 @@ export default function CirclesPage() {
                 </div>
               ) : (
                 <div className="mt-5 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Forming. Waiting to start.</span>
+                  <span className="text-xs text-muted-foreground">
+                    {circle.targetMembers
+                      ? `${circle.memberCount} of ${circle.targetMembers} joined · starts automatically when full`
+                      : "Forming. Waiting to start."}
+                  </span>
                 </div>
               )}
 

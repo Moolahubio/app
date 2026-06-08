@@ -15,6 +15,7 @@ export const circlesTable = pgTable("circles", {
   payoutCents: integer("payout_cents"),
   currentRound: integer("current_round").notNull().default(0),
   totalRounds: integer("total_rounds").notNull().default(0),
+  targetMembers: integer("target_members"),
   startDate: timestamp("start_date", { withTimezone: true }),
   contractAddress: text("contract_address"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

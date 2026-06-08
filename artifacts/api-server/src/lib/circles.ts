@@ -72,32 +72,60 @@ export async function createCircle(
   input: {
     name: string;
     type?: string;
-    contributionCents: number;
+    contributionCents?: number;
     numRounds?: number;
     frequency: string;
     memberEmails?: string[];
     imageUrl?: string | null;
+    targetPayoutCents?: number;
+    groupSize?: number;
   },
 ) {
   if (!input.name?.trim()) throw new AppError("Circle name is required.");
-  if (input.contributionCents <= 0) throw new AppError("Enter a contribution amount.");
   const inviteCount = (input.memberEmails ?? []).filter((e) => e?.includes("@")).length;
   if (inviteCount > MAX_CIRCLE_MEMBERS - 1) {
     throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} members (including the organizer).`);
   }
   const type = input.type === "accumulation" ? "accumulation" : "rotation";
 
-  // For accumulation circles the organizer chooses how many rounds the circle
-  // runs, and each member receives their own savings back (contribution × rounds)
-  // at the end. For rotation, rounds are derived from member count at start, and
-  // the payout (full pot) is finalized then.
+  // Three creation shapes:
+  // - Accumulation: organizer sets rounds; each member gets their own savings
+  //   back (contribution × rounds) at the end.
+  // - Target-payout rotation: organizer sets the payout each member receives and
+  //   the group size N. Everyone pays an equal base (= payout / N) plus a fee on
+  //   top, so the recipient nets exactly the target each round. The circle locks
+  //   to N members and auto-starts when full.
+  // - Legacy rotation: fixed contribution; rounds/payout derived at start.
   let totalRounds = 1;
   let payoutCents: number | null = null;
+  let targetMembers: number | null = null;
+  let contributionCents = Math.floor(input.contributionCents ?? 0);
   if (type === "accumulation") {
     const rounds = Math.floor(input.numRounds ?? 0);
     if (rounds < 2) throw new AppError("Choose at least 2 rounds for an accumulation circle.");
+    if (contributionCents <= 0) throw new AppError("Enter a contribution amount.");
     totalRounds = rounds;
-    payoutCents = input.contributionCents * rounds;
+    payoutCents = contributionCents * rounds;
+  } else if (input.targetPayoutCents != null && input.groupSize != null) {
+    const n = Math.floor(input.groupSize);
+    if (n < 2) throw new AppError("A circle needs at least 2 people.");
+    if (n > MAX_CIRCLE_MEMBERS) {
+      throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} people.`);
+    }
+    const target = Math.floor(input.targetPayoutCents);
+    if (target <= 0) throw new AppError("Enter a target payout amount.");
+    const base = Math.round(target / n);
+    if (base <= 0) throw new AppError("That payout is too small for that many people.");
+    // Fee is added on top of the base, so the recipient still nets base × N.
+    contributionCents = base + Math.round((base * FEE_BPS) / 10_000);
+    payoutCents = base * n;
+    totalRounds = n;
+    targetMembers = n;
+    if (inviteCount > n - 1) {
+      throw new AppError(`Invite at most ${n - 1} ${n - 1 === 1 ? "person" : "people"} for a circle of ${n}.`);
+    }
+  } else {
+    if (contributionCents <= 0) throw new AppError("Enter a contribution amount.");
   }
 
   const [circle] = await db
@@ -107,12 +135,13 @@ export async function createCircle(
       createdById: userId,
       imageUrl: input.imageUrl ?? null,
       type,
-      contributionCents: input.contributionCents,
+      contributionCents,
       payoutCents,
       frequency: input.frequency || "monthly",
       status: "forming",
       currentRound: 0,
       totalRounds,
+      targetMembers,
     })
     .returning();
 
@@ -153,6 +182,8 @@ export async function listCirclesForUser(userId: string) {
       payoutCents: receivePerPerson(c, memberCount),
       potCents: c.contributionCents * memberCount,
       memberCount,
+      targetMembers: c.targetMembers ?? null,
+      feeBps: c.targetMembers != null || (escrowEnabled() && c.contractAddress) ? FEE_BPS : 0,
       myPayoutRound: me?.payoutRound ?? 0,
       currentRound: c.currentRound,
       totalRounds: c.totalRounds,
@@ -194,18 +225,26 @@ export async function getCircleDetail(userId: string, circleId: string) {
     payoutCents: receivePerPerson(c, memberCount),
     potCents: c.contributionCents * memberCount,
     memberCount,
+    targetMembers: c.targetMembers ?? null,
     totalRounds: c.totalRounds,
     currentRound: c.currentRound,
     imageUrl: c.imageUrl ?? null,
     startDate: c.startDate ? c.startDate.toISOString() : null,
     contractAddress: c.contractAddress,
-    feeBps: escrowEnabled() && c.contractAddress ? FEE_BPS : 0,
+    // Target-payout circles always carry the fee (it's baked into the
+    // contribution), even before any on-chain escrow exists.
+    feeBps: c.targetMembers != null || (escrowEnabled() && c.contractAddress) ? FEE_BPS : 0,
     explorerUrl: c.contractAddress ? explorerUrl() : null,
     myPayoutRound: me?.payoutRound ?? null,
     myContributionStatus: contributedThisRound ? "paid" : "due",
     isCreator,
     canInvite: isCreator && c.status === "forming",
-    canStart: isCreator && c.status === "forming" && memberCount >= 2,
+    // Targeted circles auto-start when full, so they never offer a manual start.
+    canStart:
+      isCreator &&
+      c.status === "forming" &&
+      memberCount >= 2 &&
+      c.targetMembers == null,
     canDelete: isCreator && c.status === "forming" && memberCount <= 1,
     canContribute: c.status === "active" && !contributedThisRound && !!me,
     pendingInvites: isCreator ? pendingInvites.map((i) => ({ id: i.id, email: i.email })) : [],
@@ -456,8 +495,12 @@ async function maybeProcessPayout(circleId: string, round: number) {
     // same economics in the ledger as "pending" and let the reconciler stamp the
     // settlement tx hash by circle+round once the escrow's RoundSettled fires.
     const onchainRotation = onchainEnabled() && !!circle.contractAddress;
-    const feeCents = onchainRotation ? feeCentsOf(potCents) : 0;
-    const netCents = potCents - feeCents;
+    // payoutCents is the net the recipient receives; the fee is whatever remains
+    // of the pot. This unifies every case: 0 for legacy ledger circles (payout
+    // == pot), the 2%-on-top for target-payout circles, and the escrow fee for
+    // legacy on-chain circles (payout was stored as pot − escrow fee).
+    const netCents = circle.payoutCents ?? potCents;
+    const feeCents = Math.max(0, potCents - netCents);
     await db.transaction(async (tx) => {
       await transfer({
         type: "payout",
@@ -481,7 +524,7 @@ async function maybeProcessPayout(circleId: string, round: number) {
           fromKey: acct.pool(circleId),
           toKey: acct.external,
           amountCents: feeCents,
-          onchain: { onchainStatus: "pending" },
+          onchain: onchainRotation ? { onchainStatus: "pending" } : { onchainStatus: "none" },
           requireSufficientFrom: true,
           circleId,
           round,
@@ -530,6 +573,18 @@ export async function inviteToCircle(userId: string, circleId: string, emailRaw:
   if (circle.status !== "forming") throw new AppError("This circle has already started.");
   if (circle.members.some((m) => m.user.email === email)) {
     throw new AppError("That person is already a member.");
+  }
+  // Target-payout circles lock to a fixed group size, so the roster (current
+  // members + still-pending invites) can never exceed it.
+  if (circle.targetMembers != null) {
+    const [pending] = await db
+      .select({ c: count() })
+      .from(circleInvitesTable)
+      .where(and(eq(circleInvitesTable.circleId, circleId), eq(circleInvitesTable.status, "pending")));
+    const alreadyInvited = circle.members.length + Number(pending?.c ?? 0);
+    if (alreadyInvited >= circle.targetMembers) {
+      throw new AppError("This circle is already full.");
+    }
   }
   await db
     .insert(circleInvitesTable)
@@ -617,7 +672,7 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
         .update(circleInvitesTable)
         .set({ status: "accepted" })
         .where(eq(circleInvitesTable.id, inviteId));
-      return { circleId: invite.circleId, alreadyMember: true, createdById: circle.createdById, circleName: circle.name };
+      return { circleId: invite.circleId, alreadyMember: true, autoStarted: false, createdById: circle.createdById, circleName: circle.name };
     }
 
     const nextPos = members.length + 1;
@@ -628,13 +683,46 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
       payoutRound: nextPos,
     });
     // Rotation rounds track member count; accumulation rounds are fixed at creation.
+    let autoStarted = false;
     if (circle.type !== "accumulation") {
-      await tx.update(circlesTable).set({ totalRounds: nextPos }).where(eq(circlesTable.id, invite.circleId));
+      // A target-payout circle locks to a fixed roster, so the moment it fills
+      // we activate it in the same transaction — it never sits stuck "forming".
+      // payoutCents (= base × N) was finalized at creation and stays correct
+      // because nextPos equals targetMembers here.
+      if (circle.targetMembers != null && nextPos >= circle.targetMembers) {
+        await tx
+          .update(circlesTable)
+          .set({ status: "active", currentRound: 1, totalRounds: nextPos, startDate: new Date() })
+          .where(eq(circlesTable.id, invite.circleId));
+        autoStarted = true;
+      } else {
+        await tx.update(circlesTable).set({ totalRounds: nextPos }).where(eq(circlesTable.id, invite.circleId));
+      }
     }
     await tx.update(circleInvitesTable).set({ status: "accepted" }).where(eq(circleInvitesTable.id, inviteId));
 
-    return { circleId: invite.circleId, alreadyMember: false, createdById: circle.createdById, circleName: circle.name };
+    return { circleId: invite.circleId, alreadyMember: false, autoStarted, createdById: circle.createdById, circleName: circle.name };
   });
+
+  if (result.autoStarted) {
+    // Best-effort on-chain escrow deploy + notify every member the circle began
+    // (mirrors the manual startCircle path).
+    await maybeDeployRotationEscrow(result.circleId);
+    const memberRows = await db
+      .select({ userId: circleMembersTable.userId })
+      .from(circleMembersTable)
+      .where(eq(circleMembersTable.circleId, result.circleId));
+    await notifyMany(
+      memberRows.map((r) => r.userId).filter((id) => id !== userId),
+      {
+        type: "circle_started",
+        title: "Circle started",
+        body: `${result.circleName} is now active. Round 1 has begun.`,
+        link: `/circles/${result.circleId}`,
+      },
+      { email: true },
+    );
+  }
 
   if (!result.alreadyMember) {
     const [accepter] = await db
@@ -720,9 +808,21 @@ export async function startCircle(userId: string, circleId: string) {
     if (members.length > MAX_CIRCLE_MEMBERS) {
       throw new AppError(`A circle can have at most ${MAX_CIRCLE_MEMBERS} members. Remove some members before starting.`);
     }
+    // Target-payout circles have a fixed group size and start automatically once
+    // the roster is full — manual early start would shrink the payout below the
+    // owner's configured target, so it's disallowed.
+    if (circle.targetMembers != null && members.length < circle.targetMembers) {
+      throw new AppError("This circle starts automatically once everyone has joined.");
+    }
 
     // Rotation: lock rounds to the final member count and finalize each member's
-    // payout (the full pot). Accumulation: rounds and payout were fixed at creation.
+    // payout. For a target-payout circle the recipient receives base × members
+    // (fee already baked into the contribution); for legacy circles the payout is
+    // the full pot. Accumulation: rounds and payout were fixed at creation.
+    const targetedBase =
+      circle.type !== "accumulation" && circle.targetMembers != null && circle.payoutCents != null
+        ? Math.round(circle.payoutCents / circle.targetMembers)
+        : null;
     const startUpdate =
       circle.type === "accumulation"
         ? { status: "active", currentRound: 1, startDate: new Date() }
@@ -730,7 +830,10 @@ export async function startCircle(userId: string, circleId: string) {
             status: "active",
             currentRound: 1,
             totalRounds: members.length,
-            payoutCents: circle.contributionCents * members.length,
+            payoutCents:
+              targetedBase != null
+                ? targetedBase * members.length
+                : circle.contributionCents * members.length,
             startDate: new Date(),
           };
     await tx.update(circlesTable).set(startUpdate).where(eq(circlesTable.id, circleId));
@@ -827,13 +930,21 @@ async function maybeDeployRotationEscrow(circleId: string): Promise<void> {
     gracePeriodSecs,
   });
   if (deployed.status === "confirmed") {
-    // On-chain the escrow deducts the protocol fee from each payout, so the
-    // recipient nets pot - fee. Mirror that in the stored payout estimate.
-    const potCents = circle.contributionCents * circle.totalRounds;
-    const feeCents = feeCentsOf(potCents);
-    await db
-      .update(circlesTable)
-      .set({ contractAddress: deployed.escrow, payoutCents: potCents - feeCents })
-      .where(eq(circlesTable.id, circleId));
+    // For a target-payout circle the payout is already pinned to the target, so
+    // only record the contract address. For legacy circles, mirror the escrow's
+    // fee-deducted payout estimate (recipient nets pot − fee).
+    if (circle.targetMembers != null) {
+      await db
+        .update(circlesTable)
+        .set({ contractAddress: deployed.escrow })
+        .where(eq(circlesTable.id, circleId));
+    } else {
+      const potCents = circle.contributionCents * circle.totalRounds;
+      const feeCents = feeCentsOf(potCents);
+      await db
+        .update(circlesTable)
+        .set({ contractAddress: deployed.escrow, payoutCents: potCents - feeCents })
+        .where(eq(circlesTable.id, circleId));
+    }
   }
 }

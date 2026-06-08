@@ -1924,6 +1924,10 @@ components:
           type: integer
         memberCount:
           type: integer
+        targetMembers:
+          type: ["integer", "null"]
+        feeBps:
+          type: integer
         myPayoutRound:
           type: integer
         currentRound:
@@ -1957,6 +1961,8 @@ components:
           type: integer
         memberCount:
           type: integer
+        targetMembers:
+          type: ["integer", "null"]
         currentRound:
           type: integer
         totalRounds:
@@ -2060,7 +2066,7 @@ components:
 
     CircleInput:
       type: object
-      required: [name, contributionCents, frequency, memberEmails]
+      required: [name, frequency, memberEmails]
       properties:
         name:
           type: string
@@ -2069,6 +2075,10 @@ components:
         contributionCents:
           type: integer
         numRounds:
+          type: integer
+        targetPayoutCents:
+          type: integer
+        groupSize:
           type: integer
         frequency:
           type: string

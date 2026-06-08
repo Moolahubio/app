@@ -1,5 +1,6 @@
 - [MoolaHub stack decisions](moolahub-stack.md) — auth (Privy primary + passkeys; email/password & CDP onramp removed), double-entry ledger, on-chain testnet tradeoff, circles/Susu, no seed/demo data; everything is real per-user data.
 - [MoolaHub ledger invariants](moolahub-ledger-invariants.md) — reservation + ledger.transfer must share one tx; deposit dedup uses the bare on-chain tx hash. Past review rejections.
+- [MoolaHub Susu target-payout](moolahub-susu-target-payout.md) — target payout + group size N; 2% fee on TOP of base; fixed roster auto-starts at N; manual start blocked; legacy paths gated on targetMembers==null.
 - [MoolaHub Account section](moolahub-account.md) — Privy-primary auth + passkeys (email/password removed); NO KYC; WebAuthn challenges single-use; private object route auth-guarded.
 - [MoolaHub email+password auth](moolahub-email-password-auth.md) — email+password is PRIMARY; Privy never logs into a password account; verification codes burn after N attempts; username public+CI-unique vs private legal name; completion gate for legacy Privy accounts.
 - [MoolaHub client auth/logout](moolahub-auth-logout.md) — logout: setQueryData(getMe,null) then removeQueries excluding getMe, then navigate; invalidate/remove-all race refetch and keep stale auth.
