@@ -62,6 +62,7 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     error NotStalled();
     error NothingToRefund();
     error BadConfig();
+    error CirclePaused();
 
     /// @dev Lock the implementation so only clones (via initialize) are usable.
     constructor() {
@@ -163,18 +164,27 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     }
 
     /// @notice Cancel a stalled circle so contributors can reclaim the current
-    ///         round's contributions. Permissionless once past deadline + grace;
-    ///         the guardian may also cancel in an emergency.
+    ///         round's contributions. Permissionless once the round is past
+    ///         deadline + grace with missing contributions. The guardian has no
+    ///         special cancellation power — use pause() to halt contributions,
+    ///         then any member can call unpause() to resume.
+    ///
+    /// @dev Cancellation is explicitly blocked while the circle is paused.
+    ///      This prevents a guardian from manufacturing a stall (pause →
+    ///      deadline expires → cancel) to strand later members' principal.
+    ///      Members can always call unpause() to nullify an abusive pause before
+    ///      the round deadline passes.
     function cancelStalled() external nonReentrant {
         if (status != Status.Active) revert NotActive();
+        if (paused) revert CirclePaused();
         bool stalled = _pastGrace() && roundContributions[currentRound] < totalRounds;
-        if (!stalled && msg.sender != guardian) revert NotStalled();
+        if (!stalled) revert NotStalled();
 
         // Effects before the external (reputation) interaction — strict CEI.
         status = Status.Cancelled;
         _accrueRefunds(currentRound);
         emit CircleCancelled(currentRound, msg.sender);
-        if (stalled) _flagDelinquents(currentRound);
+        _flagDelinquents(currentRound);
     }
 
     function _pastGrace() private view returns (bool) {
@@ -234,6 +244,16 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     function pause() external {
         if (msg.sender != guardian) revert NotGuardian();
         paused = true; // blocks new contributions; cannot move funds
+    }
+
+    /// @notice Any member may resume a paused circle. This nullifies an abusive
+    ///         guardian pause that would otherwise manufacture a stall, since
+    ///         `cancelStalled()` is blocked while `paused == true`. Members
+    ///         acting collectively can always restore contribution ability.
+    function unpause() external {
+        if (status != Status.Active) revert NotActive();
+        if (!isMember[msg.sender]) revert NotMember();
+        paused = false;
     }
 
     // --- Views ---------------------------------------------------------------

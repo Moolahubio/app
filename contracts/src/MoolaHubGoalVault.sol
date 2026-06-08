@@ -12,12 +12,14 @@ import {IMoolaHubGoalVault} from "./interfaces/IMoolaHubGoalVault.sol";
 ///         non-custodial: only the owning account can move its own balance —
 ///         there is NO admin path to user funds anywhere in this contract.
 ///
-/// @dev Fee model: deposits are free; withdrawals charge `feeBps` (2%) to the
-///      treasury. Collecting the fee here (rather than on a separate "cash out"
-///      endpoint) means a user cannot escape it by exporting their wallet and
-///      moving funds directly — the only way out of the vault is withdraw().
-///      Early withdrawal is always permitted; `unlockAt` is advisory metadata
-///      surfaced in the UI, never enforced.
+/// @dev Fee model: deposits are free; withdrawals charge a fee to the treasury.
+///      The fee applied to any withdrawal is the LOWER of:
+///        (a) the global `feeBps` at the time of withdrawal, and
+///        (b) the `feeBps` that was in effect when the user first deposited into
+///            that (owner, goalId) slot (snapshotted in `_lockedFeeBps`).
+///      This means fee increases can never retroactively raise costs on already-
+///      deposited principal — the owner can only make things cheaper for existing
+///      depositors. New deposits into an empty slot pick up the current global fee.
 ///
 ///      The owner (multisig) can only tune feeBps (capped) and the treasury
 ///      address; it can never withdraw a user's balance.
@@ -33,6 +35,11 @@ contract MoolaHubGoalVault is IMoolaHubGoalVault, Ownable2Step, ReentrancyGuard 
 
     mapping(address => mapping(bytes32 => uint256)) private _bal; // owner => goalId => amount
     mapping(address => mapping(bytes32 => uint64)) public unlockAt; // advisory only
+
+    /// @dev The fee rate locked at the time of first deposit into each (owner, goalId)
+    ///      slot. Reset to 0 when the balance returns to zero, so the next deposit
+    ///      always picks up the then-current global fee.
+    mapping(address => mapping(bytes32 => uint16)) private _lockedFeeBps;
 
     error ZeroAmount();
     error Insufficient();
@@ -58,12 +65,18 @@ contract MoolaHubGoalVault is IMoolaHubGoalVault, Ownable2Step, ReentrancyGuard 
 
     function _deposit(bytes32 goalId, uint256 amount) private {
         if (amount == 0) revert ZeroAmount();
+        // Snapshot the current fee for this slot on the first deposit (or after
+        // the balance was fully withdrawn). Subsequent top-ups keep the existing
+        // locked rate so the user's position is never retroactively worsened.
+        if (_bal[msg.sender][goalId] == 0) {
+            _lockedFeeBps[msg.sender][goalId] = feeBps;
+        }
         _bal[msg.sender][goalId] += amount; // effects
         usdc.safeTransferFrom(msg.sender, address(this), amount); // interaction
         emit GoalDeposited(msg.sender, goalId, amount);
     }
 
-    // --- Withdrawals (2% fee) ------------------------------------------------
+    // --- Withdrawals ---------------------------------------------------------
 
     /// @inheritdoc IMoolaHubGoalVault
     function withdraw(bytes32 goalId, uint256 grossAmount) external nonReentrant {
@@ -73,7 +86,19 @@ contract MoolaHubGoalVault is IMoolaHubGoalVault, Ownable2Step, ReentrancyGuard 
 
         _bal[msg.sender][goalId] = b - grossAmount; // effects
 
-        uint256 fee = (grossAmount * feeBps) / BPS;
+        // Use the lower of the locked rate and the current global rate so that
+        // (a) fee increases never hurt existing depositors, and
+        // (b) fee decreases always benefit them immediately.
+        uint16 locked = _lockedFeeBps[msg.sender][goalId];
+        uint16 effectiveFee = locked < feeBps ? locked : feeBps;
+
+        // Clear the locked rate once the slot is emptied so the next deposit
+        // always picks up the then-current fee.
+        if (_bal[msg.sender][goalId] == 0) {
+            _lockedFeeBps[msg.sender][goalId] = 0;
+        }
+
+        uint256 fee = (grossAmount * effectiveFee) / BPS;
         uint256 net = grossAmount - fee;
         if (fee > 0) usdc.safeTransfer(treasury, fee);
         usdc.safeTransfer(msg.sender, net); // only ever to the owner of the funds
@@ -91,8 +116,38 @@ contract MoolaHubGoalVault is IMoolaHubGoalVault, Ownable2Step, ReentrancyGuard 
         return _bal[owner_][goalId];
     }
 
+    /// @notice The effective withdrawal fee rate for a given (owner, goalId) slot.
+    ///         Returns the lower of the locked rate and the current global rate.
+    ///         Returns 0 for empty slots (no balance, so no locked rate applies yet).
+    ///         Note: also returns 0 when the slot was funded while feeBps was 0.
+    function lockedFeeBpsOf(address owner_, bytes32 goalId) external view returns (uint16) {
+        if (_bal[owner_][goalId] == 0) return 0; // empty slot
+        uint16 locked = _lockedFeeBps[owner_][goalId];
+        return locked < feeBps ? locked : feeBps;
+    }
+
     function quoteWithdraw(uint256 grossAmount) external view returns (uint256 net, uint256 fee) {
         fee = (grossAmount * feeBps) / BPS;
+        net = grossAmount - fee;
+    }
+
+    /// @notice Quote a withdrawal using the effective fee for a specific (owner, goalId) slot.
+    ///         Uses balance presence to distinguish an empty slot from a deposit made at fee=0.
+    ///         Mirrors withdraw() exactly: effectiveFee = min(lockedFee, currentFee).
+    function quoteWithdrawFor(address owner_, bytes32 goalId, uint256 grossAmount)
+        external
+        view
+        returns (uint256 net, uint256 fee)
+    {
+        uint16 effectiveFee;
+        if (_bal[owner_][goalId] == 0) {
+            // Empty slot — use global fee as indicative reference for UI display.
+            effectiveFee = feeBps;
+        } else {
+            uint16 locked = _lockedFeeBps[owner_][goalId];
+            effectiveFee = locked < feeBps ? locked : feeBps;
+        }
+        fee = (grossAmount * effectiveFee) / BPS;
         net = grossAmount - fee;
     }
 

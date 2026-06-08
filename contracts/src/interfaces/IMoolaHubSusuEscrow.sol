@@ -22,7 +22,7 @@ interface IMoolaHubSusuEscrow {
         address treasury;
         uint64 roundDuration; // seconds per round
         uint64 gracePeriod; // seconds after deadline before a round can be cancelled/flagged
-        address guardian; // may only pause + open refunds
+        address guardian; // may pause() to halt contributions; cannot force-cancel a healthy circle
         address reputation; // optional (address(0) disables strike reporting)
         bytes32 circleId; // off-chain UUID, for correlation
     }
@@ -38,9 +38,10 @@ interface IMoolaHubSusuEscrow {
 
     function contribute() external;
     function flagDelinquents() external; // permissionless after deadline + grace
-    function cancelStalled() external; // permissionless after deadline + grace
+    function cancelStalled() external; // permissionless after deadline + grace; reverts while paused
     function claimRefund() external; // contributor pulls unsettled contributions back
     function pause() external; // guardian only
+    function unpause() external; // any member — nullifies an abusive guardian pause
 
     function status() external view returns (Status);
     function currentRound() external view returns (uint256);

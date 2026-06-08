@@ -202,6 +202,92 @@ contract SusuEscrowTest is Test {
         assertEq(usdc.balanceOf(guardian), 0); // guardian gained nothing
     }
 
+    /// @notice The guardian must NOT be able to cancel a healthy (non-stalled)
+    ///         circle. Removing this power closes the key-compromise extraction
+    ///         path where a guardian could strand later members' principal after
+    ///         early recipients have already been paid.
+    function test_guardian_cannotCancelHealthyCircle() public {
+        MoolaHubSusuEscrow e = _create(keccak256("c8"));
+        _fundAll(address(e));
+
+        // Round 1 fully settles — alice (position 0) gets paid.
+        _roundContribute(e);
+        assertEq(uint256(e.currentRound()), 2);
+
+        // Round 2 is open and healthy (nobody has contributed yet but deadline
+        // hasn't passed). Guardian attempts to force-cancel.
+        vm.prank(guardian);
+        vm.expectRevert(MoolaHubSusuEscrow.NotStalled.selector);
+        e.cancelStalled();
+
+        // Circle must still be active; bob and carol are not stranded.
+        assertEq(uint8(e.status()), uint8(IMoolaHubSusuEscrow.Status.Active));
+    }
+
+    /// @notice Guardian pause cannot be weaponised to manufacture a stall:
+    ///         cancelStalled() reverts while the circle is paused, and any
+    ///         member can call unpause() to restore contribution ability.
+    function test_guardian_pauseCannotManufactureStall() public {
+        MoolaHubSusuEscrow e = _create(keccak256("c9"));
+        _fundAll(address(e));
+
+        // Round 1 settles normally.
+        _roundContribute(e);
+
+        // Guardian pauses during round 2.
+        vm.prank(guardian);
+        e.pause();
+        assertTrue(e.paused());
+
+        // Deadline passes — normally this would allow cancelStalled().
+        vm.warp(block.timestamp + ROUND + GRACE + 1);
+
+        // cancelStalled() must revert while paused.
+        vm.expectRevert(MoolaHubSusuEscrow.CirclePaused.selector);
+        e.cancelStalled();
+
+        // Any member can unpause — this nullifies the manufactured stall.
+        vm.prank(bob);
+        e.unpause();
+        assertFalse(e.paused());
+
+        // After unpause, a genuine stall can still be cancelled normally.
+        // (Here there ARE missing contributions past deadline, so it's legitimate.)
+        e.cancelStalled();
+        assertEq(uint8(e.status()), uint8(IMoolaHubSusuEscrow.Status.Cancelled));
+
+        // Only round-2 contributions are refundable (none here — nobody paid in r2).
+        // Alice's round-1 pot stays with alice (she legitimately received it).
+        assertEq(e.refundableOf(alice), 0);
+        assertEq(e.refundableOf(bob), 0);
+        assertEq(e.refundableOf(carol), 0);
+    }
+
+    /// @notice Members can unpause and continue contributing normally.
+    function test_member_canUnpause_andContribute() public {
+        MoolaHubSusuEscrow e = _create(keccak256("c10"));
+        _fundAll(address(e));
+
+        vm.prank(guardian);
+        e.pause();
+
+        // Member unpauses.
+        vm.prank(alice);
+        e.unpause();
+        assertFalse(e.paused());
+
+        // Contributions resume normally.
+        _roundContribute(e);
+        assertEq(uint256(e.currentRound()), 2);
+
+        // Non-member cannot unpause.
+        vm.prank(guardian);
+        e.pause();
+        vm.prank(dave); // dave is not a member
+        vm.expectRevert(MoolaHubSusuEscrow.NotMember.selector);
+        e.unpause();
+    }
+
     function test_feeCapEnforcedAtInit() public {
         // Build a factory with an over-cap fee and expect the escrow init to revert.
         vm.startPrank(owner);

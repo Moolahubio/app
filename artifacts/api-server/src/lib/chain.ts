@@ -81,6 +81,8 @@ const GOAL_VAULT_ABI = parseAbi([
   "function withdraw(bytes32 goalId, uint256 grossAmount)",
   "function balanceOf(address owner, bytes32 goalId) view returns (uint256)",
   "function quoteWithdraw(uint256 grossAmount) view returns (uint256 net, uint256 fee)",
+  "function quoteWithdrawFor(address owner, bytes32 goalId, uint256 grossAmount) view returns (uint256 net, uint256 fee)",
+  "function lockedFeeBpsOf(address owner, bytes32 goalId) view returns (uint16)",
   "function feeBps() view returns (uint16)",
   "event GoalDeposited(address indexed owner, bytes32 indexed goalId, uint256 amount)",
   "event GoalWithdrawn(address indexed owner, bytes32 indexed goalId, uint256 grossAmount, uint256 fee)",
