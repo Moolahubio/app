@@ -328,15 +328,6 @@ export default function ProfilePage() {
 
       <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-center text-sm text-muted-foreground">
         <Eyebrow className="text-muted-foreground">Save today · Reach it together</Eyebrow>
-        <span className="text-muted-foreground">·</span>
-        <a
-          href="https://moolahub.io/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-jade-600 hover:text-jade-700 dark:text-jade-400"
-        >
-          moolahub.io
-        </a>
       </div>
     </div>
   );

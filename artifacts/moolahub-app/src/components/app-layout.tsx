@@ -7,6 +7,7 @@ import {
   Target, 
   GraduationCap, 
   Receipt,
+  User,
 } from "lucide-react";
 import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Avatar, Skeleton } from "@/components/ui";
@@ -25,6 +26,13 @@ const nav: NavItem[] = [
   { label: "Goals", href: "/goals", icon: Target },
   { label: "Learn", href: "/learn", icon: GraduationCap },
   { label: "Activity", href: "/activity", icon: Receipt },
+];
+
+// The mobile bottom bar also surfaces Profile, which on desktop lives in the
+// sidebar footer. Without this, mobile users have no way to reach their profile.
+const bottomNav: NavItem[] = [
+  ...nav,
+  { label: "Profile", href: "/profile", icon: User },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -101,13 +109,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <p className="truncate text-xs text-muted-foreground">View profile</p>
           </div>
         </Link>
-
-        <a
-          href="#"
-          className="mt-2 px-2 text-xs text-muted-foreground transition-colors duration-150 hover:text-jade-600"
-        >
-          moolahub.io
-        </a>
       </aside>
 
       <div className="lg:pl-64">

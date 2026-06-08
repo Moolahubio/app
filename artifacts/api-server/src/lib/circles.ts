@@ -13,6 +13,7 @@ import { onchainEnabled, explorerUrl, escrowEnabled, deployCircleEscrow } from "
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { requireWalletForUser } from "./wallet";
+import { recordSave } from "./streaks";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
@@ -332,6 +333,9 @@ export async function contribute(userId: string, circleId: string) {
     },
     { email: true },
   );
+
+  // Light the savings streak for this circle (derived/non-financial, never throws).
+  await recordSave(userId, { type: "circle", id: circleId, frequency: circle.frequency }, txn.id);
 
   // Book this round's payout/fee rows (if it just filled) BEFORE kicking the
   // reconciler, so the escrow's RoundSettled backfill always finds pending

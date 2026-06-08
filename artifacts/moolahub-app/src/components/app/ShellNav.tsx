@@ -24,7 +24,10 @@ export function ShellNavList({
 
   if (layout === "bottom") {
     return (
-      <div className="mx-auto grid max-w-md grid-cols-5 safe-pb">
+      <div
+        className="mx-auto grid max-w-md safe-pb"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
         {items.map((item) => (
           <ShellNavLink key={item.href} item={item} active={isActive(pathname, item.href)} layout="bottom" />
         ))}

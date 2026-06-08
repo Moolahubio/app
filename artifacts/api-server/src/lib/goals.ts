@@ -13,6 +13,7 @@ import { formatMoney } from "./money";
 import { goalVaultEnabled, goalVaultContract, explorerUrl, networkName } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { requireWalletForUser } from "./wallet";
+import { recordSave } from "./streaks";
 
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
 // feeBps (2%). Deposits are free. When the vault isn't configured/reachable,
@@ -190,6 +191,10 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
   });
 
   if (onchain) kickReconciler();
+
+  // Light the savings streak for this goal. Derived/non-financial and never
+  // throws, so a streak hiccup can't affect the committed allocation.
+  await recordSave(userId, { type: "goal", id: goalId, frequency: goal.frequency }, txn.id);
 
   await notify(userId, {
     type: "goal",
