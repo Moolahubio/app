@@ -1,0 +1,11 @@
+.mh-glass-card {
+  background: rgba(7, 13, 11, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(48, 197, 138, 0.15);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.mh-glow-circle {
+  background: radial-gradient(circle, rgba(14, 158, 110, 0.15) 0%, rgba(14, 158, 110, 0) 70%);
+}

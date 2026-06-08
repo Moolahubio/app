@@ -1,0 +1,45 @@
+.mh-centered-bg {
+  background-color: #070D0B;
+}
+
+.mh-centered-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 800px;
+  height: 600px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(14, 158, 110, 0.15) 0%, rgba(7, 13, 11, 0) 70%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.mh-centered-chart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1200px;
+  transform: translate(-50%, -50%);
+  opacity: 0.1;
+  filter: blur(12px);
+  pointer-events: none;
+}
+
+.mh-centered-card {
+  background-color: #0C1512;
+  border: 1px solid #1B2A24;
+  box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px inset rgba(255,255,255,0.05);
+}
+
+.mh-input {
+  background-color: #070D0B;
+  border: 1px solid #1B2A24;
+  color: #FFFFFF;
+  transition: all 0.2s ease;
+}
+
+.mh-input:focus-within {
+  border-color: #0E9E6E;
+  box-shadow: 0 0 0 1px #0E9E6E;
+  outline: none;
+}

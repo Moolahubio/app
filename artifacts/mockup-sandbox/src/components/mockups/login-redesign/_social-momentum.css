@@ -1,0 +1,35 @@
+/* _social-momentum.css */
+.mh-glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(12, 21, 18, 0.05);
+  box-shadow: 0 8px 32px rgba(12, 21, 18, 0.03);
+}
+
+.mh-hover-lift {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mh-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(14, 158, 110, 0.08);
+}
+
+.mh-ticker-container {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.mh-ticker {
+  display: flex;
+  width: max-content;
+  animation: mh-ticker-anim 20s linear infinite;
+}
+
+@keyframes mh-ticker-anim {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.mh-avatar-ring {
+  border: 2px solid #FFFFFF;
+}

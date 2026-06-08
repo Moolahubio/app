@@ -1,0 +1,40 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap");
+
+/* ---- MoolaHub brand helpers (scoped to login-redesign group) ---- */
+.mh-display { font-family: "Poppins", "Inter", sans-serif; }
+.mh-sans { font-family: "Inter", ui-sans-serif, system-ui, sans-serif; }
+.mh-mono { font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; }
+
+.mh-eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.75rem;
+}
+
+.mh-grid-dark {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+.mh-grid-light {
+  background-image:
+    linear-gradient(rgba(12, 21, 18, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(12, 21, 18, 0.045) 1px, transparent 1px);
+}
+
+@keyframes mh-draw-line {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes mh-twinkle {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+@keyframes mh-fade-up {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.mh-animate-draw { animation: mh-draw-line 2.4s ease-out forwards; }
+.mh-animate-twinkle { animation: mh-twinkle 2.8s ease-in-out infinite; }
+.mh-animate-fade-up { animation: mh-fade-up 0.6s ease-out both; }
