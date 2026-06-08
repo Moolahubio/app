@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable, sessionsTable } from "@workspace/db";
 import {
@@ -26,6 +26,38 @@ import {
 } from "../lib/twofactor";
 
 const router: IRouter = Router();
+
+// Allowlisted origins (same source of truth as the CORS config in app.ts).
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+/**
+ * CSRF guard for session-establishing endpoints.
+ *
+ * Two complementary checks:
+ *  1. Content-Type must be `application/json`.  HTML forms can only submit
+ *     application/x-www-form-urlencoded, multipart/form-data, or text/plain —
+ *     never JSON — so this alone blocks every cross-site form attack.
+ *  2. If an `Origin` header is present (browsers always include it on
+ *     cross-site requests) it must appear in ALLOWED_ORIGINS.  This closes
+ *     the gap for any future path that could accept non-JSON bodies.
+ */
+function requireJsonAndAllowedOrigin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.is("application/json")) {
+    res.status(415).json({ error: "Content-Type must be application/json" });
+    return;
+  }
+
+  const origin = req.headers["origin"];
+  if (origin && !allowedOrigins.includes(origin)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  next();
+}
 
 const COOKIE = "moolahub_session";
 // Base cookie attributes; `maxAge` is set per-login to match the session TTL
@@ -60,7 +92,7 @@ router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   );
 });
 
-router.post("/auth/privy", async (req, res): Promise<void> => {
+router.post("/auth/privy", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
   const parsed = PrivyAuthBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request" });
@@ -136,7 +168,7 @@ router.post("/auth/privy", async (req, res): Promise<void> => {
 
 // Second step of a 2FA-gated login: verify the authenticator/backup code against
 // the pending challenge, then establish the session.
-router.post("/auth/2fa/login", async (req, res): Promise<void> => {
+router.post("/auth/2fa/login", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
   const parsed = TwoFactorLoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request" });
