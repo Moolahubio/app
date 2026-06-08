@@ -144,7 +144,7 @@ export default function CirclesPage() {
                       htmlFor="type-rotation"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
-                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60" : "border-border",
+                        type === "rotation" ? "border-jade-500/40 bg-jade-50/60 dark:bg-jade-500/15" : "border-border",
                       )}
                     >
                       <RadioGroupItem value="rotation" id="type-rotation" className="mt-0.5" />
@@ -159,7 +159,7 @@ export default function CirclesPage() {
                       htmlFor="type-accumulation"
                       className={cn(
                         "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors",
-                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60" : "border-border",
+                        type === "accumulation" ? "border-jade-500/40 bg-jade-50/60 dark:bg-jade-500/15" : "border-border",
                       )}
                     >
                       <RadioGroupItem value="accumulation" id="type-accumulation" className="mt-0.5" />
@@ -249,7 +249,7 @@ export default function CirclesPage() {
                     </p>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4">
+                <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4 dark:bg-jade-500/10">
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You pay per round</p>
                     <p className="font-semibold text-foreground">{formatMoney(payPerRoundCents)}</p>
@@ -291,7 +291,7 @@ export default function CirclesPage() {
         }
       />
 
-      <Card className="flex items-center gap-4 border-jade-500/15 bg-jade-50/60 p-5">
+      <Card className="flex items-center gap-4 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
         <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-jade-500 text-white sm:flex">
           <ShieldCheck className="h-6 w-6" />
         </span>
@@ -305,7 +305,7 @@ export default function CirclesPage() {
       </Card>
 
       {inviteList.length > 0 && (
-        <Card className="border-jade-500/20 bg-jade-50/50 p-6">
+        <Card className="border-jade-500/20 bg-jade-50/50 p-6 dark:bg-jade-500/10">
           <div className="flex items-center gap-2">
             <Inbox className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">

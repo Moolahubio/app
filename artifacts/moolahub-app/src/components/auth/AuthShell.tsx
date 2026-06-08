@@ -18,7 +18,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
             Saving, made social
           </p>
-          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">
+          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
             Built on Base
           </p>
           <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
@@ -35,7 +35,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/50">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/65">
           <span className="inline-flex items-center gap-2">
             <Lock className="h-4 w-4 text-jade-400" /> You hold the keys
           </span>

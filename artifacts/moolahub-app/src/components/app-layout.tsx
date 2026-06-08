@@ -81,11 +81,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {reminder && (
           <div className="mt-6 rounded-xl border border-white/10 bg-ink-950 p-4 text-white">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
               Next due
             </p>
             <p className="mt-1 text-sm font-semibold">{reminder.title}</p>
-            <p className="text-xs text-white/55">
+            <p className="text-xs text-white/70">
               {formatMoney(reminder.amountCents)} ·{" "}
               {new Date(reminder.dueDate).toLocaleDateString("en-US", {
                 month: "short",

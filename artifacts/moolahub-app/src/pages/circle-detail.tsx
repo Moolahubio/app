@@ -59,7 +59,7 @@ export default function CircleDetailPage() {
             </span>
             <div>
               <h1 className="font-display text-2xl font-bold">{circle.name}</h1>
-              <p className="text-sm capitalize text-white/55">
+              <p className="text-sm capitalize text-white/70">
                 {circle.frequency} · {circle.members.length} members
                 {isForming
                   ? " · forming"
@@ -98,7 +98,7 @@ export default function CircleDetailPage() {
             },
           ].map((s) => (
             <div key={s.label}>
-              <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/45">
+              <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/60">
                 {s.label}
               </p>
               <p className="mt-1 font-display text-xl font-bold">{s.value}</p>
@@ -263,7 +263,7 @@ export default function CircleDetailPage() {
                   key={m.id}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                    current ? "border-jade-500/30 bg-jade-50" : "border-border bg-card",
+                    current ? "border-jade-500/30 bg-jade-50 dark:bg-jade-500/15" : "border-border bg-card",
                   )}
                 >
                   {!isAccumulation && (

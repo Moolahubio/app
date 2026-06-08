@@ -15,6 +15,7 @@
 - [pnpm transitive-vuln overrides](pnpm-transitive-vuln-overrides.md) — fix flagged CVEs with version-TARGETED root pnpm.overrides keys (`pkg@badver`), never blanket names which downgrade healthy newer copies.
 - [drizzle-kit push TTY block](drizzle-push-tty.md) — `push` errors on no-TTY when prompting (e.g. UNIQUE on populated table); apply additive DDL via direct SQL with the exact constraint name drizzle expects.
 - [Fixed overlays + backdrop-filter](moolahub-overlay-backdrop-filter.md) — app shell header uses backdrop-blur, so `fixed inset-0` resolves to the header box not the viewport; use a document pointerdown listener (or a body portal) for click-outside/modals.
+- [Dark-mode contrast](moolahub-dark-mode-contrast.md) — `bg-jade-50/xx` callouts need a `dark:` bg or they render washed-out light; keep dark hero-card white tiers ≥/55; the dark `--muted-foreground` token is the biggest readability lever.
 - [Notifications need client invalidation](moolahub-notifications-invalidation.md) — bell reads getListNotifications; backend notifies on most activities, but mutations must invalidate that key or new notifications won't appear until refocus/remount.
 - [Circle deletion](circles-delete.md) — idle forming+<=1-member circles hard-delete safely; FK row-lock serializes acceptInvite vs deleteCircle FOR UPDATE.
 - [CSRF/CORS origin allowlist](moolahub-csrf-origin.md) — prod ALLOWED_ORIGINS is unset; derive origins from REPLIT_DOMAINS + same-origin (x-forwarded-host/proto), else all POST auth 403s in prod.

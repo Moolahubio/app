@@ -73,13 +73,13 @@ export default function DashboardPage() {
 
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
                 Total balance
               </p>
               <p className="mt-1.5 font-display text-4xl font-bold sm:text-5xl">
                 {formatMoney(totalCents)}
               </p>
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/55">
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/70">
                 <span>
                   Available{" "}
                   <span className="font-semibold text-white">
@@ -114,7 +114,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-center justify-between text-xs text-white/50">
+            <div className="flex items-center justify-between text-xs text-white/65">
               <span className="font-mono uppercase tracking-[0.15em]">Growth · 6 months</span>
               <span className="text-jade-400">
                 +{formatMoney(Math.floor(totalCents * YIELD_APY), { sign: true })} earned

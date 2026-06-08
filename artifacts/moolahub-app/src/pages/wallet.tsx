@@ -53,7 +53,7 @@ export default function WalletPage() {
       <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">
         <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:32px_32px] [mask-image:radial-gradient(70%_80%_at_90%_0%,black,transparent)]" />
         <div className="flex items-center justify-between">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
             Available balance
           </p>
           <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
@@ -63,7 +63,7 @@ export default function WalletPage() {
         <p className="mt-1.5 font-display text-4xl font-bold">
           {formatMoney(wallet.availableCents)}
         </p>
-        <p className="mt-1 text-sm text-white/55">
+        <p className="mt-1 text-sm text-white/70">
           {formatMoney(wallet.goalAllocatedCents)} allocated to goals
         </p>
 
@@ -71,7 +71,7 @@ export default function WalletPage() {
           <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-center gap-2">
               <WalletIcon className="h-4 w-4 text-jade-400" />
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
                 Your USDC deposit address
               </p>
             </div>
@@ -79,7 +79,7 @@ export default function WalletPage() {
               <code className="truncate font-mono text-sm text-white/80">{wallet.address}</code>
               <CopyButton value={wallet.address} />
             </div>
-            <p className="mt-2 text-xs text-white/45">
+            <p className="mt-2 text-xs text-white/60">
               Send only <span className="text-white/70">USDC on {NETWORK}</span> to this address.
             </p>
           </div>
@@ -191,7 +191,7 @@ export default function WalletPage() {
         </Card>
       </div>
 
-      <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5">
+      <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-muted-foreground">
           MoolaHub is non-custodial: funds settle to your own Base wallet, and every movement

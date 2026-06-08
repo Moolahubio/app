@@ -202,7 +202,7 @@ export default function ProfilePage() {
                     if (e.key === "Enter") void saveName();
                     if (e.key === "Escape") setEditingName(false);
                   }}
-                  className="w-full max-w-xs rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 font-display text-lg font-bold text-white outline-none placeholder:text-white/40 focus:border-jade-400/50"
+                  className="w-full max-w-xs rounded-lg border border-white/15 bg-white/10 px-3 py-1.5 font-display text-lg font-bold text-white outline-none placeholder:text-white/55 focus:border-jade-400/50"
                 />
                 <button
                   onClick={() => void saveName()}
@@ -232,7 +232,7 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
-            <p className="mt-0.5 text-sm text-white/55">{user.email}</p>
+            <p className="mt-0.5 text-sm text-white/70">{user.email}</p>
             {isUploading && <p className="mt-1 text-xs text-jade-300">Uploading picture…</p>}
           </div>
         </div>
@@ -246,7 +246,7 @@ export default function ProfilePage() {
         <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex items-center gap-2">
             <WalletIcon className="h-4 w-4 text-jade-400" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
               Base wallet · non-custodial
             </p>
           </div>
