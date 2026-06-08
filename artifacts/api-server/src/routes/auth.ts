@@ -32,6 +32,7 @@ import { createWalletForUser, getWalletForUser } from "../lib/wallet";
 import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
+import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -245,13 +246,23 @@ router.post("/auth/login", requireJsonAndAllowedOrigin, async (req, res): Promis
 
   const email = parsed.data.email.trim().toLowerCase();
   const rememberMe = parsed.data.rememberMe === true;
+  const ip = req.ip || "unknown";
+
+  const locked = loginLockoutRemaining(email, ip);
+  if (locked !== null) {
+    res.status(429).json({ error: "Too many failed attempts. Please try again later." });
+    return;
+  }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
   const ok = await verifyPassword(parsed.data.password, user?.passwordHash);
   if (!user || !user.passwordHash || !ok) {
+    recordFailedLogin(email, ip);
     res.status(401).json({ error: "Invalid email or password." });
     return;
   }
+
+  clearLoginAttempts(email, ip);
 
   if (!user.emailVerifiedAt) {
     await issueVerificationCode(user.id, email, user.name);

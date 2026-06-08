@@ -1996,6 +1996,7 @@ components:
           type: string
         memberEmails:
           type: array
+          maxItems: 19
           items:
             type: string
         imageUrl:

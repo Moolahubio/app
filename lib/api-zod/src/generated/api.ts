@@ -557,13 +557,17 @@ export const ListCirclesResponse = zod.array(ListCirclesResponseItem)
 /**
  * @summary Create a new Susu circle
  */
+export const createCircleBodyMemberEmailsMax = 19;
+
+
+
 export const CreateCircleBody = zod.object({
   "name": zod.string(),
   "type": zod.string().optional(),
   "contributionCents": zod.number(),
   "numRounds": zod.number().optional(),
   "frequency": zod.string(),
-  "memberEmails": zod.array(zod.string()),
+  "memberEmails": zod.array(zod.string()).max(createCircleBodyMemberEmailsMax),
   "imageUrl": zod.string().optional()
 })
 

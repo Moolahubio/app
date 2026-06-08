@@ -39,6 +39,19 @@ linkage only.
   outside the layout to avoid a redirect loop) to collect the missing username
   and/or password. `/auth/me` exposes `username`, `hasPassword`, `emailVerified`
   for the gate to read.
+- The logged-out login page MUST keep a legacy "Sign in with Privy" entry point
+  (`PrivyLegacySignIn` in the auth components), or passwordless legacy accounts
+  with no passkey are stranded — they have no way to reach the completion gate.
+  **Why:** code review rejected a build that made the login UI email/password +
+  passkey only. Removing the Privy login path silently locks out legacy users.
+
+## Login throttling (anti-brute-force)
+- `/auth/login` has a per-(email+IP) lockout (`loginThrottle.ts`) on top of the
+  coarse per-IP `express-rate-limit` in `app.ts`. After a small budget of failed
+  attempts it returns **429** with a generic message; a success clears the
+  counter. State is in-process (single-process API) and resets on restart.
+  **Why:** review required login throttling, not just verification-code attempt
+  caps — a 6-digit-style cap does nothing against password guessing.
 
 ## Test notes
 - Offline auth e2e: `auth-http.e2e.ts` (in `test:auth`). Email no-ops without

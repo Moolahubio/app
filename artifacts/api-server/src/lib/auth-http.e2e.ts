@@ -35,6 +35,7 @@ delete process.env.RESEND_API_KEY;
 const { db, pool, usersTable, emailVerificationCodesTable } = await import("@workspace/db");
 const { eq, inArray } = await import("drizzle-orm");
 const { createSession } = await import("./auth");
+const { hashPassword } = await import("./password");
 const appModule = await import("../app");
 const app = appModule.default;
 
@@ -223,6 +224,41 @@ async function run() {
 
   const legacyMe2 = await api<MeDto>("GET", "/api/auth/me", { token: legacyToken });
   assert.equal(legacyMe2.body.hasPassword, true, "hasPassword flips true after a legacy account sets a password");
+
+  // --- 9) Login is throttled after repeated wrong passwords -----------------
+  // Use a dedicated verified account so the lockout (per email+IP) doesn't
+  // affect the other identifiers exercised above.
+  const lockEmail = `e2e+lock+${runId}@moolahub.test`;
+  const [locked] = await db
+    .insert(usersTable)
+    .values({
+      name: "Lockout User",
+      username: `lock_${runId}`,
+      email: lockEmail,
+      passwordHash: await hashPassword("Right-Passw0rd!"),
+      emailVerifiedAt: new Date(),
+    })
+    .returning();
+  userIds.push(locked.id);
+
+  let sawLockout = false;
+  for (let i = 0; i < 12; i++) {
+    const attempt = await api("POST", "/api/auth/login", {
+      body: { email: lockEmail, password: "definitely-wrong" },
+    });
+    if (attempt.status === 429) {
+      sawLockout = true;
+      break;
+    }
+    assert.equal(attempt.status, 401, `pre-lockout wrong password returns 401 (attempt ${i + 1})`);
+  }
+  assert.ok(sawLockout, "repeated wrong passwords eventually lock the account (429)");
+
+  // Even the CORRECT password is refused while locked out.
+  const blocked = await api("POST", "/api/auth/login", {
+    body: { email: lockEmail, password: "Right-Passw0rd!" },
+  });
+  assert.equal(blocked.status, 429, "the correct password is also blocked while locked out");
 
   console.log(`\u2713 Email + password auth HTTP e2e passed (runId=${runId})`);
 }

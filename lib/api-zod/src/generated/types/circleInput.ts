@@ -12,6 +12,7 @@ export interface CircleInput {
   contributionCents: number;
   numRounds?: number;
   frequency: string;
+  /** @maxItems 19 */
   memberEmails: string[];
   imageUrl?: string;
 }
