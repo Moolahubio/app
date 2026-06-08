@@ -7,12 +7,14 @@
  */
 
 /**
- * Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete /auth/2fa/login. Otherwise the authenticated user is returned.
+ * Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete /auth/2fa/login. When the account's email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.
  */
 export interface LoginResult {
   twoFactorRequired: boolean;
   /** @nullable */
   challengeId?: string | null;
+  /** @nullable */
+  emailVerificationRequired?: boolean | null;
   /** @nullable */
   id?: string | null;
   /** @nullable */
@@ -20,9 +22,15 @@ export interface LoginResult {
   /** @nullable */
   email?: string | null;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   /** @nullable */
   hasWallet?: boolean | null;
   /** @nullable */
   walletAddress?: string | null;
+  /** @nullable */
+  hasPassword?: boolean | null;
+  /** @nullable */
+  privyLinked?: boolean | null;
 }

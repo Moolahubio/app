@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { db, usersTable, sessionsTable } from "@workspace/db";
 import {
   PrivyAuthBody,
@@ -8,6 +8,19 @@ import {
   TwoFactorLoginResponse,
   LogoutResponse,
   GetMeResponse,
+  RegisterBody,
+  RegisterResponse,
+  LoginBody,
+  LoginResponse,
+  VerifyEmailBody,
+  VerifyEmailResponse,
+  ResendVerificationCodeBody,
+  ResendVerificationCodeResponse,
+  UsernameAvailableResponse,
+  LinkPrivyBody,
+  LinkPrivyResponse,
+  ChangePasswordBody,
+  ChangePasswordResponse,
 } from "@workspace/api-zod";
 import {
   requireAuth,
@@ -17,6 +30,8 @@ import {
 } from "../lib/auth";
 import { createWalletForUser, getWalletForUser } from "../lib/wallet";
 import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
+import { hashPassword, verifyPassword } from "../lib/password";
+import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -68,6 +83,72 @@ const cookieOpts = {
   sameSite: "lax" as const,
 };
 
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/;
+const MIN_PASSWORD = 8;
+const REFERRAL_SOURCES = [
+  "Twitter",
+  "Telegram",
+  "WhatsApp",
+  "Discord",
+  "LinkedIn",
+  "Friends",
+  "Others",
+];
+
+type UserRow = typeof usersTable.$inferSelect;
+
+/** Public, session-bearing user shape returned after a successful login. */
+function authUserFields(user: UserRow, walletAddress: string | null) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    username: user.username ?? null,
+    avatarUrl: user.avatarUrl ?? null,
+    hasWallet: !!walletAddress,
+    walletAddress: walletAddress ?? null,
+    hasPassword: !!user.passwordHash,
+    privyLinked: !!user.privyDid,
+    emailVerified: !!user.emailVerifiedAt,
+  };
+}
+
+/**
+ * Complete a primary-auth login: clear any deactivation, ensure a wallet,
+ * mint a session + cookie, and return the LoginResult payload. Callers must
+ * already have verified credentials (and any 2FA second factor).
+ */
+async function finishLogin(res: Response, user: UserRow, rememberMe: boolean) {
+  if (user.deactivatedAt) {
+    await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
+  }
+  const wallet = await createWalletForUser(user.id);
+  const token = await createSession(user.id, rememberMe);
+  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
+  return { twoFactorRequired: false, ...authUserFields(user, wallet.address) };
+}
+
+/** Case-insensitive username clash check, optionally excluding one user id. */
+async function usernameTaken(username: string, excludeUserId?: string): Promise<boolean> {
+  const [clash] = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(
+      and(
+        sql`lower(${usersTable.username}) = ${username}`,
+        excludeUserId ? ne(usersTable.id, excludeUserId) : undefined,
+      ),
+    );
+  return !!clash;
+}
+
+function isValidPastDate(dob: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) return false;
+  const d = new Date(`${dob}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.getTime() < Date.now();
+}
+
 router.post("/auth/logout", async (req, res): Promise<void> => {
   const token = req.cookies?.[COOKIE] ?? req.headers["x-session-token"];
   if (token) {
@@ -80,17 +161,226 @@ router.post("/auth/logout", async (req, res): Promise<void> => {
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const wallet = await getWalletForUser(user.id);
+  res.json(GetMeResponse.parse(authUserFields(user, wallet?.address ?? null)));
+});
+
+// --------------------------------------------------------- email + password
+
+router.post("/auth/register", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
+  const parsed = RegisterBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  const name = parsed.data.name.trim();
+  const email = parsed.data.email.trim().toLowerCase();
+  const username = parsed.data.username.trim().toLowerCase();
+  const { password, dateOfBirth } = parsed.data;
+  const referralSource = parsed.data.referralSource ?? null;
+
+  if (!name) {
+    res.status(400).json({ error: "Please enter your legal name." });
+    return;
+  }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    res.status(400).json({ error: "Please enter a valid email address." });
+    return;
+  }
+  if (!USERNAME_RE.test(username)) {
+    res.status(400).json({ error: "Username must be 3–30 characters: letters, numbers, or underscores." });
+    return;
+  }
+  if (password.length < MIN_PASSWORD) {
+    res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD} characters.` });
+    return;
+  }
+  if (!isValidPastDate(dateOfBirth)) {
+    res.status(400).json({ error: "Please enter a valid date of birth." });
+    return;
+  }
+  if (referralSource && !REFERRAL_SOURCES.includes(referralSource)) {
+    res.status(400).json({ error: "Invalid referral source." });
+    return;
+  }
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  if (existing && existing.emailVerifiedAt) {
+    res.status(409).json({ error: "An account with this email already exists. Please sign in." });
+    return;
+  }
+  if (await usernameTaken(username, existing?.id)) {
+    res.status(409).json({ error: "That username is already taken." });
+    return;
+  }
+
+  const passwordHash = await hashPassword(password);
+
+  let user: UserRow;
+  if (existing) {
+    // Re-registering an account that never finished email verification: refresh
+    // its details and issue a new code.
+    [user] = await db
+      .update(usersTable)
+      .set({ name, username, passwordHash, dateOfBirth, referralSource })
+      .where(eq(usersTable.id, existing.id))
+      .returning();
+  } else {
+    [user] = await db
+      .insert(usersTable)
+      .values({ name, email, username, passwordHash, dateOfBirth, referralSource })
+      .returning();
+  }
+
+  await issueVerificationCode(user.id, email, name);
+  res.json(RegisterResponse.parse({ emailVerificationRequired: true, email }));
+});
+
+router.post("/auth/login", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
+  const parsed = LoginBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  const email = parsed.data.email.trim().toLowerCase();
+  const rememberMe = parsed.data.rememberMe === true;
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  const ok = await verifyPassword(parsed.data.password, user?.passwordHash);
+  if (!user || !user.passwordHash || !ok) {
+    res.status(401).json({ error: "Invalid email or password." });
+    return;
+  }
+
+  if (!user.emailVerifiedAt) {
+    await issueVerificationCode(user.id, email, user.name);
+    res.json(LoginResponse.parse({ twoFactorRequired: false, emailVerificationRequired: true, email }));
+    return;
+  }
+
+  if (user.twoFactorEnabled) {
+    const challengeId = await createTwoFactorChallenge(user.id, rememberMe);
+    res.json(LoginResponse.parse({ twoFactorRequired: true, challengeId }));
+    return;
+  }
+
+  res.json(LoginResponse.parse(await finishLogin(res, user, rememberMe)));
+});
+
+router.post("/auth/verify-email", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
+  const parsed = VerifyEmailBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  const email = parsed.data.email.trim().toLowerCase();
+  const rememberMe = parsed.data.rememberMe === true;
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  if (!user) {
+    res.status(400).json({ error: "That code is invalid or has expired." });
+    return;
+  }
+  if (user.emailVerifiedAt) {
+    res.status(400).json({ error: "This email is already verified. Please sign in." });
+    return;
+  }
+
+  const verified = await consumeVerificationCode(user.id, parsed.data.code);
+  if (!verified) {
+    res.status(400).json({ error: "That code is invalid or has expired." });
+    return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ emailVerifiedAt: new Date() })
+    .where(eq(usersTable.id, user.id))
+    .returning();
+
+  if (updated.twoFactorEnabled) {
+    const challengeId = await createTwoFactorChallenge(updated.id, rememberMe);
+    res.json(VerifyEmailResponse.parse({ twoFactorRequired: true, challengeId }));
+    return;
+  }
+
+  res.json(VerifyEmailResponse.parse(await finishLogin(res, updated, rememberMe)));
+});
+
+router.post("/auth/resend-code", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
+  const parsed = ResendVerificationCodeBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const email = parsed.data.email.trim().toLowerCase();
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  // Never reveal whether an account exists / is already verified.
+  if (user && !user.emailVerifiedAt) {
+    await issueVerificationCode(user.id, email, user.name);
+  }
+  res.json(ResendVerificationCodeResponse.parse({ ok: true }));
+});
+
+router.get("/auth/username-available", async (req, res): Promise<void> => {
+  const raw = typeof req.query.username === "string" ? req.query.username.trim().toLowerCase() : "";
+  if (!USERNAME_RE.test(raw)) {
+    res.json(
+      UsernameAvailableResponse.parse({
+        available: false,
+        reason: "Username must be 3–30 characters: letters, numbers, or underscores.",
+      }),
+    );
+    return;
+  }
+  const taken = await usernameTaken(raw);
   res.json(
-    GetMeResponse.parse({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl ?? null,
-      hasWallet: !!wallet,
-      walletAddress: wallet?.address ?? null,
+    UsernameAvailableResponse.parse({
+      available: !taken,
+      reason: taken ? "That username is already taken." : null,
     }),
   );
 });
+
+// ---------------------------------------------------- change / set password
+
+router.post("/auth/password", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
+  const user = (req as AuthRequest).user;
+  const parsed = ChangePasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  if (parsed.data.newPassword.length < MIN_PASSWORD) {
+    res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD} characters.` });
+    return;
+  }
+
+  // Accounts that already have a password must prove the current one. Legacy /
+  // Privy-only accounts (no password yet) may set one without it.
+  if (user.passwordHash) {
+    const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
+    if (!ok) {
+      res.status(401).json({ error: "Your current password is incorrect." });
+      return;
+    }
+  }
+
+  const passwordHash = await hashPassword(parsed.data.newPassword);
+  const updates: Partial<typeof usersTable.$inferInsert> = { passwordHash };
+  // Setting the first password on an authenticated account also confirms email
+  // control, so it becomes a usable email/password login.
+  if (!user.passwordHash && !user.emailVerifiedAt) {
+    updates.emailVerifiedAt = new Date();
+  }
+  await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id));
+
+  res.json(ChangePasswordResponse.parse({ ok: true }));
+});
+
+// --------------------------------------------------------------- Privy auth
 
 router.post("/auth/privy", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
   const parsed = PrivyAuthBody.safeParse(req.body);
@@ -114,56 +404,95 @@ router.post("/auth/privy", requireJsonAndAllowedOrigin, async (req, res): Promis
 
   // Identity is derived strictly from the verified Privy token (the DID) and the
   // profile fetched server-side from Privy. Client-supplied email/name are NOT
-  // trusted for account linking — otherwise a valid Privy token holder could
-  // bind their DID to someone else's account by submitting that email.
+  // trusted for account linking.
   const profile = await getPrivyProfile(did).catch(() => ({}) as { email?: string; name?: string });
   const verifiedEmail = profile.email ? profile.email.toLowerCase() : null;
   const name = profile.name ?? parsed.data.name ?? "MoolaHub Member";
 
   let [user] = await db.select().from(usersTable).where(eq(usersTable.privyDid, did));
+
+  // Privy is NOT a login method for password accounts — email compromise alone
+  // must never grant access. A password account that has linked Privy still
+  // signs in with its email + password only.
+  if (user && user.passwordHash) {
+    res.status(403).json({ error: "Please sign in with your email and password." });
+    return;
+  }
+
   if (!user && verifiedEmail) {
-    // Only link to an existing account when the email is verified by Privy.
-    [user] = await db.select().from(usersTable).where(eq(usersTable.email, verifiedEmail));
-    if (user) {
-      await db.update(usersTable).set({ privyDid: did }).where(eq(usersTable.id, user.id));
+    const [byEmail] = await db.select().from(usersTable).where(eq(usersTable.email, verifiedEmail));
+    if (byEmail) {
+      if (byEmail.passwordHash) {
+        // Don't link or log in via a Privy email-match to a password account.
+        res.status(403).json({
+          error:
+            "An account with this email uses a password. Sign in with your email and password, then link Privy from your account settings.",
+        });
+        return;
+      }
+      // Legacy passwordless account — safe to link this DID.
+      [user] = await db
+        .update(usersTable)
+        .set({ privyDid: did })
+        .where(eq(usersTable.id, byEmail.id))
+        .returning();
     }
   }
+
   if (!user) {
     const email = verifiedEmail ?? `${did.replace(/[^a-zA-Z0-9]/g, "")}@privy.moolahub`;
-    [user] = await db.insert(usersTable).values({ name, email, privyDid: did }).returning();
+    // Privy-verified email counts as verified; synthetic placeholders do not.
+    const emailVerifiedAt = verifiedEmail ? new Date() : null;
+    [user] = await db.insert(usersTable).values({ name, email, privyDid: did, emailVerifiedAt }).returning();
   }
 
-  // "Keep me logged in" — read defensively from the raw body so it works whether
-  // or not the generated client/schema includes it yet. Defaults to false (7d).
   const rememberMe = (req.body as { rememberMe?: unknown })?.rememberMe === true;
 
-  // When 2FA is enabled, primary auth alone does not establish a session: issue a
-  // short-lived challenge and require the second factor via /auth/2fa/login.
   if (user.twoFactorEnabled) {
     const challengeId = await createTwoFactorChallenge(user.id, rememberMe);
     res.json(PrivyAuthResponse.parse({ twoFactorRequired: true, challengeId }));
     return;
   }
 
-  if (user.deactivatedAt) {
-    await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
+  res.json(PrivyAuthResponse.parse(await finishLogin(res, user, rememberMe)));
+});
+
+// Link a Privy identity to the *currently signed-in* account (optional wallet
+// linkage). This is the only Privy path available to password accounts.
+router.post("/auth/privy/link", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
+  const user = (req as AuthRequest).user;
+  const parsed = LinkPrivyBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  if (!privyEnabled()) {
+    res.status(400).json({ error: "Privy is not configured." });
+    return;
   }
 
-  const wallet = await createWalletForUser(user.id);
-  const token = await createSession(user.id, rememberMe);
-  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
+  let did: string;
+  try {
+    did = await verifyPrivyToken(parsed.data.token);
+  } catch {
+    res.status(400).json({ error: "Invalid Privy token" });
+    return;
+  }
 
-  res.json(
-    PrivyAuthResponse.parse({
-      twoFactorRequired: false,
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl ?? null,
-      hasWallet: true,
-      walletAddress: wallet.address,
-    }),
-  );
+  const [other] = await db.select().from(usersTable).where(eq(usersTable.privyDid, did));
+  if (other && other.id !== user.id) {
+    res.status(409).json({ error: "This Privy identity is already linked to another account." });
+    return;
+  }
+
+  const [updated] = await db
+    .update(usersTable)
+    .set({ privyDid: did })
+    .where(eq(usersTable.id, user.id))
+    .returning();
+  const wallet = await createWalletForUser(user.id);
+
+  res.json(LinkPrivyResponse.parse(authUserFields(updated, wallet.address)));
 });
 
 // Second step of a 2FA-gated login: verify the authenticator/backup code against
@@ -195,8 +524,6 @@ router.post("/auth/2fa/login", requireJsonAndAllowedOrigin, async (req, res): Pr
   }
 
   // Success — atomically consume the challenge so it can be used exactly once.
-  // If a concurrent request already consumed it, this returns null and we reject
-  // rather than mint a second session from the same challenge.
   const consumed = await consumeTwoFactorChallenge(parsed.data.challengeId);
   if (!consumed) {
     res.status(400).json({ error: "Your verification session expired. Please sign in again." });
@@ -209,24 +536,8 @@ router.post("/auth/2fa/login", requireJsonAndAllowedOrigin, async (req, res): Pr
       .set({ twoFactorBackupCodes: result.remainingBackupHashes })
       .where(eq(usersTable.id, user.id));
   }
-  if (user.deactivatedAt) {
-    await db.update(usersTable).set({ deactivatedAt: null }).where(eq(usersTable.id, user.id));
-  }
 
-  const wallet = await createWalletForUser(user.id);
-  const token = await createSession(user.id, consumed.rememberMe);
-  res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(consumed.rememberMe) });
-
-  res.json(
-    TwoFactorLoginResponse.parse({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl ?? null,
-      hasWallet: true,
-      walletAddress: wallet.address,
-    }),
-  );
+  res.json(TwoFactorLoginResponse.parse(await finishLogin(res, user, consumed.rememberMe)));
 });
 
 export default router;

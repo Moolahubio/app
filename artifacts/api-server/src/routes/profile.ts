@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { db, usersTable, walletsTable } from "@workspace/db";
 import { UpdateProfileBody, GetProfileResponse, UpdateProfileResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
@@ -83,7 +83,7 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
     if (raw === null || raw === "") {
       updates.username = null;
     } else {
-      const username = raw.trim();
+      const username = raw.trim().toLowerCase();
       if (!USERNAME_RE.test(username)) {
         res.status(400).json({
           error: "Username must be 3–30 characters: letters, numbers, or underscores.",
@@ -93,7 +93,7 @@ router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
       const [clash] = await db
         .select({ id: usersTable.id })
         .from(usersTable)
-        .where(and(eq(usersTable.username, username), ne(usersTable.id, user.id)));
+        .where(and(sql`lower(${usersTable.username}) = ${username}`, ne(usersTable.id, user.id)));
       if (clash) {
         res.status(409).json({ error: "That username is already taken." });
         return;

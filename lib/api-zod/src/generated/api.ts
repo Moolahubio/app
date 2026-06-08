@@ -109,13 +109,17 @@ export const LoginPasskeyVerifyBody = zod.object({
 export const LoginPasskeyVerifyResponse = zod.object({
   "twoFactorRequired": zod.boolean(),
   "challengeId": zod.string().nullish(),
+  "emailVerificationRequired": zod.boolean().nullish(),
   "id": zod.string().nullish(),
   "name": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "username": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean().nullish(),
-  "walletAddress": zod.string().nullish()
-}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. Otherwise the authenticated user is returned.')
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().nullish(),
+  "privyLinked": zod.boolean().nullish()
+}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
 
 
 /**
@@ -141,9 +145,13 @@ export const GetMeResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
+  "username": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean(),
-  "walletAddress": zod.string().nullish()
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().optional().describe('Whether the account has an email\/password credential set.'),
+  "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
+  "emailVerified": zod.boolean().optional()
 })
 
 
@@ -160,13 +168,17 @@ export const PrivyAuthBody = zod.object({
 export const PrivyAuthResponse = zod.object({
   "twoFactorRequired": zod.boolean(),
   "challengeId": zod.string().nullish(),
+  "emailVerificationRequired": zod.boolean().nullish(),
   "id": zod.string().nullish(),
   "name": zod.string().nullish(),
   "email": zod.string().nullish(),
+  "username": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean().nullish(),
-  "walletAddress": zod.string().nullish()
-}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. Otherwise the authenticated user is returned.')
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().nullish(),
+  "privyLinked": zod.boolean().nullish()
+}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
 
 
 /**
@@ -181,9 +193,149 @@ export const TwoFactorLoginResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "email": zod.string(),
+  "username": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "hasWallet": zod.boolean(),
-  "walletAddress": zod.string().nullish()
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().optional().describe('Whether the account has an email\/password credential set.'),
+  "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
+  "emailVerified": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Create an account with email + password (sends an email verification code)
+ */
+export const registerBodyPasswordMin = 8;
+
+
+
+export const RegisterBody = zod.object({
+  "name": zod.string().describe('Legal name (private).'),
+  "username": zod.string().describe('Public handle, 3–30 chars of letters, numbers, underscores.'),
+  "email": zod.string(),
+  "password": zod.string().min(registerBodyPasswordMin),
+  "dateOfBirth": zod.string().describe('ISO date (YYYY-MM-DD); must be in the past.'),
+  "referralSource": zod.string().nullish().describe('One of Twitter | Telegram | WhatsApp | Discord | LinkedIn | Friends | Others.'),
+  "rememberMe": zod.boolean().optional()
+})
+
+export const RegisterResponse = zod.object({
+  "emailVerificationRequired": zod.boolean(),
+  "email": zod.string()
+})
+
+
+/**
+ * @summary Sign in with email + password
+ */
+export const LoginBody = zod.object({
+  "email": zod.string(),
+  "password": zod.string(),
+  "rememberMe": zod.boolean().optional()
+})
+
+export const LoginResponse = zod.object({
+  "twoFactorRequired": zod.boolean(),
+  "challengeId": zod.string().nullish(),
+  "emailVerificationRequired": zod.boolean().nullish(),
+  "id": zod.string().nullish(),
+  "name": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "username": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "hasWallet": zod.boolean().nullish(),
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().nullish(),
+  "privyLinked": zod.boolean().nullish()
+}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
+
+
+/**
+ * @summary Confirm an email verification code and establish a session
+ */
+export const VerifyEmailBody = zod.object({
+  "email": zod.string(),
+  "code": zod.string().describe('The 6-digit verification code.'),
+  "rememberMe": zod.boolean().optional()
+})
+
+export const VerifyEmailResponse = zod.object({
+  "twoFactorRequired": zod.boolean(),
+  "challengeId": zod.string().nullish(),
+  "emailVerificationRequired": zod.boolean().nullish(),
+  "id": zod.string().nullish(),
+  "name": zod.string().nullish(),
+  "email": zod.string().nullish(),
+  "username": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "hasWallet": zod.boolean().nullish(),
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().nullish(),
+  "privyLinked": zod.boolean().nullish()
+}).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
+
+
+/**
+ * @summary Resend the email verification code for an unverified account
+ */
+export const ResendVerificationCodeBody = zod.object({
+  "email": zod.string()
+})
+
+export const ResendVerificationCodeResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Check whether a public username is available
+ */
+export const UsernameAvailableQueryParams = zod.object({
+  "username": zod.coerce.string()
+})
+
+export const UsernameAvailableResponse = zod.object({
+  "available": zod.boolean(),
+  "reason": zod.string().nullish()
+})
+
+
+/**
+ * @summary Link a Privy wallet/identity to the signed-in account (optional)
+ */
+export const LinkPrivyBody = zod.object({
+  "token": zod.string()
+})
+
+export const LinkPrivyResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "username": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "hasWallet": zod.boolean(),
+  "walletAddress": zod.string().nullish(),
+  "hasPassword": zod.boolean().optional().describe('Whether the account has an email\/password credential set.'),
+  "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
+  "emailVerified": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Set or change the account password
+ */
+export const changePasswordBodyNewPasswordMin = 8;
+
+
+
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string().nullish().describe('Required when the account already has a password set.'),
+  "newPassword": zod.string().min(changePasswordBodyNewPasswordMin)
+})
+
+export const ChangePasswordResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 
@@ -411,7 +563,7 @@ export const CreateCircleBody = zod.object({
   "contributionCents": zod.number(),
   "numRounds": zod.number().optional(),
   "frequency": zod.string(),
-  "memberEmails": zod.array(zod.string()).max(19, "A circle can have at most 20 members (including the organizer)"),
+  "memberEmails": zod.array(zod.string()),
   "imageUrl": zod.string().optional()
 })
 
@@ -857,6 +1009,10 @@ export const GetProfileResponse = zod.object({
   "nationality": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "walletAddress": zod.string().nullable(),
+  "referralSource": zod.string().nullish(),
+  "emailVerified": zod.boolean().optional(),
+  "hasPassword": zod.boolean().optional(),
+  "privyLinked": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
@@ -881,6 +1037,10 @@ export const UpdateProfileResponse = zod.object({
   "nationality": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "walletAddress": zod.string().nullable(),
+  "referralSource": zod.string().nullish(),
+  "emailVerified": zod.boolean().optional(),
+  "hasPassword": zod.boolean().optional(),
+  "privyLinked": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 

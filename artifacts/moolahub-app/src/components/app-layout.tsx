@@ -39,13 +39,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   });
   const { data: streak } = useStreak(isAuthenticated);
 
+  const needsCompletion = !!user && (!user.username || !user.hasPassword);
+
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
       setLocation("/login");
+    } else if (!isAuthLoading && isAuthenticated && needsCompletion) {
+      setLocation("/complete-profile");
     }
-  }, [isAuthLoading, isAuthenticated, setLocation]);
+  }, [isAuthLoading, isAuthenticated, needsCompletion, setLocation]);
 
-  if (isAuthLoading || !isAuthenticated) {
+  if (isAuthLoading || !isAuthenticated || needsCompletion) {
     return null;
   }
 

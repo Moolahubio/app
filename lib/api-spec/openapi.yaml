@@ -278,6 +278,188 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
 
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Create an account with email + password (sends an email verification code)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "200":
+          description: Account created; email verification required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailVerificationRequired"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Email or username already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in with email + password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: >-
+            Logged in, OR a 2FA challenge, OR email verification required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "401":
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      tags: [auth]
+      summary: Confirm an email verification code and establish a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailInput"
+      responses:
+        "200":
+          description: Verified and logged in (or a 2FA challenge)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "400":
+          description: Invalid or expired code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/resend-code:
+    post:
+      operationId: resendVerificationCode
+      tags: [auth]
+      summary: Resend the email verification code for an unverified account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendCodeInput"
+      responses:
+        "200":
+          description: If the account exists and is unverified, a code was sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /auth/username-available:
+    get:
+      operationId: usernameAvailable
+      tags: [auth]
+      summary: Check whether a public username is available
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Availability result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsernameAvailability"
+
+  /auth/privy/link:
+    post:
+      operationId: linkPrivy
+      tags: [auth]
+      summary: Link a Privy wallet/identity to the signed-in account (optional)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrivyLinkInput"
+      responses:
+        "200":
+          description: Linked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Invalid request or token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: This Privy identity is already linked to another account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Set or change the account password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Current password incorrect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   # ---- Security (2FA) ----
   /security/2fa:
     get:
@@ -1322,12 +1504,22 @@ components:
           type: string
         email:
           type: string
+        username:
+          type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
         hasWallet:
           type: boolean
         walletAddress:
           type: ["string", "null"]
+        hasPassword:
+          type: boolean
+          description: Whether the account has an email/password credential set.
+        privyLinked:
+          type: boolean
+          description: Whether a Privy identity is linked to this account.
+        emailVerified:
+          type: boolean
 
     LoginResult:
       type: object
@@ -1335,17 +1527,23 @@ components:
       description: >-
         Result of a primary-auth login. When the account has 2FA enabled, only
         `twoFactorRequired` + `challengeId` are returned and the caller must
-        complete /auth/2fa/login. Otherwise the authenticated user is returned.
+        complete /auth/2fa/login. When the account's email is unverified,
+        `emailVerificationRequired` is true. Otherwise the authenticated user is
+        returned.
       properties:
         twoFactorRequired:
           type: boolean
         challengeId:
           type: ["string", "null"]
+        emailVerificationRequired:
+          type: ["boolean", "null"]
         id:
           type: ["string", "null"]
         name:
           type: ["string", "null"]
         email:
+          type: ["string", "null"]
+        username:
           type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
@@ -1353,6 +1551,100 @@ components:
           type: ["boolean", "null"]
         walletAddress:
           type: ["string", "null"]
+        hasPassword:
+          type: ["boolean", "null"]
+        privyLinked:
+          type: ["boolean", "null"]
+
+    RegisterInput:
+      type: object
+      required: [name, username, email, password, dateOfBirth]
+      properties:
+        name:
+          type: string
+          description: Legal name (private).
+        username:
+          type: string
+          description: Public handle, 3–30 chars of letters, numbers, underscores.
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 8
+        dateOfBirth:
+          type: string
+          description: ISO date (YYYY-MM-DD); must be in the past.
+        referralSource:
+          type: ["string", "null"]
+          description: One of Twitter | Telegram | WhatsApp | Discord | LinkedIn | Friends | Others.
+        rememberMe:
+          type: boolean
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        rememberMe:
+          type: boolean
+
+    VerifyEmailInput:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+        code:
+          type: string
+          description: The 6-digit verification code.
+        rememberMe:
+          type: boolean
+
+    ResendCodeInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+
+    EmailVerificationRequired:
+      type: object
+      required: [emailVerificationRequired, email]
+      properties:
+        emailVerificationRequired:
+          type: boolean
+        email:
+          type: string
+
+    UsernameAvailability:
+      type: object
+      required: [available]
+      properties:
+        available:
+          type: boolean
+        reason:
+          type: ["string", "null"]
+
+    PrivyLinkInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    ChangePasswordInput:
+      type: object
+      required: [newPassword]
+      properties:
+        currentPassword:
+          type: ["string", "null"]
+          description: Required when the account already has a password set.
+        newPassword:
+          type: string
+          minLength: 8
 
     TwoFactorLoginInput:
       type: object
@@ -1954,6 +2246,14 @@ components:
           type: ["string", "null"]
         walletAddress:
           type: ["string", "null"]
+        referralSource:
+          type: ["string", "null"]
+        emailVerified:
+          type: boolean
+        hasPassword:
+          type: boolean
+        privyLinked:
+          type: boolean
         createdAt:
           type: string
 

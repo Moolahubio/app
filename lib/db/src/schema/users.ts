@@ -4,11 +4,21 @@ import { z } from "zod/v4";
 
 export const usersTable = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // Private legal name — only ever shown back to the account owner.
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   privyDid: text("privy_did").unique(),
   avatarUrl: text("avatar_url"),
-  // Profile information the member can edit.
+  // Primary credential: argon2/scrypt-hashed password. Nullable so legacy
+  // Privy-only accounts (created before email/password) can still exist and be
+  // prompted to set one. Accounts WITH a passwordHash are NOT loginable via
+  // Privy email-match — email compromise alone must never grant access.
+  passwordHash: text("password_hash"),
+  // Set once the user proves control of their email via a one-time code.
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  // "How did you hear about MoolaHub?" — onboarding attribution.
+  referralSource: text("referral_source"),
+  // Public-facing handle, shown to other members instead of the legal name.
   username: text("username").unique(),
   dateOfBirth: text("date_of_birth"),
   nationality: text("nationality"),

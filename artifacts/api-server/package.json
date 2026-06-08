@@ -19,7 +19,8 @@
     "test:circles": "pnpm run test:susu && pnpm run test:susu-accumulation && pnpm run test:susu-http && pnpm run test:susu-http-authz && pnpm run test:susu-invite-authz",
     "test:twofactor": "tsx src/lib/twofactor.e2e.ts",
     "test:twofactor-http": "tsx src/lib/twofactor-http.e2e.ts",
-    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http"
+    "test:auth-http": "tsx src/lib/auth-http.e2e.ts",
+    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",

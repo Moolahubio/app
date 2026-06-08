@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import CompleteProfile from "@/pages/complete-profile";
 import Dashboard from "@/pages/dashboard";
 import Wallet from "@/pages/wallet";
 import Circles from "@/pages/circles";
@@ -40,6 +41,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/complete-profile" component={CompleteProfile} />
       <Route path="/dashboard">
         <ProtectedRoute component={Dashboard} />
       </Route>

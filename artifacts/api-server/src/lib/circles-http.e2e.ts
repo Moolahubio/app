@@ -65,7 +65,8 @@ const runId = randomUUID().slice(0, 8);
 const CONTRIBUTION_CENTS = 1000; // $10.00 per round
 const DEPOSIT_CENTS = 6000; // covers every round for either circle type
 
-type TestUser = { id: string; email: string; name: string; token: string };
+type TestUser = { id: string; email: string; name: string; username: string; token: string };
+let userSeq = 0;
 
 const allUsers: TestUser[] = [];
 const allCircleIds: string[] = [];
@@ -105,10 +106,14 @@ async function api<T = unknown>(
 
 async function makeUser(prefix: string, label: string): Promise<TestUser> {
   const email = `${prefix}+${label}+${runId}@moolahub.test`;
-  const [u] = await db.insert(usersTable).values({ name: `${prefix} ${label} ${runId}`, email }).returning();
+  const username = `u${++userSeq}${runId}`.toLowerCase();
+  const [u] = await db
+    .insert(usersTable)
+    .values({ name: `${prefix} ${label} ${runId}`, username, email })
+    .returning();
   await createWalletForUser(u.id);
   const token = await createSession(u.id);
-  const tu = { id: u.id, email: u.email, name: u.name, token };
+  const tu = { id: u.id, email: u.email, name: u.name, username: u.username ?? username, token };
   allUsers.push(tu);
   return tu;
 }
@@ -193,7 +198,7 @@ async function inviteAndAccept(creator: TestUser, circleId: string, circleName: 
 function recipientForRound(detail: CircleDetailDto, round: number, members: TestUser[]): TestUser {
   const member = detail.members.find((m) => m.payoutRound === round);
   assert.ok(member, `round ${round} should have a recipient member in the HTTP detail`);
-  const user = members.find((u) => u.name === member.name);
+  const user = members.find((u) => u.username === member.name);
   assert.ok(user, `recipient member ${member.name} should map to a known test user`);
   return user;
 }
@@ -264,7 +269,7 @@ async function runRotation() {
     );
 
     const after = await getDetail(creator.token, circleId);
-    const recipientMember = after.members.find((m) => m.name === recipient.name);
+    const recipientMember = after.members.find((m) => m.name === recipient.username);
     assert.ok(recipientMember?.paidOut, `round ${round}: recipient.paidOut reaches the client as true`);
 
     if (round < n) {

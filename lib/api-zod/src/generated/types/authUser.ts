@@ -11,8 +11,15 @@ export interface AuthUser {
   name: string;
   email: string;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   hasWallet: boolean;
   /** @nullable */
   walletAddress?: string | null;
+  /** Whether the account has an email/password credential set. */
+  hasPassword?: boolean;
+  /** Whether a Privy identity is linked to this account. */
+  privyLinked?: boolean;
+  emailVerified?: boolean;
 }

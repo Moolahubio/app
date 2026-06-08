@@ -104,19 +104,28 @@ export interface AuthUser {
   name: string;
   email: string;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   hasWallet: boolean;
   /** @nullable */
   walletAddress?: string | null;
+  /** Whether the account has an email/password credential set. */
+  hasPassword?: boolean;
+  /** Whether a Privy identity is linked to this account. */
+  privyLinked?: boolean;
+  emailVerified?: boolean;
 }
 
 /**
- * Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete /auth/2fa/login. Otherwise the authenticated user is returned.
+ * Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete /auth/2fa/login. When the account's email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.
  */
 export interface LoginResult {
   twoFactorRequired: boolean;
   /** @nullable */
   challengeId?: string | null;
+  /** @nullable */
+  emailVerificationRequired?: boolean | null;
   /** @nullable */
   id?: string | null;
   /** @nullable */
@@ -124,11 +133,77 @@ export interface LoginResult {
   /** @nullable */
   email?: string | null;
   /** @nullable */
+  username?: string | null;
+  /** @nullable */
   avatarUrl?: string | null;
   /** @nullable */
   hasWallet?: boolean | null;
   /** @nullable */
   walletAddress?: string | null;
+  /** @nullable */
+  hasPassword?: boolean | null;
+  /** @nullable */
+  privyLinked?: boolean | null;
+}
+
+export interface RegisterInput {
+  /** Legal name (private). */
+  name: string;
+  /** Public handle, 3–30 chars of letters, numbers, underscores. */
+  username: string;
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  /** ISO date (YYYY-MM-DD); must be in the past. */
+  dateOfBirth: string;
+  /**
+     * One of Twitter | Telegram | WhatsApp | Discord | LinkedIn | Friends | Others.
+     * @nullable
+     */
+  referralSource?: string | null;
+  rememberMe?: boolean;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface VerifyEmailInput {
+  email: string;
+  /** The 6-digit verification code. */
+  code: string;
+  rememberMe?: boolean;
+}
+
+export interface ResendCodeInput {
+  email: string;
+}
+
+export interface EmailVerificationRequired {
+  emailVerificationRequired: boolean;
+  email: string;
+}
+
+export interface UsernameAvailability {
+  available: boolean;
+  /** @nullable */
+  reason?: string | null;
+}
+
+export interface PrivyLinkInput {
+  token: string;
+}
+
+export interface ChangePasswordInput {
+  /**
+     * Required when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /** @minLength 8 */
+  newPassword: string;
 }
 
 export interface TwoFactorLoginInput {
@@ -458,6 +533,11 @@ export interface UserProfile {
   avatarUrl?: string | null;
   /** @nullable */
   walletAddress: string | null;
+  /** @nullable */
+  referralSource?: string | null;
+  emailVerified?: boolean;
+  hasPassword?: boolean;
+  privyLinked?: boolean;
   createdAt: string;
 }
 
@@ -570,6 +650,10 @@ export interface SettlementOverviewResponse {
   platform: PlatformBalances;
   groups: SettlementStatusGroup[];
 }
+
+export type UsernameAvailableParams = {
+username: string;
+};
 
 export type ListActivityParams = {
 limit?: number;

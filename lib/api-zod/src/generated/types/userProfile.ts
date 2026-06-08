@@ -20,5 +20,10 @@ export interface UserProfile {
   avatarUrl?: string | null;
   /** @nullable */
   walletAddress: string | null;
+  /** @nullable */
+  referralSource?: string | null;
+  emailVerified?: boolean;
+  hasPassword?: boolean;
+  privyLinked?: boolean;
   createdAt: string;
 }

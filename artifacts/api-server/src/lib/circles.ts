@@ -209,7 +209,7 @@ export async function getCircleDetail(userId: string, circleId: string) {
     pendingInvites: isCreator ? pendingInvites.map((i) => ({ id: i.id, email: i.email })) : [],
     members: c.members.map((m) => ({
       id: m.id,
-      name: m.user.name,
+      name: m.user.username ?? "Member",
       position: m.position,
       payoutRound: m.payoutRound,
       paidOut: m.paidOut,
@@ -533,7 +533,7 @@ export async function inviteToCircle(userId: string, circleId: string, emailRaw:
       set: { status: "pending" },
     });
 
-  const inviter = circle.members.find((m) => m.userId === userId)?.user.name ?? "A MoolaHub member";
+  const inviter = circle.members.find((m) => m.userId === userId)?.user.username ?? "A MoolaHub member";
   await sendEmail({
     to: email,
     subject: `${inviter} invited you to a savings circle on MoolaHub`,
@@ -567,7 +567,7 @@ export async function listInvitesForUser(email: string) {
   return invites.map((i) => ({
     id: i.id,
     circleName: i.circle.name,
-    inviterName: i.circle.createdBy.name,
+    inviterName: i.circle.createdBy.username ?? "A MoolaHub member",
     contributionCents: i.circle.contributionCents,
     frequency: i.circle.frequency,
   }));
@@ -632,7 +632,7 @@ export async function acceptInvite(userId: string, userEmail: string, inviteId: 
 
   if (!result.alreadyMember) {
     const [accepter] = await db
-      .select({ name: usersTable.name })
+      .select({ name: usersTable.username })
       .from(usersTable)
       .where(eq(usersTable.id, userId));
     await notify(
