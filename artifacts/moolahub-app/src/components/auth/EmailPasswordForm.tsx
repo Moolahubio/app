@@ -10,9 +10,11 @@ import { authInputClass } from "./AuthShell";
 export function EmailPasswordForm({
   onTwoFactorRequired,
   onVerifyRequired,
+  onForgotPassword,
 }: {
   onTwoFactorRequired: (challengeId: string) => void;
   onVerifyRequired: (email: string, rememberMe: boolean) => void;
+  onForgotPassword: (email: string) => void;
 }) {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -85,15 +87,24 @@ export function EmailPasswordForm({
         </div>
       </label>
 
-      <label className="flex items-center gap-2 text-sm text-muted-foreground">
-        <input
-          type="checkbox"
-          checked={rememberMe}
-          onChange={(e) => setRememberMe(e.target.checked)}
-          className="h-4 w-4 rounded border-border"
-        />
-        Keep me logged in for 30 days
-      </label>
+      <div className="flex items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 rounded border-border"
+          />
+          Keep me logged in for 30 days
+        </label>
+        <button
+          type="button"
+          onClick={() => onForgotPassword(email.trim())}
+          className="text-sm font-medium text-jade-600 transition-colors hover:text-jade-700 dark:text-jade-400"
+        >
+          Forgot password?
+        </button>
+      </div>
 
       {error && (
         <p className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400" role="alert">

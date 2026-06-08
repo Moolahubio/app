@@ -289,6 +289,37 @@ export const ResendVerificationCodeResponse = zod.object({
 
 
 /**
+ * Always returns ok and never reveals whether an account exists. If a matching password account is found, a single-use, time-limited reset code is emailed.
+ * @summary Request a password reset code by email
+ */
+export const ForgotPasswordBody = zod.object({
+  "email": zod.string()
+})
+
+export const ForgotPasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Reset a forgotten password with an emailed code
+ */
+export const resetPasswordBodyNewPasswordMin = 8;
+
+
+
+export const ResetPasswordBody = zod.object({
+  "email": zod.string(),
+  "code": zod.string().describe('The 6-digit reset code emailed to the account.'),
+  "newPassword": zod.string().min(resetPasswordBodyNewPasswordMin)
+})
+
+export const ResetPasswordResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Check whether a public username is available
  */
 export const UsernameAvailableQueryParams = zod.object({

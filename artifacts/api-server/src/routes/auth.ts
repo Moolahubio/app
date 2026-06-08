@@ -21,6 +21,10 @@ import {
   LinkPrivyResponse,
   ChangePasswordBody,
   ChangePasswordResponse,
+  ForgotPasswordBody,
+  ForgotPasswordResponse,
+  ResetPasswordBody,
+  ResetPasswordResponse,
 } from "@workspace/api-zod";
 import {
   requireAuth,
@@ -32,6 +36,7 @@ import { createWalletForUser, getWalletForUser } from "../lib/wallet";
 import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
+import { issuePasswordResetCode, consumePasswordResetCode } from "../lib/passwordReset";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
 import {
@@ -345,6 +350,64 @@ router.post("/auth/resend-code", requireJsonAndAllowedOrigin, async (req, res): 
     await issueVerificationCode(user.id, email, user.name);
   }
   res.json(ResendVerificationCodeResponse.parse({ ok: true }));
+});
+
+// --------------------------------------------------------- forgot password
+
+router.post("/auth/forgot-password", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
+  const parsed = ForgotPasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const email = parsed.data.email.trim().toLowerCase();
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  // Only password accounts can reset a password — and never reveal whether an
+  // account exists / has a password. Privy-only accounts sign in with Privy.
+  if (user && user.passwordHash) {
+    await issuePasswordResetCode(user.id, email, user.name);
+  }
+  res.json(ForgotPasswordResponse.parse({ ok: true }));
+});
+
+router.post("/auth/reset-password", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
+  const parsed = ResetPasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  if (parsed.data.newPassword.length < MIN_PASSWORD) {
+    res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD} characters.` });
+    return;
+  }
+
+  const email = parsed.data.email.trim().toLowerCase();
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
+  // A reset code is only ever issued to a password account, so a non-password /
+  // missing account can never hold one — fail with the same generic message.
+  if (!user || !user.passwordHash) {
+    res.status(400).json({ error: "That code is invalid or has expired." });
+    return;
+  }
+
+  const ok = await consumePasswordResetCode(user.id, parsed.data.code);
+  if (!ok) {
+    res.status(400).json({ error: "That code is invalid or has expired." });
+    return;
+  }
+
+  const passwordHash = await hashPassword(parsed.data.newPassword);
+  // Proving control of the email is enough to confirm it; a reset also verifies
+  // the email so the account is immediately usable.
+  await db
+    .update(usersTable)
+    .set({ passwordHash, emailVerifiedAt: user.emailVerifiedAt ?? new Date() })
+    .where(eq(usersTable.id, user.id));
+  // Invalidate every existing session: a forgotten password implies the account
+  // may be compromised, so force a fresh sign-in everywhere.
+  await db.delete(sessionsTable).where(eq(sessionsTable.userId, user.id));
+
+  res.json(ResetPasswordResponse.parse({ ok: true }));
 });
 
 router.get("/auth/username-available", async (req, res): Promise<void> => {

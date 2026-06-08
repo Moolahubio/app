@@ -181,6 +181,18 @@ export interface ResendCodeInput {
   email: string;
 }
 
+export interface ForgotPasswordInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  email: string;
+  /** The 6-digit reset code emailed to the account. */
+  code: string;
+  /** @minLength 8 */
+  newPassword: string;
+}
+
 export interface EmailVerificationRequired {
   emailVerificationRequired: boolean;
   email: string;

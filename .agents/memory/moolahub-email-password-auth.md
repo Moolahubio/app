@@ -53,6 +53,19 @@ linkage only.
   **Why:** review required login throttling, not just verification-code attempt
   caps — a 6-digit-style cap does nothing against password guessing.
 
+## Forgot/reset password
+- Reset codes live in a SEPARATE `password_reset_codes` table (sibling of
+  `email_verification_codes`, same shape + brute-force `attempts` burn), so an
+  in-flight reset never collides with email verification.
+- `/auth/forgot-password` ALWAYS returns `{ok:true}` and only issues a code when
+  the matched account has a `passwordHash`. Privy-only (passwordless) accounts get
+  no code — they sign in via Privy, so email control must not mint a password
+  login for them (mirrors the email-compromise invariant above).
+- `/auth/reset-password` returns the SAME generic "invalid or expired" 400 for a
+  missing/passwordless account and for a bad/burned code (no existence leak). On
+  success it sets `passwordHash`, stamps `emailVerifiedAt` if unset, and DELETES
+  all of the user's sessions (forced re-login everywhere).
+
 ## Test notes
 - Offline auth e2e: `auth-http.e2e.ts` (in `test:auth`). Email no-ops without
   `RESEND_API_KEY`, so verification codes can't be read from email — seed the code

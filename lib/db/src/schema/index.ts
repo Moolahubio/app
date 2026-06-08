@@ -1,6 +1,7 @@
 export * from "./users";
 export * from "./sessions";
 export * from "./email-verification";
+export * from "./password-reset";
 export * from "./passkeys";
 export * from "./twofactor";
 export * from "./wallets";
