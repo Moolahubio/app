@@ -11,6 +11,7 @@ import {
 } from "@workspace/db";
 import { DeactivateAccountResponse, DeleteAccountBody, DeleteAccountResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin } from "../lib/origins";
 import { userBalances } from "../lib/ledger";
 
 const router: IRouter = Router();
@@ -18,7 +19,7 @@ const COOKIE = "moolahub_session";
 
 // Deactivation is reversible: we record the timestamp and end all sessions. The
 // next successful login clears `deactivatedAt` and restores access.
-router.post("/account/deactivate", requireAuth, async (req, res): Promise<void> => {
+router.post("/account/deactivate", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
 
   await db.update(usersTable).set({ deactivatedAt: new Date() }).where(eq(usersTable.id, user.id));
@@ -81,6 +82,7 @@ router.delete("/account", requireAuth, async (req, res): Promise<void> => {
     .set({
       name: "Deleted member",
       email: `deleted+${user.id}@deleted.moolahub`,
+      passwordHash: null,
       privyDid: null,
       username: null,
       avatarUrl: null,

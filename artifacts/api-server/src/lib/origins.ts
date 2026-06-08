@@ -1,4 +1,4 @@
-import type { Request } from "express";
+import type { Request, Response, NextFunction } from "express";
 
 /**
  * Build a set of allowed browser origins for credentialed/CSRF-sensitive
@@ -32,6 +32,25 @@ export function getAllowedOrigins(): string[] {
 export function isAllowedOrigin(origin: string | undefined | null): boolean {
   if (!origin) return true; // no Origin header => same-origin / non-browser
   return getAllowedOrigins().includes(origin.replace(/\/+$/, ""));
+}
+
+/**
+ * Middleware that rejects requests whose Origin header is cross-origin and not
+ * in the allow-list. Unlike requireJsonAndAllowedOrigin, it does NOT require a
+ * JSON Content-Type, so it is suitable for authenticated state-changing routes
+ * that carry no request body (e.g. logout, 2FA setup, account deactivation).
+ *
+ * Requests without an Origin header are always passed through: non-browser
+ * clients (curl, server-to-server) don't send Origin, and same-origin browser
+ * requests are handled correctly by isSameOrigin().
+ */
+export function requireAllowedOrigin(req: Request, res: Response, next: NextFunction): void {
+  const origin = req.headers["origin"];
+  if (origin && !isSameOrigin(req) && !isAllowedOrigin(origin)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  next();
 }
 
 /**

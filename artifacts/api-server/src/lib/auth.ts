@@ -19,7 +19,9 @@ export async function getUserFromRequest(req: Request): Promise<typeof usersTabl
     .from(usersTable)
     .where(eq(usersTable.id, session.userId));
 
-  return user ?? null;
+  if (!user || user.deletedAt) return null;
+
+  return user;
 }
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {

@@ -12,6 +12,7 @@ import {
   RegenerateBackupCodesResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin } from "../lib/origins";
 import {
   generateTotpSecret,
   totpKeyUri,
@@ -37,7 +38,7 @@ router.get("/security/2fa", requireAuth, async (req, res): Promise<void> => {
 
 // Begin setup: generate (or re-use a not-yet-confirmed) secret and return a QR.
 // The secret is stored encrypted but 2FA stays disabled until /enable confirms a code.
-router.post("/security/2fa/setup", requireAuth, async (req, res): Promise<void> => {
+router.post("/security/2fa/setup", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   if (user.twoFactorEnabled) {
     res.status(400).json({ error: "Two-factor authentication is already enabled." });

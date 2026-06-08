@@ -41,7 +41,7 @@ import { sendPasswordChangedEmail } from "../lib/email";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
 import { resetThrottleRemaining, recordResetRequest } from "../lib/resetThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
-import { isAllowedOrigin, isSameOrigin } from "../lib/origins";
+import { isAllowedOrigin, isSameOrigin, requireAllowedOrigin } from "../lib/origins";
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -159,7 +159,7 @@ function isValidPastDate(dob: string): boolean {
   return d.getTime() < Date.now();
 }
 
-router.post("/auth/logout", async (req, res): Promise<void> => {
+router.post("/auth/logout", requireAllowedOrigin, async (req, res): Promise<void> => {
   const token = req.cookies?.[COOKIE] ?? req.headers["x-session-token"];
   if (token) {
     await db.delete(sessionsTable).where(eq(sessionsTable.token, token as string));
@@ -276,7 +276,7 @@ router.post("/auth/login", requireJsonAndAllowedOrigin, async (req, res): Promis
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
   const ok = await verifyPassword(parsed.data.password, user?.passwordHash);
-  if (!user || !user.passwordHash || !ok) {
+  if (!user || user.deletedAt || !user.passwordHash || !ok) {
     recordFailedLogin(email, ip);
     res.status(401).json({ error: "Invalid email or password." });
     return;
@@ -377,9 +377,19 @@ router.post("/auth/forgot-password", requireJsonAndAllowedOrigin, async (req, re
   recordResetRequest("forgot", ip, email);
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  // Only password accounts can reset a password — and never reveal whether an
-  // account exists / has a password. Privy-only accounts sign in with Privy.
-  if (user && user.passwordHash) {
+  // Issue a reset code for:
+  //   (a) accounts that already have a password (standard reset), OR
+  //   (b) accounts that have a real verified email but no password yet (first-
+  //       time password bootstrap via email proof).
+  // Synthetic placeholder emails (@privy.moolahub) cannot receive real email,
+  // so they are silently skipped — same as a non-existent account.
+  // The response is always { ok: true } to avoid leaking account existence.
+  const canReceiveCode =
+    user &&
+    !user.deletedAt &&
+    (user.passwordHash ||
+      (user.emailVerifiedAt && !user.email.endsWith("@privy.moolahub")));
+  if (canReceiveCode) {
     await issuePasswordResetCode(user.id, email, user.name);
   }
   res.json(ForgotPasswordResponse.parse({ ok: true }));
@@ -409,9 +419,10 @@ router.post("/auth/reset-password", requireJsonAndAllowedOrigin, async (req, res
   recordResetRequest("reset", ip, email);
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  // A reset code is only ever issued to a password account, so a non-password /
-  // missing account can never hold one — fail with the same generic message.
-  if (!user || !user.passwordHash) {
+  // A reset code is only ever issued by forgot-password to a non-deleted account
+  // with either an existing password or a real verified email (first-time set).
+  // Reject anything else with the same generic message to avoid enumeration.
+  if (!user || user.deletedAt) {
     res.status(400).json({ error: "That code is invalid or has expired." });
     return;
   }
@@ -475,24 +486,36 @@ router.post("/auth/password", requireJsonAndAllowedOrigin, requireAuth, async (r
     return;
   }
 
-  // Accounts that already have a password must prove the current one. Legacy /
-  // Privy-only accounts (no password yet) may set one without it.
-  if (user.passwordHash) {
-    const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
-    if (!ok) {
-      res.status(401).json({ error: "Your current password is incorrect." });
-      return;
-    }
+  // Passwordless accounts must prove email ownership before bootstrapping a
+  // password credential.  A session alone is not sufficient — it could be
+  // stolen.  Route them through the email-verified reset flow instead.
+  if (!user.passwordHash) {
+    res.status(403).json({
+      error: "Use the forgot-password flow to set your first password.",
+    });
+    return;
+  }
+
+  const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
+  if (!ok) {
+    res.status(401).json({ error: "Your current password is incorrect." });
+    return;
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);
-  const updates: Partial<typeof usersTable.$inferInsert> = { passwordHash };
-  // Setting the first password on an authenticated account also confirms email
-  // control, so it becomes a usable email/password login.
-  if (!user.passwordHash && !user.emailVerifiedAt) {
-    updates.emailVerifiedAt = new Date();
+  await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, user.id));
+
+  // Invalidate every OTHER session so concurrent stolen sessions can't stay
+  // active after a credential rotation, while keeping the current session so
+  // the user stays logged in.
+  const currentToken = req.cookies?.[COOKIE] ?? req.headers["x-session-token"];
+  if (currentToken) {
+    await db
+      .delete(sessionsTable)
+      .where(and(eq(sessionsTable.userId, user.id), ne(sessionsTable.token, currentToken as string)));
+  } else {
+    await db.delete(sessionsTable).where(eq(sessionsTable.userId, user.id));
   }
-  await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id));
 
   // Security heads-up. Best-effort: never block or fail the change on a send error.
   void sendPasswordChangedEmail(user.email, user.name).catch((e) =>
