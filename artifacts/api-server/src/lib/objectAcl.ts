@@ -1,4 +1,6 @@
 import { File } from "@google-cloud/storage";
+import { eq, and } from "drizzle-orm";
+import { db, circleMembersTable } from "@workspace/db";
 
 const ACL_POLICY_METADATA_KEY = "custom:aclPolicy";
 
@@ -10,7 +12,9 @@ const ACL_POLICY_METADATA_KEY = "custom:aclPolicy";
 // - GROUP_MEMBER: the users who are members of a specific group;
 // - SUBSCRIBER: the users who are subscribers of a specific service / content
 //   creator.
-export enum ObjectAccessGroupType {}
+export enum ObjectAccessGroupType {
+  CIRCLE_MEMBER = "circle_member",
+}
 
 export interface ObjectAccessGroup {
   type: ObjectAccessGroupType;
@@ -55,13 +59,36 @@ abstract class BaseObjectAccessGroup implements ObjectAccessGroup {
   public abstract hasMember(userId: string): Promise<boolean>;
 }
 
+/**
+ * Access group that grants access to members of a specific circle.
+ * The id is the circle's UUID. Membership is checked against the DB.
+ */
+class CircleMemberAccessGroup extends BaseObjectAccessGroup {
+  constructor(circleId: string) {
+    super(ObjectAccessGroupType.CIRCLE_MEMBER, circleId);
+  }
+
+  public async hasMember(userId: string): Promise<boolean> {
+    const rows = await db
+      .select({ userId: circleMembersTable.userId })
+      .from(circleMembersTable)
+      .where(
+        and(
+          eq(circleMembersTable.circleId, this.id),
+          eq(circleMembersTable.userId, userId),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  }
+}
+
 function createObjectAccessGroup(
   group: ObjectAccessGroup,
 ): BaseObjectAccessGroup {
   switch (group.type) {
-    // Implement per access group type, e.g.:
-    // case "USER_LIST":
-    //   return new UserListAccessGroup(group.id);
+    case ObjectAccessGroupType.CIRCLE_MEMBER:
+      return new CircleMemberAccessGroup(group.id);
     default:
       throw new Error(`Unknown access group type: ${group.type}`);
   }

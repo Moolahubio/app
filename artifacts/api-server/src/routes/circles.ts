@@ -22,6 +22,7 @@ import {
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { sendError } from "../lib/errors";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { ObjectAccessGroupType, ObjectPermission } from "../lib/objectAcl";
 import {
   createCircle,
   listCirclesForUser,
@@ -58,25 +59,25 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
   }
 
   const imageUrl = parsed.data.imageUrl;
+  const objectStorage = new ObjectStorageService();
   if (imageUrl != null && imageUrl !== "") {
     // Only a real, allowlisted internal uploaded image may be stored — never an
     // arbitrary external URL (which would be fetched in other members' browsers:
     // tracking / SSRF) nor a disguised non-image upload.
-    const objectStorage = new ObjectStorageService();
     const usable = await objectStorage.isUsableImageObject(imageUrl);
     if (!usable) {
       res.status(400).json({ error: "Invalid circle image." });
       return;
     }
-    // A circle cover image is shared with every circle member, so it is a
-    // public display asset. Binding an ACL policy is still required: the serving
-    // route refuses to read any object that has no policy (e.g. a raw upload
-    // that was never attached to anything). Claiming fails if the object is
-    // already owned by someone else, preventing object takeover by path.
+    // A circle cover image is shared with every circle member, but scoped to
+    // circle membership only — not globally readable by any authenticated user.
+    // Claim as private; the ACL will be updated with a CIRCLE_MEMBER rule once
+    // the circle is created and its ID is known. Claiming fails if the object
+    // is already owned by someone else, preventing object takeover by path.
     const claimed = await objectStorage.claimObjectEntityForOwner(
       imageUrl,
       user.id,
-      "public",
+      "private",
     );
     if (!claimed) {
       res.status(400).json({ error: "Invalid circle image." });
@@ -99,6 +100,28 @@ router.post("/circles", requireAuth, async (req, res): Promise<void> => {
   } catch (e) {
     sendError(res, e, "Could not create circle");
     return;
+  }
+
+  // Scope the circle image to members of this specific circle. The owner
+  // (creator) already has access via the owner field; this rule grants read
+  // access to any member who joins later.
+  if (imageUrl != null && imageUrl !== "") {
+    try {
+      await objectStorage.trySetObjectEntityAclPolicy(imageUrl, {
+        owner: user.id,
+        visibility: "private",
+        aclRules: [
+          {
+            group: { type: ObjectAccessGroupType.CIRCLE_MEMBER, id: circleId },
+            permission: ObjectPermission.READ,
+          },
+        ],
+      });
+    } catch (e) {
+      // Non-fatal: the circle was created successfully; the image just falls
+      // back to owner-only access (the creator can still view it).
+      req.log.error({ err: e }, "Failed to set circle image ACL");
+    }
   }
 
   const detail = await getCircleDetail(user.id, circleId);
