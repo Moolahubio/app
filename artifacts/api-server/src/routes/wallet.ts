@@ -12,7 +12,7 @@ import { sendError } from "../lib/errors";
 import { createWalletForUser } from "../lib/wallet";
 import { userBalances } from "../lib/ledger";
 import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
-import { onchainEnabled, networkName, faucetEnabled } from "../lib/chain";
+import { onchainEnabled, networkName, faucetEnabled, depositSyncEnabled } from "../lib/chain";
 
 const router: IRouter = Router();
 
@@ -77,6 +77,16 @@ router.post("/wallet/withdraw", requireAuth, async (req, res): Promise<void> => 
 });
 
 router.post("/wallet/sync", requireAuth, async (req, res): Promise<void> => {
+  // Block sync on non-mainnet deployments where the configured token is
+  // typically a mock-mintable asset (e.g. MockUSDC on Base Sepolia). Without
+  // this guard any authenticated user can mint tokens to their wallet via the
+  // permissionless MockUSDC.mint() function and then call sync to import those
+  // fabricated tokens as real spendable balance. Operators may explicitly opt
+  // in on a testnet with a genuine non-mintable token via ENABLE_DEPOSIT_SYNC.
+  if (!depositSyncEnabled()) {
+    res.status(403).json({ error: "Deposit sync is not available on this network." });
+    return;
+  }
   const user = (req as AuthRequest).user;
   const result = await syncDeposits(user.id);
   res.json(

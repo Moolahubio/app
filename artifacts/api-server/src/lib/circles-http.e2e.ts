@@ -45,6 +45,10 @@ import type { AddressInfo } from "node:net";
 delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
+// Explicitly enable the test faucet so this e2e test can fund wallets via
+// POST /api/wallet/deposit. The faucet now defaults to off on non-mainnet to
+// prevent synthetic balance creation in production-like deployments.
+process.env.ENABLE_TEST_FAUCET = "true";
 
 const { db, pool, usersTable, circlesTable, ledgerAccountsTable, postingsTable, transactionsTable } =
   await import("@workspace/db");

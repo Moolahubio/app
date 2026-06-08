@@ -121,13 +121,34 @@ export function onchainEnabled(): boolean {
  * Whether the test-USDC faucet may mint balances. The faucet is a *testnet
  * convenience only* — it credits the ledger without a real funding source, so
  * it must never be reachable on mainnet (where it would let any user mint
- * spendable balance from nothing). On a test network it is enabled by default
- * but can be turned off with `ENABLE_TEST_FAUCET=false` as an operator kill
- * switch.
+ * spendable balance from nothing).
+ *
+ * On non-mainnet the faucet is **disabled by default** to prevent production
+ * deployments on testnets (e.g. Base Sepolia) from being an open synthetic
+ * funding endpoint. An operator may explicitly opt in by setting
+ * `ENABLE_TEST_FAUCET=true` only in intentional dev/test environments.
  */
 export function faucetEnabled(): boolean {
   if (IS_MAINNET) return false;
-  return process.env.ENABLE_TEST_FAUCET !== "false";
+  return process.env.ENABLE_TEST_FAUCET === "true";
+}
+
+/**
+ * Whether on-chain deposit sync (`POST /wallet/sync`) is allowed to credit
+ * incoming USDC transfers into the ledger.
+ *
+ * On mainnet the configured USDC is the real asset, so sync is enabled by
+ * default. On any non-mainnet deployment the configured token is typically a
+ * mock-mintable asset (e.g. MockUSDC on Base Sepolia): any caller can invoke
+ * `mint(userWallet, amount)` from any EOA, then trigger sync to import those
+ * fabricated tokens as real spendable balance. To prevent that attack, sync is
+ * **disabled by default on non-mainnet** and can only be turned on when an
+ * operator explicitly sets `ENABLE_DEPOSIT_SYNC=true` (for testnets that use a
+ * genuinely non-mintable token).
+ */
+export function depositSyncEnabled(): boolean {
+  if (IS_MAINNET) return true;
+  return process.env.ENABLE_DEPOSIT_SYNC === "true";
 }
 
 export function usdcContract(): Address | null {
