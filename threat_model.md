@@ -4,7 +4,7 @@
 
 MoolaHub is a pnpm-monorepo financial application with an Express 5 API (`artifacts/api-server`), a React/Vite web client (`artifacts/moolahub-app`), shared OpenAPI/Zod/DB packages under `lib/`, and production Solidity contracts under `contracts/src`. Users authenticate with Privy and optional passkeys / TOTP 2FA, receive an in-app wallet, save into personal goals, participate in social savings circles, and optionally settle some flows on Base/Base Sepolia. PostgreSQL via Drizzle is the application source of truth for users, sessions, balances, and product state.
 
-This scan is production-scoped. `artifacts/mockup-sandbox`, e2e test files, contract build artifacts, and local-only tooling are dev-only unless a production code path explicitly reaches them. Assume `NODE_ENV=production` in production. Replit deployment TLS is platform-managed. The app is not currently deployed from this workspace snapshot, so internet visibility constraints do not narrow the scan further. Current Base Sepolia and other non-mainnet on-chain configurations remain in scope when production code treats them as real user flows; a testnet asset is still security-relevant if the live application trusts it for ledger-backed balances.
+This scan is production-scoped. `artifacts/mockup-sandbox`, e2e test files, contract build artifacts, and local-only tooling are dev-only unless a production code path explicitly reaches them. Assume `NODE_ENV=production` in production. Replit deployment TLS is platform-managed. The application is publicly reachable at `https://moolahubapp.replit.app`, so internet-facing browser attacks are in scope. Because public Replit apps share the `replit.app` site, sibling-origin requests from another attacker-controlled `*.replit.app` deployment must be treated as same-site for cookie/CSRF analysis. Current Base Sepolia and other non-mainnet on-chain configurations remain in scope when production code treats them as real user flows; a testnet asset is still security-relevant if the live application trusts it for ledger-backed balances.
 
 ## Assets
 
@@ -41,7 +41,7 @@ This scan is production-scoped. `artifacts/mockup-sandbox`, e2e test files, cont
 
 ### Spoofing
 
-The application relies on Privy token verification, server-issued session cookies, WebAuthn ceremonies, and optional TOTP challenges. The API must derive identity only from verified auth artifacts, ensure session tokens are unpredictable and revocable, and keep WebAuthn / 2FA challenges single-use with bounded lifetime. Operator endpoints must require a separate secret and never inherit trust from ordinary user authentication.
+The application relies on Privy token verification, server-issued session cookies, WebAuthn ceremonies, and optional TOTP challenges. The API must derive identity only from verified auth artifacts, ensure session tokens are unpredictable and revocable, keep WebAuthn / 2FA challenges single-use with bounded lifetime, and require step-up proof before enrolling new durable login factors. Account lifecycle controls are part of this boundary: `deletedAt` must actually revoke future authentication rather than merely anonymize profile fields. Operator endpoints must require a separate secret and never inherit trust from ordinary user authentication.
 
 ### Tampering
 
