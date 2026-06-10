@@ -1,0 +1,74 @@
+You are an expert full-stack developer working on the MoolaHub savings app (repo: https://github.com/Moolahubio/app). The live app is at https://moolahubapp.replit.app/.
+
+### Current State
+The app already has a streak feature that includes:
+- Streak tracking
+- Streak Freezes (users can protect their streak)
+- Vacation Period (users can pause the streak without breaking it)
+
+These features already exist in the codebase. Do **not** remove or break them.
+
+### Task: Upgrade the Streak System to Flexible Frequency-Based Streaks
+
+The goal is to make streaks **less overbearing** for a savings app. Instead of forcing daily action, the streak should be based on the frequency the user chooses.
+
+#### 1. New Setting: Streak Frequency Preference
+
+- Add a new setting called **"Streak Frequency"** under **Profile → Settings**.
+- Options:
+  - **Daily** — User must deposit at least once every day to maintain the streak.
+  - **Weekly** — User must make at least **1 deposit per calendar week** (Recommended & Default).
+  - **Monthly** — User must make at least **1 deposit per calendar month**.
+- Default value = **Weekly**.
+- The user can only change this setting **once per calendar year** (e.g., they can change it on January 1st or on their account anniversary date, but not more frequently). Store the last change date and enforce this rule.
+
+#### 2. Update Streak Calculation Logic
+
+Modify the existing streak engine so it calculates based on the user’s chosen frequency:
+
+| Frequency | Qualifying Action                          | How Streak is Counted          | Display Example          |
+|-----------|--------------------------------------------|--------------------------------|--------------------------|
+| Daily     | Deposit on that calendar day               | Consecutive days               | "87 days strong"        |
+| Weekly    | At least 1 deposit in the calendar week    | Consecutive successful weeks   | "12 weeks in a row"     |
+| Monthly   | At least 1 deposit in the calendar month   | Consecutive successful months  | "3 months consistent"   |
+
+- The streak should only break if the user completely misses their chosen frequency window.
+- After a qualifying deposit, show immediate positive feedback (e.g. “Streak maintained! +1 week”).
+- Keep the existing **Streak Freeze** and **Vacation Period** features working on top of this new system. When Vacation Mode is active, the streak should pause (not break).
+
+#### 3. Add Quarterly Consistency Badges (New Feature)
+
+- Every **3 full months** of maintaining the streak without a break = one **Quarterly Consistency Badge**.
+- First badge is earned after completing the first quarter.
+- Badges should visually progress (e.g. Bronze → Silver → Gold) based on total number of perfect quarters or longest streak.
+- Show progress toward the next quarterly badge on the streak card.
+
+#### 4. UI / UX Requirements
+
+- Create a clean settings screen at **Profile → Settings → Streak Frequency**.
+- On the home/dashboard, show the current streak with the correct unit (days / weeks / months) based on user preference.
+- After a successful deposit that maintains the streak, show a nice confirmation toast or modal.
+- Add **gentle reminders** only when the streak is at risk (e.g., “Your weekly streak ends in 2 days — make a deposit to keep it alive”). Do not spam users.
+- Keep the design calm and supportive (modern fintech style), not aggressive gamification.
+
+#### 5. Technical Requirements
+
+- First, explore the existing codebase to find:
+  - Current streak logic and calculations
+  - Where user settings are stored
+  - Profile/Settings pages
+  - Streak Freeze and Vacation Period implementations
+- Add a new field in the user model/settings: `streakFrequency` (`daily` | `weekly` | `monthly`) + `streakFrequencyLastChanged` (date).
+- Update all streak calculation functions to respect the chosen frequency.
+- Ensure backward compatibility for existing users (default them to Weekly).
+- Update any relevant database schema if needed.
+
+### Output Instructions
+
+Please:
+1. First, summarize what you found in the current streak implementation.
+2. Then, provide the full list of files you need to modify.
+3. Implement the changes step by step (or provide clear code diffs + instructions).
+4. Make sure the system feels supportive and non-overbearing for savings users.
+
+Start by exploring the codebase and let me know what you find.
