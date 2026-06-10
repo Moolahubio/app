@@ -67,6 +67,18 @@ linkage only.
   all of the user's sessions (forced re-login everywhere).
 
 ## Test notes
+- `test:auth` chains sub-tests with `&&` (twofactor → twofactor-http → auth-http →
+  reset-http → reset-throttle-http), so an early failure MASKS every later one.
+  Fixing the first failure can unmask a second; run the suite to completion (or run
+  the later sub-tests directly) before declaring it green.
+  **Why:** an `/auth/password` 403 regression hid a separate forgot-password
+  issuance-rule regression downstream in the same chain.
+- The two password-set paths are the canonical model and must stay in sync:
+  passwordless (legacy Privy) accounts set a FIRST password ONLY via authenticated
+  `/auth/password` (no current pw, stamps emailVerifiedAt); `/auth/forgot-password`
+  issues a code ONLY when `user.passwordHash` exists (passwordless → silent no-op,
+  still `{ok:true}`). Do not re-add a "verified-email bootstrap" branch to
+  forgot-password — it violates the email-compromise invariant and breaks the e2e.
 - Offline auth e2e: `auth-http.e2e.ts` (in `test:auth`). Email no-ops without
   `RESEND_API_KEY`, so verification codes can't be read from email — seed the code
   row directly with `sha256(code)` (matches the lib's `hashCode`) to drive

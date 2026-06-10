@@ -377,19 +377,13 @@ router.post("/auth/forgot-password", requireJsonAndAllowedOrigin, async (req, re
   recordResetRequest("forgot", ip, email);
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  // Issue a reset code for:
-  //   (a) accounts that already have a password (standard reset), OR
-  //   (b) accounts that have a real verified email but no password yet (first-
-  //       time password bootstrap via email proof).
-  // Synthetic placeholder emails (@privy.moolahub) cannot receive real email,
-  // so they are silently skipped — same as a non-existent account.
-  // The response is always { ok: true } to avoid leaking account existence.
-  const canReceiveCode =
-    user &&
-    !user.deletedAt &&
-    (user.passwordHash ||
-      (user.emailVerifiedAt && !user.email.endsWith("@privy.moolahub")));
-  if (canReceiveCode) {
+  // Only accounts that ALREADY have a password are issued a reset code. A
+  // passwordless (legacy Privy) account is deliberately refused: email control
+  // alone must never mint a password login for it, or an email compromise would
+  // bypass Privy entirely. Such accounts add a password while signed in, via
+  // /auth/password. The response is always { ok: true } regardless, so it never
+  // leaks whether an account exists or which auth method it uses.
+  if (user && !user.deletedAt && user.passwordHash) {
     await issuePasswordResetCode(user.id, email, user.name);
   }
   res.json(ForgotPasswordResponse.parse({ ok: true }));
@@ -420,8 +414,8 @@ router.post("/auth/reset-password", requireJsonAndAllowedOrigin, async (req, res
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
   // A reset code is only ever issued by forgot-password to a non-deleted account
-  // with either an existing password or a real verified email (first-time set).
-  // Reject anything else with the same generic message to avoid enumeration.
+  // that already has a password. Reject anything else with the same generic
+  // message to avoid enumeration.
   if (!user || user.deletedAt) {
     res.status(400).json({ error: "That code is invalid or has expired." });
     return;
@@ -486,24 +480,26 @@ router.post("/auth/password", requireJsonAndAllowedOrigin, requireAuth, async (r
     return;
   }
 
-  // Passwordless accounts must prove email ownership before bootstrapping a
-  // password credential.  A session alone is not sufficient — it could be
-  // stolen.  Route them through the email-verified reset flow instead.
-  if (!user.passwordHash) {
-    res.status(403).json({
-      error: "Use the forgot-password flow to set your first password.",
-    });
-    return;
-  }
-
-  const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
-  if (!ok) {
-    res.status(401).json({ error: "Your current password is incorrect." });
-    return;
+  // A passwordless (legacy Privy) account sets its FIRST password here, from an
+  // authenticated session — there is no current password to verify. Completing
+  // the password also stamps emailVerifiedAt, finishing the account. This is the
+  // intended path for legacy accounts: forgot-password deliberately refuses
+  // passwordless accounts (email control must not mint a password login on its
+  // own), so the only way to add a password is while signed in. Every other
+  // session is revoked below, limiting the blast radius of a stolen session.
+  if (user.passwordHash) {
+    const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
+    if (!ok) {
+      res.status(401).json({ error: "Your current password is incorrect." });
+      return;
+    }
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);
-  await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, user.id));
+  await db
+    .update(usersTable)
+    .set({ passwordHash, emailVerifiedAt: user.emailVerifiedAt ?? new Date() })
+    .where(eq(usersTable.id, user.id));
 
   // Invalidate every OTHER session so concurrent stolen sessions can't stay
   // active after a credential rotation, while keeping the current session so
