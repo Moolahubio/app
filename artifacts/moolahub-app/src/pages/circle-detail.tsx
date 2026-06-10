@@ -15,7 +15,8 @@ import {
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
-import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey } from "@workspace/api-client-react";
+import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey, getGetStreaksQueryKey } from "@workspace/api-client-react";
+import { toast } from "@/hooks/use-toast";
 import { formatMoney, truncateAddress, apiErrorMessage, cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
@@ -111,7 +112,14 @@ export default function CircleDetailPage() {
             <ActionButton
               onClick={() => {
                 contributeMutation.mutate({ id: circle.id }, {
-                  onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) })
+                  onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) });
+                    queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
+                    toast({
+                      title: "Streak kept alive 🔥",
+                      description: "Nice — that contribution counts toward your savings streak.",
+                    });
+                  }
                 });
               }}
               label={`Contribute ${formatMoney(circle.contributionCents)}`}

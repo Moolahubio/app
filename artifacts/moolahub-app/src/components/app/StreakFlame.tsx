@@ -29,9 +29,16 @@ export function streakVisual(status: StreakStatus, count: number): Visual {
 }
 
 export function periodNoun(frequency: string): string {
+  if (frequency === "daily") return "day";
   if (frequency === "monthly") return "month";
   if (frequency === "biweekly") return "2-week";
   return "week";
+}
+
+/** Pluralized streak unit, e.g. 1 → "day", 3 → "weeks". */
+export function streakUnit(frequency: string, count: number): string {
+  const noun = periodNoun(frequency);
+  return count === 1 ? noun : `${noun}s`;
 }
 
 /** Small inline count + flame used on goal/circle detail and in lists. */

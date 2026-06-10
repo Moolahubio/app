@@ -11,7 +11,7 @@
 import { randomUUID } from "node:crypto";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { recordSave, getStreakOverview, type Commitment } from "./streaks";
+import { recordSave, getStreakOverview, setStreakFrequency } from "./streaks";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT FAILED: ${msg}`);
@@ -19,47 +19,67 @@ function assert(cond: unknown, msg: string): asserts cond {
 
 async function main() {
   const userId = randomUUID();
-  const commitment: Commitment = { type: "goal", id: randomUUID(), frequency: "weekly" };
 
+  // Default weekly cadence; UTC keeps calendar-week math deterministic.
   await db.insert(usersTable).values({
     id: userId,
     name: "Streak Test",
     email: `streak-${userId}@test.local`,
+    timezone: "UTC",
   });
 
   try {
-    const t0 = new Date("2026-01-05T12:00:00Z"); // a Monday
+    const t0 = new Date("2026-01-05T12:00:00Z"); // a Monday (start of an ISO week)
     const refA = `save-${randomUUID()}`;
 
-    // First save creates an active streak of 1.
-    await recordSave(userId, commitment, refA, t0);
     const heroCount = async (): Promise<number> => {
       const ov = await getStreakOverview(userId);
       assert(ov.hero, "hero should exist");
       return ov.hero.count;
     };
 
+    // First save (any deposit) lights the single account streak at 1.
+    await recordSave(userId, refA, t0);
     let ov = await getStreakOverview(userId);
     assert(ov.hero, "hero should exist after first save");
     assert(ov.hero.count === 1, `expected count 1, got ${ov.hero.count}`);
-    assert(ov.commitments.length === 1, "one commitment expected");
-    assert(ov.commitments[0].currentPeriodSatisfied, "current period should be satisfied");
+    assert(ov.frequency === "weekly", `default frequency should be weekly, got ${ov.frequency}`);
+    assert(ov.currentPeriodSatisfied, "current period should be satisfied");
+    assert(ov.commitments.length === 0, "per-commitment streaks are retired (empty list)");
 
-    // Replaying the SAME save reference must NOT advance the streak (idempotent;
-    // prevents farming a streak from one deposit).
-    await recordSave(userId, commitment, refA, t0);
-    const afterReplay = await heroCount();
-    assert(afterReplay === 1, `replay must stay at 1, got ${afterReplay}`);
+    // Replaying the SAME save reference must NOT advance (idempotent — no farming
+    // a streak from one deposit).
+    await recordSave(userId, refA, t0);
+    assert((await heroCount()) === 1, "replay must stay at 1");
 
-    // A distinct save in the NEXT week advances the streak to 2.
-    const t1 = new Date("2026-01-12T12:00:00Z");
-    await recordSave(userId, commitment, `save-${randomUUID()}`, t1);
-    const afterNextWeek = await heroCount();
-    assert(afterNextWeek === 2, `expected count 2 after next-week save, got ${afterNextWeek}`);
+    // A second deposit in the SAME week must not advance either (once per period).
+    await recordSave(userId, `save-${randomUUID()}`, new Date("2026-01-07T09:00:00Z"));
+    assert((await heroCount()) === 1, "same-week second save must stay at 1");
+
+    // A distinct save in the NEXT calendar week advances the streak to 2.
+    const t1 = new Date("2026-01-12T12:00:00Z"); // the following Monday
+    await recordSave(userId, `save-${randomUUID()}`, t1);
+    assert((await heroCount()) === 2, "expected count 2 after next-week save");
+
     ov = await getStreakOverview(userId);
     assert(ov.lifetimeBest >= 2, `lifetimeBest should be >= 2, got ${ov.lifetimeBest}`);
+    assert(ov.canChangeFrequency, "frequency should be changeable before any change");
 
-    console.log("✅ streaks.e2e passed: create, idempotent replay, period advance, read projection");
+    // Switching cadence keeps the count and consumes the annual allowance.
+    ov = await setStreakFrequency(userId, "daily");
+    assert(ov.frequency === "daily", `frequency should now be daily, got ${ov.frequency}`);
+    assert(ov.hero && ov.hero.count === 2, "count must be preserved across a cadence change");
+    assert(!ov.canChangeFrequency, "second change in the same year should be blocked");
+
+    let blocked = false;
+    try {
+      await setStreakFrequency(userId, "monthly");
+    } catch {
+      blocked = true;
+    }
+    assert(blocked, "changing frequency twice in one calendar year must throw");
+
+    console.log("✅ streaks.e2e passed: account streak create, idempotent replay, per-period cap, advance, cadence change");
   } finally {
     await db.delete(usersTable).where(eq(usersTable.id, userId));
   }

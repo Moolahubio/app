@@ -1340,6 +1340,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/StreakReminderResponse"
 
+  /streaks/frequency:
+    post:
+      operationId: setStreakFrequency
+      tags: [streaks]
+      summary: Change how often a deposit must happen to keep the streak alive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StreakFrequencyInput"
+      responses:
+        "200":
+          description: Streak overview after the frequency change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakOverview"
+        "400":
+          description: Invalid frequency or already changed this calendar year
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
   /streaks/vacation:
     post:
       operationId: startStreakVacation
@@ -1477,14 +1502,58 @@ components:
         usedThisYear:
           type: boolean
 
+    StreakBadgeProgress:
+      type: object
+      required: [earnedQuarters, nextTier, pct, daysToNext]
+      properties:
+        earnedQuarters:
+          type: integer
+        nextTier:
+          type: string
+          enum: [bronze, silver, gold]
+        pct:
+          type: number
+        daysToNext:
+          type: ["integer", "null"]
+
     StreakOverview:
       type: object
-      required: [hero, lifetimeBest, totalPeriodsSaved, commitments, freezes, badges, reminderOptIn, vacation]
+      required:
+        [
+          hero,
+          frequency,
+          canChangeFrequency,
+          nextChangeYear,
+          currentPeriodEnd,
+          currentPeriodSatisfied,
+          atRisk,
+          lifetimeBest,
+          totalPeriodsSaved,
+          commitments,
+          freezes,
+          badges,
+          badgeProgress,
+          reminderOptIn,
+          vacation,
+        ]
       properties:
         hero:
           oneOf:
             - $ref: "#/components/schemas/StreakHero"
             - type: "null"
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+        canChangeFrequency:
+          type: boolean
+        nextChangeYear:
+          type: ["integer", "null"]
+        currentPeriodEnd:
+          type: ["string", "null"]
+        currentPeriodSatisfied:
+          type: boolean
+        atRisk:
+          type: boolean
         lifetimeBest:
           type: integer
         totalPeriodsSaved:
@@ -1499,10 +1568,20 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/StreakBadge"
+        badgeProgress:
+          $ref: "#/components/schemas/StreakBadgeProgress"
         reminderOptIn:
           type: boolean
         vacation:
           $ref: "#/components/schemas/StreakVacation"
+
+    StreakFrequencyInput:
+      type: object
+      required: [frequency]
+      properties:
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly]
 
     StreakReminderInput:
       type: object

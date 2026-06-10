@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   UserCircle,
   Receipt,
+  Flame,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Card, Avatar, Eyebrow } from "@/components/ui";
@@ -44,6 +45,7 @@ const accountItems: Item[] = [
 
 const settingsItems: Item[] = [
   { icon: ShieldCheck, label: "Security", detail: "Passkeys & two-factor", href: "/profile/security" },
+  { icon: Flame, label: "Streak frequency", detail: "Daily, weekly, or monthly", href: "/profile/streak" },
   { icon: Bell, label: "Notifications", detail: "Choose what reaches you", href: "/profile/notifications" },
   { icon: Receipt, label: "Activity & yield", detail: "Ledger and earnings", href: "/activity" },
 ];

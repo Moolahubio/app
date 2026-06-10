@@ -13,7 +13,9 @@ import {
   getGetDashboardSummaryQueryKey,
   getListGoalsQueryKey,
   getListNotificationsQueryKey,
+  getGetStreaksQueryKey,
 } from "@workspace/api-client-react";
+import { toast } from "@/hooks/use-toast";
 import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
 import { useQueryClient } from "@tanstack/react-query";
@@ -119,6 +121,11 @@ export default function GoalDetailPage() {
                     onSuccess: () => {
                       refreshGoal();
                       setAllocOk("Funds added to goal");
+                      queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
+                      toast({
+                        title: "Streak kept alive 🔥",
+                        description: "Nice — that deposit counts toward your savings streak.",
+                      });
                     }
                   });
                 }}

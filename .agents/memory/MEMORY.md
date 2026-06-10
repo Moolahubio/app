@@ -18,5 +18,6 @@
 - [Dark-mode contrast](moolahub-dark-mode-contrast.md) — `bg-jade-50/xx` callouts need a `dark:` bg or they render washed-out light; keep dark hero-card white tiers ≥/55; the dark `--muted-foreground` token is the biggest readability lever.
 - [Notifications need client invalidation](moolahub-notifications-invalidation.md) — bell reads getListNotifications; backend notifies on most activities, but mutations must invalidate that key or new notifications won't appear until refocus/remount.
 - [Circle deletion](circles-delete.md) — idle forming+<=1-member circles hard-delete safely; FK row-lock serializes acceptInvite vs deleteCircle FOR UPDATE.
+- [MoolaHub streaks model](moolahub-streaks.md) — ONE account-level frequency streak (daily/weekly/monthly, change 1x/yr); any deposit via recordSave(userId,saveRef); commitments always []; deposit paths must invalidate getGetStreaks + toast.
 - [CSRF/CORS origin allowlist](moolahub-csrf-origin.md) — prod ALLOWED_ORIGINS is unset; derive origins from REPLIT_DOMAINS + same-origin (x-forwarded-host/proto), else all POST auth 403s in prod.
 - [Auth throttle layering](moolahub-auth-throttle.md) — targeted per-IP/email auth throttles sit under the global express limiter (20/IP, plain-text 429); in-process e2e share that budget, so tolerate either 429 body.

@@ -39,6 +39,11 @@ export const usersTable = pgTable("users", {
   // Streaks: evaluate periods/badges/freezes/vacation in the user's local tz.
   timezone: text("timezone").notNull().default("UTC"),
   streakReminderOptIn: boolean("streak_reminder_opt_in").notNull().default(false),
+  // Account-streak cadence: how often a deposit (any goal/circle) must land to
+  // keep the single account streak alive. Calendar-aligned in the user's tz.
+  streakFrequency: text("streak_frequency").notNull().default("weekly"), // daily | weekly | monthly
+  // When the cadence was last changed — enforces "change once per calendar year".
+  streakFrequencyLastChanged: timestamp("streak_frequency_last_changed", { withTimezone: true }),
   // Single annual vacation that pauses streak evaluation (<=30 days, 1/year).
   vacationStart: timestamp("vacation_start", { withTimezone: true }),
   vacationEnd: timestamp("vacation_end", { withTimezone: true }),

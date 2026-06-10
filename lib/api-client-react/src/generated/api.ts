@@ -61,6 +61,7 @@ import type {
   ResendCodeInput,
   ResetPasswordInput,
   SettlementOverviewResponse,
+  StreakFrequencyInput,
   StreakOverview,
   StreakReminderInput,
   StreakReminderResponse,
@@ -4756,6 +4757,77 @@ export const useSetStreakReminders = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getSetStreakRemindersMutationOptions(options));
+    }
+
+export const getSetStreakFrequencyUrl = () => {
+
+
+
+
+  return `/api/streaks/frequency`
+}
+
+/**
+ * @summary Change how often a deposit must happen to keep the streak alive
+ */
+export const setStreakFrequency = async (streakFrequencyInput: StreakFrequencyInput, options?: RequestInit): Promise<StreakOverview> => {
+
+  return customFetch<StreakOverview>(getSetStreakFrequencyUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      streakFrequencyInput,)
+  }
+);}
+
+
+
+
+export const getSetStreakFrequencyMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStreakFrequency>>, TError,{data: BodyType<StreakFrequencyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setStreakFrequency>>, TError,{data: BodyType<StreakFrequencyInput>}, TContext> => {
+
+const mutationKey = ['setStreakFrequency'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setStreakFrequency>>, {data: BodyType<StreakFrequencyInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setStreakFrequency(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetStreakFrequencyMutationResult = NonNullable<Awaited<ReturnType<typeof setStreakFrequency>>>
+    export type SetStreakFrequencyMutationBody = BodyType<StreakFrequencyInput>
+    export type SetStreakFrequencyMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Change how often a deposit must happen to keep the streak alive
+ */
+export const useSetStreakFrequency = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setStreakFrequency>>, TError,{data: BodyType<StreakFrequencyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setStreakFrequency>>,
+        TError,
+        {data: BodyType<StreakFrequencyInput>},
+        TContext
+      > => {
+      return useMutation(getSetStreakFrequencyMutationOptions(options));
     }
 
 export const getStartStreakVacationUrl = () => {

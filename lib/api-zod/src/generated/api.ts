@@ -1138,6 +1138,12 @@ export const GetStreaksResponse = zod.object({
   "commitmentName": zod.string().nullable(),
   "emoji": zod.string().nullable()
 }),zod.null()]),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "canChangeFrequency": zod.boolean(),
+  "nextChangeYear": zod.number().nullable(),
+  "currentPeriodEnd": zod.string().nullable(),
+  "currentPeriodSatisfied": zod.boolean(),
+  "atRisk": zod.boolean(),
   "lifetimeBest": zod.number(),
   "totalPeriodsSaved": zod.number(),
   "commitments": zod.array(zod.object({
@@ -1163,6 +1169,12 @@ export const GetStreaksResponse = zod.object({
   "quarterIndex": zod.number(),
   "earnedAt": zod.string()
 })),
+  "badgeProgress": zod.object({
+  "earnedQuarters": zod.number(),
+  "nextTier": zod.enum(['bronze', 'silver', 'gold']),
+  "pct": zod.number(),
+  "daysToNext": zod.number().nullable()
+}),
   "reminderOptIn": zod.boolean(),
   "vacation": zod.object({
   "active": zod.boolean(),
@@ -1186,23 +1198,25 @@ export const SetStreakRemindersResponse = zod.object({
 
 
 /**
- * @summary Start the annual streak vacation (pauses streaks without breaking them)
+ * @summary Change how often a deposit must happen to keep the streak alive
  */
-export const startStreakVacationBodyDaysMax = 30;
-
-
-
-export const StartStreakVacationBody = zod.object({
-  "days": zod.number().min(1).max(startStreakVacationBodyDaysMax)
+export const SetStreakFrequencyBody = zod.object({
+  "frequency": zod.enum(['daily', 'weekly', 'monthly'])
 })
 
-export const StartStreakVacationResponse = zod.object({
+export const SetStreakFrequencyResponse = zod.object({
   "hero": zod.union([zod.object({
   "count": zod.number(),
   "status": zod.string(),
   "commitmentName": zod.string().nullable(),
   "emoji": zod.string().nullable()
 }),zod.null()]),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "canChangeFrequency": zod.boolean(),
+  "nextChangeYear": zod.number().nullable(),
+  "currentPeriodEnd": zod.string().nullable(),
+  "currentPeriodSatisfied": zod.boolean(),
+  "atRisk": zod.boolean(),
   "lifetimeBest": zod.number(),
   "totalPeriodsSaved": zod.number(),
   "commitments": zod.array(zod.object({
@@ -1228,6 +1242,77 @@ export const StartStreakVacationResponse = zod.object({
   "quarterIndex": zod.number(),
   "earnedAt": zod.string()
 })),
+  "badgeProgress": zod.object({
+  "earnedQuarters": zod.number(),
+  "nextTier": zod.enum(['bronze', 'silver', 'gold']),
+  "pct": zod.number(),
+  "daysToNext": zod.number().nullable()
+}),
+  "reminderOptIn": zod.boolean(),
+  "vacation": zod.object({
+  "active": zod.boolean(),
+  "start": zod.string().nullable(),
+  "end": zod.string().nullable(),
+  "usedThisYear": zod.boolean()
+})
+})
+
+
+/**
+ * @summary Start the annual streak vacation (pauses streaks without breaking them)
+ */
+export const startStreakVacationBodyDaysMax = 30;
+
+
+
+export const StartStreakVacationBody = zod.object({
+  "days": zod.number().min(1).max(startStreakVacationBodyDaysMax)
+})
+
+export const StartStreakVacationResponse = zod.object({
+  "hero": zod.union([zod.object({
+  "count": zod.number(),
+  "status": zod.string(),
+  "commitmentName": zod.string().nullable(),
+  "emoji": zod.string().nullable()
+}),zod.null()]),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "canChangeFrequency": zod.boolean(),
+  "nextChangeYear": zod.number().nullable(),
+  "currentPeriodEnd": zod.string().nullable(),
+  "currentPeriodSatisfied": zod.boolean(),
+  "atRisk": zod.boolean(),
+  "lifetimeBest": zod.number(),
+  "totalPeriodsSaved": zod.number(),
+  "commitments": zod.array(zod.object({
+  "id": zod.string(),
+  "commitmentType": zod.string(),
+  "commitmentId": zod.string(),
+  "commitmentName": zod.string(),
+  "emoji": zod.string().nullable(),
+  "frequency": zod.string(),
+  "currentCount": zod.number(),
+  "bestCount": zod.number(),
+  "status": zod.string(),
+  "currentPeriodEnd": zod.string(),
+  "currentPeriodSatisfied": zod.boolean()
+})),
+  "freezes": zod.object({
+  "balance": zod.number(),
+  "usedTotal": zod.number()
+}),
+  "badges": zod.array(zod.object({
+  "badgeKey": zod.string(),
+  "year": zod.number(),
+  "quarterIndex": zod.number(),
+  "earnedAt": zod.string()
+})),
+  "badgeProgress": zod.object({
+  "earnedQuarters": zod.number(),
+  "nextTier": zod.enum(['bronze', 'silver', 'gold']),
+  "pct": zod.number(),
+  "daysToNext": zod.number().nullable()
+}),
   "reminderOptIn": zod.boolean(),
   "vacation": zod.object({
   "active": zod.boolean(),
@@ -1248,6 +1333,12 @@ export const EndStreakVacationResponse = zod.object({
   "commitmentName": zod.string().nullable(),
   "emoji": zod.string().nullable()
 }),zod.null()]),
+  "frequency": zod.enum(['daily', 'weekly', 'monthly']),
+  "canChangeFrequency": zod.boolean(),
+  "nextChangeYear": zod.number().nullable(),
+  "currentPeriodEnd": zod.string().nullable(),
+  "currentPeriodSatisfied": zod.boolean(),
+  "atRisk": zod.boolean(),
   "lifetimeBest": zod.number(),
   "totalPeriodsSaved": zod.number(),
   "commitments": zod.array(zod.object({
@@ -1273,6 +1364,12 @@ export const EndStreakVacationResponse = zod.object({
   "quarterIndex": zod.number(),
   "earnedAt": zod.string()
 })),
+  "badgeProgress": zod.object({
+  "earnedQuarters": zod.number(),
+  "nextTier": zod.enum(['bronze', 'silver', 'gold']),
+  "pct": zod.number(),
+  "daysToNext": zod.number().nullable()
+}),
   "reminderOptIn": zod.boolean(),
   "vacation": zod.object({
   "active": zod.boolean(),

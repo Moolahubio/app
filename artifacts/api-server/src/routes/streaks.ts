@@ -3,6 +3,8 @@ import {
   GetStreaksResponse,
   SetStreakRemindersBody,
   SetStreakRemindersResponse,
+  SetStreakFrequencyBody,
+  SetStreakFrequencyResponse,
   StartStreakVacationBody,
   StartStreakVacationResponse,
   EndStreakVacationResponse,
@@ -12,6 +14,7 @@ import { sendError } from "../lib/errors";
 import {
   getStreakOverview,
   setReminderOptIn,
+  setStreakFrequency,
   startVacation,
   endVacation,
 } from "../lib/streaks";
@@ -36,6 +39,17 @@ router.post("/streaks/reminders", requireAuth, async (req, res): Promise<void> =
     res.json(SetStreakRemindersResponse.parse(result));
   } catch (e) {
     sendError(res, e, "Failed to update reminders");
+  }
+});
+
+router.post("/streaks/frequency", requireAuth, async (req, res): Promise<void> => {
+  try {
+    const user = (req as AuthRequest).user;
+    const body = SetStreakFrequencyBody.parse(req.body);
+    const overview = await setStreakFrequency(user.id, body.frequency);
+    res.json(SetStreakFrequencyResponse.parse(overview));
+  } catch (e) {
+    sendError(res, e, "Failed to change streak frequency");
   }
 });
 

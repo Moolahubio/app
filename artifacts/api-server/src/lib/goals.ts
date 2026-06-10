@@ -194,7 +194,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
 
   // Light the savings streak for this goal. Derived/non-financial and never
   // throws, so a streak hiccup can't affect the committed allocation.
-  await recordSave(userId, { type: "goal", id: goalId, frequency: goal.frequency }, txn.id);
+  await recordSave(userId, txn.id);
 
   await notify(userId, {
     type: "goal",

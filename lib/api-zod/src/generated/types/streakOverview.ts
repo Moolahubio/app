@@ -6,18 +6,29 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { StreakBadge } from './streakBadge';
+import type { StreakBadgeProgress } from './streakBadgeProgress';
 import type { StreakCommitment } from './streakCommitment';
 import type { StreakFreezes } from './streakFreezes';
 import type { StreakHero } from './streakHero';
+import type { StreakOverviewFrequency } from './streakOverviewFrequency';
 import type { StreakVacation } from './streakVacation';
 
 export interface StreakOverview {
   hero: StreakHero | null;
+  frequency: StreakOverviewFrequency;
+  canChangeFrequency: boolean;
+  /** @nullable */
+  nextChangeYear: number | null;
+  /** @nullable */
+  currentPeriodEnd: string | null;
+  currentPeriodSatisfied: boolean;
+  atRisk: boolean;
   lifetimeBest: number;
   totalPeriodsSaved: number;
   commitments: StreakCommitment[];
   freezes: StreakFreezes;
   badges: StreakBadge[];
+  badgeProgress: StreakBadgeProgress;
   reminderOptIn: boolean;
   vacation: StreakVacation;
 }

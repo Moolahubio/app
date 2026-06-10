@@ -13,6 +13,8 @@ import {
 import { Card, Button, Badge, ProgressBar, IconChip, Eyebrow, Skeleton } from "@/components/ui";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
 import { useGetDashboardSummary, useGetMe } from "@workspace/api-client-react";
+import { useStreak } from "@/hooks/use-streak";
+import { streakVisual, streakUnit, periodNoun } from "@/components/app/StreakFlame";
 import { formatMoney, pct, timeAgo } from "@/lib/utils";
 
 const YIELD_APY = 0.041;
@@ -30,6 +32,7 @@ const activityIcon: Record<string, typeof ArrowDownLeft> = {
 export default function DashboardPage() {
   const { data: user } = useGetMe();
   const { data: summary, isLoading } = useGetDashboardSummary();
+  const { data: streak } = useStreak();
 
   const firstName = user?.name?.split(" ")[0] ?? "";
 
@@ -155,6 +158,41 @@ export default function DashboardPage() {
           </ul>
         </Card>
       </div>
+
+      {/* ----------------------------------------------------- Savings streak */}
+      {streak && (
+        <Link href="/streaks" className="block">
+          <Card className="flex items-center justify-between gap-4 p-5 transition-colors hover:bg-accent">
+            <div className="flex items-center gap-4">
+              {(() => {
+                const count = streak.hero?.count ?? 0;
+                const status = streak.hero?.status ?? "broken";
+                const v = streakVisual(status, count);
+                return (
+                  <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${v.glow}`}>
+                    <v.Icon className={`h-6 w-6 ${v.color}`} />
+                  </span>
+                );
+              })()}
+              <div>
+                <p className="font-display text-lg font-bold text-foreground">
+                  {streak.hero
+                    ? `${streak.hero.count} ${streakUnit(streak.frequency, streak.hero.count)}`
+                    : "No streak yet"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {streak.hero
+                    ? streak.currentPeriodSatisfied
+                      ? `Saved this ${periodNoun(streak.frequency)} — nicely done`
+                      : `One deposit keeps your ${periodNoun(streak.frequency)} streak alive`
+                    : `Make a deposit to light your first flame`}
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+          </Card>
+        </Link>
+      )}
 
       {/* ----------------------------------------- Goals + Circle + Learn */}
       <div className="grid gap-6 lg:grid-cols-3">

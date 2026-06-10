@@ -1,4 +1,4 @@
-import { and, eq, isNull, lte, gt, ne, inArray, sql, count } from "drizzle-orm";
+import { and, eq, isNull, lte, gt, ne, count } from "drizzle-orm";
 import {
   db,
   streaksTable,
@@ -6,8 +6,6 @@ import {
   streakFreezesTable,
   streakBadgesTable,
   usersTable,
-  goalsTable,
-  circlesTable,
   type Streak,
   type StreakFreeze,
   type User,
@@ -21,6 +19,12 @@ import { AppError } from "./errors";
  * events. The double-entry ledger remains the source of truth for money; nothing
  * here moves or stores balances.
  *
+ * The model is ONE streak per account: a single flame kept alive by ANY deposit
+ * (a goal allocation OR a circle contribution) landing inside the current
+ * calendar window. The window size is the user's chosen cadence — daily, weekly
+ * (default) or monthly — aligned to the calendar in the user's timezone (weeks
+ * start Monday). Per-goal/per-circle streaks are retired (legacy rows archived).
+ *
  * Two write paths feed the engine:
  *  - recordSave(): called after a ledger commit in allocateToGoal()/contribute().
  *    Marks the current period satisfied and increments once per period. Idempotent.
@@ -29,25 +33,125 @@ import { AppError } from "./errors";
  *    enqueues at most one reminder per period. Idempotent via streak_periods.
  */
 
-export type CommitmentType = "goal" | "circle";
-export type Frequency = "weekly" | "biweekly" | "monthly";
+export type Frequency = "daily" | "weekly" | "monthly";
 
-export type Commitment = {
-  type: CommitmentType;
-  id: string;
-  frequency: string;
-};
+/** Synthetic commitment type for the single per-user account streak. */
+const ACCOUNT = "account";
+const VALID_FREQ: readonly Frequency[] = ["daily", "weekly", "monthly"] as const;
 
 const DAY_MS = 86_400_000;
 const MAX_FREEZES = 4;
-const ROLL_GUARD = 600;
+const ROLL_GUARD = 1200;
 
-function normFreq(f: string): Frequency {
-  return f === "biweekly" || f === "monthly" ? f : "weekly";
+function normFreq(f: string | null | undefined): Frequency {
+  return f === "daily" || f === "monthly" ? f : "weekly";
 }
 
-function periodLenMs(f: Frequency): number {
-  return (f === "biweekly" ? 14 : 7) * DAY_MS;
+/** Lowercase cadence adjective, e.g. "weekly". */
+function unitNoun(f: Frequency): string {
+  return f;
+}
+
+/** Singular unit a count is measured in, e.g. weekly → "week". */
+export function streakUnit(f: Frequency): string {
+  return f === "daily" ? "day" : f === "monthly" ? "month" : "week";
+}
+
+function tierForOrder(order: number): "bronze" | "silver" | "gold" {
+  if (order <= 3) return "bronze";
+  if (order <= 7) return "silver";
+  return "gold";
+}
+
+// --- Calendar-aligned period math (in the user's timezone) -----------------
+
+const WEEKDAY_INDEX: Record<string, number> = {
+  Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, Sat: 5, Sun: 6,
+};
+
+/** Local (tz) calendar parts of an instant; weekday 0=Mon..6=Sun. */
+function tzParts(at: Date, tz: string): { y: number; m: number; d: number; weekday: number } {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "short",
+    }).formatToParts(at);
+    const map: Record<string, string> = {};
+    for (const p of parts) map[p.type] = p.value;
+    return {
+      y: Number(map.year),
+      m: Number(map.month),
+      d: Number(map.day),
+      weekday: WEEKDAY_INDEX[map.weekday] ?? 0,
+    };
+  } catch {
+    return { y: at.getUTCFullYear(), m: at.getUTCMonth() + 1, d: at.getUTCDate(), weekday: (at.getUTCDay() + 6) % 7 };
+  }
+}
+
+/** Milliseconds to add to a UTC instant to reach its local wall-clock value. */
+function tzOffsetMs(at: Date, tz: string): number {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).formatToParts(at);
+    const map: Record<string, string> = {};
+    for (const p of parts) map[p.type] = p.value;
+    const asUTC = Date.UTC(
+      Number(map.year),
+      Number(map.month) - 1,
+      Number(map.day),
+      Number(map.hour),
+      Number(map.minute),
+      Number(map.second),
+    );
+    return asUTC - at.getTime();
+  } catch {
+    return 0;
+  }
+}
+
+/** The UTC instant whose local (tz) wall-clock is exactly y-m-d 00:00:00. */
+function zonedMidnightUTC(y: number, m: number, d: number, tz: string): Date {
+  const guess = Date.UTC(y, m - 1, d, 0, 0, 0);
+  const off1 = tzOffsetMs(new Date(guess), tz);
+  let inst = guess - off1;
+  const off2 = tzOffsetMs(new Date(inst), tz);
+  if (off2 !== off1) inst = guess - off2;
+  return new Date(inst);
+}
+
+/** Start of the calendar period containing `at`, for the cadence, in tz. */
+function periodStartFor(at: Date, freq: Frequency, tz: string): Date {
+  const { y, m, d, weekday } = tzParts(at, tz);
+  if (freq === "daily") return zonedMidnightUTC(y, m, d, tz);
+  if (freq === "monthly") return zonedMidnightUTC(y, m, 1, tz);
+  // weekly: rewind to Monday of this local week.
+  const monday = new Date(Date.UTC(y, m - 1, d) - weekday * DAY_MS);
+  return zonedMidnightUTC(monday.getUTCFullYear(), monday.getUTCMonth() + 1, monday.getUTCDate(), tz);
+}
+
+/** Start of the calendar period immediately after the one beginning at `start`. */
+function nextPeriodStart(start: Date, freq: Frequency, tz: string): Date {
+  const { y, m, d } = tzParts(start, tz);
+  if (freq === "monthly") {
+    const ny = m === 12 ? y + 1 : y;
+    const nm = m === 12 ? 1 : m + 1;
+    return zonedMidnightUTC(ny, nm, 1, tz);
+  }
+  const step = freq === "daily" ? 1 : 7;
+  const nxt = new Date(Date.UTC(y, m - 1, d) + step * DAY_MS);
+  return zonedMidnightUTC(nxt.getUTCFullYear(), nxt.getUTCMonth() + 1, nxt.getUTCDate(), tz);
 }
 
 function addMonths(d: Date, n: number): Date {
@@ -65,34 +169,6 @@ function monthsBetween(a: Date, b: Date): number {
   let n = (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth());
   if (b.getUTCDate() < a.getUTCDate()) n -= 1;
   return Math.max(0, n);
-}
-
-type Period = { index: number; start: Date; end: Date };
-
-function periodAt(anchor: Date, freq: Frequency, index: number): Period {
-  if (freq === "monthly") {
-    return { index, start: addMonths(anchor, index), end: addMonths(anchor, index + 1) };
-  }
-  const len = periodLenMs(freq);
-  return {
-    index,
-    start: new Date(anchor.getTime() + index * len),
-    end: new Date(anchor.getTime() + (index + 1) * len),
-  };
-}
-
-/** The period that contains `at`, anchored to `anchor`. */
-function periodFor(anchor: Date, freq: Frequency, at: Date): Period {
-  if (at.getTime() <= anchor.getTime()) return periodAt(anchor, freq, 0);
-  if (freq === "monthly") {
-    let n = monthsBetween(anchor, at);
-    while (addMonths(anchor, n + 1).getTime() <= at.getTime()) n += 1;
-    while (n > 0 && addMonths(anchor, n).getTime() > at.getTime()) n -= 1;
-    return periodAt(anchor, freq, n);
-  }
-  const len = periodLenMs(freq);
-  const n = Math.max(0, Math.floor((at.getTime() - anchor.getTime()) / len));
-  return periodAt(anchor, freq, n);
 }
 
 function intervalsOverlap(aStart: Date, aEnd: Date, bStart: Date | null, bEnd: Date | null): boolean {
@@ -168,21 +244,23 @@ async function rollForward(
   s: Streak,
   user: Pick<User, "vacationStart" | "vacationEnd">,
   freeze: StreakFreeze,
+  freq: Frequency,
+  tz: string,
   now: Date,
 ): Promise<{ streakChanged: boolean; freezeChanged: boolean }> {
-  const freq = normFreq(s.frequency);
   if (s.currentPeriodEnd.getTime() > now.getTime()) return { streakChanged: false, freezeChanged: false };
 
-  const anchor = s.startedAt;
-  const startIdx = periodFor(anchor, freq, s.currentPeriodStart).index;
-  const target = periodFor(anchor, freq, now);
   let freezeChanged = false;
   let guard = 0;
+  let pStart = s.currentPeriodStart;
+  let pEnd = s.currentPeriodEnd;
+  let satisfied = s.currentPeriodSatisfied;
 
-  for (let idx = startIdx; idx < target.index && guard < ROLL_GUARD; idx++, guard++) {
-    const p = periodAt(anchor, freq, idx);
-    const satisfied = idx === startIdx && s.currentPeriodSatisfied;
-    const onVacation = intervalsOverlap(p.start, p.end, user.vacationStart, user.vacationEnd);
+  // Walk each closed calendar period to `now`, applying the outcome ladder:
+  // vacation pause → satisfied roll-forward → freeze → break.
+  while (pEnd.getTime() <= now.getTime() && guard < ROLL_GUARD) {
+    guard++;
+    const onVacation = intervalsOverlap(pStart, pEnd, user.vacationStart, user.vacationEnd);
     let outcome: "saved" | "frozen" | "paused" | "missed";
 
     if (onVacation) {
@@ -197,11 +275,11 @@ async function rollForward(
     } else {
       const canFreeze =
         freeze.balance > 0 &&
-        (!freeze.lastUsedAt || p.end.getTime() >= addMonths(freeze.lastUsedAt, 3).getTime());
+        (!freeze.lastUsedAt || pEnd.getTime() >= addMonths(freeze.lastUsedAt, 3).getTime());
       if (canFreeze) {
         freeze.balance -= 1;
         freeze.usedTotal += 1;
-        freeze.lastUsedAt = p.end;
+        freeze.lastUsedAt = pEnd;
         freezeChanged = true;
         outcome = "frozen";
         s.status = "frozen";
@@ -217,19 +295,25 @@ async function rollForward(
       .insert(streakPeriodsTable)
       .values({
         streakId: s.id,
-        periodStart: p.start,
-        periodEnd: p.end,
+        periodStart: pStart,
+        periodEnd: pEnd,
         outcome,
         saveCount: outcome === "saved" ? 1 : 0,
       })
       .onConflictDoNothing({ target: [streakPeriodsTable.streakId, streakPeriodsTable.periodStart] });
+
+    satisfied = false;
+    pStart = pEnd;
+    pEnd = nextPeriodStart(pEnd, freq, tz);
   }
 
-  // Re-anchor the current period to the one containing `now`.
-  s.currentPeriodStart = target.start;
-  s.currentPeriodEnd = target.end;
+  // Re-anchor the current period to the calendar period containing `now`.
+  const curStart = periodStartFor(now, freq, tz);
+  const curEnd = nextPeriodStart(curStart, freq, tz);
+  s.currentPeriodStart = curStart;
+  s.currentPeriodEnd = curEnd;
   s.currentPeriodSatisfied = false;
-  if (s.status !== "broken" && !intervalsOverlap(target.start, target.end, user.vacationStart, user.vacationEnd)) {
+  if (s.status !== "broken" && !intervalsOverlap(curStart, curEnd, user.vacationStart, user.vacationEnd)) {
     if (s.status === "paused") s.status = "active";
   }
   return { streakChanged: true, freezeChanged };
@@ -298,66 +382,85 @@ async function persistFreeze(tx: Tx, f: StreakFreeze): Promise<void> {
 }
 
 /**
- * Mark the current period satisfied for a (user, commitment), creating the
- * streak on first save. Increments the streak once per period; idempotent for
- * repeat saves in the same period. Call AFTER the ledger commit. Never throws.
+ * Mark the current period satisfied for the user's single ACCOUNT streak,
+ * creating it on the first save. Any deposit qualifies — a goal allocation or a
+ * circle contribution. Increments once per calendar period; idempotent for
+ * repeat saves in the same period (and for replays of the same saveRef). Call
+ * AFTER the ledger commit. Never throws.
  */
 export async function recordSave(
   userId: string,
-  commitment: Commitment,
   saveRef: string,
   at: Date = new Date(),
 ): Promise<void> {
-  const freq = normFreq(commitment.frequency);
   try {
     await db.transaction(async (tx) => {
+      const [user] = await tx
+        .select({
+          streakFrequency: usersTable.streakFrequency,
+          timezone: usersTable.timezone,
+          vacationStart: usersTable.vacationStart,
+          vacationEnd: usersTable.vacationEnd,
+        })
+        .from(usersTable)
+        .where(eq(usersTable.id, userId));
+      const freq = normFreq(user?.streakFrequency);
+      const tz = user?.timezone || "UTC";
+      const vac = { vacationStart: user?.vacationStart ?? null, vacationEnd: user?.vacationEnd ?? null };
+
       const [existing] = await tx
         .select()
         .from(streaksTable)
         .where(
           and(
             eq(streaksTable.userId, userId),
-            eq(streaksTable.commitmentType, commitment.type),
-            eq(streaksTable.commitmentId, commitment.id),
+            eq(streaksTable.commitmentType, ACCOUNT),
+            eq(streaksTable.commitmentId, userId),
           ),
         )
         .for("update");
 
       if (!existing) {
-        const p = periodFor(at, freq, at);
-        await tx.insert(streaksTable).values({
-          userId,
-          commitmentType: commitment.type,
-          commitmentId: commitment.id,
-          frequency: freq,
-          startedAt: at,
-          currentCount: 1,
-          bestCount: 1,
-          status: "active",
-          currentPeriodStart: p.start,
-          currentPeriodEnd: p.end,
-          currentPeriodSatisfied: true,
-          lastSaveRef: saveRef,
-        });
+        const start = periodStartFor(at, freq, tz);
+        const end = nextPeriodStart(start, freq, tz);
+        await tx
+          .insert(streaksTable)
+          .values({
+            userId,
+            commitmentType: ACCOUNT,
+            commitmentId: userId,
+            frequency: freq,
+            startedAt: at,
+            currentCount: 1,
+            bestCount: 1,
+            status: "active",
+            currentPeriodStart: start,
+            currentPeriodEnd: end,
+            currentPeriodSatisfied: true,
+            lastSaveRef: saveRef,
+          })
+          .onConflictDoNothing({
+            target: [streaksTable.userId, streaksTable.commitmentType, streaksTable.commitmentId],
+          });
         return;
       }
 
+      // Idempotent: replaying the exact same save reference must not advance.
+      if (existing.lastSaveRef && existing.lastSaveRef === saveRef) return;
+
       const s: Streak = { ...existing, frequency: freq };
-      const [user] = await tx
-        .select({ vacationStart: usersTable.vacationStart, vacationEnd: usersTable.vacationEnd })
-        .from(usersTable)
-        .where(eq(usersTable.id, userId));
       const freeze = await ensureFreezeRow(tx, userId);
 
-      const { freezeChanged } = await rollForward(tx, s, user ?? { vacationStart: null, vacationEnd: null }, freeze, at);
+      const { freezeChanged } = await rollForward(tx, s, vac, freeze, freq, tz, at);
 
       // Apply the save to the now-current period.
       if (s.status === "broken" || s.currentCount === 0) {
         // Revive: a fresh streak starts here, re-anchored to this save.
-        const p = periodFor(at, freq, at);
+        const start = periodStartFor(at, freq, tz);
+        const end = nextPeriodStart(start, freq, tz);
         s.startedAt = at;
-        s.currentPeriodStart = p.start;
-        s.currentPeriodEnd = p.end;
+        s.currentPeriodStart = start;
+        s.currentPeriodEnd = end;
         s.currentCount = 1;
         s.status = "active";
         s.currentPeriodSatisfied = true;
@@ -374,7 +477,7 @@ export async function recordSave(
       if (freezeChanged) await persistFreeze(tx, freeze);
     });
   } catch (e) {
-    logger.error({ err: e, userId, commitment }, "[streaks] recordSave failed");
+    logger.error({ err: e, userId }, "[streaks] recordSave failed");
   }
 }
 
@@ -420,7 +523,7 @@ async function sendReminders(now: Date): Promise<void> {
   const rows = await db
     .select({
       streak: streaksTable,
-      commitmentName: sql<string | null>`null`,
+      frequency: usersTable.streakFrequency,
     })
     .from(streaksTable)
     .innerJoin(usersTable, eq(usersTable.id, streaksTable.userId))
@@ -435,7 +538,7 @@ async function sendReminders(now: Date): Promise<void> {
       ),
     );
 
-  for (const { streak: s } of rows) {
+  for (const { streak: s, frequency } of rows) {
     try {
       // Only nudge in the closing window: within the last 40% of the period and
       // no more than 3 days before close — and never twice for the same period.
@@ -447,12 +550,14 @@ async function sendReminders(now: Date): Promise<void> {
         s.reminderSentPeriodStart.getTime() === s.currentPeriodStart.getTime();
       if (!inWindow || alreadySent) continue;
 
-      const link = s.commitmentType === "goal" ? `/goals/${s.commitmentId}` : `/circles/${s.commitmentId}`;
+      const freq = normFreq(frequency);
+      const daysLeft = Math.max(0, Math.ceil(remaining / DAY_MS));
+      const when = freq === "daily" ? "today" : daysLeft <= 1 ? "tomorrow" : `in ${daysLeft} days`;
       await notify(s.userId, {
         type: "streak_reminder",
         title: "Keep your streak going",
-        body: "A small save before this period closes keeps your flame alive. No rush, whatever works for you.",
-        link,
+        body: `Your ${unitNoun(freq)} streak window closes ${when}. A small save to any goal or circle keeps your flame alive — no rush.`,
+        link: "/streaks",
       });
       await db
         .update(streaksTable)
@@ -487,16 +592,19 @@ export async function evaluateStreaks(now: Date = new Date()): Promise<void> {
         const [user] = await tx
           .select({
             timezone: usersTable.timezone,
+            streakFrequency: usersTable.streakFrequency,
             vacationStart: usersTable.vacationStart,
             vacationEnd: usersTable.vacationEnd,
           })
           .from(usersTable)
           .where(eq(usersTable.id, locked.userId));
-        const u = user ?? { timezone: "UTC", vacationStart: null, vacationEnd: null };
+        const u = user ?? { timezone: "UTC", streakFrequency: "weekly", vacationStart: null, vacationEnd: null };
+        const tz = u.timezone || "UTC";
+        const freq = normFreq(u.streakFrequency);
         const freeze = await ensureFreezeRow(tx, locked.userId);
 
         const s: Streak = { ...locked };
-        const { freezeChanged } = await rollForward(tx, s, u, freeze, now);
+        const { freezeChanged } = await rollForward(tx, s, u, freeze, freq, tz, now);
         await awardBadges(tx, s, u, now);
         await persistStreak(tx, s);
         if (freezeChanged) await persistFreeze(tx, freeze);
@@ -532,9 +640,14 @@ export async function startStreakLoop(): Promise<void> {
 
 const ALIVE_STATUSES = ["active", "frozen", "paused"] as const;
 
+/**
+ * Legacy per-commitment streak view. Per-goal/per-circle streaks are retired, so
+ * the API now always returns an empty `commitments` list; the type is kept for
+ * response-shape compatibility.
+ */
 export type StreakCommitmentView = {
   id: string;
-  commitmentType: CommitmentType;
+  commitmentType: string;
   commitmentId: string;
   commitmentName: string;
   emoji: string | null;
@@ -553,6 +666,13 @@ export type StreakBadgeView = {
   earnedAt: string;
 };
 
+export type StreakBadgeProgress = {
+  earnedQuarters: number;
+  nextTier: "bronze" | "silver" | "gold";
+  pct: number;
+  daysToNext: number | null;
+};
+
 export type StreakOverview = {
   hero: {
     count: number;
@@ -560,36 +680,46 @@ export type StreakOverview = {
     commitmentName: string | null;
     emoji: string | null;
   } | null;
+  frequency: Frequency;
+  canChangeFrequency: boolean;
+  nextChangeYear: number | null;
+  currentPeriodEnd: string | null;
+  currentPeriodSatisfied: boolean;
+  atRisk: boolean;
   lifetimeBest: number;
   totalPeriodsSaved: number;
   commitments: StreakCommitmentView[];
   freezes: { balance: number; usedTotal: number };
   badges: StreakBadgeView[];
+  badgeProgress: StreakBadgeProgress;
   reminderOptIn: boolean;
   vacation: { active: boolean; start: string | null; end: string | null; usedThisYear: boolean };
 };
 
-async function resolveNames(
-  rows: Streak[],
-): Promise<Map<string, { name: string; emoji: string | null }>> {
-  const out = new Map<string, { name: string; emoji: string | null }>();
-  const goalIds = rows.filter((r) => r.commitmentType === "goal").map((r) => r.commitmentId);
-  const circleIds = rows.filter((r) => r.commitmentType === "circle").map((r) => r.commitmentId);
-  if (goalIds.length) {
-    const gs = await db
-      .select({ id: goalsTable.id, name: goalsTable.name, emoji: goalsTable.emoji })
-      .from(goalsTable)
-      .where(inArray(goalsTable.id, goalIds));
-    for (const g of gs) out.set(`goal:${g.id}`, { name: g.name, emoji: g.emoji });
+/**
+ * Progress toward the next quarterly badge, derived from how long the current
+ * unbroken streak has run (vacation time excluded). A broken/empty streak shows
+ * no progress.
+ */
+function computeBadgeProgress(
+  s: Streak | undefined,
+  user: Pick<User, "vacationStart" | "vacationEnd">,
+  earnedCount: number,
+  now: Date,
+): StreakBadgeProgress {
+  if (!s || s.status === "broken" || s.currentCount === 0) {
+    return { earnedQuarters: earnedCount, nextTier: tierForOrder(earnedCount + 1), pct: 0, daysToNext: null };
   }
-  if (circleIds.length) {
-    const cs = await db
-      .select({ id: circlesTable.id, name: circlesTable.name })
-      .from(circlesTable)
-      .where(inArray(circlesTable.id, circleIds));
-    for (const c of cs) out.set(`circle:${c.id}`, { name: c.name, emoji: null });
-  }
-  return out;
+  const vacMs = vacationOverlapMs(s.startedAt, now, user);
+  const effNow = new Date(now.getTime() - vacMs);
+  const earnedQuarters = Math.floor(monthsBetween(s.startedAt, effNow) / 3);
+  const quarterStart = addMonths(s.startedAt, earnedQuarters * 3);
+  const quarterEnd = addMonths(s.startedAt, (earnedQuarters + 1) * 3);
+  const span = quarterEnd.getTime() - quarterStart.getTime();
+  const elapsed = Math.max(0, effNow.getTime() - quarterStart.getTime());
+  const pct = span > 0 ? Math.max(0, Math.min(1, elapsed / span)) : 0;
+  const daysToNext = Math.max(0, Math.ceil((quarterEnd.getTime() - effNow.getTime()) / DAY_MS));
+  return { earnedQuarters, nextTier: tierForOrder(earnedQuarters + 1), pct, daysToNext };
 }
 
 export async function getStreakOverview(userId: string): Promise<StreakOverview> {
@@ -597,6 +727,8 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
     .select({
       timezone: usersTable.timezone,
       streakReminderOptIn: usersTable.streakReminderOptIn,
+      streakFrequency: usersTable.streakFrequency,
+      streakFrequencyLastChanged: usersTable.streakFrequencyLastChanged,
       vacationStart: usersTable.vacationStart,
       vacationEnd: usersTable.vacationEnd,
       vacationYearUsed: usersTable.vacationYearUsed,
@@ -604,47 +736,37 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
     .from(usersTable)
     .where(eq(usersTable.id, userId));
 
-  const rows = await db
+  const [s] = await db
     .select()
     .from(streaksTable)
-    .where(and(eq(streaksTable.userId, userId), isNull(streaksTable.archivedAt)));
+    .where(
+      and(
+        eq(streaksTable.userId, userId),
+        eq(streaksTable.commitmentType, ACCOUNT),
+        eq(streaksTable.commitmentId, userId),
+        isNull(streaksTable.archivedAt),
+      ),
+    );
 
-  const names = await resolveNames(rows);
-  const commitments: StreakCommitmentView[] = rows.map((r) => {
-    const info = names.get(`${r.commitmentType}:${r.commitmentId}`);
-    return {
-      id: r.id,
-      commitmentType: r.commitmentType as CommitmentType,
-      commitmentId: r.commitmentId,
-      commitmentName: info?.name ?? "Savings",
-      emoji: info?.emoji ?? null,
-      frequency: r.frequency,
-      currentCount: r.currentCount,
-      bestCount: r.bestCount,
-      status: r.status,
-      currentPeriodEnd: r.currentPeriodEnd.toISOString(),
-      currentPeriodSatisfied: r.currentPeriodSatisfied,
-    };
-  });
+  const tz = user?.timezone || "UTC";
+  const now = new Date();
+  const freq = normFreq(user?.streakFrequency);
+  const vac = { vacationStart: user?.vacationStart ?? null, vacationEnd: user?.vacationEnd ?? null };
 
-  const alive = commitments.filter((c) => (ALIVE_STATUSES as readonly string[]).includes(c.status));
-  const hero = alive.reduce<StreakCommitmentView | null>((best, c) => {
-    return !best || c.currentCount > best.currentCount ? c : best;
-  }, null);
+  const alive = Boolean(s && (ALIVE_STATUSES as readonly string[]).includes(s.status));
+  const hero = s && alive ? { count: s.currentCount, status: s.status, commitmentName: null, emoji: null } : null;
+  const lifetimeBest = s ? Math.max(s.bestCount, s.currentCount) : 0;
 
-  const lifetimeBest = rows.reduce((m, r) => Math.max(m, r.bestCount, r.currentCount), 0);
-
-  const streakIds = rows.map((r) => r.id);
   let totalPeriodsSaved = 0;
-  if (streakIds.length) {
+  if (s) {
     const [agg] = await db
       .select({ saved: count() })
       .from(streakPeriodsTable)
-      .where(and(inArray(streakPeriodsTable.streakId, streakIds), eq(streakPeriodsTable.outcome, "saved")));
+      .where(and(eq(streakPeriodsTable.streakId, s.id), eq(streakPeriodsTable.outcome, "saved")));
     totalPeriodsSaved = Number(agg?.saved ?? 0);
+    // Include the currently-satisfied (open) period, which isn't logged yet.
+    if (s.currentPeriodSatisfied) totalPeriodsSaved += 1;
   }
-  // Include the currently-satisfied (open) periods, which aren't logged yet.
-  totalPeriodsSaved += commitments.filter((c) => c.currentPeriodSatisfied).length;
 
   const [freeze] = await db
     .select({ balance: streakFreezesTable.balance, usedTotal: streakFreezesTable.usedTotal })
@@ -662,19 +784,39 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
     .where(eq(streakBadgesTable.userId, userId))
     .orderBy(streakBadgesTable.year, streakBadgesTable.quarterIndex);
 
-  const tz = user?.timezone || "UTC";
-  const now = new Date();
   const vacActive = Boolean(
     user?.vacationStart && user?.vacationEnd &&
       user.vacationStart.getTime() <= now.getTime() &&
       now.getTime() < user.vacationEnd.getTime(),
   );
 
+  const changedThisYear = Boolean(
+    user?.streakFrequencyLastChanged &&
+      localYear(user.streakFrequencyLastChanged, tz) === localYear(now, tz),
+  );
+  const nextChangeYear =
+    changedThisYear && user?.streakFrequencyLastChanged
+      ? localYear(user.streakFrequencyLastChanged, tz) + 1
+      : null;
+
+  // "At risk" = an alive, non-paused streak whose current window is still open
+  // but not yet satisfied. Used for a gentle (never alarming) banner.
+  const atRisk = Boolean(
+    s && alive && s.status !== "paused" && s.currentCount > 0 &&
+      !s.currentPeriodSatisfied && s.currentPeriodEnd.getTime() > now.getTime(),
+  );
+
   return {
-    hero: hero ? { count: hero.currentCount, status: hero.status, commitmentName: hero.commitmentName, emoji: hero.emoji } : null,
+    hero,
+    frequency: freq,
+    canChangeFrequency: !changedThisYear,
+    nextChangeYear,
+    currentPeriodEnd: s ? s.currentPeriodEnd.toISOString() : null,
+    currentPeriodSatisfied: s ? s.currentPeriodSatisfied : false,
+    atRisk,
     lifetimeBest,
     totalPeriodsSaved,
-    commitments,
+    commitments: [],
     freezes: { balance: freeze?.balance ?? 0, usedTotal: freeze?.usedTotal ?? 0 },
     badges: badgeRows.map((b) => ({
       badgeKey: b.badgeKey,
@@ -682,6 +824,7 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
       quarterIndex: b.quarterIndex,
       earnedAt: b.earnedAt.toISOString(),
     })),
+    badgeProgress: computeBadgeProgress(s, vac, badgeRows.length, now),
     reminderOptIn: user?.streakReminderOptIn ?? false,
     vacation: {
       active: vacActive,
@@ -690,6 +833,74 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
       usedThisYear: user?.vacationYearUsed === localYear(now, tz),
     },
   };
+}
+
+/**
+ * Change the account-streak cadence. Allowed once per calendar year (no-op when
+ * unchanged). Re-anchors the streak to a fresh window of the new cadence while
+ * keeping the current count — switching cadence never punishes existing progress.
+ */
+export async function setStreakFrequency(userId: string, frequency: string): Promise<StreakOverview> {
+  if (!VALID_FREQ.includes(frequency as Frequency)) {
+    throw new AppError("Choose a daily, weekly, or monthly streak.");
+  }
+  const next = frequency as Frequency;
+  const now = new Date();
+  const [user] = await db
+    .select({
+      timezone: usersTable.timezone,
+      streakFrequency: usersTable.streakFrequency,
+      streakFrequencyLastChanged: usersTable.streakFrequencyLastChanged,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId));
+  const tz = user?.timezone || "UTC";
+  const current = normFreq(user?.streakFrequency);
+  if (next === current) {
+    // No-op — don't consume the annual change allowance.
+    return getStreakOverview(userId);
+  }
+  if (
+    user?.streakFrequencyLastChanged &&
+    localYear(user.streakFrequencyLastChanged, tz) === localYear(now, tz)
+  ) {
+    throw new AppError("You can change your streak frequency once per calendar year.");
+  }
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(usersTable)
+      .set({ streakFrequency: next, streakFrequencyLastChanged: now })
+      .where(eq(usersTable.id, userId));
+    const [s] = await tx
+      .select()
+      .from(streaksTable)
+      .where(
+        and(
+          eq(streaksTable.userId, userId),
+          eq(streaksTable.commitmentType, ACCOUNT),
+          eq(streaksTable.commitmentId, userId),
+        ),
+      )
+      .for("update");
+    if (s) {
+      const start = periodStartFor(now, next, tz);
+      const end = nextPeriodStart(start, next, tz);
+      await tx
+        .update(streaksTable)
+        .set({
+          frequency: next,
+          currentPeriodStart: start,
+          currentPeriodEnd: end,
+          currentPeriodSatisfied: false,
+          reminderSentPeriodStart: null,
+          status: s.status === "broken" ? "broken" : s.status === "paused" ? "paused" : "active",
+        })
+        .where(eq(streaksTable.id, s.id));
+    }
+  });
+
+  return getStreakOverview(userId);
 }
 
 export async function setReminderOptIn(userId: string, optIn: boolean): Promise<{ optIn: boolean }> {

@@ -62,15 +62,63 @@ export interface StreakVacation {
   usedThisYear: boolean;
 }
 
+export type StreakBadgeProgressNextTier = typeof StreakBadgeProgressNextTier[keyof typeof StreakBadgeProgressNextTier];
+
+
+export const StreakBadgeProgressNextTier = {
+  bronze: 'bronze',
+  silver: 'silver',
+  gold: 'gold',
+} as const;
+
+export interface StreakBadgeProgress {
+  earnedQuarters: number;
+  nextTier: StreakBadgeProgressNextTier;
+  pct: number;
+  /** @nullable */
+  daysToNext: number | null;
+}
+
+export type StreakOverviewFrequency = typeof StreakOverviewFrequency[keyof typeof StreakOverviewFrequency];
+
+
+export const StreakOverviewFrequency = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
 export interface StreakOverview {
   hero: StreakHero | null;
+  frequency: StreakOverviewFrequency;
+  canChangeFrequency: boolean;
+  /** @nullable */
+  nextChangeYear: number | null;
+  /** @nullable */
+  currentPeriodEnd: string | null;
+  currentPeriodSatisfied: boolean;
+  atRisk: boolean;
   lifetimeBest: number;
   totalPeriodsSaved: number;
   commitments: StreakCommitment[];
   freezes: StreakFreezes;
   badges: StreakBadge[];
+  badgeProgress: StreakBadgeProgress;
   reminderOptIn: boolean;
   vacation: StreakVacation;
+}
+
+export type StreakFrequencyInputFrequency = typeof StreakFrequencyInputFrequency[keyof typeof StreakFrequencyInputFrequency];
+
+
+export const StreakFrequencyInputFrequency = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export interface StreakFrequencyInput {
+  frequency: StreakFrequencyInputFrequency;
 }
 
 export interface StreakReminderInput {

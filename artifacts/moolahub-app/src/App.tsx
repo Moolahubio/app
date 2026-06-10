@@ -24,6 +24,7 @@ import Profile from "@/pages/profile";
 import ProfileInformation from "@/pages/profile-information";
 import ProfileSecurity from "@/pages/profile-security";
 import ProfileNotifications from "@/pages/profile-notifications";
+import ProfileStreak from "@/pages/profile-streak";
 import Streaks from "@/pages/streaks";
 
 const queryClient = new QueryClient();
@@ -83,6 +84,9 @@ function Router() {
       </Route>
       <Route path="/profile/notifications">
         <ProtectedRoute component={ProfileNotifications} />
+      </Route>
+      <Route path="/profile/streak">
+        <ProtectedRoute component={ProfileStreak} />
       </Route>
       <Route path="/profile">
         <ProtectedRoute component={Profile} />

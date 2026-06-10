@@ -1,17 +1,22 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { Flame, Snowflake, Plane, Bell, Share2, Trophy, ChevronRight } from "lucide-react";
-import { Card, Badge, Button, Eyebrow } from "@/components/ui";
+import {
+  Snowflake,
+  Plane,
+  Bell,
+  Share2,
+  Trophy,
+  Target,
+  Users,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react";
+import { Card, Badge, Button } from "@/components/ui";
 import { Switch } from "@/components/ui/switch";
 import { PageHeader, BackLink } from "@/components/app/bits";
-import {
-  StreakFlameHero,
-  StreakChip,
-  streakVisual,
-  periodNoun,
-} from "@/components/app/StreakFlame";
-import { StreakBadges } from "@/components/app/StreakBadges";
+import { StreakFlameHero, periodNoun, streakUnit } from "@/components/app/StreakFlame";
+import { StreakBadges, StreakBadgeTier } from "@/components/app/StreakBadges";
 import { StreakShareCard } from "@/components/app/StreakShareCard";
 import { useStreak, getGetStreaksQueryKey } from "@/hooks/use-streak";
 import {
@@ -38,34 +43,47 @@ export default function StreaksPage() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading your streaks…</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your streak…</div>;
   }
   if (!data) return null;
 
   const heroCount = data.hero?.count ?? 0;
   const heroStatus = data.hero?.status ?? "broken";
+  const unit = streakUnit(data.frequency, heroCount);
   const heroCaption = data.hero
-    ? `${data.hero.commitmentName ?? "Savings"} · longest run going`
-    : "Make a save to light your first flame";
+    ? `${heroCount}-${periodNoun(data.frequency)} streak · keep it going`
+    : `Make a deposit this ${periodNoun(data.frequency)} to light your flame`;
 
-  const savedAmount = summary
-    ? summary.goalTotalCents + summary.circlePotCents
-    : null;
-
+  const savedAmount = summary ? summary.goalTotalCents + summary.circlePotCents : null;
   const vacation = data.vacation;
+  const periodEnd = data.currentPeriodEnd ? new Date(data.currentPeriodEnd) : null;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <BackLink href="/" label="Home" />
-      <PageHeader eyebrow="Streaks" title="Savings streaks" />
+      <PageHeader eyebrow="Streaks" title="Savings streak" />
+
+      {/* Gentle at-risk nudge — never alarming */}
+      {data.atRisk && periodEnd && (
+        <div className="flex items-start gap-3 rounded-2xl border border-jade-500/30 bg-jade-500/[0.06] p-4">
+          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-jade-600 dark:text-jade-400" />
+          <p className="text-sm text-foreground">
+            A single deposit before{" "}
+            <span className="font-semibold">
+              {periodEnd.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+            </span>{" "}
+            keeps your streak alive. No rush — any goal or circle deposit counts.
+          </p>
+        </div>
+      )}
 
       {/* Hero */}
       <Card className="p-8">
         <StreakFlameHero count={heroCount} status={heroStatus} caption={heroCaption} />
         <div className="mt-6 grid grid-cols-3 gap-3 border-t border-border pt-6 text-center">
+          <Stat label={`Current ${unit}`} value={String(heroCount)} />
           <Stat label="Lifetime best" value={String(data.lifetimeBest)} />
           <Stat label="Periods saved" value={String(data.totalPeriodsSaved)} />
-          <Stat label="Freezes" value={String(data.freezes.balance)} />
         </div>
         <div className="mt-6 flex justify-center">
           <Button variant="secondary" onClick={() => setShareOpen(true)} disabled={heroCount === 0}>
@@ -74,66 +92,53 @@ export default function StreaksPage() {
         </div>
       </Card>
 
-      {/* Per-commitment streaks */}
-      <section>
-        <Eyebrow className="mb-3">Your commitments</Eyebrow>
-        {data.commitments.length === 0 ? (
-          <Card className="p-6 text-center text-sm text-muted-foreground">
-            No streaks yet. Add to a{" "}
-            <Link href="/goals" className="font-semibold text-jade-600 dark:text-jade-400">
-              goal
-            </Link>{" "}
-            or contribute to a{" "}
-            <Link href="/circles" className="font-semibold text-jade-600 dark:text-jade-400">
-              circle
-            </Link>{" "}
-            to start one.
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {data.commitments.map((c) => {
-              const v = streakVisual(c.status, c.currentCount);
-              const href = c.commitmentType === "goal" ? `/goals/${c.commitmentId}` : `/circles/${c.commitmentId}`;
-              return (
-                <Link key={c.id} href={href}>
-                  <Card className="flex items-center justify-between p-4 transition-colors hover:bg-accent">
-                    <div className="flex items-center gap-3">
-                      <span className={`flex h-10 w-10 items-center justify-center rounded-2xl ${v.glow}`}>
-                        {c.emoji ? (
-                          <span className="text-xl">{c.emoji}</span>
-                        ) : (
-                          <v.Icon className={`h-5 w-5 ${v.color}`} />
-                        )}
-                      </span>
-                      <div>
-                        <p className="font-semibold text-foreground">{c.commitmentName}</p>
-                        <p className="text-xs capitalize text-muted-foreground">
-                          {c.currentPeriodSatisfied ? "Saved this " : "Open · per "}
-                          {periodNoun(c.frequency)}
-                          {" · best "}
-                          {c.bestCount}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <StreakChip count={c.currentCount} status={c.status} />
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  </Card>
-                </Link>
-              );
-            })}
+      {/* Frequency + where saves count */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold capitalize text-foreground">{data.frequency} streak</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              One deposit per {periodNoun(data.frequency)} keeps your flame lit.
+            </p>
           </div>
+          <Link href="/profile/streak">
+            <Button variant="secondary" size="sm">
+              <Settings2 className="h-4 w-4" /> Change
+            </Button>
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-jade-500/15 text-jade-600 dark:text-jade-400">
+              <Target className="h-5 w-5" />
+            </span>
+            <p className="text-sm text-muted-foreground">Goal deposits count</p>
+          </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-jade-500/15 text-jade-600 dark:text-jade-400">
+              <Users className="h-5 w-5" />
+            </span>
+            <p className="text-sm text-muted-foreground">Circle contributions count</p>
+          </div>
+        </div>
+        {!data.canChangeFrequency && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Frequency can change once a year
+            {data.nextChangeYear ? ` — next change unlocks in ${data.nextChangeYear}.` : "."}
+          </p>
         )}
-      </section>
+      </Card>
 
-      {/* Badges */}
+      {/* Badge tier + progress */}
       <Card className="p-6">
         <div className="mb-4 flex items-center gap-2">
           <Trophy className="h-5 w-5 text-amber-500" />
           <h2 className="font-display text-lg font-bold text-foreground">Badge collection</h2>
         </div>
-        <StreakBadges badges={data.badges} />
+        <StreakBadgeTier progress={data.badgeProgress} />
+        <div className="mt-5">
+          <StreakBadges badges={data.badges} />
+        </div>
       </Card>
 
       {/* Freezes */}
@@ -157,9 +162,7 @@ export default function StreaksPage() {
               <Snowflake className="h-5 w-5" />
             </span>
           ))}
-          <span className="ml-2 text-sm text-muted-foreground">
-            {data.freezes.balance} available
-          </span>
+          <span className="ml-2 text-sm text-muted-foreground">{data.freezes.balance} available</span>
         </div>
       </Card>
 
@@ -171,7 +174,8 @@ export default function StreaksPage() {
             <div>
               <p className="font-semibold text-foreground">Gentle reminders</p>
               <p className="text-sm text-muted-foreground">
-                A single nudge before a period closes, only if you want it. Off by default.
+                A single nudge before a {periodNoun(data.frequency)} closes, only if you want it. Off by
+                default.
               </p>
             </div>
           </div>
@@ -195,7 +199,7 @@ export default function StreaksPage() {
           <h2 className="font-display text-lg font-bold text-foreground">Vacation mode</h2>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Life happens. Pause your streaks once a year (up to 30 days) without losing your progress.
+          Life happens. Pause your streak once a year (up to 30 days) without losing your progress.
         </p>
         {vacation.active ? (
           <div className="mt-4 space-y-3">
@@ -234,6 +238,10 @@ export default function StreaksPage() {
           </div>
         )}
       </Card>
+
+      <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+        <ShieldCheck className="h-3.5 w-3.5" /> Your streak never affects your balance or your money.
+      </p>
 
       <StreakShareCard
         open={shareOpen}

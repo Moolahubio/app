@@ -374,7 +374,7 @@ export async function contribute(userId: string, circleId: string) {
   );
 
   // Light the savings streak for this circle (derived/non-financial, never throws).
-  await recordSave(userId, { type: "circle", id: circleId, frequency: circle.frequency }, txn.id);
+  await recordSave(userId, txn.id);
 
   // Book this round's payout/fee rows (if it just filled) BEFORE kicking the
   // reconciler, so the escrow's RoundSettled backfill always finds pending
