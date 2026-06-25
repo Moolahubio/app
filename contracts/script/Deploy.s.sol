@@ -8,28 +8,30 @@ import {MoolaHubCircleFactory} from "../src/MoolaHubCircleFactory.sol";
 import {MoolaHubGoalVault} from "../src/MoolaHubGoalVault.sol";
 import {MoolaHubTreasury} from "../src/MoolaHubTreasury.sol";
 
-/// @notice Deploys the MoolaHub on-chain stack to Base Sepolia (or any EVM).
+/// @notice Deploys the MoolaHub on-chain stack to Monad Testnet (chainId 10143)
+///         or any EVM. Fails closed: the token and role addresses are REQUIRED,
+///         never defaulted to the deployer or a wrong-chain token (replit.md
+///         role-address policy + the non-custodial invariant — OWNER/GUARDIAN
+///         must never silently fall back to the deployer).
 ///
 /// Required env:
 ///   DEPLOYER_PRIVATE_KEY  - deployer key (testnet)
-/// Optional env (with Base Sepolia defaults):
-///   USDC_ADDRESS          - default 0x036CbD53842c5426634e7929541eC2318f3dCF7e (Circle, Base Sepolia)
-///   OWNER_ADDRESS         - multisig owner; defaults to the deployer
-///   GUARDIAN_ADDRESS      - circle guardian; defaults to the owner
+///   USDC_ADDRESS          - USDC token (Circle native Monad-testnet USDC, 6 dp)
+///   OWNER_ADDRESS         - multisig owner (NOT the deployer)
+///   GUARDIAN_ADDRESS      - circle guardian
+/// Optional env:
 ///   FEE_RECIPIENT_ADDRESS - destination for platform fees; defaults to the deployed Treasury
 ///   FEE_BPS               - default 200 (2%)
 ///
 /// Run:
-///   forge script script/Deploy.s.sol --rpc-url base_sepolia --broadcast --verify
+///   forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast --verify
 contract Deploy is Script {
-    address constant USDC_BASE_SEPOLIA = 0x036CbD53842c5426634e7929541eC2318f3dCF7e;
-
     function run() external {
         uint256 pk = vm.envUint("DEPLOYER_PRIVATE_KEY");
         address deployer = vm.addr(pk);
-        address usdc = vm.envOr("USDC_ADDRESS", USDC_BASE_SEPOLIA);
-        address owner = vm.envOr("OWNER_ADDRESS", deployer);
-        address guardian = vm.envOr("GUARDIAN_ADDRESS", owner);
+        address usdc = vm.envAddress("USDC_ADDRESS");
+        address owner = vm.envAddress("OWNER_ADDRESS");
+        address guardian = vm.envAddress("GUARDIAN_ADDRESS");
         uint16 feeBps = uint16(vm.envOr("FEE_BPS", uint256(200)));
 
         vm.startBroadcast(pk);
@@ -78,15 +80,78 @@ contract Deploy is Script {
         console2.log("Guardian:        ", guardian);
         console2.log("FeeBps:          ", feeBps);
 
+        // Record the deployment via a helper struct so run()'s local stack stays
+        // shallow (the inline serialize block hits solc "stack too deep").
+        Deployment memory d;
+        d.chainId = block.chainid;
+        d.deployer = deployer;
+        d.owner = owner;
+        d.guardian = guardian;
+        d.usdc = usdc;
+        d.treasury = address(treasury);
+        d.feeSink = feeSink;
+        d.reputation = address(reputation);
+        d.escrowImplementation = address(escrowImpl);
+        d.circleFactory = address(factory);
+        d.goalVault = address(goalVault);
+        d.feeBps = feeBps;
+        _writeDeployment(d);
+    }
+
+    struct Deployment {
+        uint256 chainId;
+        address deployer;
+        address owner;
+        address guardian;
+        address usdc;
+        address treasury;
+        address feeSink;
+        address reputation;
+        address escrowImplementation;
+        address circleFactory;
+        address goalVault;
+        uint16 feeBps;
+    }
+
+    /// @dev Stamp the deployment record to ./deployments/latest.json AND a
+    ///      per-network file (e.g. monad-testnet.json) so a record is never
+    ///      ambiguous about which chain its addresses belong to. Reverts on an
+    ///      unrecognized chain (fail closed) rather than writing blank metadata.
+    function _writeDeployment(Deployment memory d) internal {
+        (string memory network, string memory explorer) = _networkMeta(d.chainId);
+        require(bytes(network).length != 0, "Deploy: unknown chainId, add it to _networkMeta");
+
         string memory json = "deployment";
-        vm.serializeAddress(json, "usdc", usdc);
-        vm.serializeAddress(json, "treasury", address(treasury));
-        vm.serializeAddress(json, "feeSink", feeSink);
-        vm.serializeAddress(json, "reputation", address(reputation));
-        vm.serializeAddress(json, "escrowImplementation", address(escrowImpl));
-        vm.serializeAddress(json, "circleFactory", address(factory));
-        vm.serializeAddress(json, "goalVault", address(goalVault));
-        string memory out = vm.serializeUint(json, "feeBps", feeBps);
+        vm.serializeUint(json, "chainId", d.chainId);
+        vm.serializeString(json, "network", network);
+        vm.serializeString(json, "explorer", explorer);
+        vm.serializeAddress(json, "deployer", d.deployer);
+        vm.serializeAddress(json, "owner", d.owner);
+        vm.serializeAddress(json, "guardian", d.guardian);
+        vm.serializeAddress(json, "usdc", d.usdc);
+        vm.serializeAddress(json, "treasury", d.treasury);
+        vm.serializeAddress(json, "feeSink", d.feeSink);
+        vm.serializeAddress(json, "reputation", d.reputation);
+        vm.serializeAddress(json, "escrowImplementation", d.escrowImplementation);
+        vm.serializeAddress(json, "circleFactory", d.circleFactory);
+        vm.serializeAddress(json, "goalVault", d.goalVault);
+        string memory out = vm.serializeUint(json, "feeBps", d.feeBps);
+
         vm.writeJson(out, "./deployments/latest.json");
+        vm.writeJson(out, string.concat("./deployments/", network, ".json"));
+    }
+
+    /// @dev chainId -> (network slug, explorer base url) for the deployment
+    ///      record. Returns ("", "") for unrecognized chains (the caller reverts).
+    ///      Register a chain here before deploying to it. Values: Monad Testnet
+    ///      (10143) and Base Sepolia (84532) explorers.
+    function _networkMeta(uint256 chainId)
+        internal
+        pure
+        returns (string memory network, string memory explorer)
+    {
+        if (chainId == 10143) return ("monad-testnet", "https://testnet.monadscan.com");
+        if (chainId == 84532) return ("base-sepolia", "https://sepolia.basescan.org");
+        return ("", "");
     }
 }

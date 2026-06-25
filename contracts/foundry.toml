@@ -16,9 +16,15 @@ line_length = 110
 tab_width = 4
 bracket_spacing = true
 
-# Base Sepolia. Set BASE_SEPOLIA_RPC_URL and BASESCAN_API_KEY in your env.
+# Deploy targets. Monad Testnet (chainId 10143) is the migration target; Base
+# Sepolia is kept for rollback. Etherscan v2 is multichain — the verifier URL is
+# identical for both; only `chain` differs.
+#   Monad: set MONAD_TESTNET_RPC_URL + MONADSCAN_API_KEY
+#   Base:  set BASE_SEPOLIA_RPC_URL  + BASESCAN_API_KEY
 [rpc_endpoints]
+monad_testnet = "${MONAD_TESTNET_RPC_URL}"
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 [etherscan]
+monad_testnet = { key = "${MONADSCAN_API_KEY}", chain = 10143, url = "https://api.etherscan.io/v2/api" }
 base_sepolia = { key = "${BASESCAN_API_KEY}", chain = 84532, url = "https://api.etherscan.io/v2/api" }
