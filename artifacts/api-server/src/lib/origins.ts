@@ -11,13 +11,25 @@ import type { Request, Response, NextFunction } from "express";
  *
  * Bare hosts (no scheme) are normalized to https://.
  */
+/**
+ * Strip trailing slashes in linear time. Equivalent to `.replace(/\/+$/, "")`
+ * but without that pattern's quadratic backtracking on a long run of slashes —
+ * `isAllowedOrigin` runs this on the attacker-controlled Origin header, where
+ * the backtracking is a ReDoS / event-loop-starvation DoS vector.
+ */
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s.charCodeAt(end - 1) === 47 /* "/" */) end--;
+  return s.slice(0, end);
+}
+
 function originsFromCsv(csv: string | undefined): string[] {
   return (csv || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean)
     .map((s) => (/^https?:\/\//i.test(s) ? s : `https://${s}`))
-    .map((s) => s.replace(/\/+$/, ""));
+    .map(stripTrailingSlashes);
 }
 
 export function getAllowedOrigins(): string[] {
@@ -31,7 +43,10 @@ export function getAllowedOrigins(): string[] {
 
 export function isAllowedOrigin(origin: string | undefined | null): boolean {
   if (!origin) return true; // no Origin header => same-origin / non-browser
-  return getAllowedOrigins().includes(origin.replace(/\/+$/, ""));
+  // No legitimate origin is anywhere near this long; reject early so a
+  // pathological Origin header can't burn CPU during normalization/lookup.
+  if (origin.length > 2048) return false;
+  return getAllowedOrigins().includes(stripTrailingSlashes(origin));
 }
 
 /**
