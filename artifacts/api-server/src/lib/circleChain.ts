@@ -11,7 +11,7 @@ import {
   type Address,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { base, baseSepolia } from "viem/chains";
+import { monadTestnet } from "viem/chains";
 import { centsToUnits } from "./chain";
 import { logger } from "./logger";
 
@@ -30,10 +30,9 @@ import { logger } from "./logger";
  * on a later attempt.
  */
 
-const IS_MAINNET = process.env.BASE_NETWORK === "mainnet";
-const CHAIN = IS_MAINNET ? base : baseSepolia;
+const CHAIN = monadTestnet; // Monad Testnet (10143, MON); no Monad mainnet chain in viem
 const RPC_URL =
-  process.env.BASE_RPC_URL || (IS_MAINNET ? "https://mainnet.base.org" : "https://sepolia.base.org");
+  process.env.CHAIN_RPC_URL || process.env.BASE_RPC_URL || "https://testnet-rpc.monad.xyz";
 const FACTORY = (process.env.ACCUMULATION_FACTORY_ADDRESS || "") as string;
 // Grace after each round's window before a member can be flagged delinquent.
 const GRACE_PERIOD_SECS = Number(process.env.CIRCLE_GRACE_PERIOD_SECS) || 3 * 24 * 60 * 60;
