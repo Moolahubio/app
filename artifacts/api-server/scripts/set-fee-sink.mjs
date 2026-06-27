@@ -61,6 +61,6 @@ for (const [name, addrRaw] of Object.entries(targets)) {
   const hash = await wallet.writeContract({ address, abi, functionName: "setTreasury", args: [recipient] });
   const rcpt = await pub.waitForTransactionReceipt({ hash });
   const after = await pub.readContract({ address, abi, functionName: "treasury" });
-  console.log(`${name} ${address}: ${before} -> ${after} | status=${rcpt.status} | tx https://testnet.monadscan.com/tx/${hash}`);
+  console.log(`${name} ${address}: ${before} -> ${after} | status=${rcpt.status} | tx https://testnet.monadvision.com/tx/${hash}`);
 }
 console.log("done");
