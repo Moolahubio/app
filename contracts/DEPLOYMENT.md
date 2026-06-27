@@ -4,6 +4,49 @@ A step-by-step guide for **you** to deploy the contracts to Base Sepolia and be 
 
 > **Testnet only.** Use a throwaway deployer key funded with test ETH. Never put a key that holds real money in a `.env` file. For mainnet later, the owner must be a multisig (see §10).
 
+> **Migration note — current target is Monad Testnet (chainId 10143, MON gas).**
+> The deploy scripts now default to the `monad_testnet` foundry profile and
+> require `USDC_ADDRESS`/`OWNER_ADDRESS`/`GUARDIAN_ADDRESS` explicitly (fail-closed).
+> Deploy with `--rpc-url monad_testnet` and verify per **§Verifying on Monad
+> Testnet** below. The Base Sepolia steps that follow remain valid as a reference
+> and fast rollback.
+
+---
+
+## Verifying on Monad Testnet
+
+`foundry.toml` already defines the `monad_testnet` profile (chainId `10143`,
+Etherscan v2 endpoint `https://api.etherscan.io/v2/api`). After deploying, verify
+each contract; the per-circle clones are EIP-1167 minimal proxies, so verify each
+implementation (`MoolaHubSusuEscrow`, `MoolaHubSusuAccumulation`) once.
+
+Required env: `MONAD_TESTNET_RPC_URL`, and `MONADSCAN_API_KEY` (an Etherscan v2
+multichain key) for the Etherscan path. Deploying with `--verify` auto-verifies;
+to verify an already-deployed contract:
+
+**Monadscan (Etherscan v2 — needs an API key):**
+```bash
+forge verify-contract <ADDRESS> src/MoolaHubGoalVault.sol:MoolaHubGoalVault \
+  --chain 10143 --verifier etherscan --etherscan-api-key "$MONADSCAN_API_KEY" \
+  --constructor-args $(cast abi-encode "constructor(address,address,uint16,address)" "$USDC_ADDRESS" "$FEE_RECIPIENT_ADDRESS" 200 "$OWNER_ADDRESS") \
+  --watch
+```
+
+**MonadVision / Sourcify (no API key, trailing slash required):**
+```bash
+forge verify-contract <ADDRESS> src/MoolaHubGoalVault.sol:MoolaHubGoalVault \
+  --chain 10143 --verifier sourcify --verifier-url https://sourcify-api-monad.blockvision.org/
+```
+
+**Hardhat alternative:** configure `etherscan.customChains` for `monadTestnet`
+with `apiURL https://api.etherscan.io/v2/api?chainid=10143` and
+`browserURL https://testnet.monadscan.com` (API key required), then
+`npx hardhat verify <ADDRESS> --network monadTestnet`.
+
+The verify step can print a misleading error even on success — confirm on the
+explorer (https://testnet.monadvision.com or https://testnet.monadscan.com).
+Source: docs.monad.xyz/guides/verify-smart-contract (foundry / hardhat).
+
 ---
 
 ## What you will deploy & who owns it
