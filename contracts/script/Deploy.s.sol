@@ -150,7 +150,7 @@ contract Deploy is Script {
         pure
         returns (string memory network, string memory explorer)
     {
-        if (chainId == 10143) return ("monad-testnet", "https://testnet.monadscan.com");
+        if (chainId == 10143) return ("monad-testnet", "https://testnet.monadvision.com");
         if (chainId == 84532) return ("base-sepolia", "https://sepolia.basescan.org");
         return ("", "");
     }
