@@ -8,7 +8,7 @@ export const walletsTable = pgTable("wallets", {
   userId: uuid("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }).unique(),
   address: text("address").notNull().unique(),
   privateKeyEnc: text("private_key_enc").notNull(),
-  network: text("network").notNull().default("base-sepolia"),
+  network: text("network").notNull().default("monad-testnet"),
   fundedAt: timestamp("funded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

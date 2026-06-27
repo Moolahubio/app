@@ -9,7 +9,7 @@ import {
   type Address,
   type Hex,
 } from "viem";
-import { base, baseSepolia } from "viem/chains";
+import { monadTestnet } from "viem/chains";
 import { db, circlesTable, goalsTable, walletsTable, transactionsTable } from "@workspace/db";
 import { acct, transfer } from "./ledger";
 import { unitsToCents } from "./chain";
@@ -31,13 +31,22 @@ import { logger } from "./logger";
  * the chain is authoritative and this reconciler makes the ledger match it.
  */
 
-const IS_MAINNET = process.env.BASE_NETWORK === "mainnet";
-const CHAIN = IS_MAINNET ? base : baseSepolia;
+const CHAIN = monadTestnet; // Monad Testnet (10143, MON); no Monad mainnet chain in viem
 const RPC_URL =
-  process.env.BASE_RPC_URL || (IS_MAINNET ? "https://mainnet.base.org" : "https://sepolia.base.org");
+  process.env.CHAIN_RPC_URL || process.env.BASE_RPC_URL || "https://testnet-rpc.monad.xyz";
 const GOAL_VAULT = (process.env.GOAL_VAULT_ADDRESS || "") as string;
 const INDEX_INTERVAL_MS = Number(process.env.INDEXER_INTERVAL_MS) || 20_000;
-const BLOCK_LOOKBACK = 9_000n;
+// ~400ms Monad blocks: a fixed 9k lookback covers only ~1h of wall-clock (vs ~5h
+// on Base). Widen to restore parity; override via env. A persisted high-water
+// cursor is the robust follow-up for outages longer than this window (plan §2.5).
+const BLOCK_LOOKBACK = BigInt(process.env.INDEXER_BLOCK_LOOKBACK ?? "50000");
+
+// SECURITY — fix before this module is ever wired into startup (M7): the indexer
+// is NOT started today (index.ts runs only the settlement + streak loops). Two
+// latent bugs must be resolved first: (1) indexGoalVault maps goalId->userId
+// ignoring the event `owner`, so a forged GoalDeposited could cross-credit a
+// victim's goal; (2) its dedup key (txHash:logIndex) differs from the settlement
+// reconciler's confirm stamp (txHash only), so it would double-post settled rows.
 
 // --- Event signatures (must match the contracts) ---------------------------
 const E_CONTRIBUTED = parseAbiItem("event Contributed(address indexed member, uint256 indexed round, uint256 amount)");
