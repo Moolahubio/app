@@ -9,12 +9,12 @@
 // Never prints the private key.
 import { createWalletClient, createPublicClient, http, getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { base, baseSepolia } from "viem/chains";
+import { monadTestnet } from "viem/chains";
 
-const IS_MAINNET = process.env.BASE_NETWORK === "mainnet";
+const IS_MAINNET = (process.env.CHAIN_NETWORK ?? process.env.BASE_NETWORK) === "mainnet";
 if (IS_MAINNET) throw new Error("Refusing to run against mainnet");
-const CHAIN = baseSepolia;
-const RPC = process.env.BASE_RPC_URL || "https://sepolia.base.org";
+const CHAIN = monadTestnet;
+const RPC = process.env.CHAIN_RPC_URL || process.env.BASE_RPC_URL || "https://testnet-rpc.monad.xyz";
 
 let pk = process.env.PLATFORM_PRIVATE_KEY;
 if (!pk) throw new Error("PLATFORM_PRIVATE_KEY missing");
@@ -61,6 +61,6 @@ for (const [name, addrRaw] of Object.entries(targets)) {
   const hash = await wallet.writeContract({ address, abi, functionName: "setTreasury", args: [recipient] });
   const rcpt = await pub.waitForTransactionReceipt({ hash });
   const after = await pub.readContract({ address, abi, functionName: "treasury" });
-  console.log(`${name} ${address}: ${before} -> ${after} | status=${rcpt.status} | tx https://sepolia.basescan.org/tx/${hash}`);
+  console.log(`${name} ${address}: ${before} -> ${after} | status=${rcpt.status} | tx https://testnet.monadvision.com/tx/${hash}`);
 }
 console.log("done");

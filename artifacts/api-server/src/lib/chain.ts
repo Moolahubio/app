@@ -13,21 +13,23 @@ import {
   type Address,
 } from "viem";
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
-import { base, baseSepolia } from "viem/chains";
+import { monadTestnet } from "viem/chains";
 
 /**
- * Base (EVM) chain integration via viem. USDC is an ERC-20 (6 decimals) on Base.
+ * Monad Testnet (EVM) chain integration via viem. USDC is an ERC-20 (6 decimals).
  *
  * Account generation and signing are local; reads, log queries, and submission
- * need network egress to the Base RPC. Where that's unavailable, calls fail
+ * need network egress to the Monad RPC. Where that's unavailable, calls fail
  * gracefully so the ledger-backed app keeps working; real on-chain settlement
- * happens wherever the app runs with RPC access (Base Sepolia).
+ * happens wherever the app runs with RPC access (Monad Testnet).
  */
 
-const IS_MAINNET = process.env.BASE_NETWORK === "mainnet";
-const CHAIN = IS_MAINNET ? base : baseSepolia;
+// Monad Testnet (chainId 10143, MON gas). viem has no Monad mainnet chain, so
+// there is no mainnet branch to select. Prefer CHAIN_RPC_URL; the legacy
+// BASE_RPC_URL is still read for a clean transition (plan §7).
+const CHAIN = monadTestnet;
 const RPC_URL =
-  process.env.BASE_RPC_URL || (IS_MAINNET ? "https://mainnet.base.org" : "https://sepolia.base.org");
+  process.env.CHAIN_RPC_URL || process.env.BASE_RPC_URL || "https://testnet-rpc.monad.xyz";
 const USDC_ADDRESS = (process.env.USDC_CONTRACT_ADDRESS || "") as string;
 const FACTORY_ADDRESS = (process.env.CIRCLE_FACTORY_ADDRESS || "") as string;
 const GOAL_VAULT_ADDRESS = (process.env.GOAL_VAULT_ADDRESS || "") as string;
@@ -39,8 +41,12 @@ function platformKey(): Hex | undefined {
 }
 
 const USDC_DECIMALS = 6;
-const GAS_TOPUP_WEI = 200_000_000_000_000n; // 0.0002 ETH — enough for a few testnet transfers
-const GAS_MIN_WEI = 50_000_000_000_000n; // top up when below 0.00005 ETH
+// Gas top-ups in MON (18-dp native; same wei math as ETH). Monad bills on the
+// gas LIMIT, not gas used, so per-tx cost runs higher than the gas consumed —
+// these defaults are deliberately generous and overridable via env. [VERIFY]
+// against real Monad costs before relying on them in production.
+const GAS_TOPUP_WEI = BigInt(process.env.GAS_TOPUP_WEI ?? "50000000000000000"); // 0.05 MON
+const GAS_MIN_WEI = BigInt(process.env.GAS_MIN_WEI ?? "10000000000000000"); // top up below 0.01 MON
 
 const ERC20_ABI = parseAbi([
   "function balanceOf(address owner) view returns (uint256)",
@@ -131,7 +137,7 @@ export function onchainEnabled(): boolean {
  * `ENABLE_TEST_FAUCET=true` only in intentional dev/test environments.
  */
 export function faucetEnabled(): boolean {
-  if (IS_MAINNET) return false;
+  // Opt-in only (synthetic funding with no real source); no Monad mainnet target exists.
   return process.env.ENABLE_TEST_FAUCET === "true";
 }
 
@@ -149,7 +155,8 @@ export function faucetEnabled(): boolean {
  * genuinely non-mintable token).
  */
 export function depositSyncEnabled(): boolean {
-  if (IS_MAINNET) return true;
+  // Opt-in only: a mock-mintable testnet token would otherwise let anyone mint
+  // then sync fabricated balance into the ledger. No Monad mainnet target exists yet.
   return process.env.ENABLE_DEPOSIT_SYNC === "true";
 }
 
@@ -169,11 +176,13 @@ export function platformAddress(): string | null {
 }
 
 export function networkName(): string {
-  return IS_MAINNET ? "base" : "base-sepolia";
+  return "monad-testnet";
 }
 
 export function explorerUrl(): string {
-  return process.env.BASE_EXPLORER_URL || "https://sepolia.basescan.org";
+  return (
+    process.env.CHAIN_EXPLORER_URL || process.env.BASE_EXPLORER_URL || "https://testnet.monadvision.com"
+  );
 }
 
 /** Generate a fresh EVM account (offline). */
@@ -209,7 +218,7 @@ function errMsg(e: unknown): string {
 }
 
 /**
- * Ensure a wallet holds enough ETH for gas (testnet, platform-funded). Best
+ * Ensure a wallet holds enough MON for gas (testnet, platform-funded). Best
  * effort: silently no-ops if the platform key/RPC is unavailable.
  */
 export async function ensureGas(address: string): Promise<void> {
@@ -336,7 +345,7 @@ export async function sendUsdc(params: {
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
   } catch (e) {
-    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+    return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
   }
 }
 
@@ -436,7 +445,7 @@ export async function deployCircleEscrow(params: {
     }
     return { status: "confirmed", hash, escrow: getAddress(escrow) };
   } catch (e) {
-    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+    return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
   }
 }
 
@@ -461,7 +470,7 @@ export async function mintUsdc(params: { to: string; amountCents: number }): Pro
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
   } catch (e) {
-    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+    return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
   }
 }
 
@@ -531,7 +540,7 @@ export async function escrowContribute(params: {
     }
     return { status: "confirmed", hash, settledRound };
   } catch (e) {
-    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+    return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
   }
 }
 
@@ -635,7 +644,7 @@ export async function goalDeposit(params: {
     }
     return { status: "confirmed", hash };
   } catch (e) {
-    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+    return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
   }
 }
 
@@ -715,7 +724,7 @@ export async function goalWithdraw(params: {
       netCents: unitsToCents(gross) - feeCents,
     };
   } catch (e) {
-    return { status: "skipped", reason: `base rpc unreachable: ${errMsg(e)}` };
+    return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
   }
 }
 
@@ -729,7 +738,11 @@ export async function getIncomingUsdc(address: string): Promise<IncomingPayment[
   try {
     const pub = publicClient();
     const latest = await pub.getBlockNumber();
-    const fromBlock = latest > 9_000n ? latest - 9_000n : 0n;
+    // Monad's ~400ms blocks make a fixed 9k lookback cover only ~1h of wall-clock
+    // (vs ~5h on Base). Widen to restore parity; a persisted high-water cursor is
+    // the robust follow-up for outages longer than this window (plan §2.5).
+    const lookback = BigInt(process.env.SYNC_BLOCK_LOOKBACK ?? "50000");
+    const fromBlock = latest > lookback ? latest - lookback : 0n;
     const logs = await pub.getLogs({
       address: usdc,
       event: ERC20_ABI[2],
