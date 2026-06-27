@@ -122,8 +122,9 @@ export function ForgotPasswordStep({
         <div>
           <h2 className="font-display text-lg font-bold text-foreground">Reset your password</h2>
           <p className="text-sm text-muted-foreground">
-            If an account exists for <span className="font-medium text-foreground">{email}</span>, a
-            6-digit code is on its way. Enter it with a new password.
+            A 6-digit code is on its way to{" "}
+            <span className="font-medium text-foreground">{email}</span>. Enter it with a new
+            password.
           </p>
         </div>
       </div>

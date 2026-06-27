@@ -57,10 +57,17 @@ linkage only.
 - Reset codes live in a SEPARATE `password_reset_codes` table (sibling of
   `email_verification_codes`, same shape + brute-force `attempts` burn), so an
   in-flight reset never collides with email verification.
-- `/auth/forgot-password` ALWAYS returns `{ok:true}` and only issues a code when
-  the matched account has a `passwordHash`. Privy-only (passwordless) accounts get
-  no code — they sign in via Privy, so email control must not mint a password
-  login for them (mirrors the email-compromise invariant above).
+- `/auth/forgot-password` reports the outcome PLAINLY (product decision, owner
+  asked for "tell me when the email isn't registered"): `404` when no/deleted
+  account matches, `409` when the account is passwordless (legacy Privy/social),
+  `200 {ok:true}` + code only when the account has a `passwordHash`. This
+  intentionally REVERSES the old anti-enumeration "always {ok:true}" behavior.
+  **Why:** users hit a silent dead-end ("code on its way" but none arrived).
+  Email harvesting is mitigated by the per-IP/per-email throttle (generic 429
+  fired BEFORE the user lookup), so existence leak can't be abused at scale.
+  Passwordless accounts still NEVER get a reset code — email control must not mint
+  a password login (email-compromise invariant); they add a password while signed
+  in via `/auth/password`. Do NOT revert to silent {ok:true} without owner sign-off.
 - `/auth/reset-password` returns the SAME generic "invalid or expired" 400 for a
   missing/passwordless account and for a bad/burned code (no existence leak). On
   success it sets `passwordHash`, stamps `emailVerifiedAt` if unset, and DELETES
@@ -76,9 +83,9 @@ linkage only.
 - The two password-set paths are the canonical model and must stay in sync:
   passwordless (legacy Privy) accounts set a FIRST password ONLY via authenticated
   `/auth/password` (no current pw, stamps emailVerifiedAt); `/auth/forgot-password`
-  issues a code ONLY when `user.passwordHash` exists (passwordless → silent no-op,
-  still `{ok:true}`). Do not re-add a "verified-email bootstrap" branch to
-  forgot-password — it violates the email-compromise invariant and breaks the e2e.
+  issues a code ONLY when `user.passwordHash` exists (passwordless → 409, not a
+  code). Do not re-add a "verified-email bootstrap" branch to forgot-password — it
+  violates the email-compromise invariant and breaks the e2e.
 - Offline auth e2e: `auth-http.e2e.ts` (in `test:auth`). Email no-ops without
   `RESEND_API_KEY`, so verification codes can't be read from email — seed the code
   row directly with `sha256(code)` (matches the lib's `hashCode`) to drive

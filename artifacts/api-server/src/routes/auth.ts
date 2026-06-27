@@ -377,15 +377,29 @@ router.post("/auth/forgot-password", requireJsonAndAllowedOrigin, async (req, re
   recordResetRequest("forgot", ip, email);
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  // Only accounts that ALREADY have a password are issued a reset code. A
-  // passwordless (legacy Privy) account is deliberately refused: email control
-  // alone must never mint a password login for it, or an email compromise would
-  // bypass Privy entirely. Such accounts add a password while signed in, via
-  // /auth/password. The response is always { ok: true } regardless, so it never
-  // leaks whether an account exists or which auth method it uses.
-  if (user && !user.deletedAt && user.passwordHash) {
-    await issuePasswordResetCode(user.id, email, user.name);
+
+  // Product decision: tell the user plainly when no account matches that email,
+  // instead of the silent always-{ok:true}. Email harvesting is mitigated by the
+  // per-IP/per-email throttle above (a generic 429), so this cannot be abused to
+  // enumerate accounts at scale.
+  if (!user || user.deletedAt) {
+    res.status(404).json({ error: "We couldn't find an account with that email address." });
+    return;
   }
+
+  // A passwordless (legacy Privy / social) account is still never issued a reset
+  // code: email control alone must not mint a password login, or an email
+  // compromise would bypass the social provider. Point them to their existing
+  // sign-in method; they can add a password afterwards from account settings.
+  if (!user.passwordHash) {
+    res.status(409).json({
+      error:
+        "This account doesn't use a password yet. Sign in the way you joined, then add a password from your account settings.",
+    });
+    return;
+  }
+
+  await issuePasswordResetCode(user.id, email, user.name);
   res.json(ForgotPasswordResponse.parse({ ok: true }));
 });
 

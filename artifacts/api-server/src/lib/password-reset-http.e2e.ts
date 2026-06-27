@@ -2,8 +2,9 @@
  * End-to-end test for the forgot-password flow, driven through the ACTUAL HTTP
  * API. Proves the security-critical guarantees of Task #49:
  *
- *   - /auth/forgot-password never reveals whether an account exists (always 200
- *     + {ok:true}), and issues a code only for an existing password account,
+ *   - /auth/forgot-password reports a missing account (404) and a passwordless
+ *     account (409) plainly, and issues a code only for an existing password
+ *     account ({ok:true}),
  *   - /auth/reset-password rejects an invalid/expired code (400) with a generic
  *     message and does not change the password,
  *   - reset codes are NOT brute-forceable: a code is burned after a fixed number
@@ -12,7 +13,7 @@
  *     in and the NEW password does,
  *   - resetting invalidates all existing sessions (a pre-reset session token can
  *     no longer call /auth/me),
- *   - a Privy-only account (no password) is never issued a reset code.
+ *   - a Privy-only account (no password) is never issued a reset code (409).
  *
  * Scope: on-chain settlement and email are disabled BEFORE any import so this is
  * deterministic and fully offline. APP_ENCRYPTION_KEY must remain set.
@@ -116,16 +117,20 @@ async function run() {
     .returning();
   userIds.push(user.id);
 
-  // --- 1) forgot-password never reveals account existence --------------------
+  // --- 1) forgot-password reports a known vs an unknown account --------------
   const forgotKnown = await api<{ ok: boolean }>("POST", "/api/auth/forgot-password", { body: { email } });
-  assert.equal(forgotKnown.status, 200, "forgot-password returns 200 for a known account");
-  assert.equal(forgotKnown.body.ok, true, "forgot-password returns {ok:true} for a known account");
+  assert.equal(forgotKnown.status, 200, "forgot-password returns 200 for a known password account");
+  assert.equal(forgotKnown.body.ok, true, "forgot-password returns {ok:true} for a known password account");
 
-  const forgotUnknown = await api<{ ok: boolean }>("POST", "/api/auth/forgot-password", {
+  const forgotUnknown = await api<{ ok?: boolean; error?: string }>("POST", "/api/auth/forgot-password", {
     body: { email: `nobody+${runId}@moolahub.test` },
   });
-  assert.equal(forgotUnknown.status, 200, "forgot-password returns 200 for an unknown account (no leak)");
-  assert.equal(forgotUnknown.body.ok, true, "forgot-password returns {ok:true} for an unknown account");
+  assert.equal(forgotUnknown.status, 404, "forgot-password returns 404 for an unknown account");
+  assert.ok(
+    typeof forgotUnknown.body.error === "string",
+    "forgot-password returns an error message for an unknown account",
+  );
+  assert.equal(forgotUnknown.body.ok, undefined, "forgot-password does NOT return {ok:true} for an unknown account");
   const [noRow] = await db
     .select()
     .from(passwordResetCodesTable)
@@ -207,10 +212,14 @@ async function run() {
     .returning();
   userIds.push(privyUser.id);
 
-  const forgotPrivy = await api<{ ok: boolean }>("POST", "/api/auth/forgot-password", {
+  const forgotPrivy = await api<{ ok?: boolean; error?: string }>("POST", "/api/auth/forgot-password", {
     body: { email: privyEmail },
   });
-  assert.equal(forgotPrivy.status, 200, "forgot-password returns 200 for a Privy-only account (no leak)");
+  assert.equal(forgotPrivy.status, 409, "forgot-password returns 409 for a Privy-only (passwordless) account");
+  assert.ok(
+    typeof forgotPrivy.body.error === "string",
+    "forgot-password returns an error message for a passwordless account",
+  );
   const [privyRow] = await db
     .select()
     .from(passwordResetCodesTable)
