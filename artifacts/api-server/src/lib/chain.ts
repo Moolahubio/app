@@ -181,7 +181,7 @@ export function networkName(): string {
 
 export function explorerUrl(): string {
   return (
-    process.env.CHAIN_EXPLORER_URL || process.env.BASE_EXPLORER_URL || "https://testnet.monadvision.com"
+    process.env.CHAIN_EXPLORER_URL || process.env.MONAD_EXPLORER_URL || "https://testnet.monadvision.com"
   );
 }
 

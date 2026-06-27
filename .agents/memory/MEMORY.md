@@ -2,7 +2,7 @@
 - [MoolaHub ledger invariants](moolahub-ledger-invariants.md) — reservation + ledger.transfer must share one tx; deposit dedup uses the bare on-chain tx hash. Past review rejections.
 - [MoolaHub Susu target-payout](moolahub-susu-target-payout.md) — target payout + group size N; 2% fee on TOP of base; fixed roster auto-starts at N; manual start blocked; legacy paths gated on targetMembers==null.
 - [MoolaHub Account section](moolahub-account.md) — STALE on auth ("email/password removed" is wrong; it is PRIMARY). Still valid: NO KYC; WebAuthn challenges single-use; private object route auth-guarded.
-- [MoolaHub email+password auth](moolahub-email-password-auth.md) — email+password is PRIMARY; Privy never logs into a password account; verification codes burn after N attempts; username public+CI-unique vs private legal name; completion gate for legacy Privy accounts.
+- [MoolaHub email+password auth](moolahub-email-password-auth.md) — email+password is PRIMARY; Privy never logs into a password account; forgot-password reports plainly (404/409/200, NOT silent {ok:true}); codes burn after N attempts; username public+CI-unique; completion gate for legacy Privy accounts.
 - [MoolaHub client auth/logout](moolahub-auth-logout.md) — logout: setQueryData(getMe,null) then removeQueries excluding getMe, then navigate; invalidate/remove-all race refetch and keep stale auth.
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.

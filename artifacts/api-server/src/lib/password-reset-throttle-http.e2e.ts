@@ -124,7 +124,8 @@ async function run() {
     const r = await api<{ error?: string; ok?: boolean }>("POST", "/api/auth/forgot-password", {
       email: ghost,
     });
-    assert.ok(r.status === 200 || r.status === 429, `ghost forgot attempt ${i + 1} is 200 or 429 (got ${r.status})`);
+    // A non-existent account now returns 404 until the throttle trips (429).
+    assert.ok(r.status === 404 || r.status === 429, `ghost forgot attempt ${i + 1} is 404 or 429 (got ${r.status})`);
     if (r.status === 429) {
       sawGhost429 = true;
       ghost429Body = r.body;
@@ -159,7 +160,8 @@ async function run() {
       sawIp429 = true;
       break;
     }
-    assert.equal(r.status, 200, `spray attempt ${i + 1} is 200 until the IP locks (got ${r.status})`);
+    // Each spray address is non-existent, so it returns 404 until the IP locks.
+    assert.equal(r.status, 404, `spray attempt ${i + 1} is 404 until the IP locks (got ${r.status})`);
   }
   assert.ok(sawIp429, "forgot-password trips a per-IP lock even when every request uses a new email");
 
