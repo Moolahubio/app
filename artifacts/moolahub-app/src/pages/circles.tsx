@@ -300,7 +300,7 @@ export default function CirclesPage() {
           contributes a fixed amount each round. In a <span className="font-medium text-foreground">rotation</span>{" "}
           circle, one member receives the full pot each round until everyone has had a turn. In an{" "}
           <span className="font-medium text-foreground">accumulation</span> circle, everyone saves into a shared
-          pot and gets their own savings back at the end. Everything is verifiable on Base.
+          pot and gets their own savings back at the end. Everything is verifiable on Monad.
         </p>
       </Card>
 

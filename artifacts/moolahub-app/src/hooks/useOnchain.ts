@@ -13,7 +13,7 @@ import { idToBytes32 } from "../lib/onchain/ids";
  * ERC-1271), so token-pulling actions do `approve` then the call — two sponsored
  * user-ops. The user signs each.
  *
- * Each action returns the final transaction hash; surface it as a Basescan link.
+ * Each action returns the final transaction hash; surface it as a Monad explorer link.
  */
 export function useOnchain() {
   const { client } = useSmartWallets();

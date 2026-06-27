@@ -52,7 +52,7 @@ export default function ActivityPage() {
       <PageHeader
         eyebrow="Activity"
         title="Your money, on the record"
-        description="Every deposit, contribution, and payout. Each one is linked to its proof on Base."
+        description="Every deposit, contribution, and payout. Each one is linked to its proof on Monad."
       />
 
       {reminder && (

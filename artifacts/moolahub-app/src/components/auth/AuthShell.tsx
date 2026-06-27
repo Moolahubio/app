@@ -19,7 +19,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             Saving, made social
           </p>
           <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
-            Built on Base
+            Built on Monad
           </p>
           <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
             Save today.
@@ -40,7 +40,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             <Lock className="h-4 w-4 text-jade-400" /> You hold the keys
           </span>
           <span className="inline-flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-jade-400" /> Verified on Base
+            <ShieldCheck className="h-4 w-4 text-jade-400" /> Verified on Monad
           </span>
           <span className="inline-flex items-center gap-2">
             <Users className="h-4 w-4 text-jade-400" /> People you trust

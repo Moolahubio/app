@@ -8,7 +8,7 @@ import { formatMoney, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-const NETWORK = import.meta.env.VITE_BASE_NETWORK === "mainnet" ? "Base" : "Base Sepolia";
+const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
 export default function WalletPage() {
   const { data: wallet, isLoading } = useGetWallet();
@@ -33,7 +33,7 @@ export default function WalletPage() {
         <PageHeader
           eyebrow="Wallet"
           title="Get your wallet ready"
-          description="MoolaHub runs on USDC over Base. Set up your wallet to deposit, save, and withdraw."
+          description="MoolaHub runs on USDC over Monad. Set up your wallet to deposit, save, and withdraw."
         />
         <WalletSetupCard />
       </div>
@@ -46,7 +46,7 @@ export default function WalletPage() {
       <PageHeader
         eyebrow="Wallet"
         title="Deposit & withdraw USDC"
-        description="MoolaHub runs on USDC over Base. Add USDC to your wallet, or send it to any Base wallet address."
+        description="MoolaHub runs on USDC over Monad. Add USDC to your wallet, or send it to any Monad wallet address."
       />
 
       {/* balance + receive address */}
@@ -100,7 +100,7 @@ export default function WalletPage() {
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground">
-            Send USDC to your address above from any Base wallet
+            Send USDC to your address above from any Monad wallet
             {wallet.syncEnabled ? ", then check for it:" : "."}
           </p>
           {wallet.syncEnabled && (
@@ -168,7 +168,7 @@ export default function WalletPage() {
             </span>
             <div>
               <h2 className="font-display text-lg font-bold text-foreground">Withdraw</h2>
-              <p className="text-xs text-muted-foreground">Send USDC to any Base address</p>
+              <p className="text-xs text-muted-foreground">Send USDC to any Monad address</p>
             </div>
           </div>
           <div className="mt-5">
@@ -194,9 +194,9 @@ export default function WalletPage() {
       <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-muted-foreground">
-          MoolaHub is non-custodial: funds settle to your own Base wallet, and every movement
+          MoolaHub is non-custodial: funds settle to your own Monad wallet, and every movement
           is recorded on the ledger with an on-chain reference.{" "}
-          <Badge tone="jade" className="ml-1">Built on Base</Badge>
+          <Badge tone="jade" className="ml-1">Built on Monad</Badge>
         </p>
       </Card>
     </div>

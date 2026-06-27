@@ -325,11 +325,11 @@ export default function CircleDetailPage() {
                 <h2 className="font-display text-lg font-bold text-foreground">On-chain escrow</h2>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Contributions settle into this Susu escrow on Base. A{" "}
+                Contributions settle into this Susu escrow on Monad. A{" "}
                 {((circle.feeBps ?? 0) / 100).toFixed(0)}% protocol fee is taken from each payout.
               </p>
               <a
-                href={`${circle.explorerUrl ?? "https://sepolia.basescan.org"}/address/${circle.contractAddress}`}
+                href={`${circle.explorerUrl ?? "https://testnet.monadvision.com"}/address/${circle.contractAddress}`}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700"
@@ -355,7 +355,7 @@ export default function CircleDetailPage() {
                     </div>
                     {h.txHash ? (
                       <a
-                        href={`${circle.explorerUrl ?? "https://sepolia.basescan.org"}/tx/${h.txHash}`}
+                        href={`${circle.explorerUrl ?? "https://testnet.monadvision.com"}/tx/${h.txHash}`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 dark:text-jade-300 transition hover:text-jade-800"

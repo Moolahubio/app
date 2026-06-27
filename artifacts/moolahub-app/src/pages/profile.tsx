@@ -40,7 +40,7 @@ type Item = {
 
 const accountItems: Item[] = [
   { icon: UserCircle, label: "Profile information", detail: "Name, username, date of birth", href: "/profile/information" },
-  { icon: WalletIcon, label: "Wallets", detail: "Balance & address on Base", href: "/wallet" },
+  { icon: WalletIcon, label: "Wallets", detail: "Balance & address on Monad", href: "/wallet" },
 ];
 
 const settingsItems: Item[] = [
@@ -249,7 +249,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2">
             <WalletIcon className="h-4 w-4 text-jade-400" />
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
-              Base wallet · non-custodial
+              Monad wallet · non-custodial
             </p>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">

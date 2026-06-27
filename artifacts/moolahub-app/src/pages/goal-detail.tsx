@@ -21,7 +21,7 @@ import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUEN
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-const EXPLORER_FALLBACK = "https://sepolia.basescan.org";
+const EXPLORER_FALLBACK = "https://testnet.monadvision.com";
 
 export default function GoalDetailPage() {
   const { id } = useParams();
@@ -243,7 +243,7 @@ export default function GoalDetailPage() {
                 <h2 className="font-display text-lg font-bold text-foreground">On-chain vault</h2>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Funds you allocate are deposited into this vault on Base. A {feePct}% protocol fee is
+                Funds you allocate are deposited into this vault on Monad. A {feePct}% protocol fee is
                 taken on each withdrawal.
               </p>
               <a
