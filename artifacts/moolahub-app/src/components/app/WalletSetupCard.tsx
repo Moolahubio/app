@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { PrivyProvider, usePrivy, useLogin as usePrivyLoginHook } from "@privy-io/react-auth";
+import { monadTestnet } from "viem/chains";
 import { Wallet, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import {
@@ -13,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/hooks/use-theme";
 import { apiErrorMessage } from "@/lib/utils";
 
-const NETWORK = import.meta.env.VITE_BASE_NETWORK === "mainnet" ? "Base" : "Base Sepolia";
+const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
 function SetupButton() {
   const { getAccessToken, authenticated } = usePrivy();
@@ -99,7 +100,7 @@ function SetupButton() {
 
       <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-jade-600" />
-        Your wallet is yours — funds settle on Base and every movement is recorded on the ledger.
+        Your wallet is yours. Funds settle on Monad and every movement is recorded on the ledger.
       </p>
     </div>
   );
@@ -129,6 +130,8 @@ export function WalletSetupCard() {
       <PrivyProvider
         appId={appId}
         config={{
+          defaultChain: monadTestnet,
+          supportedChains: [monadTestnet],
           appearance: {
             theme: resolvedTheme,
             accentColor: "#0E9E6E",

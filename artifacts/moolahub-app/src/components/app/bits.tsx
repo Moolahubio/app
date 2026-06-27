@@ -41,7 +41,7 @@ export function BackLink({ href, label }: { href: string; label: string }) {
   );
 }
 
-/** On-chain transaction reference — links to Base block explorer. */
+/** On-chain transaction reference — links to the Monad block explorer. */
 export function TxTag({
   hash,
   confirmed = true,
@@ -49,7 +49,7 @@ export function TxTag({
   hash: string;
   confirmed?: boolean;
 }) {
-  const explorer = "https://sepolia.basescan.org";
+  const explorer = "https://testnet.monadvision.com";
   const short = hash.length > 14 ? `${hash.slice(0, 8)}…${hash.slice(-6)}` : hash;
   const href = `${explorer.replace(/\/$/, "")}/tx/${hash}`;
 

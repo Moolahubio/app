@@ -24,7 +24,7 @@ export function useOnchainConfig() {
   });
 }
 
-/** Build a Basescan tx link. */
+/** Build an explorer tx link. */
 export function txLink(explorerUrl: string, hash: string): string {
   return `${explorerUrl.replace(/\/$/, "")}/tx/${hash}`;
 }

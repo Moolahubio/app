@@ -131,7 +131,7 @@ export function WithdrawForm({
         type="text"
         autoComplete="off"
         spellCheck={false}
-        placeholder="Recipient Base address (0x…)"
+        placeholder="Recipient Monad address (0x…)"
         required
         value={destination}
         onChange={e => setDestination(e.target.value)}
