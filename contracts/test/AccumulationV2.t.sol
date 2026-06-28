@@ -150,7 +150,7 @@ contract AccumulationV2Test is Test {
         vm.prank(alice);
         acc.withdraw();
         assertApproxEqAbs(usdc.balanceOf(alice), AMT, 1); // fee-free
-        assertEq(usdc.balanceOf(treasury), 0);
+        assertLe(usdc.balanceOf(treasury), 5); // at most rounding dust from the last-out sweep
     }
 
     function test_contribute_oncePerRound() public {

@@ -83,11 +83,14 @@ contract MoolaHubSusuAccumulationV2 is Initializable, ReentrancyGuard {
     mapping(address => uint256) public sharesOf;
     uint256 public totalShares;
     mapping(address => uint256) public principalOf; // contributed cost basis per member
+    mapping(address => uint256) public roundsContributedOf; // # rounds contributed (compliance)
     mapping(uint256 => mapping(address => bool)) public contributed; // round => member => paid
     mapping(uint256 => bool) public roundFlagged;
 
     event Contributed(address indexed member, uint256 indexed round, uint256 amount);
-    event Withdrawn(address indexed member, uint256 amount, uint256 fee);
+    event AccumulationSettled(
+        address indexed member, uint256 principal, uint256 payout, uint256 fee, uint256 yieldForfeited
+    );
     event DelinquentsFlagged(uint256 indexed round, uint256 count);
     event CircleCancelled(address indexed by);
     event ExcessSwept(uint256 amount);
@@ -178,6 +181,7 @@ contract MoolaHubSusuAccumulationV2 is Initializable, ReentrancyGuard {
 
         // Effects (CEI).
         contributed[round][msg.sender] = true;
+        roundsContributedOf[msg.sender] += 1; // compliance: contributed every round => == totalRounds
         sharesOf[msg.sender] += sh;
         totalShares += sh;
         principalOf[msg.sender] += contributionAmount;
@@ -191,31 +195,84 @@ contract MoolaHubSusuAccumulationV2 is Initializable, ReentrancyGuard {
 
     // --- Withdrawals ---------------------------------------------------------
 
-    /// @notice Withdraw the current value of your own shares (principal + your
-    ///         pro-rata yield, or less after a loss). 2% fee normally; fee-free if
-    ///         the circle was cancelled. Reverts while locked before maturity.
+    /// @notice Withdraw your own shares. Forfeiture rules (plan §5.8), judged at
+    ///         maturity from the on-chain contribution record:
+    ///         - COMPLIANT (contributed every round): receive share value
+    ///           (principal + your yield) minus the 2% fee on that amount.
+    ///         - DELINQUENT (missed any round): receive only principal (capped at
+    ///           the redeemable value if a loss occurred) minus the 2% fee on that
+    ///           amount; your accrued YIELD is forfeited. It stays in the vault and
+    ///           lifts the exchange rate for the remaining (compliant) savers —
+    ///           no loop, no extra gas, redistributed pro-rata to their holdings
+    ///           (which, since compliant members save the same schedule, is ~equal).
+    ///         - CANCELLED circle: fee-free, full share value, no forfeiture.
+    ///         - Unlocked circle, withdrawn before maturity: full share value minus
+    ///           the fee (compliance is not yet determinable, so no forfeiture).
+    ///         If the LAST shares are burned and forfeited yield remains with no
+    ///         compliant saver to receive it (all-delinquent), it goes to the
+    ///         treasury (§5.8B) so it can never be stranded.
+    ///
+    ///         SETTLEMENT ORDER (operational, §5.8G): forfeited yield only reaches
+    ///         savers STILL in the vault when the delinquent withdraws. The backend
+    ///         keeper MUST settle delinquent members before compliant ones at
+    ///         maturity; otherwise a compliant saver who exits first loses their
+    ///         share of the redistribution (it falls through to the treasury).
     function withdraw() external nonReentrant {
         bool cancelled = status == Status.Cancelled;
-        if (!cancelled && lockUntilMaturity && !isMatured()) revert Locked();
+        bool matured = isMatured();
+        if (!cancelled && lockUntilMaturity && !matured) revert Locked();
 
         uint256 shares = sharesOf[msg.sender];
         if (shares == 0) revert NothingSaved();
-        uint256 amount = _toAssets(shares, Math.Rounding.Floor);
+        uint256 principal = principalOf[msg.sender];
+        uint256 gross = _toAssets(shares, Math.Rounding.Floor); // current value of the member's shares
 
-        // Effects.
+        // Effects: burn ALL the member's shares and clear their cost basis.
         sharesOf[msg.sender] = 0;
         totalShares -= shares;
         principalOf[msg.sender] = 0;
 
-        uint256 fee = cancelled ? 0 : (amount * feeBps) / BPS;
-        uint256 net = amount - fee;
-        emit Withdrawn(msg.sender, amount, fee);
+        // `settleBase` is the amount that actually leaves the vault for this member
+        // (payout + fee). For a delinquent member it is capped at principal, so the
+        // forfeited yield (gross - settleBase) stays deployed and accrues to the
+        // remaining savers via the exchange rate.
+        uint256 settleBase;
+        uint256 fee;
+        if (cancelled) {
+            settleBase = gross; // fee-free, full value
+        } else if (matured && roundsContributedOf[msg.sender] < totalRounds) {
+            settleBase = principal < gross ? principal : gross; // min(principal, redeemable)
+            fee = (settleBase * feeBps) / BPS;
+        } else {
+            settleBase = gross; // compliant at maturity, or an unlocked early exit
+            fee = (settleBase * feeBps) / BPS;
+        }
 
-        // Interactions: cover the payout from idle first, then the adapter.
+        uint256 payout = settleBase - fee;
+        uint256 forfeited = gross - settleBase; // 0 except for a delinquent member
+        emit AccumulationSettled(msg.sender, principal, payout, fee, forfeited);
+
+        // Interactions: pull only `settleBase`; the forfeited remainder stays
+        // deployed (redistributing via the exchange rate). Idle-first.
         uint256 idle = usdc.balanceOf(address(this));
-        if (amount > idle) adapter.withdraw(amount - idle, address(this));
+        if (settleBase > idle) adapter.withdraw(settleBase - idle, address(this));
         if (fee > 0) usdc.safeTransfer(treasury, fee);
-        usdc.safeTransfer(msg.sender, net); // only ever to the owner of the funds
+        usdc.safeTransfer(msg.sender, payout); // only ever to the owner of the funds
+
+        // All-delinquent / last-out: once no shares remain, route any residual
+        // (orphaned forfeited yield + dust) to the treasury so nothing is stranded.
+        if (totalShares == 0) {
+            uint256 deployed = address(adapter) == address(0) ? 0 : adapter.maxWithdraw();
+            if (deployed > 0) adapter.withdraw(deployed, address(this));
+            uint256 residual = usdc.balanceOf(address(this));
+            if (residual > 0) usdc.safeTransfer(treasury, residual);
+        }
+    }
+
+    /// @notice True if `member` contributed in every round (judged any time, but
+    ///         only final once the circle has matured).
+    function isCompliant(address member) external view returns (bool) {
+        return roundsContributedOf[member] == totalRounds;
     }
 
     // --- Delinquency / admin -------------------------------------------------
