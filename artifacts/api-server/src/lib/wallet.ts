@@ -5,7 +5,7 @@ import { encryptSecret, decryptSecret } from "./crypto";
 import { generateAccount, ensureGas, onchainEnabled, networkName } from "./chain";
 
 /**
- * Create a Base (EVM) wallet for a user. The account is generated locally and
+ * Create a Monad (EVM) wallet for a user. The account is generated locally and
  * its private key encrypted at rest. When on-chain is configured, the wallet is
  * gas-funded (best-effort, in the background) so it can transact.
  */

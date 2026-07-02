@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: MoolaHub API — social savings platform on Base blockchain
+  description: MoolaHub API — social savings platform on Monad blockchain
 servers:
   - url: /api
     description: Base API path
@@ -718,7 +718,7 @@ paths:
     post:
       operationId: withdrawFunds
       tags: [wallet]
-      summary: Withdraw USDC to external Base address
+      summary: Withdraw USDC to external Monad address
       requestBody:
         required: true
         content:
@@ -1938,7 +1938,7 @@ components:
           type: integer
         address:
           type: ["string", "null"]
-          description: The user's Base wallet address, or null when no wallet has been set up yet.
+          description: The user's Monad wallet address, or null when no wallet has been set up yet.
         network:
           type: string
         onchainEnabled:

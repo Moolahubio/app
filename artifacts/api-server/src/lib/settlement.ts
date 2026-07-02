@@ -14,7 +14,7 @@ import { logger } from "./logger";
  * On-chain settlement reconciler.
  *
  * The double-entry ledger is the source of truth and commits synchronously. The
- * matching USDC transfer on Base is enqueued in `onchain_transfers` and settled
+ * matching USDC transfer on Monad is enqueued in `onchain_transfers` and settled
  * here, out of band. Instead of silently degrading a money movement to
  * ledger-only when the platform/user wallet is unfunded or the RPC is
  * unreachable, the transfer stays "pending" and is retried until it confirms.

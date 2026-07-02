@@ -59,8 +59,8 @@ export const LESSONS: LessonDef[] = [
         text: "USDC (USD Coin) is a stablecoin — a cryptocurrency whose value is pegged 1:1 to the US dollar. Unlike Bitcoin, 1 USDC always equals $1.00. It is issued by Circle, a regulated financial company, with dollar reserves fully audited and verified."
       },
       {
-        heading: "Why USDC on Base?",
-        text: "Base is a blockchain built by Coinbase that is fast, cheap, and environmentally friendly. Sending USDC on Base costs fractions of a cent and settles in seconds — compared to traditional wire transfers that can take days and cost $25–$50."
+        heading: "Why USDC on Monad?",
+        text: "Monad is a high-performance, EVM-compatible blockchain that is fast, cheap, and energy-efficient. Sending USDC on Monad costs fractions of a cent and settles in about a second — compared to traditional wire transfers that can take days and cost $25–$50."
       },
       {
         heading: "Is It Safe?",
@@ -69,7 +69,7 @@ export const LESSONS: LessonDef[] = [
     ],
     takeaways: [
       "USDC is a digital dollar — 1 USDC = $1.00, always",
-      "It runs on Base blockchain: fast, cheap, and transparent",
+      "It runs on the Monad blockchain: fast, cheap, and transparent",
       "MoolaHub is non-custodial — you control your funds at all times",
       "On-chain transactions are publicly verifiable, adding trust to your circles"
     ]
@@ -150,14 +150,14 @@ export const LESSONS: LessonDef[] = [
         text: "Traditional Susus require trust in a person — usually the organizer. If they disappear with the pot, there is no recourse. On-chain Susus use smart contracts: code that automatically distributes funds according to the rules everyone agreed to. No single person can go rogue."
       },
       {
-        heading: "The Base Blockchain",
-        text: "MoolaHub uses Base — a blockchain built by Coinbase. It processes transactions in about 2 seconds for fractions of a cent in fees. It uses proof-of-stake consensus, which uses 99.95% less energy than older blockchains. It is designed for exactly the kind of everyday financial transactions MoolaHub powers."
+        heading: "The Monad Blockchain",
+        text: "MoolaHub uses Monad — a high-performance, EVM-compatible Layer-1 blockchain. It settles transactions in about a second for fractions of a cent in fees, thanks to parallel execution that lets it handle thousands of transactions per second. It uses proof-of-stake consensus, far more energy-efficient than older blockchains. It is designed for exactly the kind of everyday financial transactions MoolaHub powers."
       }
     ],
     takeaways: [
       "A blockchain is a public, tamper-resistant ledger maintained by thousands of computers",
       "Smart contracts enforce rules automatically — no trusted middleman required",
-      "Base blockchain is fast, cheap, and designed for everyday financial use",
+      "The Monad blockchain is fast, cheap, and designed for everyday financial use",
       "On-chain transparency means your circle's funds can be verified by anyone"
     ]
   },
@@ -176,7 +176,7 @@ export const LESSONS: LessonDef[] = [
       },
       {
         heading: "Crypto Rails: A Different Path",
-        text: "Sending USDC on Base costs roughly $0.01–$0.05 regardless of the amount. Send $5 or $5,000 — the cost is the same. The recipient receives funds in seconds and can convert to local currency through local exchanges or peer-to-peer markets."
+        text: "Sending USDC on Monad costs roughly $0.01–$0.05 regardless of the amount. Send $5 or $5,000 — the cost is the same. The recipient receives funds in seconds and can convert to local currency through local exchanges or peer-to-peer markets."
       },
       {
         heading: "The Practical Reality",
@@ -185,7 +185,7 @@ export const LESSONS: LessonDef[] = [
     ],
     takeaways: [
       "Traditional remittances cost 6–10% in fees — billions wasted annually",
-      "USDC transfers on Base cost pennies regardless of amount",
+      "USDC transfers on Monad cost pennies regardless of amount",
       "Recipient needs local conversion options — infrastructure is growing",
       "Crypto remittances are a major use case driving blockchain adoption in Africa"
     ]

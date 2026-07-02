@@ -90,7 +90,7 @@ export function brandedEmail(opts: {
         <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#3A4A44;">${safeBody}</p>
         ${button}
       </td></tr>
-      <tr><td style="padding:18px 28px;border-top:1px solid #E4ECE8;font-size:12px;color:#8A9A93;">Social savings on Base. You're receiving this because you have a MoolaHub account.</td></tr>
+      <tr><td style="padding:18px 28px;border-top:1px solid #E4ECE8;font-size:12px;color:#8A9A93;">Social savings on Monad. You're receiving this because you have a MoolaHub account.</td></tr>
     </table>
   </td></tr></table>
 </body></html>`;

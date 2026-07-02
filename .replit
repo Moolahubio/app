@@ -89,15 +89,8 @@ externalPort = 3000
 [userenv]
 
 [userenv.shared]
-BASE_NETWORK = "base-sepolia"
-BASE_RPC_URL = "https://sepolia.base.org"
 USDC_CONTRACT_ADDRESS = "0xFc054f1d2429A632Dab801d67F484efdd84FC4D9"
-BASE_EXPLORER_URL = "https://sepolia.basescan.org"
-NEXT_PUBLIC_BASE_CHAIN = "baseSepolia"
-NEXT_PUBLIC_BASE_RPC_URL = "https://sepolia.base.org"
-NEXT_PUBLIC_USDC_ADDRESS = "0xf03C3dA6fb2a59775043CAC8ABfb75c4627728bB"
 NEXT_PUBLIC_ONRAMP = "false"
-NEXT_PUBLIC_BASE_ACCOUNT = "false"
 EMAIL_FROM = "MoolaHub <noreply@moolahub.io>"
 APP_URL = "https://moolahub.io"
 CIRCLE_FACTORY_ADDRESS = "0x1A618c3175640f997171e0c61011851963cCb649"

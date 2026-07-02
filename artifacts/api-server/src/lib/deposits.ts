@@ -16,8 +16,8 @@ import { notify } from "./notifications";
 import { formatMoney, truncateAddress } from "./money";
 
 /**
- * Crypto rail (USDC on Base). Deposits arrive on-chain to the user's wallet;
- * withdrawals send USDC to any Base address.
+ * Crypto rail (USDC on Monad). Deposits arrive on-chain to the user's wallet;
+ * withdrawals send USDC to any Monad address.
  *
  * Money moves through the double-entry ledger synchronously (source of truth);
  * the matching USDC transfer is enqueued and settled out of band by the
@@ -167,10 +167,10 @@ export async function syncDeposits(
   return { credited, totalCents };
 }
 
-/** Withdraw USDC on-chain to an external Base address. */
+/** Withdraw USDC on-chain to an external Monad address. */
 export async function withdrawToAddress(userId: string, amountCents: number, destination: string) {
   if (!isValidAddress(destination)) {
-    throw new AppError("Enter a valid Base address (starts with 0x).");
+    throw new AppError("Enter a valid Monad address (starts with 0x).");
   }
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
   const wallet = await getWalletForUser(userId);

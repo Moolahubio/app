@@ -25,6 +25,22 @@ only the async USDC send is skipped — so ledger assertions stay valid.
 **Why:** the ledger is the source of truth and commits synchronously; on-chain
 settlement is an out-of-band queue + reconciler concern, tested/owned separately.
 
+## Running the ON-chain e2e suites (test:goals-onchain / test:susu-onchain)
+These KEEP `USDC_CONTRACT_ADDRESS`+`PLATFORM_PRIVATE_KEY` (on-chain ON) and drive
+the real reconciler against Monad; they SKIP (exit 0) only if the platform wallet
+is unfunded or the RPC is unreachable. Two harness traps make them hard to run:
+- `tsx` **block-buffers stdout when writing to a file/pipe**, so `pnpm ... | tail`
+  or `> file` shows nothing until the process exits — a mid-run kill loses ALL output.
+- They exceed the bash tool's 120s cap (multiple ~90s settle-loop budgets), so a
+  single blocking bash call gets SIGKILL'd (exit -1) mid-flight, and a SIGKILL skips
+  the `finally` cleanup → can orphan test users/goals/circles.
+**How to run/verify:** either (a) run them via a Replit workflow + `restart_workflow`
+(logs are captured to /tmp/logs reliably, as the offline `circles`/`auth tests`
+workflows do), or (b) prove the on-chain op directly with `cast send` (e.g.
+`mint(addr,units)` from `$PLATFORM_PRIVATE_KEY`) + query `onchain_transfers` for
+`confirmed` rows with real tx hashes. Never run the two on-chain suites in parallel
+(shared platform key → nonce collisions).
+
 ## Side-effect notes
 - Importing `settlement.ts` is side-effect free: the reconciler interval only
   starts via `startSettlementLoop()` (called from `index.ts`), never at import.
