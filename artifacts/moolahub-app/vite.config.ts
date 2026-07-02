@@ -62,6 +62,9 @@ export default defineConfig({
     },
     dedupe: ["react", "react-dom"],
   },
+  optimizeDeps: {
+    include: ["@privy-io/react-auth", "@privy-io/react-auth/smart-wallets"],
+  },
   root: path.resolve(import.meta.dirname),
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),

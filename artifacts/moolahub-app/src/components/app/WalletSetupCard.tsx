@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
-import { PrivyProvider, usePrivy, useLogin as usePrivyLoginHook } from "@privy-io/react-auth";
-import { monadTestnet } from "viem/chains";
+import { usePrivy, useLogin as usePrivyLoginHook } from "@privy-io/react-auth";
 import { Wallet, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import {
@@ -11,7 +10,7 @@ import {
   getGetDashboardSummaryQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTheme } from "@/hooks/use-theme";
+import { isWeb3Enabled } from "@/components/app/Web3Provider";
 import { apiErrorMessage } from "@/lib/utils";
 
 const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
@@ -107,11 +106,7 @@ function SetupButton() {
 }
 
 export function WalletSetupCard() {
-  const { resolvedTheme } = useTheme();
-  const appId = import.meta.env.VITE_PRIVY_APP_ID;
-  const privyReady = Boolean(appId && appId.length >= 10);
-
-  if (!privyReady) {
+  if (!isWeb3Enabled) {
     return (
       <Card className="p-8 text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-foreground">
@@ -127,20 +122,7 @@ export function WalletSetupCard() {
 
   return (
     <Card className="p-8">
-      <PrivyProvider
-        appId={appId}
-        config={{
-          defaultChain: monadTestnet,
-          supportedChains: [monadTestnet],
-          appearance: {
-            theme: resolvedTheme,
-            accentColor: "#0E9E6E",
-            logo: `${import.meta.env.BASE_URL}brand/moolahub_app_icon.png`,
-          },
-        }}
-      >
-        <SetupButton />
-      </PrivyProvider>
+      <SetupButton />
     </Card>
   );
 }

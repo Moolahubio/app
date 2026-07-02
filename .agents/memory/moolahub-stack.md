@@ -1,6 +1,6 @@
 ---
 name: MoolaHub stack decisions
-description: Non-obvious decisions and quirks for the MoolaHub social-savings app (Base testnet) on the react-vite + Express + Drizzle rebuild
+description: Non-obvious decisions and quirks for the MoolaHub social-savings app (Monad testnet, chainId 10143) on the react-vite + Express + Drizzle rebuild
 ---
 
 ## Money & ledger

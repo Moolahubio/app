@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { Web3Provider } from "@/components/app/Web3Provider";
 import { AppLayout } from "@/components/app-layout";
 import NotFound from "@/pages/not-found";
 
@@ -106,14 +107,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
-          <AuthProvider>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
-          </AuthProvider>
-          <Toaster />
-        </TooltipProvider>
+        <Web3Provider>
+          <TooltipProvider>
+            <AuthProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+            </AuthProvider>
+            <Toaster />
+          </TooltipProvider>
+        </Web3Provider>
       </ThemeProvider>
     </QueryClientProvider>
   );

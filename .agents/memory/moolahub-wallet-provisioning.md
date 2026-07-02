@@ -31,13 +31,14 @@ provisioning*, not the custody layer. Full Privy-custodied signing is out of sco
 
 ## Testnet faucet is intentionally ENABLED for this deployment
 
-`ENABLE_TEST_FAUCET=true` is set in **shared** env. The product ships on Base
-Sepolia (BASE_NETWORK=base-sepolia), so the faucet (permissionless MockUSDC.mint)
-is wanted so users can grab test USDC. Do **not** "fix" the faucet by removing the
-flag — its earlier 403 was only because the flag was unset.
+`ENABLE_TEST_FAUCET=true` is set in **shared** env. The product runs on **Monad
+Testnet** (viem `monadTestnet`, chainId 10143; `network()` in lib/chain.ts returns
+"monad-testnet"), so the faucet (permissionless MockUSDC.mint) is wanted so users
+can grab test USDC. Do **not** "fix" the faucet by removing the flag — its earlier
+403 was only because the flag was unset.
 **Why:** faucetEnabled() is hard-false on mainnet regardless of the flag, so this
 is safe; it only mints fabricated balance on testnet, which is the intent.
-**How to apply:** if BASE_NETWORK ever flips to mainnet, the flag becomes a no-op
+**How to apply:** if the chain ever flips to a mainnet, the flag becomes a no-op
 (no code change needed). Deposit sync stays OFF (ENABLE_DEPOSIT_SYNC unset) because
 MockUSDC is mintable — do not enable sync on a mintable-token testnet.
 Shared env changes require **re-publishing** before production reflects them.
