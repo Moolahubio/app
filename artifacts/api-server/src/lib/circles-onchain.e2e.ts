@@ -1,10 +1,10 @@
 /**
  * On-chain end-to-end test: a rotation Susu circle settled through the REAL
- * Base Sepolia escrow contracts (CircleFactory + Susu escrow + MockUSDC).
+ * Monad Testnet escrow contracts (CircleFactory + Susu escrow + MockUSDC).
  *
  * Unlike `circles.e2e.ts` (which runs fully offline against the ledger), this
  * test keeps on-chain settlement ENABLED and drives the actual reconciler so
- * every economic step is mirrored on-chain and verifiable on Basescan:
+ * every economic step is mirrored on-chain and verifiable on the Monad explorer:
  *
  *   faucet-mint MockUSDC -> deploy escrow via factory on startCircle ->
  *   each member contributes (approve + contribute) into the escrow ->

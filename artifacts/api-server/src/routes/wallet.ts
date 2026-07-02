@@ -84,7 +84,7 @@ router.post("/wallet/withdraw", requireAuth, async (req, res): Promise<void> => 
 
 router.post("/wallet/sync", requireAuth, async (req, res): Promise<void> => {
   // Block sync on non-mainnet deployments where the configured token is
-  // typically a mock-mintable asset (e.g. MockUSDC on Base Sepolia). Without
+  // typically a mock-mintable asset (e.g. MockUSDC on Monad Testnet). Without
   // this guard any authenticated user can mint tokens to their wallet via the
   // permissionless MockUSDC.mint() function and then call sync to import those
   // fabricated tokens as real spendable balance. Operators may explicitly opt

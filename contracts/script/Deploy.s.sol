@@ -143,15 +143,14 @@ contract Deploy is Script {
 
     /// @dev chainId -> (network slug, explorer base url) for the deployment
     ///      record. Returns ("", "") for unrecognized chains (the caller reverts).
-    ///      Register a chain here before deploying to it. Values: Monad Testnet
-    ///      (10143) and Base Sepolia (84532) explorers.
+    ///      Register a chain here before deploying to it. Value: Monad Testnet
+    ///      (10143). This project is Monad-only; other chains revert by design.
     function _networkMeta(uint256 chainId)
         internal
         pure
         returns (string memory network, string memory explorer)
     {
         if (chainId == 10143) return ("monad-testnet", "https://testnet.monadvision.com");
-        if (chainId == 84532) return ("base-sepolia", "https://sepolia.basescan.org");
         return ("", "");
     }
 }
