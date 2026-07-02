@@ -27,4 +27,4 @@ Orientation for Claude Code working in this repo. Source of truth: https://githu
 - Contracts: `cd contracts && forge test` (use the Monad Foundry fork to deploy)
 
 ## Monad quick facts
-Chain 10143 · MON (18-dp gas) · RPC `https://testnet-rpc.monad.xyz` · explorer `https://testnet.monadscan.com` · EVM = Fusaka (cancun-safe) · gas charged on **gas limit** · viem `monadTestnet` (≥2.45; repo has ^2.52). Full table in plan §2.
+Chain 10143 · MON (18-dp gas) · RPC `https://testnet-rpc.monad.xyz` · explorer `https://testnet.monadvision.com` · EVM = Fusaka (cancun-safe) · gas charged on **gas limit** · viem `monadTestnet` (≥2.45; repo has ^2.52). Full table in plan §2.

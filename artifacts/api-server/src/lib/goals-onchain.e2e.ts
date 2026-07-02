@@ -1,10 +1,10 @@
 /**
- * On-chain end-to-end test: a savings Goal settled through the REAL Base Sepolia
+ * On-chain end-to-end test: a savings Goal settled through the REAL Monad Testnet
  * GoalVault contract (+ MockUSDC).
  *
  * Unlike an offline ledger test, this keeps on-chain settlement ENABLED and
  * drives the actual reconciler so every economic step is mirrored on-chain and
- * verifiable on Basescan:
+ * verifiable on the Monad explorer:
  *
  *   faucet-mint MockUSDC -> allocate to goal (approve + deposit into the vault,
  *   FREE) -> partial release (withdraw gross; the vault sends net and routes the

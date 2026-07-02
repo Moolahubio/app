@@ -132,7 +132,7 @@ export function onchainEnabled(): boolean {
  * spendable balance from nothing).
  *
  * On non-mainnet the faucet is **disabled by default** to prevent production
- * deployments on testnets (e.g. Base Sepolia) from being an open synthetic
+ * deployments on testnets (e.g. Monad Testnet) from being an open synthetic
  * funding endpoint. An operator may explicitly opt in by setting
  * `ENABLE_TEST_FAUCET=true` only in intentional dev/test environments.
  */
@@ -147,7 +147,7 @@ export function faucetEnabled(): boolean {
  *
  * On mainnet the configured USDC is the real asset, so sync is enabled by
  * default. On any non-mainnet deployment the configured token is typically a
- * mock-mintable asset (e.g. MockUSDC on Base Sepolia): any caller can invoke
+ * mock-mintable asset (e.g. MockUSDC on Monad Testnet): any caller can invoke
  * `mint(userWallet, amount)` from any EOA, then trigger sync to import those
  * fabricated tokens as real spendable balance. To prevent that attack, sync is
  * **disabled by default on non-mainnet** and can only be turned on when an
