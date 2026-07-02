@@ -34,7 +34,7 @@ import {
 } from "../lib/auth";
 import { createWalletForUser, getWalletForUser } from "../lib/wallet";
 import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
-import { hashPassword, verifyPassword } from "../lib/password";
+import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
 import { issuePasswordResetCode, consumePasswordResetCode } from "../lib/passwordReset";
 import { sendPasswordChangedEmail } from "../lib/email";
@@ -275,7 +275,10 @@ router.post("/auth/login", requireJsonAndAllowedOrigin, async (req, res): Promis
   }
 
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
-  const ok = await verifyPassword(parsed.data.password, user?.passwordHash);
+  // Verify against a decoy hash when there is no account/password, so scrypt runs
+  // (and latency is constant) regardless of whether the email exists — the login
+  // response must stay non-enumerating, matching forgot-password/resend-code.
+  const ok = await verifyPassword(parsed.data.password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
   if (!user || user.deletedAt || !user.passwordHash || !ok) {
     recordFailedLogin(email, ip);
     res.status(401).json({ error: "Invalid email or password." });
