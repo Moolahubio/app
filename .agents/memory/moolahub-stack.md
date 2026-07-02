@@ -10,6 +10,7 @@ description: Non-obvious decisions and quirks for the MoolaHub social-savings ap
 
 ## On-chain settlement (deliberate testnet tradeoff)
 - The ledger is the source of truth; on-chain USDC settles only when `onchainEnabled()` AND the platform/user wallet is funded. Faucet credits and withdrawals still book to the ledger when the chain step is skipped — by design, because the platform wallet may have no testnet gas/USDC. Do NOT "fail on chain error" or the whole testnet flow breaks.
+- **Post-deploy authorizer wiring (required after any fresh chain deploy):** the contract owner must call `MoolaHubReputation.setAuthorizer(factory, true)` for BOTH the circle factory AND the accumulation factory, or reputation writes from those factories revert. It is `onlyOwner`; getter is `isAuthorizer(address)`. **Why:** deploying the factories does not auto-grant them authorizer rights; this is a separate owner tx that is easy to forget and silently breaks circle/accumulation reputation until set. The owner wallet needs testnet gas — fund it from the deployer wallet if empty.
 
 ## Auth
 - **Privy is the primary auth, with passkeys (WebAuthn) as a secondary path.** Email/password was removed entirely (no `/auth/login`, `/auth/register`, no `passwordHash`, no bcrypt). Coinbase/CDP onramp removed too (no `/wallet/onramp-url`, no `@coinbase/cdp-sdk`). Wallets stay local non-custodial (viem-generated, encrypted key in DB) — unaffected by CDP removal.
