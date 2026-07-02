@@ -41,17 +41,23 @@ const INDEX_INTERVAL_MS = Number(process.env.INDEXER_INTERVAL_MS) || 20_000;
 // cursor is the robust follow-up for outages longer than this window (plan §2.5).
 const BLOCK_LOOKBACK = BigInt(process.env.INDEXER_BLOCK_LOOKBACK ?? "50000");
 
-// SECURITY — fix before this module is ever wired into startup (M7): the indexer
-// is NOT started today (index.ts runs only the settlement + streak loops). Two
-// latent bugs must be resolved first: (1) indexGoalVault maps goalId->userId
-// ignoring the event `owner`, so a forged GoalDeposited could cross-credit a
-// victim's goal; (2) its dedup key (txHash:logIndex) differs from the settlement
-// reconciler's confirm stamp (txHash only), so it would double-post settled rows.
+// MODEL EXCLUSIVITY (M7): this indexer is the reconciler for the USER-SIGNED V2
+// model (contracts custody funds; events drive the ledger). It must REPLACE, not
+// run alongside, the server-custodied settlement reconciler (lib/settlement.ts)
+// for the same flows — running both double-books, because the two use different
+// idempotency keys (indexer: onchain_xdr = txHash:logIndex; settlement: bare
+// tx_hash) and the unique tx_hash index only covers `deposit` rows. So when V2 is
+// wired, start this loop and stop enqueuing those flows through settlement.
+// (L1 cross-credit is fixed below in indexGoalVault.)
 
 // --- Event signatures (must match the contracts) ---------------------------
 const E_CONTRIBUTED = parseAbiItem("event Contributed(address indexed member, uint256 indexed round, uint256 amount)");
 const E_ROUND_SETTLED = parseAbiItem("event RoundSettled(uint256 indexed round, address indexed recipient, uint256 payout, uint256 fee)");
-const E_ACC_WITHDRAWN = parseAbiItem("event Withdrawn(address indexed member, uint256 amount, uint256 fee)");
+// V2 accumulation settlement (replaces V1 `Withdrawn`): carries the principal /
+// payout / fee / forfeited-yield split so the ledger can post yield & loss.
+const E_ACC_SETTLED = parseAbiItem(
+  "event AccumulationSettled(address indexed member, uint256 principal, uint256 payout, uint256 fee, uint256 yieldForfeited)"
+);
 const E_REFUNDED = parseAbiItem("event Refunded(address indexed member, uint256 amount)");
 const E_GOAL_DEPOSITED = parseAbiItem("event GoalDeposited(address indexed owner, bytes32 indexed goalId, uint256 amount)");
 const E_GOAL_WITHDRAWN = parseAbiItem("event GoalWithdrawn(address indexed owner, bytes32 indexed goalId, uint256 grossAmount, uint256 fee)");
@@ -127,13 +133,13 @@ async function post(params: {
 
 async function indexCircle(addr: Address, circle: { id: string; type: string }, ctx: Ctx, from: bigint, to: bigint) {
   const pub = publicClient();
-  const [contribs, settled, withdrawn, refunded] = await Promise.all([
+  const [contribs, settled, accSettled, refunded] = await Promise.all([
     pub.getLogs({ address: addr, event: E_CONTRIBUTED, fromBlock: from, toBlock: to }),
     circle.type === "accumulation"
       ? Promise.resolve([])
       : pub.getLogs({ address: addr, event: E_ROUND_SETTLED, fromBlock: from, toBlock: to }),
     circle.type === "accumulation"
-      ? pub.getLogs({ address: addr, event: E_ACC_WITHDRAWN, fromBlock: from, toBlock: to })
+      ? pub.getLogs({ address: addr, event: E_ACC_SETTLED, fromBlock: from, toBlock: to })
       : Promise.resolve([]),
     pub.getLogs({ address: addr, event: E_REFUNDED, fromBlock: from, toBlock: to }),
   ]);
@@ -183,12 +189,48 @@ async function indexCircle(addr: Address, circle: { id: string; type: string }, 
     });
   }
 
-  for (const log of withdrawn) {
+  // Accumulation settlement (V2). The member's pool-ledger balance equals their
+  // contributed principal; on settlement they redeem `payout` (+ `fee` to the
+  // treasury), where payout+fee = the redeemed assets. We reconcile the pool's
+  // ledger backing to the realized value FIRST, then move the funds out:
+  //   realized = (payout + fee) − principal
+  //     > 0  this member's accrued yield → credit yield → pool
+  //     < 0  a realized loss             → debit  pool  → external
+  //   = 0    no yield/loss (e.g. Passthrough launch, or a delinquent capped at
+  //          principal — their forfeited yield STAYS in the pool and surfaces as
+  //          other members' realized yield when they later withdraw).
+  // §Phase4 default: yield is recognized at withdrawal (not accrued continuously).
+  for (const log of accSettled) {
     const member = ctx.walletToUser.get(((log.args.member ?? "") as string).toLowerCase());
     if (!member) continue;
-    const gross = unitsToCents((log.args.amount ?? 0n) as bigint);
+    const principal = unitsToCents((log.args.principal ?? 0n) as bigint);
+    const payout = unitsToCents((log.args.payout ?? 0n) as bigint);
     const fee = unitsToCents((log.args.fee ?? 0n) as bigint);
     const op = `${log.transactionHash}:${log.logIndex}`;
+    const realized = payout + fee - principal;
+    if (realized > 0) {
+      await post({
+        opId: `${op}:yield`,
+        type: "yield",
+        description: "Savings yield",
+        userId: member,
+        fromKey: acct.yield,
+        toKey: acct.pool(circle.id),
+        amountCents: realized,
+        txHash: log.transactionHash ?? "",
+      });
+    } else if (realized < 0) {
+      await post({
+        opId: `${op}:loss`,
+        type: "loss",
+        description: "Savings loss",
+        userId: member,
+        fromKey: acct.pool(circle.id),
+        toKey: acct.external,
+        amountCents: -realized,
+        txHash: log.transactionHash ?? "",
+      });
+    }
     await post({
       opId: op,
       type: "payout",
@@ -196,7 +238,7 @@ async function indexCircle(addr: Address, circle: { id: string; type: string }, 
       userId: member,
       fromKey: acct.pool(circle.id),
       toKey: acct.wallet(member),
-      amountCents: gross - fee,
+      amountCents: payout,
       txHash: log.transactionHash ?? "",
     });
     await post({
@@ -239,6 +281,10 @@ async function indexGoalVault(ctx: Ctx, from: bigint, to: bigint) {
   for (const log of deposits) {
     const goal = ctx.goalByHash.get(((log.args.goalId ?? "") as string).toLowerCase());
     if (!goal) continue;
+    // L1 — the vault keys slots by (owner, goalId), so a deposit made under a goalId
+    // that belongs to someone else is the DEPOSITOR's own slot, not this goal. Only
+    // credit when the on-chain depositor is the goal's owner; never cross-credit.
+    if (ctx.walletToUser.get(((log.args.owner ?? "") as string).toLowerCase()) !== goal.userId) continue;
     await post({
       opId: `${log.transactionHash}:${log.logIndex}`,
       type: "goal_allocate",
@@ -251,9 +297,16 @@ async function indexGoalVault(ctx: Ctx, from: bigint, to: bigint) {
     });
   }
 
+  // NOTE (goal yield): GoalVaultV2's GoalWithdrawn carries only grossAmount/fee, no
+  // principal/yield split — so goal *yield* cannot be reconciled from the event the
+  // way accumulation can. Correct as-is on the Passthrough adapter (no yield). When
+  // the Curvance adapter is switched on, enrich GoalWithdrawn (emit principal/yield
+  // or shares) and add the same yield/loss posting here. Tracked as M7 follow-up.
   for (const log of withdrawals) {
     const goal = ctx.goalByHash.get(((log.args.goalId ?? "") as string).toLowerCase());
     if (!goal) continue;
+    // L1 — same ownership guard as deposits (the withdrawer must be the goal owner).
+    if (ctx.walletToUser.get(((log.args.owner ?? "") as string).toLowerCase()) !== goal.userId) continue;
     const gross = unitsToCents((log.args.grossAmount ?? 0n) as bigint);
     const fee = unitsToCents((log.args.fee ?? 0n) as bigint);
     const op = `${log.transactionHash}:${log.logIndex}`;
