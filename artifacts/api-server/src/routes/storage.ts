@@ -11,6 +11,7 @@ import {
 } from "../lib/objectStorage";
 import { ObjectPermission } from "../lib/objectAcl";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireJsonAndAllowedOrigin } from "../lib/origins";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
@@ -25,7 +26,7 @@ const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
  * The client sends JSON metadata (name, size, contentType) — NOT the file.
  * Then uploads the file directly to the returned presigned URL.
  */
-router.post("/storage/uploads/request-url", requireAuth, async (req: Request, res: Response) => {
+router.post("/storage/uploads/request-url", requireJsonAndAllowedOrigin, requireAuth, async (req: Request, res: Response) => {
   const parsed = RequestUploadUrlBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Missing or invalid required fields" });

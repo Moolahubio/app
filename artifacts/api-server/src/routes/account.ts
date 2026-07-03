@@ -11,7 +11,7 @@ import {
 } from "@workspace/db";
 import { DeactivateAccountResponse, DeleteAccountBody, DeleteAccountResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
-import { requireAllowedOrigin } from "../lib/origins";
+import { requireJsonAndAllowedOrigin } from "../lib/origins";
 import { userBalances } from "../lib/ledger";
 
 const router: IRouter = Router();
@@ -19,7 +19,7 @@ const COOKIE = "moolahub_session";
 
 // Deactivation is reversible: we record the timestamp and end all sessions. The
 // next successful login clears `deactivatedAt` and restores access.
-router.post("/account/deactivate", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
+router.post("/account/deactivate", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
 
   await db.update(usersTable).set({ deactivatedAt: new Date() }).where(eq(usersTable.id, user.id));
@@ -33,7 +33,7 @@ router.post("/account/deactivate", requireAllowedOrigin, requireAuth, async (req
 // can't be deleted. When clear, we anonymize PII, revoke credentials, and end
 // every session. Ledger/circle/goal history is retained for integrity but no
 // longer tied to identifiable data.
-router.delete("/account", requireAuth, async (req, res): Promise<void> => {
+router.delete("/account", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = DeleteAccountBody.safeParse(req.body);
   if (!parsed.success || parsed.data.confirm !== "DELETE") {

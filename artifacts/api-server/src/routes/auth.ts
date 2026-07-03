@@ -41,7 +41,7 @@ import { sendPasswordChangedEmail } from "../lib/email";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
 import { resetThrottleRemaining, recordResetRequest } from "../lib/resetThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
-import { isAllowedOrigin, isSameOrigin, requireAllowedOrigin } from "../lib/origins";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { verifyStepUp } from "../lib/stepUp";
 import { issueReauthCode } from "../lib/reauth";
 import {
@@ -53,34 +53,6 @@ import {
 } from "../lib/twofactor";
 
 const router: IRouter = Router();
-
-/**
- * CSRF guard for session-establishing endpoints.
- *
- * Two complementary checks:
- *  1. Content-Type must be `application/json`.  HTML forms can only submit
- *     application/x-www-form-urlencoded, multipart/form-data, or text/plain —
- *     never JSON — so this alone blocks every cross-site form attack.
- *  2. If an `Origin` header is present (browsers always include it on POSTs,
- *     even same-origin ones) it must either match the host the request was
- *     served on (same-origin) or appear in the allowlist (ALLOWED_ORIGINS +
- *     REPLIT_DOMAINS). This closes the gap for any future path that could
- *     accept non-JSON bodies, without requiring manual origin configuration.
- */
-function requireJsonAndAllowedOrigin(req: Request, res: Response, next: NextFunction): void {
-  if (!req.is("application/json")) {
-    res.status(415).json({ error: "Content-Type must be application/json" });
-    return;
-  }
-
-  const origin = req.headers["origin"];
-  if (origin && !isSameOrigin(req) && !isAllowedOrigin(origin)) {
-    res.status(403).json({ error: "Forbidden" });
-    return;
-  }
-
-  next();
-}
 
 const COOKIE = "moolahub_session";
 // Base cookie attributes; `maxAge` is set per-login to match the session TTL

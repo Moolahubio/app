@@ -69,6 +69,34 @@ export function requireAllowedOrigin(req: Request, res: Response, next: NextFunc
 }
 
 /**
+ * CSRF guard for JSON-body mutation endpoints.
+ *
+ * Two complementary checks:
+ *  1. Content-Type must be `application/json`.  HTML forms can only submit
+ *     application/x-www-form-urlencoded, multipart/form-data, or text/plain —
+ *     never JSON — so this alone blocks every cross-site form attack.
+ *  2. If an `Origin` header is present (browsers always include it on POSTs,
+ *     even same-origin ones) it must either match the host the request was
+ *     served on (same-origin) or appear in the allowlist (ALLOWED_ORIGINS +
+ *     REPLIT_DOMAINS). This closes the gap for any future path that could
+ *     accept non-JSON bodies, without requiring manual origin configuration.
+ */
+export function requireJsonAndAllowedOrigin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.is("application/json")) {
+    res.status(415).json({ error: "Content-Type must be application/json" });
+    return;
+  }
+
+  const origin = req.headers["origin"];
+  if (origin && !isSameOrigin(req) && !isAllowedOrigin(origin)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  next();
+}
+
+/**
  * True when the request's Origin matches the host the request was served on
  * (standard same-origin CSRF check). Honors X-Forwarded-Host so it works behind
  * the Replit reverse proxy, where the API and frontend share one origin.

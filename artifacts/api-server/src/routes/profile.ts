@@ -3,6 +3,7 @@ import { and, eq, ne, sql } from "drizzle-orm";
 import { db, usersTable, walletsTable } from "@workspace/db";
 import { UpdateProfileBody, GetProfileResponse, UpdateProfileResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireJsonAndAllowedOrigin } from "../lib/origins";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { isUniqueViolation } from "../lib/dbErrors";
 
@@ -31,7 +32,7 @@ router.get("/profile", requireAuth, async (req, res): Promise<void> => {
   res.json(GetProfileResponse.parse(profilePayload(user, wallet?.address ?? null)));
 });
 
-router.patch("/profile", requireAuth, async (req, res): Promise<void> => {
+router.patch("/profile", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = UpdateProfileBody.safeParse(req.body);
   if (!parsed.success) {

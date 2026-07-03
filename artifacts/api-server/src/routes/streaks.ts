@@ -10,6 +10,7 @@ import {
   EndStreakVacationResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import {
   getStreakOverview,
@@ -31,7 +32,7 @@ router.get("/streaks", requireAuth, async (req, res): Promise<void> => {
   }
 });
 
-router.post("/streaks/reminders", requireAuth, async (req, res): Promise<void> => {
+router.post("/streaks/reminders", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   try {
     const user = (req as AuthRequest).user;
     const body = SetStreakRemindersBody.parse(req.body);
@@ -42,7 +43,7 @@ router.post("/streaks/reminders", requireAuth, async (req, res): Promise<void> =
   }
 });
 
-router.post("/streaks/frequency", requireAuth, async (req, res): Promise<void> => {
+router.post("/streaks/frequency", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   try {
     const user = (req as AuthRequest).user;
     const body = SetStreakFrequencyBody.parse(req.body);
@@ -53,7 +54,7 @@ router.post("/streaks/frequency", requireAuth, async (req, res): Promise<void> =
   }
 });
 
-router.post("/streaks/vacation", requireAuth, async (req, res): Promise<void> => {
+router.post("/streaks/vacation", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   try {
     const user = (req as AuthRequest).user;
     const body = StartStreakVacationBody.parse(req.body);
@@ -64,7 +65,7 @@ router.post("/streaks/vacation", requireAuth, async (req, res): Promise<void> =>
   }
 });
 
-router.post("/streaks/vacation/end", requireAuth, async (req, res): Promise<void> => {
+router.post("/streaks/vacation/end", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   try {
     const user = (req as AuthRequest).user;
     const overview = await endVacation(user.id);

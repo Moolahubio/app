@@ -9,6 +9,7 @@ import {
   CompleteLessonResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin } from "../lib/origins";
 import { LESSONS } from "../lib/lessons-data";
 
 const router: IRouter = Router();
@@ -72,7 +73,7 @@ router.get("/learn/lessons/:slug", requireAuth, async (req, res): Promise<void> 
   );
 });
 
-router.post("/learn/lessons/:slug/complete", requireAuth, async (req, res): Promise<void> => {
+router.post("/learn/lessons/:slug/complete", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawSlug = Array.isArray(req.params.slug) ? req.params.slug[0] : req.params.slug;
   const params = CompleteLessonParams.safeParse({ slug: rawSlug });

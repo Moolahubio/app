@@ -12,7 +12,7 @@ import {
   RegenerateBackupCodesResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
-import { requireAllowedOrigin } from "../lib/origins";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import {
   generateTotpSecret,
   totpKeyUri,
@@ -59,7 +59,7 @@ router.post("/security/2fa/setup", requireAllowedOrigin, requireAuth, async (req
 });
 
 // Confirm the pending secret with a live code, enable 2FA, and return backup codes once.
-router.post("/security/2fa/enable", requireAuth, async (req, res): Promise<void> => {
+router.post("/security/2fa/enable", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = EnableTwoFactorBody.safeParse(req.body);
   if (!parsed.success) {
@@ -97,7 +97,7 @@ router.post("/security/2fa/enable", requireAuth, async (req, res): Promise<void>
   res.json(EnableTwoFactorResponse.parse({ backupCodes: codes }));
 });
 
-router.post("/security/2fa/disable", requireAuth, async (req, res): Promise<void> => {
+router.post("/security/2fa/disable", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = DisableTwoFactorBody.safeParse(req.body);
   if (!parsed.success) {
@@ -123,7 +123,7 @@ router.post("/security/2fa/disable", requireAuth, async (req, res): Promise<void
   res.json(DisableTwoFactorResponse.parse({ ok: true }));
 });
 
-router.post("/security/2fa/backup-codes", requireAuth, async (req, res): Promise<void> => {
+router.post("/security/2fa/backup-codes", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = RegenerateBackupCodesBody.safeParse(req.body);
   if (!parsed.success) {

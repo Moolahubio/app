@@ -12,6 +12,7 @@ import {
   UpdateNotificationPreferencesResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { categoriesForPreference } from "../lib/notifications";
 
 const router: IRouter = Router();
@@ -31,7 +32,7 @@ router.get("/notifications/preferences", requireAuth, async (req, res): Promise<
   );
 });
 
-router.patch("/notifications/preferences", requireAuth, async (req, res): Promise<void> => {
+router.patch("/notifications/preferences", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = UpdateNotificationPreferencesBody.safeParse(req.body);
   if (!parsed.success) {
@@ -97,13 +98,13 @@ router.get("/notifications", requireAuth, async (req, res): Promise<void> => {
   );
 });
 
-router.delete("/notifications", requireAuth, async (req, res): Promise<void> => {
+router.delete("/notifications", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   await db.delete(notificationsTable).where(eq(notificationsTable.userId, user.id));
   res.json(ClearNotificationsResponse.parse({ ok: true }));
 });
 
-router.post("/notifications/read-all", requireAuth, async (req, res): Promise<void> => {
+router.post("/notifications/read-all", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   await db
     .update(notificationsTable)
@@ -112,7 +113,7 @@ router.post("/notifications/read-all", requireAuth, async (req, res): Promise<vo
   res.json(MarkAllNotificationsReadResponse.parse({ ok: true }));
 });
 
-router.post("/notifications/:id/read", requireAuth, async (req, res): Promise<void> => {
+router.post("/notifications/:id/read", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = MarkNotificationReadParams.safeParse({ id: rawId });

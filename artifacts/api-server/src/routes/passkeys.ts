@@ -24,6 +24,7 @@ import {
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { requireAuth, createSession, sessionTtlMs, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { createTwoFactorChallenge } from "../lib/twofactor";
 import { verifyStepUp } from "../lib/stepUp";
 
@@ -105,7 +106,7 @@ router.get("/passkeys", requireAuth, async (req, res): Promise<void> => {
   );
 });
 
-router.delete("/passkeys/:id", requireAuth, async (req, res): Promise<void> => {
+router.delete("/passkeys/:id", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   await db
     .delete(passkeysTable)
@@ -113,7 +114,7 @@ router.delete("/passkeys/:id", requireAuth, async (req, res): Promise<void> => {
   res.json({ ok: true });
 });
 
-router.post("/passkeys/register/options", requireAuth, async (req, res): Promise<void> => {
+router.post("/passkeys/register/options", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
 
   // Binding a new passkey is enrolling a durable login method — possession of
@@ -153,7 +154,7 @@ router.post("/passkeys/register/options", requireAuth, async (req, res): Promise
   res.json(RegisterPasskeyOptionsResponse.parse({ flowId, options }));
 });
 
-router.post("/passkeys/register/verify", requireAuth, async (req, res): Promise<void> => {
+router.post("/passkeys/register/verify", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = RegisterPasskeyVerifyBody.safeParse(req.body);
   if (!parsed.success) {

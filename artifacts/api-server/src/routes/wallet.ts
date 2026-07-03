@@ -8,6 +8,7 @@ import {
   SyncDepositsResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { getWalletForUser } from "../lib/wallet";
 import { userOnchainBalanceSummary } from "../lib/onchainBalances";
@@ -43,7 +44,7 @@ router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
   );
 });
 
-router.post("/wallet/deposit", requireAuth, async (req, res): Promise<void> => {
+router.post("/wallet/deposit", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   // The faucet mints test balance with no real funding source. Refuse it
   // outright on mainnet / when disabled so it can't be used to conjure
@@ -68,7 +69,7 @@ router.post("/wallet/deposit", requireAuth, async (req, res): Promise<void> => {
   res.json(DepositFaucetResponse.parse({ ok: true }));
 });
 
-router.post("/wallet/withdraw", requireAuth, async (req, res): Promise<void> => {
+router.post("/wallet/withdraw", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = WithdrawFundsBody.safeParse(req.body);
   if (!parsed.success) {
@@ -86,7 +87,7 @@ router.post("/wallet/withdraw", requireAuth, async (req, res): Promise<void> => 
   res.json(WithdrawFundsResponse.parse({ ok: true }));
 });
 
-router.post("/wallet/sync", requireAuth, async (req, res): Promise<void> => {
+router.post("/wallet/sync", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   // Block sync on non-mainnet deployments where the configured token is
   // typically a mock-mintable asset (e.g. MockUSDC on Monad Testnet). Without
   // this guard any authenticated user can mint tokens to their wallet via the

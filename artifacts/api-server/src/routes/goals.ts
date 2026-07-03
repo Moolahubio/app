@@ -14,6 +14,7 @@ import {
   DeleteGoalResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { ObjectStorageService } from "../lib/objectStorage";
 import {
@@ -76,7 +77,7 @@ router.get("/goals", requireAuth, async (req, res): Promise<void> => {
   res.json(ListGoalsResponse.parse(goals.map(goalToJson)));
 });
 
-router.post("/goals", requireAuth, async (req, res): Promise<void> => {
+router.post("/goals", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = CreateGoalBody.safeParse(req.body);
   if (!parsed.success) {
@@ -142,7 +143,7 @@ router.get("/goals/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(GetGoalResponse.parse(goalToJson(goal)));
 });
 
-router.post("/goals/:id/allocate", requireAuth, async (req, res): Promise<void> => {
+router.post("/goals/:id/allocate", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = AllocateToGoalParams.safeParse({ id: rawId });
@@ -166,7 +167,7 @@ router.post("/goals/:id/allocate", requireAuth, async (req, res): Promise<void> 
   res.json(AllocateToGoalResponse.parse({ ok: true }));
 });
 
-router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> => {
+router.post("/goals/:id/release", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = ReleaseFromGoalParams.safeParse({ id: rawId });
@@ -195,7 +196,7 @@ router.post("/goals/:id/release", requireAuth, async (req, res): Promise<void> =
   }
 });
 
-router.post("/goals/:id/delete", requireAuth, async (req, res): Promise<void> => {
+router.post("/goals/:id/delete", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeleteGoalParams.safeParse({ id: rawId });

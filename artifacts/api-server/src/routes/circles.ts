@@ -20,6 +20,7 @@ import {
   DeleteCircleResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { ObjectAccessGroupType, ObjectPermission } from "../lib/objectAcl";
@@ -50,7 +51,7 @@ router.get("/circles/invites", requireAuth, async (req, res): Promise<void> => {
   res.json(ListInvitesResponse.parse(invites));
 });
 
-router.post("/circles", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const parsed = CreateCircleBody.safeParse(req.body);
   if (!parsed.success) {
@@ -148,7 +149,7 @@ router.get("/circles/:id", requireAuth, async (req, res): Promise<void> => {
   res.json(GetCircleResponse.parse(detail));
 });
 
-router.post("/circles/:id/invite", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles/:id/invite", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = InviteToCircleParams.safeParse({ id: rawId });
@@ -172,7 +173,7 @@ router.post("/circles/:id/invite", requireAuth, async (req, res): Promise<void> 
   res.json(InviteToCircleResponse.parse({ ok: true }));
 });
 
-router.post("/circles/:id/start", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles/:id/start", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = StartCircleParams.safeParse({ id: rawId });
@@ -191,7 +192,7 @@ router.post("/circles/:id/start", requireAuth, async (req, res): Promise<void> =
   res.json(StartCircleResponse.parse({ ok: true }));
 });
 
-router.post("/circles/:id/delete", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles/:id/delete", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeleteCircleParams.safeParse({ id: rawId });
@@ -210,7 +211,7 @@ router.post("/circles/:id/delete", requireAuth, async (req, res): Promise<void> 
   res.json(DeleteCircleResponse.parse({ ok: true }));
 });
 
-router.post("/circles/:id/contribute", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles/:id/contribute", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = ContributeToCircleParams.safeParse({ id: rawId });
@@ -229,7 +230,7 @@ router.post("/circles/:id/contribute", requireAuth, async (req, res): Promise<vo
   res.json(ContributeToCircleResponse.parse({ ok: true }));
 });
 
-router.post("/circles/invites/:id/accept", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles/invites/:id/accept", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = AcceptInviteParams.safeParse({ id: rawId });
@@ -248,7 +249,7 @@ router.post("/circles/invites/:id/accept", requireAuth, async (req, res): Promis
   res.json(AcceptInviteResponse.parse({ ok: true }));
 });
 
-router.post("/circles/invites/:id/decline", requireAuth, async (req, res): Promise<void> => {
+router.post("/circles/invites/:id/decline", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeclineInviteParams.safeParse({ id: rawId });
