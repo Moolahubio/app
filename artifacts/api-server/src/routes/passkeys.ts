@@ -25,6 +25,7 @@ import {
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
 import { requireAuth, createSession, sessionTtlMs, type AuthRequest } from "../lib/auth";
 import { createTwoFactorChallenge } from "../lib/twofactor";
+import { verifyStepUp } from "../lib/stepUp";
 
 const router: IRouter = Router();
 
@@ -114,6 +115,19 @@ router.delete("/passkeys/:id", requireAuth, async (req, res): Promise<void> => {
 
 router.post("/passkeys/register/options", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
+
+  // Binding a new passkey is enrolling a durable login method — possession of
+  // the session cookie alone must not be enough. Require step-up proof of an
+  // existing factor (password, 2FA code, or emailed reauth code) before even
+  // starting the WebAuthn ceremony; the challenge minted below is short-lived
+  // and single-use, so this one check covers the whole registration flow.
+  const body = (req.body ?? {}) as { currentPassword?: string; twoFactorCode?: string; reauthCode?: string };
+  const stepUp = await verifyStepUp(user, body);
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
+    return;
+  }
+
   const { rpID } = rpFromRequest(req);
 
   const existing = await db.select().from(passkeysTable).where(eq(passkeysTable.userId, user.id));

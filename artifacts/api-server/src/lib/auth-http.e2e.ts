@@ -32,7 +32,7 @@ delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
 
-const { db, pool, usersTable, emailVerificationCodesTable } = await import("@workspace/db");
+const { db, pool, usersTable, emailVerificationCodesTable, reauthCodesTable } = await import("@workspace/db");
 const { eq, inArray } = await import("drizzle-orm");
 const { createSession } = await import("./auth");
 const { hashPassword } = await import("./password");
@@ -215,12 +215,41 @@ async function run() {
   assert.equal(legacyMe.body.hasPassword, false, "legacy Privy-only account reports hasPassword=false (gate fires)");
   assert.equal(legacyMe.body.username, null, "legacy account has no username yet (gate fires)");
 
-  // A passwordless account may set a first password WITHOUT the current one.
-  const setFirst = await api("POST", "/api/auth/password", {
+  // A stolen session alone must NOT be enough to mint a first password: with no
+  // step-up proof at all, the passwordless branch is rejected.
+  const setFirstNoProof = await api("POST", "/api/auth/password", {
     token: legacyToken,
     body: { currentPassword: null, newPassword: "First-Passw0rd!" },
   });
-  assert.equal(setFirst.status, 200, `legacy account can set a first password (got ${setFirst.status})`);
+  assert.equal(
+    setFirstNoProof.status,
+    401,
+    `setting a first password with no step-up proof is rejected (got ${setFirstNoProof.status})`,
+  );
+
+  // With neither a password nor 2FA, the fallback is an emailed reauth code,
+  // requested through the ACTUAL HTTP endpoint the client hits (no JSON body
+  // is sent for this route — exercising that exact request shape catches
+  // content-type/CSRF-guard mismatches that a DB-only seed would miss).
+  const requestCode = await api("POST", "/api/auth/stepup/request-code", { token: legacyToken });
+  assert.equal(requestCode.status, 200, `requesting a step-up code succeeds (got ${requestCode.status})`);
+
+  // Email is disabled in this test, so overwrite the issued code with one
+  // whose plaintext we control (same pattern as password-reset e2e's
+  // seedResetCode) to drive the rest of the flow deterministically.
+  const legacyReauthCode = "654321";
+  await db.delete(reauthCodesTable).where(eq(reauthCodesTable.userId, legacy.id));
+  await db.insert(reauthCodesTable).values({
+    userId: legacy.id,
+    codeHash: createHash("sha256").update(legacyReauthCode).digest("hex"),
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+  });
+
+  const setFirst = await api("POST", "/api/auth/password", {
+    token: legacyToken,
+    body: { currentPassword: legacyReauthCode, newPassword: "First-Passw0rd!" },
+  });
+  assert.equal(setFirst.status, 200, `legacy account can set a first password with a valid reauth code (got ${setFirst.status})`);
 
   const legacyMe2 = await api<MeDto>("GET", "/api/auth/me", { token: legacyToken });
   assert.equal(legacyMe2.body.hasPassword, true, "hasPassword flips true after a legacy account sets a password");

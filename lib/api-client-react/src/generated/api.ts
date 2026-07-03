@@ -57,6 +57,7 @@ import type {
   PrivyLinkInput,
   ProfileUpdate,
   RegisterInput,
+  RegisterPasskeyOptionsInput,
   ReleaseFromGoalResult,
   ResendCodeInput,
   ResetPasswordInput,
@@ -322,14 +323,15 @@ export const getRegisterPasskeyOptionsUrl = () => {
 /**
  * @summary Begin passkey registration (returns WebAuthn creation options)
  */
-export const registerPasskeyOptions = async ( options?: RequestInit): Promise<PasskeyChallengeResponse> => {
+export const registerPasskeyOptions = async (registerPasskeyOptionsInput?: RegisterPasskeyOptionsInput, options?: RequestInit): Promise<PasskeyChallengeResponse> => {
 
   return customFetch<PasskeyChallengeResponse>(getRegisterPasskeyOptionsUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      registerPasskeyOptionsInput,)
   }
 );}
 
@@ -337,8 +339,8 @@ export const registerPasskeyOptions = async ( options?: RequestInit): Promise<Pa
 
 
 export const getRegisterPasskeyOptionsMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPasskeyOptions>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof registerPasskeyOptions>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPasskeyOptions>>, TError,{data?: BodyType<RegisterPasskeyOptionsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerPasskeyOptions>>, TError,{data?: BodyType<RegisterPasskeyOptionsInput>}, TContext> => {
 
 const mutationKey = ['registerPasskeyOptions'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -350,10 +352,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerPasskeyOptions>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerPasskeyOptions>>, {data?: BodyType<RegisterPasskeyOptionsInput>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  registerPasskeyOptions(requestOptions)
+          return  registerPasskeyOptions(data,requestOptions)
         }
 
 
@@ -364,18 +366,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type RegisterPasskeyOptionsMutationResult = NonNullable<Awaited<ReturnType<typeof registerPasskeyOptions>>>
-
+    export type RegisterPasskeyOptionsMutationBody = BodyType<RegisterPasskeyOptionsInput> | undefined
     export type RegisterPasskeyOptionsMutationError = ErrorType<ApiError>
 
     /**
  * @summary Begin passkey registration (returns WebAuthn creation options)
  */
 export const useRegisterPasskeyOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPasskeyOptions>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerPasskeyOptions>>, TError,{data?: BodyType<RegisterPasskeyOptionsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof registerPasskeyOptions>>,
         TError,
-        void,
+        {data?: BodyType<RegisterPasskeyOptionsInput>},
         TContext
       > => {
       return useMutation(getRegisterPasskeyOptionsMutationOptions(options));
@@ -1241,6 +1243,76 @@ export const useResendVerificationCode = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getResendVerificationCodeMutationOptions(options));
+    }
+
+export const getRequestStepUpCodeUrl = () => {
+
+
+
+
+  return `/api/auth/stepup/request-code`
+}
+
+/**
+ * @summary Request an emailed confirmation code to prove account ownership before enrolling a new durable login method, for accounts with neither a password nor 2FA enabled.
+ */
+export const requestStepUpCode = async ( options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getRequestStepUpCodeUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRequestStepUpCodeMutationOptions = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestStepUpCode>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestStepUpCode>>, TError,void, TContext> => {
+
+const mutationKey = ['requestStepUpCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestStepUpCode>>, void> = () => {
+
+
+          return  requestStepUpCode(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestStepUpCodeMutationResult = NonNullable<Awaited<ReturnType<typeof requestStepUpCode>>>
+
+    export type RequestStepUpCodeMutationError = ErrorType<ApiError>
+
+    /**
+ * @summary Request an emailed confirmation code to prove account ownership before enrolling a new durable login method, for accounts with neither a password nor 2FA enabled.
+ */
+export const useRequestStepUpCode = <TError = ErrorType<ApiError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestStepUpCode>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestStepUpCode>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRequestStepUpCodeMutationOptions(options));
     }
 
 export const getForgotPasswordUrl = () => {

@@ -66,6 +66,12 @@ export const DeletePasskeyResponse = zod.object({
 /**
  * @summary Begin passkey registration (returns WebAuthn creation options)
  */
+export const RegisterPasskeyOptionsBody = zod.object({
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
+})
+
 export const RegisterPasskeyOptionsResponse = zod.object({
   "flowId": zod.string(),
   "options": zod.record(zod.string(), zod.unknown())
@@ -289,6 +295,14 @@ export const ResendVerificationCodeResponse = zod.object({
 
 
 /**
+ * @summary Request an emailed confirmation code to prove account ownership before enrolling a new durable login method, for accounts with neither a password nor 2FA enabled.
+ */
+export const RequestStepUpCodeResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * Always returns ok and never reveals whether an account exists. If a matching password account is found, a single-use, time-limited reset code is emailed.
  * @summary Request a password reset code by email
  */
@@ -336,7 +350,10 @@ export const UsernameAvailableResponse = zod.object({
  * @summary Link a Privy wallet/identity to the signed-in account (optional)
  */
 export const LinkPrivyBody = zod.object({
-  "token": zod.string()
+  "token": zod.string(),
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
 export const LinkPrivyResponse = zod.object({

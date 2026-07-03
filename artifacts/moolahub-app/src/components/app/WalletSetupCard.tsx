@@ -12,6 +12,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
 import { apiErrorMessage } from "@/lib/utils";
+import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
@@ -23,6 +24,7 @@ function SetupButton() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intentionalRef = useRef(false);
+  const { requestProof, stepUpDialog } = useStepUpGate();
 
   const provision = async () => {
     setBusy(true);
@@ -33,8 +35,13 @@ function SetupButton() {
         setBusy(false);
         return;
       }
+      const proof = await requestProof();
+      if (!proof) {
+        setBusy(false);
+        return;
+      }
       // Linking the Privy identity provisions the user's wallet server-side.
-      await linkPrivy.mutateAsync({ data: { token } });
+      await linkPrivy.mutateAsync({ data: { token, ...proof } });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() }),
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() }),
@@ -101,6 +108,8 @@ function SetupButton() {
         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-jade-600" />
         Your wallet is yours. Funds settle on Monad and every movement is recorded on the ledger.
       </p>
+
+      {stepUpDialog}
     </div>
   );
 }

@@ -6,8 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PrivyLinkInput {
-  token: string;
+export interface RegisterPasskeyOptionsInput {
   /**
      * Required (step-up) when the account already has a password set.
      * @nullable

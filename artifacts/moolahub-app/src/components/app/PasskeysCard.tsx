@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 export function PasskeysCard() {
   const queryClient = useQueryClient();
@@ -19,6 +20,7 @@ export function PasskeysCard() {
   const optionsMutation = useRegisterPasskeyOptions();
   const verifyMutation = useRegisterPasskeyVerify();
   const deleteMutation = useDeletePasskey();
+  const { requestProof, stepUpDialog } = useStepUpGate();
 
   const [error, setError] = useState<string | null>(null);
   const supported = browserSupportsWebAuthn();
@@ -30,8 +32,10 @@ export function PasskeysCard() {
 
   const handleAdd = async () => {
     setError(null);
+    const proof = await requestProof();
+    if (!proof) return;
     try {
-      const { flowId, options } = await optionsMutation.mutateAsync();
+      const { flowId, options } = await optionsMutation.mutateAsync({ data: proof });
       const response = await startRegistration({
         optionsJSON: options as unknown as PublicKeyCredentialCreationOptionsJSON,
       });
@@ -122,6 +126,8 @@ export function PasskeysCard() {
           ))}
         </ul>
       )}
+
+      {stepUpDialog}
     </Card>
   );
 }

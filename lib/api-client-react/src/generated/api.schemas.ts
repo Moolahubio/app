@@ -254,6 +254,21 @@ export interface UsernameAvailability {
 
 export interface PrivyLinkInput {
   token: string;
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
 }
 
 export interface ChangePasswordInput {
@@ -670,6 +685,24 @@ export interface PasskeyRegisterVerifyInput {
   /** @nullable */
   deviceName?: string | null;
   response: PasskeyRegisterVerifyInputResponse;
+}
+
+export interface RegisterPasskeyOptionsInput {
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
 }
 
 export type PasskeyLoginVerifyInputResponse = { [key: string]: unknown };

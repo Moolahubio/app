@@ -54,6 +54,7 @@ export * from './privyAuthInput';
 export * from './privyLinkInput';
 export * from './profileUpdate';
 export * from './registerInput';
+export * from './registerPasskeyOptionsInput';
 export * from './releaseFromGoalResult';
 export * from './reminder';
 export * from './resendCodeInput';

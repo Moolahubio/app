@@ -112,6 +112,12 @@ paths:
       tags: [passkeys]
       operationId: registerPasskeyOptions
       summary: Begin passkey registration (returns WebAuthn creation options)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterPasskeyOptionsInput"
       responses:
         "200":
           description: Registration options
@@ -378,6 +384,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OkResponse"
+
+  /auth/stepup/request-code:
+    post:
+      operationId: requestStepUpCode
+      tags: [auth]
+      summary: >-
+        Request an emailed confirmation code to prove account ownership before
+        enrolling a new durable login method, for accounts with neither a
+        password nor 2FA enabled.
+      responses:
+        "200":
+          description: Code sent (if applicable)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          description: Account already has a password or 2FA — use that instead
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /auth/forgot-password:
     post:
@@ -1781,6 +1815,17 @@ components:
       properties:
         token:
           type: string
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
 
     ChangePasswordInput:
       type: object
@@ -2501,6 +2546,20 @@ components:
         response:
           type: object
           additionalProperties: true
+    RegisterPasskeyOptionsInput:
+      type: object
+      properties:
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
     PasskeyLoginVerifyInput:
       type: object
       required: [flowId, response]

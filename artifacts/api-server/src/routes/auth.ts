@@ -42,6 +42,8 @@ import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "..
 import { resetThrottleRemaining, recordResetRequest } from "../lib/resetThrottle";
 import { isUniqueViolation } from "../lib/dbErrors";
 import { isAllowedOrigin, isSameOrigin, requireAllowedOrigin } from "../lib/origins";
+import { verifyStepUp } from "../lib/stepUp";
+import { issueReauthCode } from "../lib/reauth";
 import {
   createTwoFactorChallenge,
   getTwoFactorChallenge,
@@ -463,6 +465,30 @@ router.post("/auth/reset-password", requireJsonAndAllowedOrigin, async (req, res
   res.json(ResetPasswordResponse.parse({ ok: true }));
 });
 
+// Issue an emailed step-up confirmation code for accounts that have neither a
+// password nor TOTP 2FA enabled (the only accounts that need this fallback —
+// everyone else proves possession with their existing password/2FA code
+// directly on the enrollment request). Requires an authenticated session so it
+// can't be used to spam arbitrary inboxes.
+router.post(
+  "/auth/stepup/request-code",
+  requireAllowedOrigin,
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const user = (req as AuthRequest).user;
+    if (user.passwordHash || user.twoFactorEnabled) {
+      res.status(400).json({
+        error: "Use your password or two-factor code instead of requesting an email code.",
+      });
+      return;
+    }
+    await issueReauthCode(user.id, user.email, user.name);
+    // Always ok:true regardless of the cooldown, matching resend-code's shape —
+    // there is nothing to enumerate here since the caller is already authenticated.
+    res.json({ ok: true });
+  },
+);
+
 router.get("/auth/username-available", async (req, res): Promise<void> => {
   const raw = typeof req.query.username === "string" ? req.query.username.trim().toLowerCase() : "";
   if (!USERNAME_RE.test(raw)) {
@@ -498,16 +524,27 @@ router.post("/auth/password", requireJsonAndAllowedOrigin, requireAuth, async (r
   }
 
   // A passwordless (legacy Privy) account sets its FIRST password here, from an
-  // authenticated session — there is no current password to verify. Completing
-  // the password also stamps emailVerifiedAt, finishing the account. This is the
-  // intended path for legacy accounts: forgot-password deliberately refuses
-  // passwordless accounts (email control must not mint a password login on its
-  // own), so the only way to add a password is while signed in. Every other
-  // session is revoked below, limiting the blast radius of a stolen session.
+  // authenticated session. There is no current password to verify, so this is
+  // exactly the "durable factor enrollment" case that must be step-up gated:
+  // possession of the session cookie alone must not be enough to mint a
+  // password login an attacker controls. verifyStepUp falls back to the
+  // account's 2FA code, and then to an emailed reauth code, for accounts with
+  // neither a password nor 2FA. Completing the password also stamps
+  // emailVerifiedAt, finishing the account. Every other session is revoked
+  // below, limiting the blast radius of a stolen session.
   if (user.passwordHash) {
     const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
     if (!ok) {
       res.status(401).json({ error: "Your current password is incorrect." });
+      return;
+    }
+  } else {
+    const stepUp = await verifyStepUp(user, {
+      twoFactorCode: parsed.data.currentPassword,
+      reauthCode: parsed.data.currentPassword,
+    });
+    if (!stepUp.ok) {
+      res.status(stepUp.status).json({ error: stepUp.error });
       return;
     }
   }
@@ -634,6 +671,20 @@ router.post("/auth/privy/link", requireJsonAndAllowedOrigin, requireAuth, async 
     did = await verifyPrivyToken(parsed.data.token);
   } catch {
     res.status(400).json({ error: "Invalid Privy token" });
+    return;
+  }
+
+  // Linking (or re-linking) Privy overwrites `users.privyDid`, which is itself a
+  // durable login method — a stolen session must not be able to silently swap
+  // in an attacker-controlled Privy identity. Require step-up proof of an
+  // existing factor first (password, 2FA code, or emailed reauth code).
+  const stepUp = await verifyStepUp(user, {
+    currentPassword: parsed.data.currentPassword,
+    twoFactorCode: parsed.data.twoFactorCode,
+    reauthCode: parsed.data.reauthCode,
+  });
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
     return;
   }
 

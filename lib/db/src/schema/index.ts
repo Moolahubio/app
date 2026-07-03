@@ -4,6 +4,7 @@ export * from "./email-verification";
 export * from "./password-reset";
 export * from "./passkeys";
 export * from "./twofactor";
+export * from "./reauth";
 export * from "./wallets";
 export * from "./goals";
 export * from "./circles";
