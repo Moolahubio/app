@@ -33,3 +33,16 @@ or break the ones that were never vulnerable.
 Note: a couple of pre-existing peer warnings (esbuild-plugin-pino wanting esbuild
 <=0.25.8 vs the api-server's own esbuild@0.27, and jayson's isomorphic-ws/ws@7)
 are unrelated to the overrides and non-fatal.
+
+## The pnpm-workspace.yaml `overrides:` block is INERT here
+`package.json` `pnpm.overrides` is the ONLY effective override source. pnpm uses a
+single overrides source, and when `package.json` defines `pnpm.overrides`, the
+`overrides:` block in `pnpm-workspace.yaml` is fully ignored. Evidence: the
+lockfile's top `overrides:` echo lists only the package.json keys; the workspace
+block's `esbuild: "<ver>"` blanket never collapsed transitive esbuild (0.27.7 from
+tsx/@orval/core survived it), its `@esbuild/*: "-"` platform exclusions did not
+strip those binaries, and its `@esbuild-kit/esm-loader: npm:tsx` remap didn't take.
+**How to apply:** put EVERY override (version bumps, platform "-", aliases) in
+root `package.json` `pnpm.overrides`. Do not add or edit entries in the
+pnpm-workspace.yaml `overrides:` block expecting them to work — they won't until
+that block is consolidated into package.json.
