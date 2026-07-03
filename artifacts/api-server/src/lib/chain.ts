@@ -218,6 +218,84 @@ function errMsg(e: unknown): string {
 }
 
 /**
+ * Whether a failed tx submission is a *transient* rejection from Monad's
+ * load-balanced RPC (read-your-write lag), not a genuine revert. A stale
+ * `getTransactionCount` from a lagging node collides two txs on one nonce
+ * ("existing transaction had higher priority" / "nonce too low"), and a freshly
+ * funded balance may not be visible yet ("insufficient balance"). All are
+ * pre-inclusion rejections — the tx never entered the mempool — so re-sending is
+ * safe.
+ */
+function isTransientSubmitError(e: unknown): boolean {
+  const m = errMsg(e).toLowerCase();
+  return (
+    m.includes("higher priority") ||
+    m.includes("nonce too low") ||
+    m.includes("replacement transaction underpriced") ||
+    m.includes("insufficient balance")
+  );
+}
+
+/**
+ * Submit a transaction (returning its hash) with bounded retries for the
+ * transient RPC rejections above. viem re-fetches a fresh nonce each attempt, so
+ * once the lagging node catches up the send goes through. Genuine reverts and
+ * config errors are not matched and surface immediately.
+ *
+ * Testnet-acceptable edge: if viem's transport internally re-sends a broadcast
+ * whose response was lost and the first copy actually landed, the retry surfaces
+ * "nonce too low" and we re-send on a fresh nonce — a second distinct tx. Before
+ * mainnet, gate "nonce too low" retries on money-moving sites behind an
+ * idempotency check (confirm the account nonce/balance delta first).
+ */
+async function submitTx(send: () => Promise<Hex>, attempts = 5): Promise<Hex> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await send();
+    } catch (e) {
+      lastErr = e;
+      if (i === attempts - 1 || !isTransientSubmitError(e)) throw e;
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+  throw lastErr;
+}
+
+/**
+ * Poll until `address` reports at least `minWei` for several consecutive reads.
+ *
+ * Monad's public RPC is load-balanced with read-your-write lag: a freshly
+ * credited native balance is not visible on every backend node at once, so a
+ * user-signed tx submitted immediately after a gas top-up can be admitted by a
+ * node that still sees a zero balance and rejected with "Signer had
+ * insufficient balance". Requiring a short run of consecutive confirming reads
+ * (each sampling a possibly-different node) waits out that lag before we let a
+ * caller sign against the new balance. Mirrors the escrow-address poll in
+ * `deployCircleEscrow`. Best-effort: returns after `timeoutMs` regardless.
+ */
+async function awaitBalanceVisible(
+  address: Address,
+  minWei: bigint,
+  timeoutMs = 30_000,
+): Promise<void> {
+  const pub = publicClient();
+  const deadline = Date.now() + timeoutMs;
+  let streak = 0;
+  while (Date.now() < deadline) {
+    let bal = 0n;
+    try {
+      bal = await pub.getBalance({ address });
+    } catch {
+      /* transient RPC error — keep polling */
+    }
+    streak = bal >= minWei ? streak + 1 : 0;
+    if (streak >= 4) return;
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+}
+
+/**
  * Ensure a wallet holds enough MON for gas (testnet, platform-funded). Best
  * effort: silently no-ops if the platform key/RPC is unavailable.
  */
@@ -226,11 +304,15 @@ export async function ensureGas(address: string): Promise<void> {
   if (!pk) return;
   try {
     const pub = publicClient();
-    const balance = await pub.getBalance({ address: getAddress(address) });
+    const addr = getAddress(address);
+    const balance = await pub.getBalance({ address: addr });
     if (balance >= GAS_MIN_WEI) return;
     const wallet = walletClientFor(pk);
-    const hash = await wallet.sendTransaction({ to: getAddress(address), value: GAS_TOPUP_WEI });
+    const hash = await submitTx(() => wallet.sendTransaction({ to: addr, value: GAS_TOPUP_WEI }));
     await pub.waitForTransactionReceipt({ hash });
+    // Wait out the load-balanced RPC's read-your-write lag so the freshly funded
+    // gas is visible to whichever node admits the next user-signed tx.
+    await awaitBalanceVisible(addr, GAS_MIN_WEI);
   } catch {
     /* gas top-up is best-effort on testnet */
   }
@@ -355,12 +437,14 @@ export async function sendUsdc(params: {
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
     const pub = publicClient();
-    const hash = await wallet.writeContract({
-      address: usdc,
-      abi: ERC20_ABI,
-      functionName: "transfer",
-      args: [getAddress(params.to), centsToUnits(params.amountCents)],
-    });
+    const hash = await submitTx(() =>
+      wallet.writeContract({
+        address: usdc,
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [getAddress(params.to), centsToUnits(params.amountCents)],
+      }),
+    );
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
   } catch (e) {
@@ -428,18 +512,20 @@ export async function deployCircleEscrow(params: {
     }
 
     const wallet = walletClientFor(pk);
-    const hash = await wallet.writeContract({
-      address: factory,
-      abi: FACTORY_ABI,
-      functionName: "createCircle",
-      args: [
-        id,
-        centsToUnits(params.contributionCents),
-        params.members.map((m) => getAddress(m)),
-        BigInt(Math.max(1, Math.floor(params.roundDurationSecs))),
-        BigInt(Math.max(0, Math.floor(params.gracePeriodSecs))),
-      ],
-    });
+    const hash = await submitTx(() =>
+      wallet.writeContract({
+        address: factory,
+        abi: FACTORY_ABI,
+        functionName: "createCircle",
+        args: [
+          id,
+          centsToUnits(params.contributionCents),
+          params.members.map((m) => getAddress(m)),
+          BigInt(Math.max(1, Math.floor(params.roundDurationSecs))),
+          BigInt(Math.max(0, Math.floor(params.gracePeriodSecs))),
+        ],
+      }),
+    );
     const receipt = await pub.waitForTransactionReceipt({ hash });
     if (receipt.status === "reverted") {
       return { status: "skipped", reason: `createCircle reverted (tx ${hash})` };
@@ -447,9 +533,10 @@ export async function deployCircleEscrow(params: {
 
     // The public RPC is load-balanced, so an `escrowOf` read immediately after
     // the receipt can hit a node that hasn't yet caught up to the deploy block
-    // and return the zero address. Poll a few times before giving up.
+    // and return the zero address. The observed read-your-write lag runs ~12s,
+    // so poll up to ~30s (matching awaitBalanceVisible) before giving up.
     let escrow = ZERO_ADDRESS as Address;
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 20; i++) {
       escrow = (await pub.readContract({
         address: factory,
         abi: FACTORY_ABI,
@@ -480,12 +567,14 @@ export async function mintUsdc(params: { to: string; amountCents: number }): Pro
   try {
     const wallet = walletClientFor(pk);
     const pub = publicClient();
-    const hash = await wallet.writeContract({
-      address: usdc,
-      abi: MOCK_USDC_ABI,
-      functionName: "mint",
-      args: [getAddress(params.to), centsToUnits(params.amountCents)],
-    });
+    const hash = await submitTx(() =>
+      wallet.writeContract({
+        address: usdc,
+        abi: MOCK_USDC_ABI,
+        functionName: "mint",
+        args: [getAddress(params.to), centsToUnits(params.amountCents)],
+      }),
+    );
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
   } catch (e) {
@@ -530,20 +619,24 @@ export async function escrowContribute(params: {
       args: [account.address, escrow],
     })) as bigint;
     if (allowance < amount) {
-      const approveHash = await wallet.writeContract({
-        address: usdc,
-        abi: MOCK_USDC_ABI,
-        functionName: "approve",
-        args: [escrow, amount],
-      });
+      const approveHash = await submitTx(() =>
+        wallet.writeContract({
+          address: usdc,
+          abi: MOCK_USDC_ABI,
+          functionName: "approve",
+          args: [escrow, amount],
+        }),
+      );
       await pub.waitForTransactionReceipt({ hash: approveHash });
     }
 
-    const hash = await wallet.writeContract({
-      address: escrow,
-      abi: ESCROW_ABI,
-      functionName: "contribute",
-    });
+    const hash = await submitTx(() =>
+      wallet.writeContract({
+        address: escrow,
+        abi: ESCROW_ABI,
+        functionName: "contribute",
+      }),
+    );
     const receipt = await pub.waitForTransactionReceipt({ hash });
 
     let settledRound: number | null = null;
@@ -660,21 +753,25 @@ export async function goalDeposit(params: {
       args: [account.address, vault],
     })) as bigint;
     if (allowance < amount) {
-      const approveHash = await wallet.writeContract({
-        address: usdc,
-        abi: MOCK_USDC_ABI,
-        functionName: "approve",
-        args: [vault, amount],
-      });
+      const approveHash = await submitTx(() =>
+        wallet.writeContract({
+          address: usdc,
+          abi: MOCK_USDC_ABI,
+          functionName: "approve",
+          args: [vault, amount],
+        }),
+      );
       await pub.waitForTransactionReceipt({ hash: approveHash });
     }
 
-    const hash = await wallet.writeContract({
-      address: vault,
-      abi: GOAL_VAULT_ABI,
-      functionName: "deposit",
-      args: [goalId, amount],
-    });
+    const hash = await submitTx(() =>
+      wallet.writeContract({
+        address: vault,
+        abi: GOAL_VAULT_ABI,
+        functionName: "deposit",
+        args: [goalId, amount],
+      }),
+    );
     const receipt = await pub.waitForTransactionReceipt({ hash });
     if (receipt.status === "reverted") {
       return { status: "skipped", reason: `goal deposit reverted (tx ${hash})` };
@@ -729,12 +826,14 @@ export async function goalWithdraw(params: {
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
 
-    const hash = await wallet.writeContract({
-      address: vault,
-      abi: GOAL_VAULT_ABI,
-      functionName: "withdraw",
-      args: [goalId, gross],
-    });
+    const hash = await submitTx(() =>
+      wallet.writeContract({
+        address: vault,
+        abi: GOAL_VAULT_ABI,
+        functionName: "withdraw",
+        args: [goalId, gross],
+      }),
+    );
     const receipt = await pub.waitForTransactionReceipt({ hash });
     if (receipt.status === "reverted") {
       return { status: "skipped", reason: `goal withdraw reverted (tx ${hash})` };

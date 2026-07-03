@@ -943,22 +943,27 @@ async function maybeDeployRotationEscrow(circleId: string): Promise<void> {
     roundDurationSecs,
     gracePeriodSecs,
   });
-  if (deployed.status === "confirmed") {
-    // For a target-payout circle the payout is already pinned to the target, so
-    // only record the contract address. For legacy circles, mirror the escrow's
-    // fee-deducted payout estimate (recipient nets pot − fee).
-    if (circle.targetMembers != null) {
-      await db
-        .update(circlesTable)
-        .set({ contractAddress: deployed.escrow })
-        .where(eq(circlesTable.id, circleId));
-    } else {
-      const potCents = circle.contributionCents * circle.totalRounds;
-      const feeCents = feeCentsOf(potCents);
-      await db
-        .update(circlesTable)
-        .set({ contractAddress: deployed.escrow, payoutCents: potCents - feeCents })
-        .where(eq(circlesTable.id, circleId));
-    }
+  if (deployed.status !== "confirmed") {
+    console.warn("[circle-escrow] deploy not confirmed:", {
+      circleId,
+      reason: deployed.reason,
+    });
+    return;
+  }
+  // For a target-payout circle the payout is already pinned to the target, so
+  // only record the contract address. For legacy circles, mirror the escrow's
+  // fee-deducted payout estimate (recipient nets pot − fee).
+  if (circle.targetMembers != null) {
+    await db
+      .update(circlesTable)
+      .set({ contractAddress: deployed.escrow })
+      .where(eq(circlesTable.id, circleId));
+  } else {
+    const potCents = circle.contributionCents * circle.totalRounds;
+    const feeCents = feeCentsOf(potCents);
+    await db
+      .update(circlesTable)
+      .set({ contractAddress: deployed.escrow, payoutCents: potCents - feeCents })
+      .where(eq(circlesTable.id, circleId));
   }
 }
