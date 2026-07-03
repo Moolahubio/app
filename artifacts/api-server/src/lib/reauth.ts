@@ -60,29 +60,37 @@ export async function issueReauthCode(userId: string, email: string, name: strin
 export async function consumeReauthCode(userId: string, code: string): Promise<boolean> {
   await db.delete(reauthCodesTable).where(lt(reauthCodesTable.expiresAt, new Date()));
 
-  const [row] = await db.select().from(reauthCodesTable).where(eq(reauthCodesTable.userId, userId));
-  if (!row || row.expiresAt < new Date()) return false;
+  return db.transaction(async (tx) => {
+    // Row-level lock serializes concurrent consume attempts for this user so
+    // the check-then-delete/increment sequence below is effectively atomic.
+    const [row] = await tx
+      .select()
+      .from(reauthCodesTable)
+      .where(eq(reauthCodesTable.userId, userId))
+      .for("update");
+    if (!row || row.expiresAt < new Date()) return false;
 
-  if (row.attempts >= MAX_ATTEMPTS) {
-    await db.delete(reauthCodesTable).where(eq(reauthCodesTable.id, row.id));
-    return false;
-  }
-
-  const candidate = Buffer.from(hashCode(code), "hex");
-  const stored = Buffer.from(row.codeHash, "hex");
-  const ok = candidate.length === stored.length && timingSafeEqual(candidate, stored);
-  if (!ok) {
-    const [updated] = await db
-      .update(reauthCodesTable)
-      .set({ attempts: sql`${reauthCodesTable.attempts} + 1` })
-      .where(eq(reauthCodesTable.id, row.id))
-      .returning({ attempts: reauthCodesTable.attempts });
-    if (updated && updated.attempts >= MAX_ATTEMPTS) {
-      await db.delete(reauthCodesTable).where(eq(reauthCodesTable.id, row.id));
+    if (row.attempts >= MAX_ATTEMPTS) {
+      await tx.delete(reauthCodesTable).where(eq(reauthCodesTable.id, row.id));
+      return false;
     }
-    return false;
-  }
 
-  await db.delete(reauthCodesTable).where(and(eq(reauthCodesTable.id, row.id)));
-  return true;
+    const candidate = Buffer.from(hashCode(code), "hex");
+    const stored = Buffer.from(row.codeHash, "hex");
+    const ok = candidate.length === stored.length && timingSafeEqual(candidate, stored);
+    if (!ok) {
+      const [updated] = await tx
+        .update(reauthCodesTable)
+        .set({ attempts: sql`${reauthCodesTable.attempts} + 1` })
+        .where(eq(reauthCodesTable.id, row.id))
+        .returning({ attempts: reauthCodesTable.attempts });
+      if (updated && updated.attempts >= MAX_ATTEMPTS) {
+        await tx.delete(reauthCodesTable).where(eq(reauthCodesTable.id, row.id));
+      }
+      return false;
+    }
+
+    await tx.delete(reauthCodesTable).where(and(eq(reauthCodesTable.id, row.id)));
+    return true;
+  });
 }

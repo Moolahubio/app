@@ -70,36 +70,41 @@ export async function consumeVerificationCode(userId: string, code: string): Pro
     .delete(emailVerificationCodesTable)
     .where(lt(emailVerificationCodesTable.expiresAt, new Date()));
 
-  const [row] = await db
-    .select()
-    .from(emailVerificationCodesTable)
-    .where(eq(emailVerificationCodesTable.userId, userId));
-  if (!row || row.expiresAt < new Date()) return false;
+  return db.transaction(async (tx) => {
+    // Row-level lock serializes concurrent consume attempts for this user so
+    // the check-then-delete/increment sequence below is effectively atomic.
+    const [row] = await tx
+      .select()
+      .from(emailVerificationCodesTable)
+      .where(eq(emailVerificationCodesTable.userId, userId))
+      .for("update");
+    if (!row || row.expiresAt < new Date()) return false;
 
-  // Already exhausted: invalidate and force a fresh code.
-  if (row.attempts >= MAX_ATTEMPTS) {
-    await db.delete(emailVerificationCodesTable).where(eq(emailVerificationCodesTable.id, row.id));
-    return false;
-  }
-
-  const candidate = Buffer.from(hashCode(code), "hex");
-  const stored = Buffer.from(row.codeHash, "hex");
-  const ok = candidate.length === stored.length && timingSafeEqual(candidate, stored);
-  if (!ok) {
-    const [updated] = await db
-      .update(emailVerificationCodesTable)
-      .set({ attempts: sql`${emailVerificationCodesTable.attempts} + 1` })
-      .where(eq(emailVerificationCodesTable.id, row.id))
-      .returning({ attempts: emailVerificationCodesTable.attempts });
-    // Burn the code once the attempt budget is spent.
-    if (updated && updated.attempts >= MAX_ATTEMPTS) {
-      await db.delete(emailVerificationCodesTable).where(eq(emailVerificationCodesTable.id, row.id));
+    // Already exhausted: invalidate and force a fresh code.
+    if (row.attempts >= MAX_ATTEMPTS) {
+      await tx.delete(emailVerificationCodesTable).where(eq(emailVerificationCodesTable.id, row.id));
+      return false;
     }
-    return false;
-  }
 
-  await db
-    .delete(emailVerificationCodesTable)
-    .where(and(eq(emailVerificationCodesTable.id, row.id)));
-  return true;
+    const candidate = Buffer.from(hashCode(code), "hex");
+    const stored = Buffer.from(row.codeHash, "hex");
+    const ok = candidate.length === stored.length && timingSafeEqual(candidate, stored);
+    if (!ok) {
+      const [updated] = await tx
+        .update(emailVerificationCodesTable)
+        .set({ attempts: sql`${emailVerificationCodesTable.attempts} + 1` })
+        .where(eq(emailVerificationCodesTable.id, row.id))
+        .returning({ attempts: emailVerificationCodesTable.attempts });
+      // Burn the code once the attempt budget is spent.
+      if (updated && updated.attempts >= MAX_ATTEMPTS) {
+        await tx.delete(emailVerificationCodesTable).where(eq(emailVerificationCodesTable.id, row.id));
+      }
+      return false;
+    }
+
+    await tx
+      .delete(emailVerificationCodesTable)
+      .where(and(eq(emailVerificationCodesTable.id, row.id)));
+    return true;
+  });
 }

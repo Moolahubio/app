@@ -72,36 +72,41 @@ export async function consumePasswordResetCode(userId: string, code: string): Pr
     .delete(passwordResetCodesTable)
     .where(lt(passwordResetCodesTable.expiresAt, new Date()));
 
-  const [row] = await db
-    .select()
-    .from(passwordResetCodesTable)
-    .where(eq(passwordResetCodesTable.userId, userId));
-  if (!row || row.expiresAt < new Date()) return false;
+  return db.transaction(async (tx) => {
+    // Row-level lock serializes concurrent consume attempts for this user so
+    // the check-then-delete/increment sequence below is effectively atomic.
+    const [row] = await tx
+      .select()
+      .from(passwordResetCodesTable)
+      .where(eq(passwordResetCodesTable.userId, userId))
+      .for("update");
+    if (!row || row.expiresAt < new Date()) return false;
 
-  // Already exhausted: invalidate and force a fresh code.
-  if (row.attempts >= MAX_ATTEMPTS) {
-    await db.delete(passwordResetCodesTable).where(eq(passwordResetCodesTable.id, row.id));
-    return false;
-  }
-
-  const candidate = Buffer.from(hashCode(code), "hex");
-  const stored = Buffer.from(row.codeHash, "hex");
-  const ok = candidate.length === stored.length && timingSafeEqual(candidate, stored);
-  if (!ok) {
-    const [updated] = await db
-      .update(passwordResetCodesTable)
-      .set({ attempts: sql`${passwordResetCodesTable.attempts} + 1` })
-      .where(eq(passwordResetCodesTable.id, row.id))
-      .returning({ attempts: passwordResetCodesTable.attempts });
-    // Burn the code once the attempt budget is spent.
-    if (updated && updated.attempts >= MAX_ATTEMPTS) {
-      await db.delete(passwordResetCodesTable).where(eq(passwordResetCodesTable.id, row.id));
+    // Already exhausted: invalidate and force a fresh code.
+    if (row.attempts >= MAX_ATTEMPTS) {
+      await tx.delete(passwordResetCodesTable).where(eq(passwordResetCodesTable.id, row.id));
+      return false;
     }
-    return false;
-  }
 
-  await db
-    .delete(passwordResetCodesTable)
-    .where(and(eq(passwordResetCodesTable.id, row.id)));
-  return true;
+    const candidate = Buffer.from(hashCode(code), "hex");
+    const stored = Buffer.from(row.codeHash, "hex");
+    const ok = candidate.length === stored.length && timingSafeEqual(candidate, stored);
+    if (!ok) {
+      const [updated] = await tx
+        .update(passwordResetCodesTable)
+        .set({ attempts: sql`${passwordResetCodesTable.attempts} + 1` })
+        .where(eq(passwordResetCodesTable.id, row.id))
+        .returning({ attempts: passwordResetCodesTable.attempts });
+      // Burn the code once the attempt budget is spent.
+      if (updated && updated.attempts >= MAX_ATTEMPTS) {
+        await tx.delete(passwordResetCodesTable).where(eq(passwordResetCodesTable.id, row.id));
+      }
+      return false;
+    }
+
+    await tx
+      .delete(passwordResetCodesTable)
+      .where(and(eq(passwordResetCodesTable.id, row.id)));
+    return true;
+  });
 }
