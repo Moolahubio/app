@@ -97,3 +97,18 @@ the route returns 503 and exposes nothing. The user explicitly declined to
 provision the token secret (considers a shared bearer token a security risk), so
 do NOT auto-create/request it — leave enabling it to the operator. Do not weaken
 the gate to plain `requireAuth` (that would leak operator data to every user).
+
+## Source of truth: on-chain and ledger are co-authoritative (user-confirmed)
+The user chose the "let them work together" model over making either side the sole
+truth. On-chain is authoritative for VALUE and settlement FINALITY (a confirmed
+`Transfer`/`RoundSettled` is what happened to the money; the ledger converges to it,
+never overrides it). The ledger is authoritative for INTENT/MEANING and everything
+not-yet/never on-chain (membership, payout order, fees, streaks, pending + off-chain
+balances). The reconciler is the referee that drives `pending` ledger claims to a
+terminal state matching chain reality.
+**Why:** the chain is trust-minimized / verifiable / DR-safe but partial and slow
+(RPC lag); the ledger is complete / fast / expresses intent but mutable. Neither
+alone can run the product.
+**How to apply:** never let a chain-vs-ledger divergence resolve silently — surface
+it (alert/log), book failures as `pending` (not `none`), and do not add code paths
+that silently prefer one side. This is a confirmed decision; stay consistent with it.
