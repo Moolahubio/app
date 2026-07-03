@@ -41,6 +41,18 @@ workflows do), or (b) prove the on-chain op directly with `cast send` (e.g.
 `confirmed` rows with real tx hashes. Never run the two on-chain suites in parallel
 (shared platform key → nonce collisions).
 
+**The running api-server IS a competing signer.** Its `startSettlementLoop`
+reconciler claims pending `onchain_transfers` (SKIP LOCKED) and tops up user gas
+from the SAME `$PLATFORM_PRIVATE_KEY`. So an on-chain e2e run while the api-server
+workflow is up collides on the platform nonce — symptoms: mint/approve revert with
+"An existing transaction had higher priority" (platform nonce) or the user wallet's
+`approve` reverts "Signer had insufficient balance" (its `ensureGas` top-up got
+stuck). Fix: stop the api-server first (kill its node tree by explicit PID, or via
+a workflow that isn't running concurrently), then run ONE on-chain process.
+**Recovery once polluted:** stuck low-priority platform txs block the nonce queue,
+so even isolated reruns keep failing for MINUTES until the mempool drains — waiting
+~75s is often not enough. Don't hammer it; each retry adds more stuck txs.
+
 ## Side-effect notes
 - Importing `settlement.ts` is side-effect free: the reconciler interval only
   starts via `startSettlementLoop()` (called from `index.ts`), never at import.

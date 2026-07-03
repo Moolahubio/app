@@ -1891,6 +1891,12 @@ components:
           type: integer
         goalTotalCents:
           type: integer
+        pendingCents:
+          type: integer
+          description: On-chain wallet outflows still settling (not yet reflected on-chain).
+        balanceUnavailable:
+          type: boolean
+          description: True when an on-chain balance read failed, so displayed figures may be understated.
         circlePotCents:
           type: integer
         yieldApy:
@@ -1936,6 +1942,12 @@ components:
           type: integer
         goalAllocatedCents:
           type: integer
+        pendingCents:
+          type: integer
+          description: On-chain wallet outflows still settling (not yet reflected on-chain).
+        balanceUnavailable:
+          type: boolean
+          description: True when an on-chain balance read failed, so displayed figures may be understated.
         address:
           type: ["string", "null"]
           description: The user's Monad wallet address, or null when no wallet has been set up yet.
@@ -2193,6 +2205,9 @@ components:
           type: integer
         savedCents:
           type: integer
+        balanceUnavailable:
+          type: boolean
+          description: True when this goal's on-chain vault balance read failed, so savedCents may be understated.
         deadline:
           type: string
         frequency:

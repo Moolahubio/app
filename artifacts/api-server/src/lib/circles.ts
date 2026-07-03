@@ -13,6 +13,7 @@ import { onchainEnabled, explorerUrl, escrowEnabled, deployCircleEscrow } from "
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { requireWalletForUser } from "./wallet";
+import { walletSpendableCents } from "./onchainBalances";
 import { recordSave } from "./streaks";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
@@ -295,19 +296,32 @@ export async function contribute(userId: string, circleId: string) {
     );
   if (already) throw new AppError("You've already contributed this round");
 
-  await requireWalletForUser(userId);
-  if ((await accountBalance(acct.wallet(userId))) < circle.contributionCents) {
+  // On-chain settlement routes a rotation contribution into the circle's own
+  // escrow contract (member wallet → escrow), which auto-settles the round when
+  // the last member contributes. When on-chain is configured, a contribution is
+  // only ever real once it settles on-chain, so a rotation circle without a live
+  // escrow must block rather than silently move ledger-only. Accumulation circles
+  // have no on-chain contribution path yet, so they always settle ledger-only.
+  const wantsOnchain = circle.type !== "accumulation" && onchainEnabled();
+  if (wantsOnchain && !circle.contractAddress) {
+    throw new AppError(
+      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+    );
+  }
+  const escrow = wantsOnchain ? circle.contractAddress : null;
+
+  // Gate on the spendable wallet balance. On-chain (escrow) contributions gate on
+  // the REAL on-chain balance minus in-flight outflows; ledger-only contributions
+  // (accumulation, or rotation offline) gate on the ledger wallet balance — using
+  // the on-chain gate there would ignore the ledger debit and allow double-spend.
+  const wallet = escrow ? await requireWalletForUser(userId) : null;
+  const spendable =
+    escrow && wallet
+      ? await walletSpendableCents(userId, wallet.address)
+      : await accountBalance(acct.wallet(userId));
+  if (spendable < circle.contributionCents) {
     throw new AppError("Insufficient available balance");
   }
-
-  // On-chain settlement routes the contribution into the circle's own escrow
-  // contract (member wallet → escrow), which auto-settles the round when the
-  // last member contributes. Resolve its address before the tx; null disables
-  // on-chain for this contribution (e.g. the escrow was never deployed).
-  const escrow =
-    circle.type !== "accumulation" && circle.contractAddress && onchainEnabled()
-      ? circle.contractAddress
-      : null;
 
   // Reserve the contribution slot and move the money in ONE transaction so they
   // commit or roll back together. The unique (circle_id, user_id, round)
@@ -339,7 +353,7 @@ export async function contribute(userId: string, circleId: string) {
       fromKey: acct.wallet(userId),
       toKey: acct.pool(circleId),
       amountCents: circle.contributionCents,
-      onchain: escrow ? { onchainStatus: "pending" } : { onchainStatus: "none" },
+      onchain: { onchainStatus: escrow ? "pending" : "none" },
       requireSufficientFrom: true,
       circleId,
       round,
@@ -380,7 +394,7 @@ export async function contribute(userId: string, circleId: string) {
   // reconciler, so the escrow's RoundSettled backfill always finds pending
   // payout/fee rows to stamp — never racing ahead of their insertion.
   await maybeProcessPayout(circleId, round);
-  if (escrow) kickReconciler();
+  kickReconciler();
   return txn;
 }
 

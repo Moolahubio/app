@@ -345,6 +345,8 @@ export interface Goal {
   color: string;
   targetCents: number;
   savedCents: number;
+  /** True when this goal's on-chain vault balance read failed, so savedCents may be understated. */
+  balanceUnavailable?: boolean;
   deadline: string;
   frequency: string;
   /** @nullable */
@@ -395,6 +397,10 @@ export interface DashboardSummary {
   availableCents: number;
   totalCents: number;
   goalTotalCents: number;
+  /** On-chain wallet outflows still settling (not yet reflected on-chain). */
+  pendingCents?: number;
+  /** True when an on-chain balance read failed, so displayed figures may be understated. */
+  balanceUnavailable?: boolean;
   circlePotCents: number;
   yieldApy: number;
   recentActivity: ActivityItem[];
@@ -409,6 +415,10 @@ export interface WalletInfo {
   availableCents: number;
   totalCents: number;
   goalAllocatedCents: number;
+  /** On-chain wallet outflows still settling (not yet reflected on-chain). */
+  pendingCents?: number;
+  /** True when an on-chain balance read failed, so displayed figures may be understated. */
+  balanceUnavailable?: boolean;
   /**
      * The user's Monad wallet address, or null when no wallet has been set up yet.
      * @nullable

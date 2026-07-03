@@ -10,25 +10,31 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       <section className="relative isolate hidden flex-col justify-between overflow-hidden bg-ink-950 p-12 text-white lg:flex">
         <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:48px_48px] [mask-image:radial-gradient(80%_60%_at_30%_20%,black,transparent)]" />
 
-        <Link href="/login">
-          <Logo tone="light" />
-        </Link>
+        <div>
+          <Link href="/login">
+            <Logo tone="light" />
+          </Link>
+          <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
+            Just Save, Earn &amp; Belong.
+          </p>
+        </div>
 
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
-            Saving, made social
+            Save. Earn. Belong.
           </p>
           <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
             Built on Monad
           </p>
           <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
-            Save today.
+            Save. Earn.
             <br />
-            <span className="text-jade-400">Reach it together.</span>
+            <span className="text-jade-400">Belong.</span>
           </h1>
           <p className="mt-5 max-w-sm text-lg text-white/60">
-            Open a secure wallet in minutes. No bank account needed. Set a goal
-            and save with people you trust.
+            Moolahub brings together personal savings and traditional susu groups
+            with modern fintech and blockchain technology. Save consistently, earn
+            yield on your money, and belong to a community that grows wealth together.
           </p>
           <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5">
             <AscendingChart className="max-h-32" />

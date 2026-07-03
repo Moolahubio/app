@@ -63,7 +63,7 @@ export default function GoalDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackLink href="/goals" label="All goals" />
+      <BackLink href="/goals" label="Personal Savings" />
 
       <div className="grid gap-6 md:grid-cols-5">
         {/* progress ring */}

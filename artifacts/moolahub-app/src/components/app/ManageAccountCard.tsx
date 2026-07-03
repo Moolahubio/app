@@ -115,7 +115,7 @@ export function ManageAccountCard() {
             <DialogTitle>Deactivate your account?</DialogTitle>
             <DialogDescription>
               Your account will be temporarily disabled and you'll be signed out. Your
-              data, balances, and circles stay safe. Sign back in any time to
+              data, balances, and group savings stay safe. Sign back in any time to
               reactivate.
             </DialogDescription>
           </DialogHeader>
@@ -142,7 +142,7 @@ export function ManageAccountCard() {
             <DialogTitle>Delete your account?</DialogTitle>
             <DialogDescription>
               This permanently removes your profile and revokes access. You can only
-              delete when your balance is zero and you have no active goals or circles.
+              delete when your balance is zero and you have no active personal or group savings.
               Type <span className="font-semibold text-foreground">DELETE</span> to
               confirm.
             </DialogDescription>

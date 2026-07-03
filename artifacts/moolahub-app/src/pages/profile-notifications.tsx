@@ -57,7 +57,7 @@ const CATEGORIES: {
   },
   {
     key: "social",
-    label: "Circles & social",
+    label: "Group savings & social",
     description: "Invites, member activity, and circle updates.",
   },
   {

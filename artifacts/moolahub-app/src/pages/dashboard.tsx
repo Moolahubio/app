@@ -90,7 +90,7 @@ export default function DashboardPage() {
                   </span>
                 </span>
                 <span>
-                  In goals{" "}
+                  In savings{" "}
                   <span className="font-semibold text-white">
                     {formatMoney(goalTotalCents)}
                   </span>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
               <IconChip tone="jade">
                 <Target className="h-5 w-5" />
               </IconChip>
-              <h2 className="font-display text-lg font-bold text-foreground">Your goals</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">Personal savings</h2>
             </div>
             <Link href="/goals" className="text-muted-foreground transition-colors hover:text-muted-foreground">
               <ChevronRight className="h-5 w-5" />
@@ -210,7 +210,7 @@ export default function DashboardPage() {
           </div>
           <div className="mt-5 space-y-4">
             {activeGoals.length === 0 && (
-              <p className="text-sm text-muted-foreground">No goals yet. Create your first one.</p>
+              <p className="text-sm text-muted-foreground">Nothing here yet. Create your first goal.</p>
             )}
             {activeGoals.slice(0, 3).map((g) => (
               <Link key={g.id} href={`/goals/${g.id}`} className="block group">

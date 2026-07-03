@@ -10,7 +10,7 @@ import {
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { sendError } from "../lib/errors";
 import { getWalletForUser } from "../lib/wallet";
-import { userBalances } from "../lib/ledger";
+import { userOnchainBalanceSummary } from "../lib/onchainBalances";
 import { faucetDeposit, syncDeposits, withdrawToAddress } from "../lib/deposits";
 import { onchainEnabled, networkName, faucetEnabled, depositSyncEnabled } from "../lib/chain";
 
@@ -22,13 +22,17 @@ router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
   // "Continue with Privy" flow in the Wallet section), this returns an empty
   // state with hasWallet=false; the client renders the setup card.
   const wallet = await getWalletForUser(user.id);
-  const bal = await userBalances(user.id);
+  // Balances are sourced from on-chain (when configured) so what we display is
+  // the REAL settled balance, not the ledger's optimistic view.
+  const bal = await userOnchainBalanceSummary(user.id);
 
   res.json(
     GetWalletResponse.parse({
       availableCents: bal.availableCents,
       totalCents: bal.totalCents,
       goalAllocatedCents: bal.allocatedCents,
+      pendingCents: bal.pendingCents,
+      balanceUnavailable: bal.balanceUnavailable,
       address: wallet?.address ?? null,
       network: networkName(),
       onchainEnabled: onchainEnabled(),

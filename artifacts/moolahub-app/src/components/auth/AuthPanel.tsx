@@ -56,7 +56,7 @@ export function AuthPanel() {
           Welcome back
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Sign in to keep saving toward your goals.
+          Sign in to keep your savings on track.
         </p>
       </div>
 

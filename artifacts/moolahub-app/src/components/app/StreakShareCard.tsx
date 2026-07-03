@@ -153,5 +153,5 @@ function drawCard(
 
   ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.font = "600 38px Inter, system-ui, sans-serif";
-  ctx.fillText("MoolaHub · Save today, reach it together", S / 2, S - 80);
+  ctx.fillText("MoolaHub · Save. Earn. Belong.", S / 2, S - 80);
 }

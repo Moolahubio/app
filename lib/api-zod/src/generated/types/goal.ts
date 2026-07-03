@@ -14,6 +14,8 @@ export interface Goal {
   color: string;
   targetCents: number;
   savedCents: number;
+  /** True when this goal's on-chain vault balance read failed, so savedCents may be understated. */
+  balanceUnavailable?: boolean;
   deadline: string;
   frequency: string;
   /** @nullable */

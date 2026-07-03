@@ -253,6 +253,25 @@ export async function usdcBalance(address: string): Promise<number> {
   }
 }
 
+/**
+ * Read a USDC balance in cents, THROWING when the RPC is unreachable. Use this
+ * for money-movement gating (withdrawals, contributions, allocations) where a
+ * silent 0 could wrongly block a funded user, and where an unverifiable balance
+ * must fail closed rather than be assumed. The catch-to-0 `usdcBalance` above is
+ * only for best-effort display wrappers that surface `balanceUnavailable`.
+ */
+export async function usdcBalanceStrict(address: string): Promise<number> {
+  const usdc = usdcContract();
+  if (!usdc) throw new Error("USDC contract not configured");
+  const units = await publicClient().readContract({
+    address: usdc,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [getAddress(address)],
+  });
+  return unitsToCents(units as bigint);
+}
+
 /** Read an ETH (native gas) balance, in wei. Returns null when unreachable. */
 export async function ethBalanceWei(address: string): Promise<bigint | null> {
   try {
@@ -586,6 +605,24 @@ export async function goalVaultBalance(owner: string, goalId: string): Promise<n
   } catch {
     return 0;
   }
+}
+
+/**
+ * Read a user's on-chain goal balance in cents, THROWING when the RPC is
+ * unreachable or the vault isn't configured. Gating (releases, deletes) must
+ * fail closed rather than treat an unreadable balance as 0.
+ */
+export async function goalVaultBalanceStrict(owner: string, goalId: string): Promise<number> {
+  const vault = goalVaultContract();
+  if (!vault) throw new Error("goal vault not configured");
+  if (!isValidAddress(owner)) throw new Error("invalid owner address");
+  const units = await publicClient().readContract({
+    address: vault,
+    abi: GOAL_VAULT_ABI,
+    functionName: "balanceOf",
+    args: [getAddress(owner), goalIdToBytes32(goalId)],
+  });
+  return unitsToCents(units as bigint);
 }
 
 export type GoalWithdrawResult =

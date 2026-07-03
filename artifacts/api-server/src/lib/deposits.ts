@@ -1,7 +1,7 @@
 import { eq, and, inArray } from "drizzle-orm";
 import { AppError } from "./errors";
 import { db, transactionsTable } from "@workspace/db";
-import { acct, transfer, accountBalance } from "./ledger";
+import { acct, transfer } from "./ledger";
 import {
   onchainEnabled,
   getIncomingUsdc,
@@ -12,6 +12,7 @@ import {
 } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { getWalletForUser } from "./wallet";
+import { walletSpendableCents } from "./onchainBalances";
 import { notify } from "./notifications";
 import { formatMoney, truncateAddress } from "./money";
 
@@ -35,16 +36,13 @@ function isUniqueViolation(e: unknown): boolean {
   );
 }
 
-/** Initial on-chain meta for a movement: pending when settlement is configured. */
-function initialOnchainMeta() {
-  return onchainEnabled()
-    ? { onchainStatus: "pending" as const }
-    : { onchainStatus: "none" as const };
-}
-
 /**
- * Testnet faucet: the platform distributor sends test USDC to the user's
- * wallet. Credits the ledger; settles on-chain where the platform is funded.
+ * Testnet faucet: the platform distributor mints test USDC to the user's wallet
+ * on-chain. When on-chain settlement is configured the ledger credit is booked
+ * 'pending' and only stamped confirmed once the mint settles — a faucet credit
+ * that never reaches the chain would be phantom balance the user can't actually
+ * spend (on-chain is the source of truth). Offline (no chain configured) the
+ * faucet is a pure ledger convenience and books the credit directly.
  */
 export async function faucetDeposit(userId: string, amountCents: number) {
   const wallet = await getWalletForUser(userId);
@@ -52,8 +50,12 @@ export async function faucetDeposit(userId: string, amountCents: number) {
   if (amountCents <= 0 || amountCents > 1_000_00) {
     throw new AppError("Enter an amount up to 1,000 test USDC.");
   }
+  // When on-chain settlement is configured, the mint must actually land before
+  // the credit is spendable, so we book the ledger 'pending' and settle via the
+  // reconciler. Offline (no chain), money moves ledger-only (onchainStatus
+  // 'none') — the testnet-convenience faucet with no real funding source.
+  const settle = onchainEnabled();
 
-  const enabled = onchainEnabled();
   const txn = await db.transaction(async (tx) => {
     const t = await transfer({
       type: "deposit",
@@ -62,10 +64,10 @@ export async function faucetDeposit(userId: string, amountCents: number) {
       fromKey: acct.external,
       toKey: acct.wallet(userId),
       amountCents,
-      onchain: initialOnchainMeta(),
+      onchain: { onchainStatus: settle ? "pending" : "none" },
       tx,
     });
-    if (enabled) {
+    if (settle) {
       await enqueueOnchainTransfer(
         {
           transactionId: t.id,
@@ -80,7 +82,7 @@ export async function faucetDeposit(userId: string, amountCents: number) {
     }
     return t;
   });
-  if (enabled) kickReconciler();
+  if (settle) kickReconciler();
   await notify(userId, {
     type: "deposit",
     title: "USDC received",
@@ -175,11 +177,14 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
   const wallet = await getWalletForUser(userId);
   if (!wallet) throw new AppError("Set up your wallet first to withdraw.");
-  if ((await accountBalance(acct.wallet(userId))) < amountCents) {
+  // Gate on the spendable balance: on-chain (confirmed minus in-flight outflows)
+  // when configured, else the ledger balance offline. On-chain USDC is the source
+  // of truth for what can be spent whenever a chain is available.
+  if ((await walletSpendableCents(userId, wallet.address)) < amountCents) {
     throw new AppError("Insufficient available balance.");
   }
+  const settle = onchainEnabled();
 
-  const enabled = onchainEnabled();
   const txn = await db.transaction(async (tx) => {
     const t = await transfer({
       type: "withdrawal",
@@ -188,11 +193,11 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
       fromKey: acct.wallet(userId),
       toKey: acct.external,
       amountCents,
-      onchain: initialOnchainMeta(),
+      onchain: { onchainStatus: settle ? "pending" : "none" },
       requireSufficientFrom: true,
       tx,
     });
-    if (enabled) {
+    if (settle) {
       await enqueueOnchainTransfer(
         {
           transactionId: t.id,
@@ -207,7 +212,7 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
     }
     return t;
   });
-  if (enabled) kickReconciler();
+  if (settle) kickReconciler();
   await notify(
     userId,
     {

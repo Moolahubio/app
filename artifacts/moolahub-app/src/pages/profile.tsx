@@ -329,7 +329,7 @@ export default function ProfilePage() {
       </button>
 
       <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-center text-sm text-muted-foreground">
-        <Eyebrow className="text-muted-foreground">Save today · Reach it together</Eyebrow>
+        <Eyebrow className="text-muted-foreground">Save. Earn. Belong.</Eyebrow>
       </div>
     </div>
   );

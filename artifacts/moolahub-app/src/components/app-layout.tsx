@@ -22,8 +22,8 @@ import { useGetDashboardSummary, useListNotifications, getGetDashboardSummaryQue
 
 const nav: NavItem[] = [
   { label: "Home", href: "/", icon: LayoutDashboard },
-  { label: "Circles", href: "/circles", icon: Users },
-  { label: "Goals", href: "/goals", icon: Target },
+  { label: "Personal Savings", href: "/goals", icon: Target },
+  { label: "Group Savings", href: "/circles", icon: Users },
   { label: "Learn", href: "/learn", icon: GraduationCap },
   { label: "Activity", href: "/activity", icon: Receipt },
 ];

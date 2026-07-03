@@ -10,6 +10,10 @@ export interface WalletInfo {
   availableCents: number;
   totalCents: number;
   goalAllocatedCents: number;
+  /** On-chain wallet outflows still settling (not yet reflected on-chain). */
+  pendingCents?: number;
+  /** True when an on-chain balance read failed, so displayed figures may be understated. */
+  balanceUnavailable?: boolean;
   /**
      * The user's Monad wallet address, or null when no wallet has been set up yet.
      * @nullable

@@ -64,7 +64,7 @@ export default function WalletPage() {
           {formatMoney(wallet.availableCents)}
         </p>
         <p className="mt-1 text-sm text-white/70">
-          {formatMoney(wallet.goalAllocatedCents)} allocated to goals
+          {formatMoney(wallet.goalAllocatedCents)} allocated to savings
         </p>
 
         {wallet.address && (

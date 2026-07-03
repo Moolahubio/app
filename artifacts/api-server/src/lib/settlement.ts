@@ -4,10 +4,15 @@ import {
   onchainTransfersTable,
   transactionsTable,
   contributionsTable,
+  postingsTable,
+  circlesTable,
+  circleMembersTable,
   type OnchainTransfer,
 } from "@workspace/db";
 import { onchainEnabled, sendUsdc, mintUsdc, escrowContribute, goalDeposit, goalWithdraw } from "./chain";
 import { getSigningSecret } from "./wallet";
+import { notify } from "./notifications";
+import { formatMoney } from "./money";
 import { logger } from "./logger";
 
 /**
@@ -259,6 +264,23 @@ function circleIdFromMemo(memo: string | null): string | null {
   return parts[0] === "susu" && parts[1] ? parts[1] : null;
 }
 
+/** Parse `susu:<circleId>:<round>` memos into circle id + round (for unwinding). */
+function circleRoundFromMemo(memo: string | null): { circleId: string; round: number } | null {
+  if (!memo) return null;
+  const parts = memo.split(":");
+  if (parts[0] !== "susu" || !parts[1] || parts[2] === undefined) return null;
+  const round = Number(parts[2]);
+  if (!Number.isInteger(round)) return null;
+  return { circleId: parts[1], round };
+}
+
+/** Parse `payout:<circleId>` memos (accumulation savings-returned) into circle id. */
+function payoutCircleFromMemo(memo: string | null): string | null {
+  if (!memo) return null;
+  const parts = memo.split(":");
+  return parts[0] === "payout" && parts[1] ? parts[1] : null;
+}
+
 /**
  * Parse `goal:<goalId>[:<feeTxnId>]` memos. `goalId` is the on-chain key; the
  * optional `feeTxnId` is the ledger fee transaction a withdraw must confirm
@@ -317,23 +339,214 @@ async function requeue(rowId: string, reason: string): Promise<void> {
 }
 
 /**
- * Dead-letter a transfer: mark the queue row 'failed' (so the claim query never
- * picks it up again) and flag the linked ledger transaction 'failed' so the
- * activity feed surfaces it for an operator. The ledger itself is unchanged —
- * the money already moved in the double-entry ledger; only the on-chain mirror
- * is broken.
+ * Reverse a ledger transaction by booking a mirror-image `reversal` transaction:
+ * one negated posting for every posting of the original, so the two together net
+ * to zero and every touched account returns to its pre-transaction balance. No
+ * `requireSufficientFrom` — a reversal must ALWAYS succeed to restore balances,
+ * even if an intervening spend would make the "from" side look short. Purely
+ * ledger-internal (`onchainStatus: 'none'`), since it mirrors an on-chain
+ * transfer that never happened. Idempotency is the caller's responsibility (the
+ * CAS in `markFailed` guarantees a row is reversed at most once).
+ */
+async function reverseLedgerTransaction(
+  tx: Executor,
+  originalTxnId: string,
+  description: string,
+): Promise<void> {
+  const [orig] = await tx
+    .select()
+    .from(transactionsTable)
+    .where(eq(transactionsTable.id, originalTxnId));
+  if (!orig) return;
+  const origPostings = await tx
+    .select()
+    .from(postingsTable)
+    .where(eq(postingsTable.transactionId, originalTxnId));
+  if (origPostings.length === 0) return;
+  const [rev] = await tx
+    .insert(transactionsTable)
+    .values({
+      type: "reversal",
+      description,
+      userId: orig.userId,
+      circleId: orig.circleId,
+      round: orig.round,
+      onchainStatus: "none",
+    })
+    .returning();
+  await tx.insert(postingsTable).values(
+    origPostings.map((p) => ({
+      transactionId: rev.id,
+      accountId: p.accountId,
+      amountCents: -p.amountCents,
+    })),
+  );
+}
+
+/**
+ * Undo a rotation round whose escrow contribution permanently failed. When the
+ * final contribution fills a round, `maybeProcessPayout` books the recipient's
+ * payout (and fee) as pending, claims the recipient (`paidOut = true`) and
+ * advances the circle. If a contribution then dead-letters, the escrow can never
+ * settle that round on-chain, so those pending payout/fee rows must be reversed
+ * and the round reopened. A round already stamped 'confirmed' means the escrow
+ * DID pay out on-chain — reversing then would be wrong, so we refuse and log
+ * loudly for manual intervention.
+ */
+async function unwindCircleRound(tx: Executor, circleId: string, round: number): Promise<void> {
+  const payoutRows = await tx
+    .select()
+    .from(transactionsTable)
+    .where(
+      and(
+        eq(transactionsTable.circleId, circleId),
+        eq(transactionsTable.round, round),
+        inArray(transactionsTable.type, ["payout", "fee"]),
+      ),
+    );
+  const confirmed = payoutRows.filter((r) => r.onchainStatus === "confirmed");
+  if (confirmed.length > 0) {
+    logger.error(
+      { circleId, round, confirmed: confirmed.map((r) => r.id) },
+      "cannot unwind circle round: payout already settled on-chain; manual reconciliation required",
+    );
+    return;
+  }
+  for (const r of payoutRows) {
+    await reverseLedgerTransaction(tx, r.id, `Reversal · ${r.description}`);
+  }
+  // Reopen the recipient's slot so the round can refill and re-pay once retried.
+  await tx
+    .update(circleMembersTable)
+    .set({ paidOut: false })
+    .where(and(eq(circleMembersTable.circleId, circleId), eq(circleMembersTable.payoutRound, round)));
+  // Roll the circle back to this round. `maybeProcessPayout` advanced it to
+  // round+1 (or marked it 'completed' on the last round), so accept either.
+  await tx
+    .update(circlesTable)
+    .set({ status: "active", currentRound: round })
+    .where(
+      and(
+        eq(circlesTable.id, circleId),
+        inArray(circlesTable.currentRound, [round, round + 1]),
+      ),
+    );
+}
+
+/**
+ * Reverse the ledger side-effects of a dead-lettered transfer so the ledger
+ * stops showing money that never moved on-chain. On-chain is the source of
+ * truth: when a transfer permanently fails, its USDC never left (or never
+ * arrived), so the matching ledger posting must be undone or the funds are
+ * stranded (e.g. a failed withdrawal would keep the wallet debited forever,
+ * blocking re-spend even though the coins are still on-chain).
+ */
+async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void> {
+  switch (row.kind) {
+    // Simple single-transaction transfers: reverse the linked ledger txn.
+    // faucet: external→wallet mint; withdrawal: wallet→external; goal_deposit:
+    // wallet→goal. Undoing each restores the pre-transfer balances.
+    case "faucet":
+    case "withdrawal":
+    case "goal_deposit":
+      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · on-chain transfer failed");
+      return;
+    // goal_withdraw settles the net release AND the fee on one on-chain
+    // withdrawal, so both ledger txns must be reversed together.
+    case "goal_withdraw": {
+      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · goal withdrawal failed");
+      const parsed = goalFromMemo(row.memo);
+      if (parsed?.feeTxnId) {
+        await reverseLedgerTransaction(tx, parsed.feeTxnId, "Reversal · goal withdrawal fee");
+      }
+      return;
+    }
+    // A rotation contribution that never reached the escrow: reverse the ledger
+    // contribution, delete the contribution record (it never settled), and
+    // unwind the round it may have triggered.
+    case "escrow_contribute": {
+      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · circle contribution failed");
+      if (row.contributionId) {
+        await tx.delete(contributionsTable).where(eq(contributionsTable.id, row.contributionId));
+      }
+      const parsed = circleRoundFromMemo(row.memo);
+      if (parsed) await unwindCircleRound(tx, parsed.circleId, parsed.round);
+      return;
+    }
+    // Accumulation savings-returned payout (platform → member wallet) that
+    // failed to send: reverse the payout and reopen the member's claim so a
+    // retry can pay them. This should be rare, so log it loudly.
+    case "payout": {
+      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · payout failed");
+      const circleId = payoutCircleFromMemo(row.memo);
+      const [origTxn] = await tx
+        .select({ userId: transactionsTable.userId })
+        .from(transactionsTable)
+        .where(eq(transactionsTable.id, row.transactionId));
+      if (circleId && origTxn?.userId) {
+        await tx
+          .update(circleMembersTable)
+          .set({ paidOut: false })
+          .where(
+            and(
+              eq(circleMembersTable.circleId, circleId),
+              eq(circleMembersTable.userId, origTxn.userId),
+            ),
+          );
+      }
+      logger.error(
+        { rowId: row.id, circleId, txnId: row.transactionId },
+        "accumulation payout dead-lettered; reversed and reopened member claim",
+      );
+      return;
+    }
+    // Legacy direct "contribution" transfers have no round machinery to unwind.
+    default:
+      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · on-chain transfer failed");
+      return;
+  }
+}
+
+/**
+ * Dead-letter a transfer: flip the queue row 'failed' (so the claim query never
+ * picks it up again), flag the linked ledger transaction 'failed', and REVERSE
+ * its ledger side-effects so the ledger matches on-chain reality (the money
+ * never moved). The CAS on `status = 'processing'` makes this exactly-once: only
+ * the pass that flips the row does the reversal, so a double call (e.g. a retry
+ * path) can never reverse twice. All of it commits in one transaction.
  */
 async function markFailed(row: OnchainTransfer, reason: string): Promise<void> {
-  await db.transaction(async (tx) => {
-    await tx
+  const reversed = await db.transaction(async (tx) => {
+    const flipped = await tx
       .update(onchainTransfersTable)
       .set({ status: "failed", lastError: reason })
-      .where(eq(onchainTransfersTable.id, row.id));
+      .where(and(eq(onchainTransfersTable.id, row.id), eq(onchainTransfersTable.status, "processing")))
+      .returning({ id: onchainTransfersTable.id });
+    if (flipped.length === 0) return false;
     await tx
       .update(transactionsTable)
       .set({ onchainStatus: "failed" })
       .where(eq(transactionsTable.id, row.transactionId));
+    await reverseForKind(tx, row);
+    return true;
   });
+  if (!reversed) return;
+  logger.warn({ rowId: row.id, kind: row.kind, reason }, "settlement transfer dead-lettered and reversed");
+  // Notify the source user (best-effort, outside the ledger transaction) that
+  // their movement was refunded. Platform-sourced transfers (faucet/payout) have
+  // no source user to notify.
+  if (row.sourceUserId) {
+    await notify(
+      row.sourceUserId,
+      {
+        type: "refund",
+        title: "Transfer reversed",
+        body: `A ${formatMoney(row.amountCents)} transfer couldn't be completed on-chain and was returned to your balance.`,
+        link: "/wallet",
+      },
+      { email: true },
+    ).catch((e) => logger.warn({ err: e, rowId: row.id }, "refund notification failed"));
+  }
 }
 
 /**

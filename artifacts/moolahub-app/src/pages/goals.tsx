@@ -71,7 +71,7 @@ export default function GoalsPage() {
   };
 
   if (goalsLoading || walletLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading your goals…</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your personal savings…</div>;
   }
 
   const goalsList = goals ?? [];
@@ -81,9 +81,9 @@ export default function GoalsPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader
-        eyebrow="Savings Goals"
-        title="Your goals"
-        description="Set a target and a date, and we'll track your progress. Goals are pots within your one wallet, not separate accounts."
+        eyebrow="Personal Savings"
+        title="Your personal savings"
+        description="Set a target and a date, and we'll track your progress. Each goal is a pot within your one wallet, not a separate account."
         action={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
@@ -160,7 +160,7 @@ export default function GoalsPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            Allocated to goals
+            Allocated to savings
           </p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">
             {formatMoney(totalSaved)}

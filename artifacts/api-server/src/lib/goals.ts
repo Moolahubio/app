@@ -7,17 +7,30 @@ import {
   postingsTable,
   ledgerAccountsTable,
 } from "@workspace/db";
-import { acct, transfer, accountBalance, goalBalances } from "./ledger";
+import { acct, transfer, accountBalance } from "./ledger";
 import { notify } from "./notifications";
 import { formatMoney } from "./money";
-import { goalVaultEnabled, goalVaultContract, explorerUrl, networkName } from "./chain";
+import {
+  goalVaultEnabled,
+  goalVaultContract,
+  goalVaultBalanceStrict,
+  explorerUrl,
+  networkName,
+} from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
-import { requireWalletForUser } from "./wallet";
+import { getWalletForUser, requireWalletForUser } from "./wallet";
 import { recordSave } from "./streaks";
+import {
+  walletSpendableCents,
+  goalSpendableCents,
+  goalBalancesView,
+  pendingGoalTransfersExist,
+} from "./onchainBalances";
 
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
-// feeBps (2%). Deposits are free. When the vault isn't configured/reachable,
-// goals run ledger-only with no fee (graceful degradation, like circles).
+// feeBps (2%). Deposits are free; every withdrawal (including the auto-withdraw
+// on delete) charges the fee. On-chain settlement is required for all goal
+// movement, so the fee always applies.
 const FEE_BPS = Number(process.env.GOAL_FEE_BPS) || 200;
 
 function feeCentsOf(grossCents: number): number {
@@ -77,15 +90,23 @@ function goalOnchainMeta() {
 }
 
 export async function listGoals(userId: string) {
-  const [goals, balances] = await Promise.all([
-    db
-      .select()
-      .from(goalsTable)
-      .where(and(eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)))
-      .orderBy(asc(goalsTable.createdAt)),
-    goalBalances(userId),
-  ]);
-  return goals.map((g) => ({ ...g, savedCents: balances[g.id] ?? 0 }));
+  const wallet = await getWalletForUser(userId);
+  const goals = await db
+    .select()
+    .from(goalsTable)
+    .where(and(eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)))
+    .orderBy(asc(goalsTable.createdAt));
+  // On-chain vault balance is the displayed "saved" amount — the ledger is only
+  // the movement journal, the chain is the source of truth.
+  const balances = await goalBalancesView(
+    wallet?.address ?? null,
+    goals.map((g) => g.id),
+  );
+  return goals.map((g) => ({
+    ...g,
+    savedCents: balances[g.id]?.cents ?? 0,
+    balanceUnavailable: balances[g.id]?.balanceUnavailable ?? false,
+  }));
 }
 
 export async function getGoal(userId: string, goalId: string) {
@@ -100,10 +121,15 @@ export async function getGoal(userId: string, goalId: string) {
       ),
     );
   if (!goal) return null;
-  const [balances, history] = await Promise.all([goalBalances(userId), goalHistory(goalId)]);
+  const wallet = await getWalletForUser(userId);
+  const [balances, history] = await Promise.all([
+    goalBalancesView(wallet?.address ?? null, [goalId]),
+    goalHistory(goalId),
+  ]);
   return {
     ...goal,
-    savedCents: balances[goalId] ?? 0,
+    savedCents: balances[goalId]?.cents ?? 0,
+    balanceUnavailable: balances[goalId]?.balanceUnavailable ?? false,
     ...goalOnchainMeta(),
     history,
   };
@@ -136,7 +162,13 @@ export async function createGoal(
       imageUrl: input.imageUrl ?? null,
     })
     .returning();
-  return { ...goal, savedCents: 0, ...goalOnchainMeta(), history: [] as GoalHistoryItem[] };
+  return {
+    ...goal,
+    savedCents: 0,
+    balanceUnavailable: false,
+    ...goalOnchainMeta(),
+    history: [] as GoalHistoryItem[],
+  };
 }
 
 /**
@@ -154,13 +186,14 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
       and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
     );
   if (!goal) throw new AppError("Goal not found");
-  await requireWalletForUser(userId);
-  if ((await accountBalance(acct.wallet(userId))) < amountCents) {
+  const settle = goalVaultEnabled();
+  const vault = goalVaultContract();
+  const wallet = await requireWalletForUser(userId);
+  // Gate on the spendable wallet balance: real on-chain (confirmed minus
+  // in-flight outflows) when the vault is configured, else the ledger balance.
+  if ((await walletSpendableCents(userId, wallet.address)) < amountCents) {
     throw new AppError("Insufficient available balance");
   }
-
-  const onchain = goalVaultEnabled();
-  const vault = goalVaultContract();
 
   const txn = await db.transaction(async (tx) => {
     const t = await transfer({
@@ -172,9 +205,9 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
       toKey: acct.goal(goalId),
       amountCents,
       requireSufficientFrom: true,
-      onchain: onchain ? { onchainStatus: "pending" } : undefined,
+      onchain: { onchainStatus: settle ? "pending" : "none" },
     });
-    if (onchain && vault) {
+    if (settle && vault) {
       await enqueueOnchainTransfer(
         {
           transactionId: t.id,
@@ -190,7 +223,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
     return t;
   });
 
-  if (onchain) kickReconciler();
+  if (settle) kickReconciler();
 
   // Light the savings streak for this goal. Derived/non-financial and never
   // throws, so a streak hiccup can't affect the committed allocation.
@@ -247,12 +280,18 @@ async function releaseFromGoalCore(
   notifyUser: boolean,
 ): Promise<ReleaseResult> {
   const goal = { name: goalName };
-  const balances = await goalBalances(userId);
-  if ((balances[goalId] ?? 0) < amountCents) throw new AppError("Insufficient goal balance");
-
-  const onchain = goalVaultEnabled();
+  const settle = goalVaultEnabled();
   const vault = goalVaultContract();
-  const feeCents = onchain ? feeCentsOf(amountCents) : 0;
+  const wallet = await requireWalletForUser(userId);
+  // Gate on the spendable savings balance: real on-chain vault balance (confirmed
+  // minus in-flight withdrawals) when configured, else the goal's ledger balance.
+  if ((await goalSpendableCents(wallet.address, userId, goalId)) < amountCents) {
+    throw new AppError("Insufficient savings balance");
+  }
+
+  // The 2% withdrawal fee is charged by the on-chain vault; offline (ledger-only)
+  // there is no vault to take it, so releases run fee-free.
+  const feeCents = settle ? feeCentsOf(amountCents) : 0;
   const netCents = amountCents - feeCents;
 
   await db.transaction(async (tx) => {
@@ -265,7 +304,7 @@ async function releaseFromGoalCore(
       toKey: acct.wallet(userId),
       amountCents: netCents,
       requireSufficientFrom: true,
-      onchain: onchain ? { onchainStatus: "pending" } : undefined,
+      onchain: { onchainStatus: settle ? "pending" : "none" },
     });
 
     let feeTxnId: string | null = null;
@@ -279,12 +318,12 @@ async function releaseFromGoalCore(
         toKey: acct.fees,
         amountCents: feeCents,
         requireSufficientFrom: true,
-        onchain: { onchainStatus: "pending" },
+        onchain: { onchainStatus: settle ? "pending" : "none" },
       });
       feeTxnId = feeTxn.id;
     }
 
-    if (onchain && vault) {
+    if (settle && vault) {
       await enqueueOnchainTransfer(
         {
           transactionId: netTxn.id,
@@ -299,7 +338,7 @@ async function releaseFromGoalCore(
     }
   });
 
-  if (onchain) kickReconciler();
+  if (settle) kickReconciler();
 
   if (notifyUser) {
     await notify(userId, {
@@ -347,30 +386,72 @@ export async function deleteGoal(userId: string, goalId: string): Promise<Delete
     .returning();
   if (!goal) throw new AppError("Goal not found");
 
-  const balances = await goalBalances(userId);
-  const balanceCents = balances[goalId] ?? 0;
+  try {
+    // Refuse to close while a deposit/withdraw for this goal is still settling: a
+    // deposit that confirms after we drain would strand funds in a closed goal's
+    // vault balance with no way to recover them. (Offline there are no pending
+    // transfers, so this is a no-op.)
+    if (await pendingGoalTransfersExist(userId, goalId)) {
+      throw new AppError(
+        "This goal has a transfer still settling. Please try again once it completes.",
+      );
+    }
 
-  let released: ReleaseResult = { grossCents: 0, netCents: 0, feeCents: 0 };
-  if (balanceCents > 0) {
-    released = await releaseFromGoalCore(userId, goalId, goal.name, balanceCents, false);
+    // Drain the goal's balance back to the wallet: the REAL on-chain vault
+    // balance when configured, else the goal's ledger account balance offline.
+    const wallet = await getWalletForUser(userId);
+    let balanceCents = 0;
+    if (goalVaultEnabled()) {
+      if (wallet) {
+        try {
+          balanceCents = await goalVaultBalanceStrict(wallet.address, goalId);
+        } catch {
+          throw new AppError(
+            "We couldn't verify your savings balance right now. Please try again in a moment.",
+          );
+        }
+      }
+    } else {
+      balanceCents = await accountBalance(acct.goal(goalId));
+    }
+
+    let released: ReleaseResult = { grossCents: 0, netCents: 0, feeCents: 0 };
+    if (balanceCents > 0) {
+      released = await releaseFromGoalCore(userId, goalId, goal.name, balanceCents, false);
+    }
+
+    await notify(userId, {
+      type: "goal",
+      title: `Deleted ${goal.name}`,
+      body:
+        balanceCents > 0
+          ? `Goal closed. ${formatMoney(released.netCents)} returned to your available balance${
+              released.feeCents > 0 ? ` (after a ${formatMoney(released.feeCents)} fee)` : ""
+            }.`
+          : `Goal closed.`,
+      link: `/goals`,
+    });
+
+    return {
+      ok: true,
+      withdrawnGrossCents: released.grossCents,
+      withdrawnNetCents: released.netCents,
+      feeCents: released.feeCents,
+    };
+  } catch (e) {
+    // Roll the soft-delete back so a failed close doesn't hide a goal that still
+    // holds an on-chain balance we never drained.
+    await db
+      .update(goalsTable)
+      .set({ status: ACTIVE })
+      .where(
+        and(
+          eq(goalsTable.id, goalId),
+          eq(goalsTable.userId, userId),
+          eq(goalsTable.status, DELETED),
+        ),
+      )
+      .catch(() => undefined);
+    throw e;
   }
-
-  await notify(userId, {
-    type: "goal",
-    title: `Deleted ${goal.name}`,
-    body:
-      balanceCents > 0
-        ? `Goal closed. ${formatMoney(released.netCents)} returned to your available balance${
-            released.feeCents > 0 ? ` (after a ${formatMoney(released.feeCents)} fee)` : ""
-          }.`
-        : `Goal closed.`,
-    link: `/goals`,
-  });
-
-  return {
-    ok: true,
-    withdrawnGrossCents: released.grossCents,
-    withdrawnNetCents: released.netCents,
-    feeCents: released.feeCents,
-  };
 }

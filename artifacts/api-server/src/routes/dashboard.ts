@@ -4,7 +4,8 @@ import { db, lessonProgressTable } from "@workspace/db";
 import { GetDashboardSummaryResponse } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { LESSONS } from "../lib/lessons-data";
-import { userBalances, userActivity } from "../lib/ledger";
+import { userActivity } from "../lib/ledger";
+import { userOnchainBalanceSummary } from "../lib/onchainBalances";
 import { listGoals } from "../lib/goals";
 import { listCirclesForUser } from "../lib/circles";
 
@@ -13,7 +14,9 @@ const router: IRouter = Router();
 router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
 
-  const bal = await userBalances(user.id);
+  // Balances sourced from on-chain (when configured) so the dashboard shows the
+  // REAL settled balance, not the ledger's optimistic view.
+  const bal = await userOnchainBalanceSummary(user.id);
   const goals = await listGoals(user.id);
   const circles = await listCirclesForUser(user.id);
   const activity = await userActivity(user.id, 5);
@@ -81,6 +84,8 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
       availableCents: bal.availableCents,
       totalCents: bal.totalCents,
       goalTotalCents: bal.allocatedCents,
+      pendingCents: bal.pendingCents,
+      balanceUnavailable: bal.balanceUnavailable,
       circlePotCents,
       yieldApy: 4.5,
       recentActivity,

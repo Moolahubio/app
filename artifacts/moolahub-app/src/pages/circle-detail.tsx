@@ -47,7 +47,7 @@ export default function CircleDetailPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <BackLink href="/circles" label="All circles" />
+      <BackLink href="/circles" label="Group Savings" />
 
       {/* ----------------------------------------------------------- header */}
       <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">

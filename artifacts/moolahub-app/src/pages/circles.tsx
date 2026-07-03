@@ -105,7 +105,7 @@ export default function CirclesPage() {
   };
 
   if (circlesLoading || invitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading your circles…</div>;
+    return <div className="p-8 text-center text-muted-foreground">Loading your group savings…</div>;
   }
 
   const visible = circles?.filter((c) => c.status !== "completed") ?? [];
@@ -114,8 +114,8 @@ export default function CirclesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader
-        eyebrow="Susu Circles"
-        title="Your circles"
+        eyebrow="Group Savings"
+        title="Your group savings"
         description="Rotating savings with people you trust. Every round is held by an on-chain contract, not a person."
         action={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -453,7 +453,7 @@ export default function CirclesPage() {
         </button>
       </div>
 
-      <Eyebrow className="pt-4 text-center text-muted-foreground">Save today · Reach it together</Eyebrow>
+      <Eyebrow className="pt-4 text-center text-muted-foreground">Save. Earn. Belong.</Eyebrow>
     </div>
   );
 }

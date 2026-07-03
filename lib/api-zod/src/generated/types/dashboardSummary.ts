@@ -14,6 +14,10 @@ export interface DashboardSummary {
   availableCents: number;
   totalCents: number;
   goalTotalCents: number;
+  /** On-chain wallet outflows still settling (not yet reflected on-chain). */
+  pendingCents?: number;
+  /** True when an on-chain balance read failed, so displayed figures may be understated. */
+  balanceUnavailable?: boolean;
   circlePotCents: number;
   yieldApy: number;
   recentActivity: ActivityItem[];
