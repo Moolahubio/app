@@ -41,6 +41,23 @@ cent. Accepted — same property circles has and prior reviews accepted. Don't
   where a concurrent allocate re-funds a goal we're about to close, stranding
   funds in a deleted goal. The goal *account* keeps its balance regardless of the
   goals-row status, so the drain still works post-flip.
+  - **The flip alone is NOT sufficient — the money-IN path must revalidate under a
+    row lock.** A pre-transaction `status=active` SELECT does not serialize against
+    the flip, so `allocateToGoal` MUST re-read the goal row `SELECT ... FOR UPDATE`
+    and re-check `status===ACTIVE` *inside* its own `db.transaction` BEFORE
+    transfer/enqueue (mirrors the circles `.for("update")` pattern). Without it,
+    delete-wins → allocate commits `wallet→goal` (+ on-chain `goal_deposit`) into a
+    deleted goal → stranded (no read/withdraw path, no recovery API). The flip
+    UPDATE and the FOR UPDATE contend on the same row, so they fully serialize;
+    keep the wallet-balance gate OUTSIDE the tx so a slow on-chain read never holds
+    the lock (the ledger transfer re-checks funds via `requireSufficientFrom`).
+    Regression: `goals-race.e2e.ts` (`test:goals-race`, offline) pins both
+    orderings + a concurrent stress loop.
+  - **Money-OUT (`releaseFromGoal`) needs NO such guard** and is intentionally
+    status-agnostic (so delete can drain a flipped goal). Over-drain is impossible:
+    `requireSufficientFrom` + the `goalSpendableCents` gate are atomic in the
+    locked transfer, and the worst interleaving just fails the drain → delete's
+    catch rolls the goal back to active (funds intact, retryable).
 - **goal_withdraw confirms the queue row + net release txn + fee txn ATOMICALLY**
   in one DB tx (`confirmGoalWithdraw`), and the reconciler's idempotency
   early-return ALSO backfills the fee txn for `goal_withdraw` rows. **Why:** one

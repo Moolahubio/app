@@ -179,23 +179,45 @@ export async function createGoal(
  * nothing to settle it.
  */
 export async function allocateToGoal(userId: string, goalId: string, amountCents: number) {
-  const [goal] = await db
-    .select()
+  // Pre-check ownership/existence for a fast, friendly failure. This is only an
+  // optimization — the authoritative status check happens again *inside* the
+  // transaction under a row lock (below), which is what actually closes the
+  // delete-vs-allocate race.
+  const [pre] = await db
+    .select({ id: goalsTable.id })
     .from(goalsTable)
     .where(
       and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
     );
-  if (!goal) throw new AppError("Goal not found");
+  if (!pre) throw new AppError("Goal not found");
   const settle = goalVaultEnabled();
   const vault = goalVaultContract();
   const wallet = await requireWalletForUser(userId);
   // Gate on the spendable wallet balance: real on-chain (confirmed minus
   // in-flight outflows) when the vault is configured, else the ledger balance.
+  // Done before the transaction so a slow on-chain read doesn't hold the goal
+  // row lock; the ledger transfer re-checks funds atomically with
+  // requireSufficientFrom.
   if ((await walletSpendableCents(userId, wallet.address)) < amountCents) {
     throw new AppError("Insufficient available balance");
   }
 
-  const txn = await db.transaction(async (tx) => {
+  const { txn, goalName } = await db.transaction(async (tx) => {
+    // Lock the goal row and re-validate it is still active *inside* the
+    // transaction. deleteGoal closes a goal with a compare-and-set UPDATE
+    // (active -> deleted) that takes this same row lock, so locking + rechecking
+    // here fully serializes an allocation against a concurrent delete. Without
+    // this, an allocation that passed the pre-check could post wallet -> goal
+    // funds (and enqueue an on-chain goal_deposit) after the goal was already
+    // deleted and drained — stranding the money, since every read/withdraw path
+    // requires status = active and there is no recovery API for a deleted goal.
+    const [goal] = await tx
+      .select()
+      .from(goalsTable)
+      .where(and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId)))
+      .for("update");
+    if (!goal || goal.status !== ACTIVE) throw new AppError("Goal not found");
+
     const t = await transfer({
       tx,
       type: "goal_allocate",
@@ -220,7 +242,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
         tx,
       );
     }
-    return t;
+    return { txn: t, goalName: goal.name };
   });
 
   if (settle) kickReconciler();
@@ -231,8 +253,8 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
 
   await notify(userId, {
     type: "goal",
-    title: `Added to ${goal.name}`,
-    body: `${formatMoney(amountCents)} moved into ${goal.name}.`,
+    title: `Added to ${goalName}`,
+    body: `${formatMoney(amountCents)} moved into ${goalName}.`,
     link: `/goals/${goalId}`,
   });
   return txn;
