@@ -331,6 +331,24 @@ async function confirmGoalWithdraw(
   });
 }
 
+/**
+ * Persist a just-broadcast tx hash onto the queue row BEFORE we wait for its
+ * receipt. This is the crash-recovery pointer: if the process dies (or the RPC
+ * response is lost) between submission and confirmation, the next pass has an
+ * exact, unambiguous hash to reconcile against (`reconcileKnownHash` in
+ * chain.ts) instead of guessing from coarse from/to/amount event matching,
+ * which risks misattributing an unrelated legitimate transfer of the same
+ * amount. Best-effort: a failure here just means the next attempt falls back
+ * to a fresh send, which is the pre-existing (safe, if wasteful) behavior.
+ */
+async function persistSubmittedHash(rowId: string, hash: string): Promise<void> {
+  try {
+    await db.update(onchainTransfersTable).set({ txHash: hash }).where(eq(onchainTransfersTable.id, rowId));
+  } catch (e) {
+    logger.warn({ err: e, rowId }, "failed to persist submitted tx hash (best-effort)");
+  }
+}
+
 async function requeue(rowId: string, reason: string): Promise<void> {
   await db
     .update(onchainTransfersTable)
@@ -594,7 +612,12 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
   // Faucet mints test USDC straight to the wallet; the platform signs internally
   // (mint is permissionless), so no per-row signing key is needed.
   if (row.kind === "faucet") {
-    const result = await mintUsdc({ to: row.toAddress, amountCents: row.amountCents });
+    const result = await mintUsdc({
+      to: row.toAddress,
+      amountCents: row.amountCents,
+      knownTxHash: row.attempts > 0 ? row.txHash : undefined,
+      onSubmitted: (hash) => persistSubmittedHash(row.id, hash),
+    });
     if (result.status === "confirmed") {
       await markConfirmed(row, result.hash);
       return true;
@@ -615,10 +638,22 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
   // one that fills the round, the escrow auto-settles it (RoundSettled) — we
   // then stamp the matching ledger payout/fee rows with this settlement tx hash.
   if (row.kind === "escrow_contribute") {
+    const parsedRound = circleRoundFromMemo(row.memo);
+    if (!parsedRound) {
+      // No round parseable from the memo: `escrowContribute` has no other
+      // safe idempotency key for `contribute()` (see its doc comment), so
+      // fail closed here too rather than let it fall through to a raw
+      // (unsafe-to-retry) contribute call.
+      await markFailed(row, "escrow_contribute missing round in memo");
+      return false;
+    }
     const result = await escrowContribute({
       fromPrivateKey,
       escrow: row.toAddress,
       amountCents: row.amountCents,
+      round: parsedRound.round,
+      knownTxHash: row.attempts > 0 ? row.txHash : undefined,
+      onSubmitted: (hash) => persistSubmittedHash(row.id, hash),
     });
     if (result.status === "confirmed") {
       await markConfirmed(row, result.hash);
@@ -646,6 +681,8 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
       fromPrivateKey,
       goalId: parsed.goalId,
       amountCents: row.amountCents,
+      knownTxHash: row.attempts > 0 ? row.txHash : undefined,
+      onSubmitted: (hash) => persistSubmittedHash(row.id, hash),
     });
     if (result.status === "confirmed") {
       await markConfirmed(row, result.hash);
@@ -669,6 +706,8 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
       fromPrivateKey,
       goalId: parsed.goalId,
       grossCents: row.amountCents,
+      knownTxHash: row.attempts > 0 ? row.txHash : undefined,
+      onSubmitted: (hash) => persistSubmittedHash(row.id, hash),
     });
     if (result.status === "confirmed") {
       // One on-chain withdrawal settles both the net release and the fee, so
@@ -687,6 +726,8 @@ async function processRow(row: OnchainTransfer): Promise<boolean> {
     to: row.toAddress,
     amountCents: row.amountCents,
     memo: row.memo ?? undefined,
+    knownTxHash: row.attempts > 0 ? row.txHash : undefined,
+    onSubmitted: (hash) => persistSubmittedHash(row.id, hash),
   });
 
   if (result.status === "confirmed") {
@@ -775,6 +816,15 @@ let loopStarted = false;
  * Recover rows stranded in "processing" by a previous crash, then run the
  * reconciler on an interval. Single-instance assumption: any "processing" row
  * left at boot is from a dead worker, so it's safe to requeue.
+ *
+ * A requeued row may have already broadcast its transaction before the crash
+ * (the crash could've happened after submit but before the row was marked
+ * confirmed). That's safe to resend blindly here because every settlement
+ * path checked on-chain state before resubmitting once `row.attempts > 0`:
+ * `submitTx`'s nonce guard catches a still-pending original tx, and each
+ * settlement function (sendUsdc/mintUsdc/goalDeposit/goalWithdraw/
+ * escrowContribute) checks for an already-landed transfer/contribution before
+ * sending a new one.
  */
 export async function startSettlementLoop(): Promise<void> {
   if (loopStarted) return;

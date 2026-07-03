@@ -112,6 +112,55 @@ circleMembers→circles for that userId) and add them to the internal-address
 set before checking `p.from`. Any fixed/global address list is the wrong
 shape for per-circle clone contracts — it must be scoped to the syncing user.
 
+## Retry/replay idempotency is by exact persisted tx hash, NOT amount/event heuristics
+Earlier design used amount-based event scanning (from/to/value match within a
+lookback window) to detect an already-landed retry. **Code review rejected
+this**: two independently legitimate transfers of the same amount between the
+same pair in the same window are indistinguishable from a replay, so it could
+misattribute someone else's transfer as "already confirmed" (false positive)
+or vice versa. It was replaced with deterministic hash-based reconciliation:
+- Every money-moving call in `chain.ts` (sendUsdc/mintUsdc/goalDeposit/
+  goalWithdraw) takes `knownTxHash?: string | null` (the queue row's
+  persisted `txHash` from a prior attempt, only passed when `attempts > 0`)
+  and `onSubmitted?: (hash) => Promise<void>`. On entry, if `knownTxHash`
+  looks like a real hash, `reconcileKnownHash()` calls
+  `getTransactionReceipt` on it directly — "confirmed" returns that hash
+  without resending, "reverted" falls through to a fresh send, and "pending"
+  (covers both still-in-mempool AND unknown-to-this-node) returns skipped
+  WITHOUT resending, since a false "not found" on a lagging RPC node is
+  exactly the double-send risk being avoided.
+- `settlement.ts` persists the hash via `persistSubmittedHash(rowId, hash)`
+  (updates `onchainTransfers.txHash`) from the `onSubmitted` callback, fired
+  right after `submitTx` returns and BEFORE `waitForTransactionReceipt` — so a
+  crash between broadcast and confirmation still leaves an exact pointer for
+  the next attempt.
+- `submitTx`'s own same-call nonce-guard (`findMinedTxByNonce`) is a SEPARATE,
+  narrower defense for the sub-second window of "lost RPC response mid-retry
+  within one `submitTx` call" — it now also validates the mined tx's `to`
+  address matches the intended destination (not just nonce), because
+  `nonceBefore` is read from a possibly-lagging load-balanced node and could
+  be stale, letting a stale nonce match a prior UNRELATED tx from the same
+  signer (e.g. a gas top-up) and wrongly report "already sent". Callers must
+  pass both `account` AND `to` or the guard is skipped entirely.
+- `escrowContribute` fails closed (`skipped`, does not call `contribute()`)
+  when `round` is missing, instead of falling back to a raw unguarded call —
+  `contribute()` takes no round argument, so `hasContributed(round, member)`
+  (keyed off the memo's `susu:<circleId>:<round>`) is a fallback idempotency
+  key, NOT the primary one; without a parsed round there is no safe way to
+  retry at all. `settlement.ts` mirrors this by dead-lettering the row (not
+  calling `escrowContribute` at all) when `circleRoundFromMemo` returns null.
+  Reviewer flagged that `hasContributed` alone is too coarse (false on a
+  still-pending prior contribution → double-send risk survives), so
+  `escrowContribute` now ALSO takes the same `knownTxHash`/`onSubmitted` pair
+  as the other flows: known hash confirmed → return it; pending/unknown → skip
+  without resending; only when there's no known hash (or it reverted) does it
+  fall back to the `hasContributed` check before calling `contribute()`.
+**Why:** exact tx-hash lookup is unambiguous — it names the specific
+transaction, not a fingerprint that can coincidentally match something else.
+**How to apply:** any NEW money-moving on-chain call must follow the same
+pattern (knownTxHash + onSubmitted + persistSubmittedHash), never resurrect
+amount/event-based "recent transfer" matching for idempotency.
+
 ## Source of truth: on-chain and ledger are co-authoritative (user-confirmed)
 The user chose the "let them work together" model over making either side the sole
 truth. On-chain is authoritative for VALUE and settlement FINALITY (a confirmed

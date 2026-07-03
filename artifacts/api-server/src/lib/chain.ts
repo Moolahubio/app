@@ -245,18 +245,87 @@ function isTransientSubmitError(e: unknown): boolean {
 }
 
 /**
+ * Best-effort: scan a short window of recent blocks for a transaction FROM
+ * `address` that used `nonce` AND was sent `to` the expected contract/target.
+ * There is no RPC method that directly answers "what landed at this nonce",
+ * so we walk recent blocks looking for it. Used to detect a broadcast that
+ * actually reached the chain right before a transient submit error, so a
+ * retry doesn't blindly resend on a fresh nonce and double the action. Monad's
+ * ~400ms blocks make ~50 blocks cover the ~15-20s a `submitTx` retry loop
+ * spans.
+ *
+ * The `to` check matters: `nonceBefore` is read from a possibly-lagging
+ * load-balanced RPC node, so it can be stale (behind the account's true
+ * on-chain nonce). If we trusted "any mined tx at that nonce" without
+ * checking its destination, a stale nonce could match a completely unrelated
+ * prior transaction from the same signer (e.g. a gas top-up or a different
+ * money-movement call) and get misreported as "the intended tx already
+ * landed" — silently skipping the real send. Matching `to` as well rules that
+ * out; it is still not a full guarantee (calldata could differ against the
+ * same contract), which is why this is only used to avoid a same-attempt
+ * double-broadcast, not as the sole cross-attempt idempotency mechanism (see
+ * the `knownTxHash` reconciliation in the money-movement functions below).
+ */
+async function findMinedTxByNonce(
+  address: Address,
+  nonce: number,
+  to: Address,
+  lookbackBlocks = 50n,
+): Promise<Hex | null> {
+  try {
+    const pub = publicClient();
+    const latest = await pub.getBlockNumber();
+    const from = latest > lookbackBlocks ? latest - lookbackBlocks : 0n;
+    for (let bn = latest; bn >= from; bn--) {
+      const block = await pub.getBlock({ blockNumber: bn, includeTransactions: true });
+      for (const t of block.transactions) {
+        if (typeof t === "string") continue;
+        if (
+          t.from.toLowerCase() === address.toLowerCase() &&
+          t.nonce === nonce &&
+          t.to?.toLowerCase() === to.toLowerCase()
+        ) {
+          return t.hash;
+        }
+      }
+      if (bn === 0n) break;
+    }
+  } catch {
+    /* best-effort — fall through and let the caller retry normally */
+  }
+  return null;
+}
+
+/**
  * Submit a transaction (returning its hash) with bounded retries for the
  * transient RPC rejections above. viem re-fetches a fresh nonce each attempt, so
  * once the lagging node catches up the send goes through. Genuine reverts and
  * config errors are not matched and surface immediately.
  *
- * Testnet-acceptable edge: if viem's transport internally re-sends a broadcast
- * whose response was lost and the first copy actually landed, the retry surfaces
- * "nonce too low" and we re-send on a fresh nonce — a second distinct tx. Before
- * mainnet, gate "nonce too low" retries on money-moving sites behind an
- * idempotency check (confirm the account nonce/balance delta first).
+ * Idempotency guard: if the RPC response for the first broadcast was lost but
+ * the tx actually landed, blindly resending on the fresh nonce viem fetches
+ * would submit a second, distinct transaction — double-debiting a withdrawal,
+ * double-paying a payout, etc. When `account` AND `to` are supplied we
+ * snapshot the account's pending nonce before the first attempt and, before
+ * ANY retry, check whether a transaction at that nonce AND destination
+ * already landed; if so we return that hash instead of resending. Callers
+ * that move money should always pass both.
  */
-async function submitTx(send: () => Promise<Hex>, attempts = 5): Promise<Hex> {
+async function submitTx(
+  send: () => Promise<Hex>,
+  opts?: { attempts?: number; account?: Address; to?: Address },
+): Promise<Hex> {
+  const attempts = opts?.attempts ?? 5;
+  const account = opts?.account;
+  const to = opts?.to;
+  let nonceBefore: number | null = null;
+  if (account && to) {
+    try {
+      nonceBefore = await publicClient().getTransactionCount({ address: account, blockTag: "pending" });
+    } catch {
+      nonceBefore = null;
+    }
+  }
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
@@ -264,10 +333,49 @@ async function submitTx(send: () => Promise<Hex>, attempts = 5): Promise<Hex> {
     } catch (e) {
       lastErr = e;
       if (i === attempts - 1 || !isTransientSubmitError(e)) throw e;
+      if (account && to && nonceBefore != null) {
+        const landed = await findMinedTxByNonce(account, nonceBefore, to);
+        if (landed) return landed;
+      }
       await new Promise((r) => setTimeout(r, 3000));
     }
   }
   throw lastErr;
+}
+
+export type KnownHashOutcome =
+  | { kind: "confirmed"; receipt: import("viem").TransactionReceipt }
+  | { kind: "reverted" }
+  | { kind: "pending" };
+
+/**
+ * Deterministically reconcile a PREVIOUSLY-PERSISTED tx hash (from an earlier
+ * attempt on this same queue row) against on-chain state, rather than
+ * guessing from coarse event matching (from/to/amount). This is the primary
+ * cross-attempt idempotency mechanism for every money-moving call: settlement
+ * callers persist the hash returned by `submitTx` (via `onSubmitted`) into the
+ * queue row BEFORE waiting for a receipt, so a crash between submit and
+ * confirm leaves an exact, unambiguous pointer to check next time — no
+ * amount/address heuristics, no risk of matching an unrelated legitimate
+ * transfer of the same amount.
+ *
+ * "pending" covers both "still in the mempool" and "unknown to this RPC node
+ * (dropped, or a stale node)" — `getTransactionReceipt` can't distinguish
+ * these, and treating "not found" as "safe to resend" is exactly the
+ * double-send risk we're avoiding, so callers must NOT submit a fresh tx on
+ * "pending" and should simply retry later instead.
+ */
+async function reconcileKnownHash(hash: Hex): Promise<KnownHashOutcome> {
+  try {
+    const receipt = await publicClient().getTransactionReceipt({ hash });
+    return receipt.status === "reverted" ? { kind: "reverted" } : { kind: "confirmed", receipt };
+  } catch {
+    return { kind: "pending" };
+  }
+}
+
+function isLikelyTxHash(h: string | null | undefined): h is Hex {
+  return typeof h === "string" && /^0x[0-9a-fA-F]{64}$/.test(h);
 }
 
 /**
@@ -433,6 +541,20 @@ export async function sendUsdc(params: {
   to: string;
   amountCents: number;
   memo?: string;
+  /**
+   * A tx hash persisted by the caller from a PRIOR attempt on this same queue
+   * row (see `reconcileKnownHash`). When on-chain state shows it already
+   * confirmed, we return it directly instead of resending — no amount/address
+   * heuristics involved. When it's still pending/unknown, we do NOT resend
+   * (that would risk a double-send if it later lands); the caller should
+   * retry again later. Only pass this on retries (attempts > 0); the first
+   * attempt has no prior hash to check.
+   */
+  knownTxHash?: string | null;
+  /** Invoked with the broadcast hash immediately after submission succeeds,
+   * before waiting for the receipt, so the caller can persist it as the new
+   * `knownTxHash` for any future retry. */
+  onSubmitted?: (hash: Hex) => Promise<void> | void;
 }): Promise<OnchainResult> {
   const usdc = usdcContract();
   if (!usdc) return { status: "skipped", reason: "USDC contract not configured" };
@@ -442,17 +564,32 @@ export async function sendUsdc(params: {
       ? params.fromPrivateKey
       : `0x${params.fromPrivateKey}`) as Hex;
     const account = privateKeyToAccount(pk);
+    const to = getAddress(params.to);
+
+    if (isLikelyTxHash(params.knownTxHash)) {
+      const outcome = await reconcileKnownHash(params.knownTxHash);
+      if (outcome.kind === "confirmed") return { status: "confirmed", hash: params.knownTxHash };
+      if (outcome.kind === "pending") {
+        return { status: "skipped", reason: "previous transfer still pending on-chain" };
+      }
+      // "reverted" — the prior attempt definitively failed on-chain; fall
+      // through and submit a fresh transfer.
+    }
+
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
     const pub = publicClient();
-    const hash = await submitTx(() =>
-      wallet.writeContract({
-        address: usdc,
-        abi: ERC20_ABI,
-        functionName: "transfer",
-        args: [getAddress(params.to), centsToUnits(params.amountCents)],
-      }),
+    const hash = await submitTx(
+      () =>
+        wallet.writeContract({
+          address: usdc,
+          abi: ERC20_ABI,
+          functionName: "transfer",
+          args: [to, centsToUnits(params.amountCents)],
+        }),
+      { account: account.address, to: usdc },
     );
+    await params.onSubmitted?.(hash);
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
   } catch (e) {
@@ -519,20 +656,23 @@ export async function deployCircleEscrow(params: {
       return { status: "confirmed", hash: "", escrow: getAddress(existing) };
     }
 
+    const account = privateKeyToAccount(pk);
     const wallet = walletClientFor(pk);
-    const hash = await submitTx(() =>
-      wallet.writeContract({
-        address: factory,
-        abi: FACTORY_ABI,
-        functionName: "createCircle",
-        args: [
-          id,
-          centsToUnits(params.contributionCents),
-          params.members.map((m) => getAddress(m)),
-          BigInt(Math.max(1, Math.floor(params.roundDurationSecs))),
-          BigInt(Math.max(0, Math.floor(params.gracePeriodSecs))),
-        ],
-      }),
+    const hash = await submitTx(
+      () =>
+        wallet.writeContract({
+          address: factory,
+          abi: FACTORY_ABI,
+          functionName: "createCircle",
+          args: [
+            id,
+            centsToUnits(params.contributionCents),
+            params.members.map((m) => getAddress(m)),
+            BigInt(Math.max(1, Math.floor(params.roundDurationSecs))),
+            BigInt(Math.max(0, Math.floor(params.gracePeriodSecs))),
+          ],
+        }),
+      { account: account.address, to: factory },
     );
     const receipt = await pub.waitForTransactionReceipt({ hash });
     if (receipt.status === "reverted") {
@@ -567,22 +707,41 @@ export async function deployCircleEscrow(params: {
  * Faucet: mint test USDC straight to a wallet (MockUSDC.mint is permissionless;
  * the platform just pays gas). Returns the mint tx hash or "skipped".
  */
-export async function mintUsdc(params: { to: string; amountCents: number }): Promise<OnchainResult> {
+export async function mintUsdc(params: {
+  to: string;
+  amountCents: number;
+  knownTxHash?: string | null;
+  onSubmitted?: (hash: Hex) => Promise<void> | void;
+}): Promise<OnchainResult> {
   const usdc = usdcContract();
   const pk = platformKey();
   if (!usdc || !pk) return { status: "skipped", reason: "USDC/platform not configured" };
   if (!isValidAddress(params.to)) return { status: "skipped", reason: "invalid destination" };
   try {
+    const account = privateKeyToAccount(pk);
+    const to = getAddress(params.to);
+
+    if (isLikelyTxHash(params.knownTxHash)) {
+      const outcome = await reconcileKnownHash(params.knownTxHash);
+      if (outcome.kind === "confirmed") return { status: "confirmed", hash: params.knownTxHash };
+      if (outcome.kind === "pending") {
+        return { status: "skipped", reason: "previous mint still pending on-chain" };
+      }
+    }
+
     const wallet = walletClientFor(pk);
     const pub = publicClient();
-    const hash = await submitTx(() =>
-      wallet.writeContract({
-        address: usdc,
-        abi: MOCK_USDC_ABI,
-        functionName: "mint",
-        args: [getAddress(params.to), centsToUnits(params.amountCents)],
-      }),
+    const hash = await submitTx(
+      () =>
+        wallet.writeContract({
+          address: usdc,
+          abi: MOCK_USDC_ABI,
+          functionName: "mint",
+          args: [to, centsToUnits(params.amountCents)],
+        }),
+      { account: account.address, to: usdc },
     );
+    await params.onSubmitted?.(hash);
     await pub.waitForTransactionReceipt({ hash });
     return { status: "confirmed", hash };
   } catch (e) {
@@ -620,20 +779,89 @@ export type EscrowContributeResult =
   | { status: "skipped"; reason: string };
 
 /**
+ * Look up the tx hash of a member's `Contributed` event for a specific round,
+ * plus any `RoundSettled` emitted in the same transaction (the escrow
+ * auto-settles a round when the last member's contribution lands). Used to
+ * reconcile an already-landed contribution instead of resending it.
+ */
+async function findContributedTx(
+  escrow: Address,
+  round: number,
+  member: Address,
+  lookbackBlocks = 5000n,
+): Promise<{ hash: Hex; settledRound: number | null } | null> {
+  try {
+    const pub = publicClient();
+    const latest = await pub.getBlockNumber();
+    const fromBlock = latest > lookbackBlocks ? latest - lookbackBlocks : 0n;
+    const logs = await pub.getContractEvents({
+      address: escrow,
+      abi: ESCROW_ABI,
+      eventName: "Contributed",
+      args: { member, round: BigInt(round) },
+      fromBlock,
+      toBlock: latest,
+    });
+    if (logs.length === 0) return null;
+    const hash = logs[logs.length - 1].transactionHash as Hex | null;
+    if (!hash) return null;
+    let settledRound: number | null = null;
+    try {
+      const receipt = await pub.getTransactionReceipt({ hash });
+      const settled = parseEventLogs({ abi: ESCROW_ABI, eventName: "RoundSettled", logs: receipt.logs });
+      if (settled.length > 0) settledRound = Number(settled[0].args.round);
+    } catch {
+      /* best-effort */
+    }
+    return { hash, settledRound };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * A member contributes to the on-chain escrow: approve the escrow to pull the
  * contribution (if the allowance is short) then call `contribute()`. The escrow
  * auto-settles the round when the last member contributes — when that happens
  * the receipt carries a `RoundSettled` event, whose round we return so the
  * caller can confirm the matching ledger payout.
+ *
+ * Idempotency: two layers, since `contribute()` takes no round argument.
+ * 1) `knownTxHash` — a hash persisted by the caller from a PRIOR attempt on
+ *    this same queue row (see `reconcileKnownHash`). Checked FIRST: if that
+ *    exact tx is confirmed, we return it without touching the chain further;
+ *    if it's still pending/unknown, we do NOT resend (a false "not found" on
+ *    a lagging RPC node is exactly the double-send risk this avoids) — the
+ *    caller should retry later instead.
+ * 2) `hasContributed(round, member)` — a secondary, coarser guard for the
+ *    case where no known hash exists yet (first attempt after a crash before
+ *    any hash was persisted, or a hash reconciled as reverted). `round`
+ *    (parsed from the queue row's memo) is the only safe key for this check:
+ *    a replay after the round has already advanced would otherwise silently
+ *    apply to whatever round is current on-chain (charging the member for the
+ *    next round instead of the one they intended, or crediting the wrong
+ *    round's payout) — which is why a missing round fails closed below rather
+ *    than falling back to a raw `contribute()` call.
  */
 export async function escrowContribute(params: {
   fromPrivateKey: string;
   escrow: string;
   amountCents: number;
+  round?: number;
+  knownTxHash?: string | null;
+  onSubmitted?: (hash: Hex) => Promise<void> | void;
 }): Promise<EscrowContributeResult> {
   const usdc = usdcContract();
   if (!usdc) return { status: "skipped", reason: "USDC contract not configured" };
   if (!isValidAddress(params.escrow)) return { status: "skipped", reason: "invalid escrow address" };
+  // `round` is the ONLY safe fallback idempotency key for `contribute()` (see
+  // above) — without it we cannot tell whether this member already
+  // contributed this round, so we fail closed instead of blindly calling
+  // `contribute()` and risking it silently applying to whatever round is
+  // current on-chain.
+  if (params.round == null) {
+    return { status: "skipped", reason: "missing round — cannot safely verify contribution idempotency" };
+  }
   try {
     const pk = (params.fromPrivateKey.startsWith("0x")
       ? params.fromPrivateKey
@@ -641,9 +869,48 @@ export async function escrowContribute(params: {
     const account = privateKeyToAccount(pk);
     const escrow = getAddress(params.escrow);
     const amount = centsToUnits(params.amountCents);
+    const pub = publicClient();
+    const round = params.round;
+
+    if (isLikelyTxHash(params.knownTxHash)) {
+      const outcome = await reconcileKnownHash(params.knownTxHash);
+      if (outcome.kind === "confirmed") {
+        let settledRound: number | null = null;
+        try {
+          const settled = parseEventLogs({
+            abi: ESCROW_ABI,
+            eventName: "RoundSettled",
+            logs: outcome.receipt.logs,
+          });
+          if (settled.length > 0) settledRound = Number(settled[0].args.round);
+        } catch {
+          /* best-effort */
+        }
+        return { status: "confirmed", hash: params.knownTxHash, settledRound };
+      }
+      if (outcome.kind === "pending") {
+        return { status: "skipped", reason: "previous contribution still pending on-chain" };
+      }
+      // "reverted" — fall through to the hasContributed check / fresh submit.
+    }
+
+    const already = (await pub.readContract({
+      address: escrow,
+      abi: ESCROW_ABI,
+      functionName: "hasContributed",
+      args: [BigInt(round), account.address],
+    })) as boolean;
+    if (already) {
+      const found = await findContributedTx(escrow, round, account.address);
+      return {
+        status: "confirmed",
+        hash: found?.hash ?? "",
+        settledRound: found?.settledRound ?? null,
+      };
+    }
+
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
-    const pub = publicClient();
 
     const allowance = (await pub.readContract({
       address: usdc,
@@ -652,24 +919,29 @@ export async function escrowContribute(params: {
       args: [account.address, escrow],
     })) as bigint;
     if (allowance < amount) {
-      const approveHash = await submitTx(() =>
-        wallet.writeContract({
-          address: usdc,
-          abi: MOCK_USDC_ABI,
-          functionName: "approve",
-          args: [escrow, amount],
-        }),
+      const approveHash = await submitTx(
+        () =>
+          wallet.writeContract({
+            address: usdc,
+            abi: MOCK_USDC_ABI,
+            functionName: "approve",
+            args: [escrow, amount],
+          }),
+        { account: account.address, to: usdc },
       );
       await pub.waitForTransactionReceipt({ hash: approveHash });
     }
 
-    const hash = await submitTx(() =>
-      wallet.writeContract({
-        address: escrow,
-        abi: ESCROW_ABI,
-        functionName: "contribute",
-      }),
+    const hash = await submitTx(
+      () =>
+        wallet.writeContract({
+          address: escrow,
+          abi: ESCROW_ABI,
+          functionName: "contribute",
+        }),
+      { account: account.address, to: escrow },
     );
+    await params.onSubmitted?.(hash);
     const receipt = await pub.waitForTransactionReceipt({ hash });
 
     let settledRound: number | null = null;
@@ -764,6 +1036,8 @@ export async function goalDeposit(params: {
   fromPrivateKey: string;
   goalId: string;
   amountCents: number;
+  knownTxHash?: string | null;
+  onSubmitted?: (hash: Hex) => Promise<void> | void;
 }): Promise<OnchainResult> {
   const vault = goalVaultContract();
   const usdc = usdcContract();
@@ -775,9 +1049,18 @@ export async function goalDeposit(params: {
     const account = privateKeyToAccount(pk);
     const amount = centsToUnits(params.amountCents);
     const goalId = goalIdToBytes32(params.goalId);
+    const pub = publicClient();
+
+    if (isLikelyTxHash(params.knownTxHash)) {
+      const outcome = await reconcileKnownHash(params.knownTxHash);
+      if (outcome.kind === "confirmed") return { status: "confirmed", hash: params.knownTxHash };
+      if (outcome.kind === "pending") {
+        return { status: "skipped", reason: "previous deposit still pending on-chain" };
+      }
+    }
+
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
-    const pub = publicClient();
 
     const allowance = (await pub.readContract({
       address: usdc,
@@ -786,25 +1069,30 @@ export async function goalDeposit(params: {
       args: [account.address, vault],
     })) as bigint;
     if (allowance < amount) {
-      const approveHash = await submitTx(() =>
-        wallet.writeContract({
-          address: usdc,
-          abi: MOCK_USDC_ABI,
-          functionName: "approve",
-          args: [vault, amount],
-        }),
+      const approveHash = await submitTx(
+        () =>
+          wallet.writeContract({
+            address: usdc,
+            abi: MOCK_USDC_ABI,
+            functionName: "approve",
+            args: [vault, amount],
+          }),
+        { account: account.address, to: usdc },
       );
       await pub.waitForTransactionReceipt({ hash: approveHash });
     }
 
-    const hash = await submitTx(() =>
-      wallet.writeContract({
-        address: vault,
-        abi: GOAL_VAULT_ABI,
-        functionName: "deposit",
-        args: [goalId, amount],
-      }),
+    const hash = await submitTx(
+      () =>
+        wallet.writeContract({
+          address: vault,
+          abi: GOAL_VAULT_ABI,
+          functionName: "deposit",
+          args: [goalId, amount],
+        }),
+      { account: account.address, to: vault },
     );
+    await params.onSubmitted?.(hash);
     const receipt = await pub.waitForTransactionReceipt({ hash });
     if (receipt.status === "reverted") {
       return { status: "skipped", reason: `goal deposit reverted (tx ${hash})` };
@@ -825,6 +1113,8 @@ export async function goalWithdraw(params: {
   fromPrivateKey: string;
   goalId: string;
   grossCents: number;
+  knownTxHash?: string | null;
+  onSubmitted?: (hash: Hex) => Promise<void> | void;
 }): Promise<GoalWithdrawResult> {
   const vault = goalVaultContract();
   if (!vault) return { status: "skipped", reason: "goal vault not configured" };
@@ -836,6 +1126,33 @@ export async function goalWithdraw(params: {
     const goalId = goalIdToBytes32(params.goalId);
     const requested = centsToUnits(params.grossCents);
     const pub = publicClient();
+
+    if (isLikelyTxHash(params.knownTxHash)) {
+      const outcome = await reconcileKnownHash(params.knownTxHash);
+      if (outcome.kind === "confirmed") {
+        let feeUnits = 0n;
+        try {
+          const events = parseEventLogs({
+            abi: GOAL_VAULT_ABI,
+            eventName: "GoalWithdrawn",
+            logs: outcome.receipt.logs,
+          });
+          if (events.length > 0) feeUnits = (events[0].args.fee ?? 0n) as bigint;
+        } catch {
+          /* best-effort */
+        }
+        const feeCents = unitsToCents(feeUnits);
+        return {
+          status: "confirmed",
+          hash: params.knownTxHash,
+          feeCents,
+          netCents: unitsToCents(requested) - feeCents,
+        };
+      }
+      if (outcome.kind === "pending") {
+        return { status: "skipped", reason: "previous withdrawal still pending on-chain" };
+      }
+    }
 
     // The ledger is the source of truth for the user's app balance, but the
     // vault can only return what was actually deposited on-chain for this
@@ -856,17 +1173,21 @@ export async function goalWithdraw(params: {
     if (gross === 0n) {
       return { status: "confirmed", hash: "", feeCents: 0, netCents: 0 };
     }
+
     await ensureGas(account.address);
     const wallet = walletClientFor(pk);
 
-    const hash = await submitTx(() =>
-      wallet.writeContract({
-        address: vault,
-        abi: GOAL_VAULT_ABI,
-        functionName: "withdraw",
-        args: [goalId, gross],
-      }),
+    const hash = await submitTx(
+      () =>
+        wallet.writeContract({
+          address: vault,
+          abi: GOAL_VAULT_ABI,
+          functionName: "withdraw",
+          args: [goalId, gross],
+        }),
+      { account: account.address, to: vault },
     );
+    await params.onSubmitted?.(hash);
     const receipt = await pub.waitForTransactionReceipt({ hash });
     if (receipt.status === "reverted") {
       return { status: "skipped", reason: `goal withdraw reverted (tx ${hash})` };
