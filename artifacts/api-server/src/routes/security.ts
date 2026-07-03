@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
 import {
   GetTwoFactorStatusResponse,
+  SetupTwoFactorBody,
   SetupTwoFactorResponse,
   EnableTwoFactorBody,
   EnableTwoFactorResponse,
@@ -13,6 +14,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
+import { verifyStepUp } from "../lib/stepUp";
 import {
   generateTotpSecret,
   totpKeyUri,
@@ -45,6 +47,23 @@ router.post("/security/2fa/setup", requireAllowedOrigin, requireAuth, async (req
     return;
   }
 
+  // Enrolling 2FA is minting a new durable login factor — possession of the
+  // session cookie alone must not be enough (a stolen session on a passwordless
+  // account could otherwise enroll attacker-controlled TOTP and use it to take
+  // over the account, see /auth/password's step-up fallback). Require proof of
+  // an existing factor (password, or emailed reauth code) up front, before even
+  // generating the secret.
+  const parsed = SetupTwoFactorBody.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const stepUp = await verifyStepUp(user, parsed.data);
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
+    return;
+  }
+
   const secret = generateTotpSecret();
   await db
     .update(usersTable)
@@ -72,6 +91,18 @@ router.post("/security/2fa/enable", requireJsonAndAllowedOrigin, requireAuth, as
   }
   if (!user.twoFactorSecret) {
     res.status(400).json({ error: "Start setup first." });
+    return;
+  }
+
+  // Same step-up requirement as /setup: confirming the TOTP code proves
+  // possession of the authenticator, but not possession of an *existing*
+  // login factor — a stolen session could otherwise complete enrollment on
+  // its own. Require the same proof again here so a session that only made
+  // it through /setup (e.g. via a still-valid but now-stale reauth code)
+  // can't finish enrollment without it.
+  const stepUp = await verifyStepUp(user, parsed.data);
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
     return;
   }
 

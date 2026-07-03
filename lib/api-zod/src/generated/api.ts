@@ -399,6 +399,12 @@ export const GetTwoFactorStatusResponse = zod.object({
 /**
  * @summary Begin 2FA setup (returns secret + QR to scan)
  */
+export const SetupTwoFactorBody = zod.object({
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
+})
+
 export const SetupTwoFactorResponse = zod.object({
   "secret": zod.string().describe('Base32 secret to type into an authenticator app manually.'),
   "otpauthUrl": zod.string(),
@@ -410,7 +416,9 @@ export const SetupTwoFactorResponse = zod.object({
  * @summary Confirm a code to enable 2FA (returns one-time backup codes)
  */
 export const EnableTwoFactorBody = zod.object({
-  "code": zod.string().describe('A 6-digit TOTP code or a backup code.')
+  "code": zod.string().describe('A 6-digit TOTP code from the secret returned by setup.'),
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has no password (and no 2FA yet, since this call is what enables it). Obtain via POST \/auth\/stepup\/request-code.')
 })
 
 export const EnableTwoFactorResponse = zod.object({
@@ -445,6 +453,12 @@ export const RegenerateBackupCodesResponse = zod.object({
 /**
  * @summary Deactivate the account (reversible; signs the user out)
  */
+export const DeactivateAccountBody = zod.object({
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
+})
+
 export const DeactivateAccountResponse = zod.object({
   "ok": zod.boolean()
 })
@@ -454,7 +468,10 @@ export const DeactivateAccountResponse = zod.object({
  * @summary Permanently delete the account (clears personal data, revokes access)
  */
 export const DeleteAccountBody = zod.object({
-  "confirm": zod.string().describe('Must equal \"DELETE\" to confirm.')
+  "confirm": zod.string().describe('Must equal \"DELETE\" to confirm.'),
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
 export const DeleteAccountResponse = zod.object({

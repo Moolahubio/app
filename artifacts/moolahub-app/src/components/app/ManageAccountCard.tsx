@@ -17,12 +17,14 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiErrorMessage } from "@/lib/utils";
+import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 export function ManageAccountCard() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const deactivate = useDeactivateAccount();
   const deleteAccount = useDeleteAccount();
+  const { requestProof, stepUpDialog } = useStepUpGate();
 
   const [showDeactivate, setShowDeactivate] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -39,8 +41,10 @@ export function ManageAccountCard() {
 
   const handleDeactivate = async () => {
     setError(null);
+    const proof = await requestProof();
+    if (!proof) return;
     try {
-      await deactivate.mutateAsync();
+      await deactivate.mutateAsync({ data: proof });
       setShowDeactivate(false);
       finishSignedOut();
     } catch (err) {
@@ -50,8 +54,10 @@ export function ManageAccountCard() {
 
   const handleDelete = async () => {
     setError(null);
+    const proof = await requestProof();
+    if (!proof) return;
     try {
-      await deleteAccount.mutateAsync({ data: { confirm: "DELETE" } });
+      await deleteAccount.mutateAsync({ data: { confirm: "DELETE", ...proof } });
       setShowDelete(false);
       finishSignedOut();
     } catch (err) {
@@ -173,6 +179,8 @@ export function ManageAccountCard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {stepUpDialog}
     </Card>
   );
 }

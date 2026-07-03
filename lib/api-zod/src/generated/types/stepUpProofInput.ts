@@ -6,9 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface DeleteAccountInput {
-  /** Must equal "DELETE" to confirm. */
-  confirm: string;
+export interface StepUpProofInput {
   /**
      * Required (step-up) when the account already has a password set.
      * @nullable

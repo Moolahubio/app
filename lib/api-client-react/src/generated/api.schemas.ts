@@ -305,6 +305,21 @@ export interface TwoFactorCodeInput {
   code: string;
 }
 
+export interface TwoFactorEnableInput {
+  /** A 6-digit TOTP code from the secret returned by setup. */
+  code: string;
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has no password (and no 2FA yet, since this call is what enables it). Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
+}
+
 export interface BackupCodes {
   backupCodes: string[];
 }
@@ -312,6 +327,39 @@ export interface BackupCodes {
 export interface DeleteAccountInput {
   /** Must equal "DELETE" to confirm. */
   confirm: string;
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
+}
+
+export interface StepUpProofInput {
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
 }
 
 export interface NotificationCategories {

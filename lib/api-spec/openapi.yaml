@@ -567,6 +567,11 @@ paths:
       operationId: setupTwoFactor
       tags: [security]
       summary: Begin 2FA setup (returns secret + QR to scan)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StepUpProofInput"
       responses:
         "200":
           description: Setup material
@@ -591,7 +596,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TwoFactorCodeInput"
+              $ref: "#/components/schemas/TwoFactorEnableInput"
       responses:
         "200":
           description: Enabled
@@ -662,6 +667,11 @@ paths:
       operationId: deactivateAccount
       tags: [account]
       summary: Deactivate the account (reversible; signs the user out)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StepUpProofInput"
       responses:
         "200":
           description: Deactivated
@@ -1878,6 +1888,23 @@ components:
           type: string
           description: A 6-digit TOTP code or a backup code.
 
+    TwoFactorEnableInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: A 6-digit TOTP code from the secret returned by setup.
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has no password (and no 2FA
+            yet, since this call is what enables it). Obtain via
+            POST /auth/stepup/request-code.
+
     BackupCodes:
       type: object
       required: [backupCodes]
@@ -1894,6 +1921,32 @@ components:
         confirm:
           type: string
           description: Must equal "DELETE" to confirm.
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
+
+    StepUpProofInput:
+      type: object
+      properties:
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
 
     NotificationPreferences:
       type: object

@@ -62,6 +62,7 @@ import type {
   ResendCodeInput,
   ResetPasswordInput,
   SettlementOverviewResponse,
+  StepUpProofInput,
   StreakFrequencyInput,
   StreakOverview,
   StreakReminderInput,
@@ -69,6 +70,7 @@ import type {
   StreakVacationInput,
   SyncResult,
   TwoFactorCodeInput,
+  TwoFactorEnableInput,
   TwoFactorLoginInput,
   TwoFactorSetup,
   TwoFactorStatus,
@@ -1772,14 +1774,15 @@ export const getSetupTwoFactorUrl = () => {
 /**
  * @summary Begin 2FA setup (returns secret + QR to scan)
  */
-export const setupTwoFactor = async ( options?: RequestInit): Promise<TwoFactorSetup> => {
+export const setupTwoFactor = async (stepUpProofInput?: StepUpProofInput, options?: RequestInit): Promise<TwoFactorSetup> => {
 
   return customFetch<TwoFactorSetup>(getSetupTwoFactorUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      stepUpProofInput,)
   }
 );}
 
@@ -1787,8 +1790,8 @@ export const setupTwoFactor = async ( options?: RequestInit): Promise<TwoFactorS
 
 
 export const getSetupTwoFactorMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTwoFactor>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof setupTwoFactor>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTwoFactor>>, TError,{data?: BodyType<StepUpProofInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setupTwoFactor>>, TError,{data?: BodyType<StepUpProofInput>}, TContext> => {
 
 const mutationKey = ['setupTwoFactor'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1800,10 +1803,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setupTwoFactor>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setupTwoFactor>>, {data?: BodyType<StepUpProofInput>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  setupTwoFactor(requestOptions)
+          return  setupTwoFactor(data,requestOptions)
         }
 
 
@@ -1814,18 +1817,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type SetupTwoFactorMutationResult = NonNullable<Awaited<ReturnType<typeof setupTwoFactor>>>
-
+    export type SetupTwoFactorMutationBody = BodyType<StepUpProofInput> | undefined
     export type SetupTwoFactorMutationError = ErrorType<ApiError>
 
     /**
  * @summary Begin 2FA setup (returns secret + QR to scan)
  */
 export const useSetupTwoFactor = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTwoFactor>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTwoFactor>>, TError,{data?: BodyType<StepUpProofInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof setupTwoFactor>>,
         TError,
-        void,
+        {data?: BodyType<StepUpProofInput>},
         TContext
       > => {
       return useMutation(getSetupTwoFactorMutationOptions(options));
@@ -1842,7 +1845,7 @@ export const getEnableTwoFactorUrl = () => {
 /**
  * @summary Confirm a code to enable 2FA (returns one-time backup codes)
  */
-export const enableTwoFactor = async (twoFactorCodeInput: TwoFactorCodeInput, options?: RequestInit): Promise<BackupCodes> => {
+export const enableTwoFactor = async (twoFactorEnableInput: TwoFactorEnableInput, options?: RequestInit): Promise<BackupCodes> => {
 
   return customFetch<BackupCodes>(getEnableTwoFactorUrl(),
   {
@@ -1850,7 +1853,7 @@ export const enableTwoFactor = async (twoFactorCodeInput: TwoFactorCodeInput, op
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      twoFactorCodeInput,)
+      twoFactorEnableInput,)
   }
 );}
 
@@ -1858,8 +1861,8 @@ export const enableTwoFactor = async (twoFactorCodeInput: TwoFactorCodeInput, op
 
 
 export const getEnableTwoFactorMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableTwoFactor>>, TError,{data: BodyType<TwoFactorCodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof enableTwoFactor>>, TError,{data: BodyType<TwoFactorCodeInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableTwoFactor>>, TError,{data: BodyType<TwoFactorEnableInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof enableTwoFactor>>, TError,{data: BodyType<TwoFactorEnableInput>}, TContext> => {
 
 const mutationKey = ['enableTwoFactor'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -1871,7 +1874,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enableTwoFactor>>, {data: BodyType<TwoFactorCodeInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enableTwoFactor>>, {data: BodyType<TwoFactorEnableInput>}> = (props) => {
           const {data} = props ?? {};
 
           return  enableTwoFactor(data,requestOptions)
@@ -1885,18 +1888,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type EnableTwoFactorMutationResult = NonNullable<Awaited<ReturnType<typeof enableTwoFactor>>>
-    export type EnableTwoFactorMutationBody = BodyType<TwoFactorCodeInput>
+    export type EnableTwoFactorMutationBody = BodyType<TwoFactorEnableInput>
     export type EnableTwoFactorMutationError = ErrorType<ApiError>
 
     /**
  * @summary Confirm a code to enable 2FA (returns one-time backup codes)
  */
 export const useEnableTwoFactor = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableTwoFactor>>, TError,{data: BodyType<TwoFactorCodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableTwoFactor>>, TError,{data: BodyType<TwoFactorEnableInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof enableTwoFactor>>,
         TError,
-        {data: BodyType<TwoFactorCodeInput>},
+        {data: BodyType<TwoFactorEnableInput>},
         TContext
       > => {
       return useMutation(getEnableTwoFactorMutationOptions(options));
@@ -2055,14 +2058,15 @@ export const getDeactivateAccountUrl = () => {
 /**
  * @summary Deactivate the account (reversible; signs the user out)
  */
-export const deactivateAccount = async ( options?: RequestInit): Promise<OkResponse> => {
+export const deactivateAccount = async (stepUpProofInput?: StepUpProofInput, options?: RequestInit): Promise<OkResponse> => {
 
   return customFetch<OkResponse>(getDeactivateAccountUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      stepUpProofInput,)
   }
 );}
 
@@ -2070,8 +2074,8 @@ export const deactivateAccount = async ( options?: RequestInit): Promise<OkRespo
 
 
 export const getDeactivateAccountMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deactivateAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deactivateAccount>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deactivateAccount>>, TError,{data?: BodyType<StepUpProofInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deactivateAccount>>, TError,{data?: BodyType<StepUpProofInput>}, TContext> => {
 
 const mutationKey = ['deactivateAccount'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -2083,10 +2087,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deactivateAccount>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deactivateAccount>>, {data?: BodyType<StepUpProofInput>}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  deactivateAccount(requestOptions)
+          return  deactivateAccount(data,requestOptions)
         }
 
 
@@ -2097,18 +2101,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type DeactivateAccountMutationResult = NonNullable<Awaited<ReturnType<typeof deactivateAccount>>>
-
+    export type DeactivateAccountMutationBody = BodyType<StepUpProofInput> | undefined
     export type DeactivateAccountMutationError = ErrorType<ApiError>
 
     /**
  * @summary Deactivate the account (reversible; signs the user out)
  */
 export const useDeactivateAccount = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deactivateAccount>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deactivateAccount>>, TError,{data?: BodyType<StepUpProofInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof deactivateAccount>>,
         TError,
-        void,
+        {data?: BodyType<StepUpProofInput>},
         TContext
       > => {
       return useMutation(getDeactivateAccountMutationOptions(options));

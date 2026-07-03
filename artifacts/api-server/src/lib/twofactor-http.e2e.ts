@@ -26,7 +26,7 @@
  * Run: pnpm --filter @workspace/api-server test:twofactor-http
  */
 import assert from "node:assert/strict";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { AddressInfo } from "node:net";
 
 // Disable on-chain settlement and email at the source (snapshotted at import).
@@ -34,7 +34,7 @@ delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
 
-const { db, pool, usersTable, twoFactorChallengesTable } = await import("@workspace/db");
+const { db, pool, usersTable, twoFactorChallengesTable, reauthCodesTable } = await import("@workspace/db");
 const { eq, inArray } = await import("drizzle-orm");
 const { createSession } = await import("./auth");
 const { createTwoFactorChallenge } = await import("./twofactor");
@@ -99,15 +99,36 @@ async function makeAuthedUser(label: string): Promise<{ id: string; email: strin
   return { id: u.id, email, token };
 }
 
-/** Turn on 2FA the way the UI does: setup (get secret) then enable with a live code. */
-async function enable2fa(token: string): Promise<{ secret: string; backupCodes: string[] }> {
-  const setup = await api<{ secret: string }>("POST", "/api/security/2fa/setup", { token });
+/** Issue a live reauth code directly (bypassing email) for a passwordless/2FA-less user. */
+async function issueTestReauthCode(userId: string): Promise<string> {
+  const code = "482913";
+  await db.delete(reauthCodesTable).where(eq(reauthCodesTable.userId, userId));
+  await db.insert(reauthCodesTable).values({
+    userId,
+    codeHash: createHash("sha256").update(code).digest("hex"),
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+  });
+  return code;
+}
+
+/**
+ * Turn on 2FA the way the UI does: setup (get secret) then enable with a live
+ * code. Both steps are step-up gated; this account has neither a password nor
+ * (yet) 2FA, so the fallback is an emailed reauth code, minted directly here.
+ */
+async function enable2fa(token: string, userId: string): Promise<{ secret: string; backupCodes: string[] }> {
+  const setupCode = await issueTestReauthCode(userId);
+  const setup = await api<{ secret: string }>("POST", "/api/security/2fa/setup", {
+    token,
+    body: { reauthCode: setupCode },
+  });
   assert.equal(setup.status, 200, `2fa setup should return 200 (got ${setup.status})`);
   assert.ok(setup.body.secret, "setup returns the TOTP secret to the client");
 
+  const enableCode = await issueTestReauthCode(userId);
   const enable = await api<{ backupCodes: string[] }>("POST", "/api/security/2fa/enable", {
     token,
-    body: { code: authenticator.generate(setup.body.secret) },
+    body: { code: authenticator.generate(setup.body.secret), reauthCode: enableCode },
   });
   assert.equal(enable.status, 200, `2fa enable should return 200 (got ${enable.status})`);
   assert.ok(Array.isArray(enable.body.backupCodes), "enable returns backup codes");
@@ -123,7 +144,7 @@ async function statusFor(token: string) {
 
 async function run() {
   const user = await makeAuthedUser("user");
-  const { secret, backupCodes } = await enable2fa(user.token);
+  const { secret, backupCodes } = await enable2fa(user.token, user.id);
 
   const enabledStatus = await statusFor(user.token);
   assert.equal(enabledStatus.enabled, true, "2FA reports enabled after setup+enable");

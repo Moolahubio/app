@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiErrorMessage } from "@/lib/utils";
+import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 type SetupState = {
   secret: string;
@@ -66,6 +67,7 @@ export function TwoFactorCard() {
   const enableMutation = useEnableTwoFactor();
   const disableMutation = useDisableTwoFactor();
   const regenerateMutation = useRegenerateBackupCodes();
+  const { requestProof, stepUpDialog } = useStepUpGate();
 
   const [setup, setSetup] = useState<SetupState>(null);
   const [code, setCode] = useState("");
@@ -84,8 +86,10 @@ export function TwoFactorCard() {
   const startSetup = async () => {
     setError(null);
     setBackupCodes(null);
+    const proof = await requestProof();
+    if (!proof) return;
     try {
-      const res = await setupMutation.mutateAsync();
+      const res = await setupMutation.mutateAsync({ data: proof });
       setSetup(res);
       setCode("");
     } catch (err) {
@@ -96,8 +100,15 @@ export function TwoFactorCard() {
   const confirmEnable = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    // A fresh step-up proof is required here too: for passwordless/2FA-less
+    // accounts the emailed reauth code used at /setup is single-use, so it
+    // can't be replayed for /enable. Ask again rather than reusing it.
+    const proof = await requestProof();
+    if (!proof) return;
     try {
-      const res = await enableMutation.mutateAsync({ data: { code: code.trim() } });
+      const res = await enableMutation.mutateAsync({
+        data: { code: code.trim(), ...proof },
+      });
       setBackupCodes(res.backupCodes);
       setSetup(null);
       setCode("");
@@ -317,6 +328,8 @@ export function TwoFactorCard() {
           )}
         </div>
       )}
+
+      {stepUpDialog}
     </Card>
   );
 }
