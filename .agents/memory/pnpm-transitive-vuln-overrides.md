@@ -46,3 +46,18 @@ strip those binaries, and its `@esbuild-kit/esm-loader: npm:tsx` remap didn't ta
 root `package.json` `pnpm.overrides`. Do not add or edit entries in the
 pnpm-workspace.yaml `overrides:` block expecting them to work — they won't until
 that block is consolidated into package.json.
+
+**Catalog-pinned deps (`pnpm-workspace.yaml` `catalog:`) need the catalog entry
+bumped too, not just `pnpm.overrides`.** For vite (consumed via `catalog:` by
+both apps and required as an exact peer by @tailwindcss/vite / @vitejs/plugin-react),
+a `"vite@7.3.3": "7.3.5"` override alone did not propagate — the peer-resolved
+copies stayed pinned at 7.3.3 until the catalog line itself (`vite: ^7.3.2`) was
+bumped to `^7.3.5`. Do both for any catalog-managed package: the override as a
+safety net, and the catalog range bump as the actual fix.
+
+Python (uv, not pnpm): there's no `pnpm.overrides` equivalent. Use either
+`[tool.uv] constraint-dependencies` (raises the minimum for transitive deps
+without adding a direct dependency) or `override-dependencies` (forces the exact
+version, ignoring what the package declares) in `pyproject.toml`, then `uv sync`.
+Prefer `constraint-dependencies` when the package is already pulled in
+transitively and you just need to bump its floor.
