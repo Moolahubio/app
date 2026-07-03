@@ -85,30 +85,98 @@ contract SusuEscrowTest is Test {
 
         uint256 pot = CONTRIB * 3;
         uint256 fee = (pot * FEE) / 10_000; // 6 USDC
-        uint256 payout = pot - fee; // 294 USDC
+        uint256 fullPayout = pot - fee; // 294 USDC — steady-state payout once no rounds remain
 
-        // Round 1 -> recipient is members[0] = alice
+        // Round 1 -> recipient is members[0] = alice. Two future rounds remain,
+        // so 2*CONTRIB of her payout is withheld as her own reserve rather than
+        // paid out immediately — this is the fix: she can no longer walk away
+        // with the full pot before funding her own remaining obligations.
         _roundContribute(e);
         assertEq(usdc.balanceOf(treasury), fee);
         assertEq(uint256(e.currentRound()), 2);
-        // alice: 300 start - 100 contributed + 294 payout
-        assertEq(usdc.balanceOf(alice), CONTRIB * 3 - CONTRIB + payout);
+        uint256 round1Payout = fullPayout - CONTRIB * 2; // 94 USDC
+        // alice: 300 start - 100 contributed + 94 immediate payout
+        assertEq(usdc.balanceOf(alice), CONTRIB * 3 - CONTRIB + round1Payout);
+        assertEq(e.heldReserve(alice), CONTRIB * 2);
         assertEq(usdc.balanceOf(bob), CONTRIB * 3 - CONTRIB);
 
-        // Round 2 -> bob
+        // Round 2 -> bob. Alice's round-2 due is drawn from her own reserve
+        // (no fresh transferFrom needed), and bob's payout in turn withholds
+        // his own remaining round-3 due.
+        uint256 aliceBalanceBeforeRound2 = usdc.balanceOf(alice);
         _roundContribute(e);
         assertEq(usdc.balanceOf(treasury), fee * 2);
+        assertEq(e.heldReserve(alice), CONTRIB); // one round drawn down
+        assertEq(usdc.balanceOf(alice), aliceBalanceBeforeRound2); // no real transfer moved
+        assertEq(e.heldReserve(bob), CONTRIB);
 
-        // Round 3 -> carol; circle completes
+        // Round 3 -> carol; circle completes. Alice and bob both draw their
+        // final round's due from reserve; nothing is left withheld anywhere.
         _roundContribute(e);
         assertEq(uint8(e.status()), uint8(IMoolaHubSusuEscrow.Status.Completed));
         assertEq(usdc.balanceOf(treasury), fee * 3); // 18 USDC total fees
         assertEq(usdc.balanceOf(address(e)), 0); // escrow drained
+        assertEq(e.heldReserve(alice), 0);
+        assertEq(e.heldReserve(bob), 0);
+        assertEq(e.heldReserve(carol), 0);
 
-        // Each member net: paid 300, received 294 -> ends with 294
-        assertEq(usdc.balanceOf(alice), payout);
-        assertEq(usdc.balanceOf(bob), payout);
-        assertEq(usdc.balanceOf(carol), payout);
+        // Each member's final net position is unchanged from before the fix:
+        // paid 300 total, received 294 total -> ends with 294. The reserve
+        // only changes WHEN money moves, never the final honest-path split.
+        assertEq(usdc.balanceOf(alice), fullPayout);
+        assertEq(usdc.balanceOf(bob), fullPayout);
+        assertEq(usdc.balanceOf(carol), fullPayout);
+    }
+
+    /// @notice The actual vulnerability being fixed: an early recipient takes
+    ///         their round payout, then defaults on every future round rather
+    ///         than continuing to contribute. Before this fix, the recipient
+    ///         had already been paid the FULL pot, so later honest
+    ///         contributors had no way to recover their own round-1
+    ///         contributions once the circle stalled. Now, the recipient's
+    ///         payout withheld a reserve covering their own future dues, and
+    ///         that reserve is forfeited to the round's honest contributors on
+    ///         cancellation instead of sitting stranded with the defaulter.
+    function test_earlyRecipientDefault_forfeitsReserve_makesHonestMembersWhole() public {
+        MoolaHubSusuEscrow e = _create(keccak256("c11"));
+        _fundAll(address(e));
+
+        // Round 1 settles normally; alice (position 0) is paid, with 2*CONTRIB
+        // withheld as her reserve for the two rounds she has yet to fund.
+        _roundContribute(e);
+        assertEq(e.heldReserve(alice), CONTRIB * 2);
+
+        // Round 2: bob and carol pay in as normal. Alice goes rogue and never
+        // calls contribute() again — the round never fills.
+        vm.prank(bob);
+        e.contribute();
+        vm.prank(carol);
+        e.contribute();
+
+        vm.warp(block.timestamp + ROUND + GRACE + 1);
+        e.cancelStalled(); // permissionless
+
+        assertEq(uint8(e.status()), uint8(IMoolaHubSusuEscrow.Status.Cancelled));
+        assertEq(rep.strikesOf(alice), 1); // the defaulter is flagged
+        assertEq(e.heldReserve(alice), 0); // her reserve is forfeited, not returned to her
+
+        // Bob and carol each contributed 200 total (round 1 + round 2) and
+        // must be made whole: their round-2 contribution refunds (100 each)
+        // plus an even split of alice's forfeited 200 reserve (100 each).
+        assertEq(e.refundableOf(bob), CONTRIB * 2);
+        assertEq(e.refundableOf(carol), CONTRIB * 2);
+        assertEq(e.refundableOf(alice), 0); // she already received her round-1 payout
+
+        vm.prank(bob);
+        e.claimRefund();
+        vm.prank(carol);
+        e.claimRefund();
+
+        // Both end up exactly where they started — no loss from alice's
+        // default, beyond the round-1 fee already paid to the treasury.
+        assertEq(usdc.balanceOf(bob), CONTRIB * 3);
+        assertEq(usdc.balanceOf(carol), CONTRIB * 3);
+        assertEq(usdc.balanceOf(address(e)), 0); // escrow fully drained, nothing stranded
     }
 
     function test_doubleContributeReverts() public {

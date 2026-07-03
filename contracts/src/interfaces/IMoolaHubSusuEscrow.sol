@@ -7,6 +7,12 @@ pragma solidity ^0.8.28;
 ///         automatically once the round fills. Non-discretionary: no one can
 ///         change the recipient or redirect funds. A 2% fee on each disbursement
 ///         is routed to the treasury (so a recipient owed 1000 receives 980).
+///
+/// @dev A recipient's payout withholds the value of their own still-unpaid
+///      future rounds as `heldReserve` — it funds those future rounds from the
+///      inside (no fresh transfer needed) and is forfeited to the members it
+///      would otherwise strand if the recipient later defaults. This prevents
+///      an early recipient from taking the full pot and refusing to continue.
 interface IMoolaHubSusuEscrow {
     enum Status {
         Active,
@@ -33,6 +39,9 @@ interface IMoolaHubSusuEscrow {
     event CircleCancelled(uint256 atRound, address indexed by);
     event Refunded(address indexed member, uint256 amount);
     event DelinquentsFlagged(uint256 indexed round, uint256 count);
+    event ReserveWithheld(address indexed member, uint256 amount);
+    event ReserveDrawn(address indexed member, uint256 indexed round, uint256 amount);
+    event ReserveForfeited(address indexed member, uint256 amount);
 
     function initialize(InitParams calldata p) external;
 
@@ -52,4 +61,5 @@ interface IMoolaHubSusuEscrow {
     function currentRecipient() external view returns (address);
     function hasContributed(uint256 round, address member) external view returns (bool);
     function refundableOf(address member) external view returns (uint256);
+    function heldReserve(address member) external view returns (uint256);
 }

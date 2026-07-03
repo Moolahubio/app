@@ -9,7 +9,13 @@ import {
   usersTable,
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
-import { onchainEnabled, explorerUrl, escrowEnabled, deployCircleEscrow } from "./chain";
+import {
+  onchainEnabled,
+  explorerUrl,
+  escrowEnabled,
+  deployCircleEscrow,
+  escrowHeldReserveCents,
+} from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { requireWalletForUser } from "./wallet";
@@ -338,7 +344,18 @@ export async function contribute(userId: string, circleId: string) {
     escrow && wallet
       ? await walletSpendableCents(userId, wallet.address)
       : await accountBalance(acct.wallet(userId));
-  if (spendable < circle.contributionCents) {
+  // A past recipient's payout withholds a reserve inside the escrow covering
+  // their own still-unpaid future rounds (see MoolaHubSusuEscrow's reserve
+  // mechanism). When it fully covers this round, the escrow draws from it
+  // on-chain instead of pulling a fresh transfer, so the fresh-wallet-balance
+  // check below doesn't apply — a member shouldn't be blocked from a round
+  // they've already effectively prepaid for. The draw is all-or-nothing per
+  // round (heldReserve is always an exact multiple of contributionCents), so
+  // there's no partial credit to blend in here.
+  const reserveCents =
+    escrow && wallet ? await escrowHeldReserveCents(escrow, wallet.address) : 0;
+  const coveredByReserve = reserveCents >= circle.contributionCents;
+  if (!coveredByReserve && spendable < circle.contributionCents) {
     throw new AppError("Insufficient available balance");
   }
 

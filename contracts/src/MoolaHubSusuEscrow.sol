@@ -54,6 +54,15 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     mapping(uint256 => uint256) public roundContributions; // count per round
     mapping(uint256 => bool) public roundFlagged; // delinquency reported for round
     mapping(address => uint256) public refundableOf;
+    /// @dev Collateral withheld from a recipient's OWN payout, equal to the
+    ///      value of their still-unpaid future rounds (see `_contribute`).
+    ///      Always an exact multiple of `contributionAmount`. It funds their
+    ///      own future obligations from the inside (no fresh transferFrom
+    ///      needed) and is forfeited to the members it would otherwise strand
+    ///      if they default (see `_accrueRefunds`). This is what makes early
+    ///      payouts safe: nobody can take the full pot and walk away, because
+    ///      the pot itself never contained more than their own contributions.
+    mapping(address => uint256) public heldReserve;
 
     error NotMember();
     error NotActive();
@@ -114,6 +123,16 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
     /// @dev Strict checks-effects-interactions: ALL state (including settlement's
     ///      round advance / completion) is written before ANY token transfer. The
     ///      member's pull happens first so the pot is funded before the payout.
+    ///
+    ///      Reserve accounting (the fix for the early-recipient default/theft
+    ///      vector): a recipient's payout withholds the value of THEIR OWN
+    ///      still-unpaid future rounds (`heldReserve`). That withheld money
+    ///      never leaves the contract, so it can satisfy their future round
+    ///      obligations without a fresh transferFrom (`fromReserve` below), and
+    ///      it is forfeited to the members it would otherwise strand if they
+    ///      default instead (see `_accrueRefunds`). Net effect for an honest
+    ///      member across the full circle is unchanged; a dishonest one can no
+    ///      longer profit by taking a payout and then refusing to contribute.
     function _contribute() private {
         if (status != Status.Active || paused) revert NotActive();
         if (!isMember[msg.sender]) revert NotMember();
@@ -126,15 +145,35 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
         roundContributions[round] = filled;
         emit Contributed(msg.sender, round, contributionAmount);
 
+        // If this member already has this round's due sitting in their own
+        // reserve (withheld from an earlier payout), draw from it instead of
+        // pulling a fresh transfer — the funds are already inside the
+        // contract. `heldReserve` is always an exact multiple of
+        // `contributionAmount`, so this is all-or-nothing per round.
+        uint256 reserve = heldReserve[msg.sender];
+        bool fromReserve = reserve >= contributionAmount;
+        if (fromReserve) {
+            heldReserve[msg.sender] = reserve - contributionAmount;
+            emit ReserveDrawn(msg.sender, round, contributionAmount);
+        }
+
         bool settle = filled == totalRounds;
         address recipient = address(0);
         uint256 payout = 0;
         uint256 fee = 0;
+        uint256 reserved = 0;
         if (settle) {
             recipient = _members[round - 1]; // positional, non-discretionary
             uint256 pot = contributionAmount * totalRounds;
             fee = (pot * feeBps) / BPS;
-            payout = pot - fee;
+            // Withhold the recipient's own remaining contribution obligations
+            // from their payout rather than paying the full pot. MAX_MEMBERS
+            // and MAX_FEE_BPS bound `reserved` well under `pot - fee`, so this
+            // subtraction cannot underflow (Solidity 0.8 would revert if it
+            // somehow did, never silently wrap).
+            reserved = contributionAmount * (totalRounds - round);
+            payout = pot - fee - reserved;
+            if (reserved > 0) heldReserve[recipient] += reserved;
             if (round == totalRounds) {
                 status = Status.Completed;
             } else {
@@ -144,11 +183,14 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
         }
 
         // --- Interactions (CEI): pull this contribution, then settle payouts ---
-        usdc.safeTransferFrom(msg.sender, address(this), contributionAmount);
+        if (!fromReserve) {
+            usdc.safeTransferFrom(msg.sender, address(this), contributionAmount);
+        }
         if (settle) {
             if (fee > 0) usdc.safeTransfer(treasury, fee);
-            usdc.safeTransfer(recipient, payout); // USDC has no transfer hook
+            if (payout > 0) usdc.safeTransfer(recipient, payout); // USDC has no transfer hook
             emit RoundSettled(round, recipient, payout, fee);
+            if (reserved > 0) emit ReserveWithheld(recipient, reserved);
             if (status == Status.Completed) emit CircleCompleted(totalRounds);
         }
     }
@@ -225,11 +267,62 @@ contract MoolaHubSusuEscrow is IMoolaHubSusuEscrow, Initializable, ReentrancyGua
 
     /// @dev On cancellation, every contribution to the unsettled current round is
     ///      refundable to its contributor. Already-settled rounds stand.
+    ///
+    ///      Reserve settlement: a past recipient's `heldReserve` was funded out
+    ///      of THEIR OWN earlier payout to cover rounds that will now never
+    ///      happen. If they kept up with this round, that reserve is simply
+    ///      theirs back (no default occurred — the circle just ended early).
+    ///      If they missed this round (the delinquent whose default likely
+    ///      caused the stall), their reserve is forfeited and split across the
+    ///      round's honest contributors instead of sitting unclaimed — this is
+    ///      what makes earlier contributors whole rather than only refunding
+    ///      the unsettled round.
     function _accrueRefunds(uint256 round) private {
         uint256 n = _members.length;
+        uint256 forfeited = 0;
+        uint256 honestCount = 0;
         for (uint256 i; i < n; ++i) {
             address m = _members[i];
-            if (hasContributed[round][m]) refundableOf[m] += contributionAmount;
+            bool contributed = hasContributed[round][m];
+            if (contributed) {
+                refundableOf[m] += contributionAmount;
+                unchecked {
+                    ++honestCount;
+                }
+            }
+            uint256 reserve = heldReserve[m];
+            if (reserve > 0) {
+                heldReserve[m] = 0;
+                if (contributed) {
+                    refundableOf[m] += reserve;
+                } else {
+                    forfeited += reserve;
+                    emit ReserveForfeited(m, reserve);
+                }
+            }
+        }
+        if (forfeited > 0) {
+            if (honestCount > 0) {
+                uint256 share = forfeited / honestCount;
+                uint256 distributed = 0;
+                for (uint256 i; i < n; ++i) {
+                    address m = _members[i];
+                    if (hasContributed[round][m]) {
+                        refundableOf[m] += share;
+                        distributed += share;
+                    }
+                }
+                // Integer-division dust (can't split evenly) — route to the
+                // treasury via the same pull-based refund path rather than
+                // stranding a few wei/units in the contract forever.
+                uint256 dust = forfeited - distributed;
+                if (dust > 0) refundableOf[treasury] += dust;
+            } else {
+                // No one contributed this round to redistribute to (e.g. a
+                // pathological all-delinquent round) — the treasury absorbs it
+                // rather than leaving it permanently unclaimable.
+                refundableOf[treasury] += forfeited;
+            }
         }
     }
 

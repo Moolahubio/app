@@ -74,8 +74,16 @@ const ESCROW_ABI = parseAbi([
   "function currentRound() view returns (uint256)",
   "function status() view returns (uint8)",
   "function hasContributed(uint256 round, address member) view returns (bool)",
+  // A member's own collateral withheld from an earlier payout (see
+  // MoolaHubSusuEscrow's reserve mechanism). Always an exact multiple of the
+  // circle's contribution amount. When it covers a future round, the escrow
+  // draws from it instead of pulling a fresh transfer from the member.
+  "function heldReserve(address member) view returns (uint256)",
   "event Contributed(address indexed member, uint256 indexed round, uint256 amount)",
   "event RoundSettled(uint256 indexed round, address indexed recipient, uint256 payout, uint256 fee)",
+  "event ReserveWithheld(address indexed member, uint256 amount)",
+  "event ReserveDrawn(address indexed member, uint256 indexed round, uint256 amount)",
+  "event ReserveForfeited(address indexed member, uint256 amount)",
 ]);
 
 // Singleton GoalVault: holds USDC per (owner, goalId). Deposits are free;
@@ -579,6 +587,31 @@ export async function mintUsdc(params: { to: string; amountCents: number }): Pro
     return { status: "confirmed", hash };
   } catch (e) {
     return { status: "skipped", reason: `rpc unreachable: ${errMsg(e)}` };
+  }
+}
+
+/**
+ * A member's own reserve held inside the escrow (in cents) — collateral
+ * withheld from an earlier payout that covers their still-unpaid future
+ * rounds. Callers use this to avoid blocking a legitimate future contribution
+ * on the member's real wallet balance when their reserve already covers it.
+ * Returns 0 (rather than throwing) when unreadable, so a transient RPC issue
+ * degrades to the stricter (wallet-balance-only) check instead of failing the
+ * whole gate.
+ */
+export async function escrowHeldReserveCents(escrow: string, member: string): Promise<number> {
+  if (!isValidAddress(escrow) || !isValidAddress(member)) return 0;
+  try {
+    const pub = publicClient();
+    const reserve = (await pub.readContract({
+      address: getAddress(escrow),
+      abi: ESCROW_ABI,
+      functionName: "heldReserve",
+      args: [getAddress(member)],
+    })) as bigint;
+    return unitsToCents(reserve);
+  } catch {
+    return 0;
   }
 }
 

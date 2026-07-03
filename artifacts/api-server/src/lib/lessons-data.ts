@@ -147,7 +147,7 @@ export const LESSONS: LessonDef[] = [
       },
       {
         heading: "Why It Matters for Savings Circles",
-        text: "Traditional Susus require trust in a person — usually the organizer. If they disappear with the pot, there is no recourse. On-chain Susus use smart contracts: code that automatically distributes funds according to the rules everyone agreed to. No single person can go rogue."
+        text: "Traditional Susus require trust in a person — usually the organizer. If they disappear with the pot, there is no recourse. On-chain Susus use smart contracts: code that automatically distributes funds according to the rules everyone agreed to, with built-in safeguards. Each payout holds back the recipient's own future contributions as collateral inside the contract, so if someone takes their turn and then stops paying in, that collateral covers the members still waiting rather than leaving them stranded."
       },
       {
         heading: "The Monad Blockchain",
