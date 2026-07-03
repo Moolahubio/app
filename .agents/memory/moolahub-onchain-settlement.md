@@ -98,6 +98,20 @@ provision the token secret (considers a shared bearer token a security risk), so
 do NOT auto-create/request it — leave enabling it to the operator. Do not weaken
 the gate to plain `requireAuth` (that would leak operator data to every user).
 
+## syncDeposits internal-address allowlist must be per-user, not just fixed addresses
+`/wallet/sync` (deposits.ts) treats transfers from known internal contracts
+(platform/goalVault/factory) as already-booked, not eligible for import as a
+fresh deposit. Circle escrow CLONES are per-circle addresses, not the shared
+factory address, so a rotation/accumulation payout landing from a user's own
+escrow was NOT in that fixed set and could be double-counted (once as the
+already-booked payout ledger row, again as an imported "deposit") in the race
+window before the reconciler backfills the settlement tx hash onto the payout
+row.
+**Fix:** resolve the caller's own circle escrow addresses per-request (join
+circleMembers→circles for that userId) and add them to the internal-address
+set before checking `p.from`. Any fixed/global address list is the wrong
+shape for per-circle clone contracts — it must be scoped to the syncing user.
+
 ## Source of truth: on-chain and ledger are co-authoritative (user-confirmed)
 The user chose the "let them work together" model over making either side the sole
 truth. On-chain is authoritative for VALUE and settlement FINALITY (a confirmed

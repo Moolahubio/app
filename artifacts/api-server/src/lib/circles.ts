@@ -68,6 +68,25 @@ async function memberCircleIds(userId: string): Promise<string[]> {
   return rows.map((r) => r.circleId);
 }
 
+/**
+ * Every on-chain escrow clone address for circles the user belongs to
+ * (rotation payouts and accumulation-circle contracts alike), regardless of
+ * circle status. A member's escrow sends them USDC directly on-chain when a
+ * round settles or the circle completes — that transfer already has a ledger
+ * entry booked as a `payout`/`goal_release`-style transaction and must never
+ * be eligible for import as an external `/wallet/sync` deposit.
+ */
+export async function getUserCircleEscrowAddresses(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ addr: circlesTable.contractAddress })
+    .from(circleMembersTable)
+    .innerJoin(circlesTable, eq(circlesTable.id, circleMembersTable.circleId))
+    .where(eq(circleMembersTable.userId, userId));
+  return rows
+    .map((r) => r.addr)
+    .filter((a): a is string => Boolean(a));
+}
+
 export async function createCircle(
   userId: string,
   input: {

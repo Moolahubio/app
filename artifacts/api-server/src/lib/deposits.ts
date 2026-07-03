@@ -12,6 +12,7 @@ import {
 } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { getWalletForUser } from "./wallet";
+import { getUserCircleEscrowAddresses } from "./circles";
 import { walletSpendableCents } from "./onchainBalances";
 import { notify } from "./notifications";
 import { formatMoney, truncateAddress } from "./money";
@@ -111,8 +112,17 @@ export async function syncDeposits(
   // These are platform-controlled contracts whose outgoing USDC transfers to
   // user wallets represent already-booked ledger entries (payouts, goal
   // withdrawals, etc.) and must never be imported as external deposits.
+  //
+  // Circle escrow clones are per-circle contracts (not the shared factory
+  // address), so they must be resolved per-user from this user's circle
+  // memberships rather than read from a fixed env-configured address. A
+  // rotation-circle payout or accumulation-circle completion pays the member
+  // straight from that escrow on-chain, and it is already booked as a
+  // `payout`/fee ledger entry by the circle-settlement code path — importing
+  // it again here as a fresh deposit would double-credit the same transfer.
+  const escrowAddresses = await getUserCircleEscrowAddresses(userId);
   const internalAddresses = new Set<string>(
-    [platformAddress(), goalVaultContract(), factoryContract()]
+    [platformAddress(), goalVaultContract(), factoryContract(), ...escrowAddresses]
       .filter((a): a is string => Boolean(a))
       .map((a) => a.toLowerCase()),
   );
