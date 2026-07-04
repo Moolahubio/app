@@ -14,16 +14,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <Link href="/login">
             <Logo tone="light" />
           </Link>
-          <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
-            Just Save, Earn &amp; Belong.
-          </p>
         </div>
 
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
-            Save. Earn. Belong.
-          </p>
-          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-white/55">
             Built on Monad
           </p>
           <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
@@ -32,24 +26,23 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
             <span className="text-jade-400">Belong.</span>
           </h1>
           <p className="mt-5 max-w-sm text-lg text-white/60">
-            Moolahub brings together personal savings and traditional susu groups
-            with modern fintech and blockchain technology. Save consistently, earn
-            yield on your money, and belong to a community that grows wealth together.
+            Personal savings and susu circles in one place. Earn yield as you go,
+            and save alongside people you trust.
           </p>
-          <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <div className="glass-dark mt-8 max-w-md rounded-2xl p-5">
             <AscendingChart className="max-h-32" />
           </div>
         </div>
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/65">
           <span className="inline-flex items-center gap-2">
-            <Lock className="h-4 w-4 text-jade-400" /> Withdrawals need extra confirmation
+            <Lock className="h-4 w-4 text-jade-400" /> Withdrawals need a second confirmation
           </span>
           <span className="inline-flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-jade-400" /> Verified on Monad
+            <ShieldCheck className="h-4 w-4 text-jade-400" /> Every transaction has an on-chain receipt
           </span>
           <span className="inline-flex items-center gap-2">
-            <Users className="h-4 w-4 text-jade-400" /> People you trust
+            <Users className="h-4 w-4 text-jade-400" /> Save in circles with people you trust
           </span>
         </div>
       </section>

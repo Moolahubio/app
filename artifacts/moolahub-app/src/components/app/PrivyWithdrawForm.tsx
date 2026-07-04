@@ -51,7 +51,7 @@ export function PrivyWithdrawForm({
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Your wallet is self-custodial — connect it to sign the withdrawal yourself.
+          Your wallet is self-custodial. Connect it to sign the withdrawal yourself.
         </p>
         <Button variant="secondary" className="w-full" onClick={() => login()}>
           Connect wallet to withdraw

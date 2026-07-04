@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 
 export type NavItem = {
   label: string;
+  /** Compact label used in the mobile bottom bar where space is tight. */
+  shortLabel?: string;
   href: string;
   icon: LucideIcon;
 };
@@ -72,7 +74,7 @@ function ShellNavLink({
           />
         )}
         <Icon className={cn("h-5 w-5 transition-transform duration-150", active && "scale-105")} strokeWidth={active ? 2.25 : 2} />
-        {item.label}
+        <span className="max-w-full truncate whitespace-nowrap">{item.shortLabel ?? item.label}</span>
       </Link>
     );
   }

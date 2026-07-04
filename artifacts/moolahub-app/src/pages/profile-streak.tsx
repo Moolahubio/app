@@ -116,7 +116,7 @@ export default function ProfileStreakPage() {
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             You can change your streak frequency once per calendar year
-            {data.nextChangeYear ? ` — your next change unlocks in ${data.nextChangeYear}.` : "."}
+            {data.nextChangeYear ? `. Your next change unlocks in ${data.nextChangeYear}.` : "."}
           </p>
         </div>
       )}

@@ -244,8 +244,8 @@ export default function CirclesPage() {
                   {emailCount > maxInvites && (
                     <p className="text-xs text-destructive">
                       {type === "rotation"
-                        ? `Too many invites — a circle of ${groupNum} has room for ${maxInvites} besides you.`
-                        : "Too many members — a circle can have at most 20 people (you + 19 invitees)."}
+                        ? `Too many invites. A circle of ${groupNum} has room for ${maxInvites} besides you.`
+                        : "Too many members. A circle can have at most 20 people (you + 19 invitees)."}
                     </p>
                   )}
                 </div>

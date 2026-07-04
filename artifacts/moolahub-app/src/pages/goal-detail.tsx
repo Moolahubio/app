@@ -126,7 +126,7 @@ export default function GoalDetailPage() {
                       queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
                       toast({
                         title: "Streak kept alive 🔥",
-                        description: "Nice — that deposit counts toward your savings streak.",
+                        description: "Nice, that deposit counts toward your savings streak.",
                       });
                     }
                   });

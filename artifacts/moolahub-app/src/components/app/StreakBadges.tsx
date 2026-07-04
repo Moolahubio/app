@@ -79,7 +79,7 @@ export function StreakBadgeTier({ progress }: { progress: StreakBadgeProgress })
           {progress.daysToNext == null
             ? "Keep your streak alive for three months to earn your next badge."
             : progress.daysToNext === 0
-              ? "Your next badge lands today — keep it going."
+              ? "Your next badge lands today, keep it going."
               : `${progress.daysToNext} ${progress.daysToNext === 1 ? "day" : "days"} to your next badge.`}
         </p>
       </div>

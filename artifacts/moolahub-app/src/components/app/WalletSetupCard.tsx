@@ -112,7 +112,7 @@ function SetupButton() {
       <h2 className="mt-4 font-display text-xl font-bold text-foreground">Set up your wallet</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
         Continue with Privy to create your {NETWORK} wallet. Privy lets you sign up with an email
-        or connect an existing web3 wallet — either way, you'll be able to deposit, save, and
+        or connect an existing web3 wallet. Either way, you'll be able to deposit, save, and
         withdraw USDC.
       </p>
 

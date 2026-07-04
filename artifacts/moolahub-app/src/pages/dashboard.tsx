@@ -183,7 +183,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-muted-foreground">
                   {streak.hero
                     ? streak.currentPeriodSatisfied
-                      ? `Saved this ${periodNoun(streak.frequency)} — nicely done`
+                      ? `Saved this ${periodNoun(streak.frequency)}, nicely done`
                       : `One deposit keeps your ${periodNoun(streak.frequency)} streak alive`
                     : `Make a deposit to light your first flame`}
                 </p>
@@ -283,17 +283,17 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* ---------------------------------------------------- Recent activity */}
+      {/* ---------------------------------------------------- Recent transactions */}
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-foreground">Recent activity</h2>
-          <Link href="/activity" className="text-sm font-medium text-jade-600 dark:text-jade-400 hover:text-jade-700">
+          <h2 className="font-display text-lg font-bold text-foreground">Recent transactions</h2>
+          <Link href="/transactions" className="text-sm font-medium text-jade-600 dark:text-jade-400 hover:text-jade-700">
             View all
           </Link>
         </div>
         <ul className="mt-4 divide-y divide-border">
           {recentActivity.length === 0 && (
-            <li className="py-6 text-center text-sm text-muted-foreground">No activity yet.</li>
+            <li className="py-6 text-center text-sm text-muted-foreground">No transactions yet.</li>
           )}
           {recentActivity.slice(0, 5).map((item) => {
             const Icon = activityIcon[item.type] ?? ArrowUpRight;

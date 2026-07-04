@@ -1,13 +1,12 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
-import { 
-  LayoutDashboard, 
-  Users, 
-  Target, 
-  GraduationCap, 
-  Receipt,
-  User,
+import {
+  House,
+  UsersRound,
+  PiggyBank,
+  BookOpen,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Avatar, Skeleton } from "@/components/ui";
@@ -21,18 +20,11 @@ import { formatMoney, avatarSrc } from "@/lib/utils";
 import { useGetDashboardSummary, useListNotifications, getGetDashboardSummaryQueryKey, getListNotificationsQueryKey } from "@workspace/api-client-react";
 
 const nav: NavItem[] = [
-  { label: "Home", href: "/", icon: LayoutDashboard },
-  { label: "Personal Savings", href: "/goals", icon: Target },
-  { label: "Group Savings", href: "/circles", icon: Users },
-  { label: "Learn", href: "/learn", icon: GraduationCap },
-  { label: "Activity", href: "/activity", icon: Receipt },
-];
-
-// The mobile bottom bar also surfaces Profile, which on desktop lives in the
-// sidebar footer. Without this, mobile users have no way to reach their profile.
-const bottomNav: NavItem[] = [
-  ...nav,
-  { label: "Profile", href: "/profile", icon: User },
+  { label: "Home", href: "/", icon: House },
+  { label: "Personal Savings", shortLabel: "Savings", href: "/goals", icon: PiggyBank },
+  { label: "Group Savings", shortLabel: "Groups", href: "/circles", icon: UsersRound },
+  { label: "Learn", href: "/learn", icon: BookOpen },
+  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -112,7 +104,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur-sm">
+        <header className="glass sticky top-0 z-20 rounded-none border-x-0 border-t-0">
           <div className="flex h-14 items-center justify-between gap-4 px-5 lg:h-16 lg:px-8">
             <Link href="/" className="lg:hidden">
               <MoolaMark className="h-8 w-8" />
@@ -120,7 +112,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             <Link
               href="/wallet"
-              className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 transition-colors duration-150 hover:bg-muted active:bg-muted sm:px-4 sm:py-2"
+              className="hover-lift flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 hover:border-jade-500/40 sm:px-4 sm:py-2"
             >
               <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 Balance
@@ -137,6 +129,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 count={streak?.hero?.count ?? 0}
                 status={streak?.hero?.status ?? "broken"}
               />
+              <Link
+                href="/profile"
+                aria-label="View profile"
+                className="ml-0.5 rounded-full ring-offset-2 ring-offset-background transition-shadow hover:ring-2 hover:ring-jade-500/40 focus-ring lg:hidden"
+              >
+                {user ? (
+                  <Avatar name={user.name} src={avatarSrc(user.avatarUrl)} tone="jade" className="h-8 w-8" />
+                ) : (
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                )}
+              </Link>
             </div>
           </div>
         </header>
@@ -146,7 +149,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm lg:hidden">
+      <nav className="glass fixed inset-x-0 bottom-0 z-50 rounded-t-3xl border-x-0 border-b-0 lg:hidden">
         <ShellNavList items={nav} layout="bottom" />
       </nav>
 

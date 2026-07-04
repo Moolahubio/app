@@ -90,7 +90,7 @@ export async function faucetDeposit(userId: string, amountCents: number) {
     type: "deposit",
     title: "USDC received",
     body: `${formatMoney(amountCents)} was added to your wallet.`,
-    link: "/activity",
+    link: "/transactions",
   });
   return txn;
 }
@@ -173,7 +173,7 @@ export async function syncDeposits(
       type: "deposit",
       title: "USDC received",
       body: `${formatMoney(p.amountCents)} was added to your wallet.`,
-      link: "/activity",
+      link: "/transactions",
     });
     credited += 1;
     totalCents += p.amountCents;
@@ -238,7 +238,7 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
       type: "withdrawal",
       title: "Withdrawal sent",
       body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
-      link: "/activity",
+      link: "/transactions",
     },
     { email: true },
   );
@@ -318,7 +318,7 @@ export async function confirmClientWithdrawal(
       type: "withdrawal",
       title: "Withdrawal sent",
       body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
-      link: "/activity",
+      link: "/transactions",
     },
     { email: true },
   );

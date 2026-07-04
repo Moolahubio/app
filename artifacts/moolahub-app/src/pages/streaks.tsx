@@ -72,7 +72,7 @@ export default function StreaksPage() {
             <span className="font-semibold">
               {periodEnd.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
             </span>{" "}
-            keeps your streak alive. No rush — any goal or circle deposit counts.
+            keeps your streak alive. No rush, any goal or circle deposit counts.
           </p>
         </div>
       )}
@@ -124,7 +124,7 @@ export default function StreaksPage() {
         {!data.canChangeFrequency && (
           <p className="mt-3 text-xs text-muted-foreground">
             Frequency can change once a year
-            {data.nextChangeYear ? ` — next change unlocks in ${data.nextChangeYear}.` : "."}
+            {data.nextChangeYear ? `. Next change unlocks in ${data.nextChangeYear}.` : "."}
           </p>
         )}
       </Card>

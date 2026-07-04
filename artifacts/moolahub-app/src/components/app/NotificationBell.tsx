@@ -117,7 +117,7 @@ export function NotificationBell({
                   return (
                     <li key={n.id}>
                       <Link
-                        href={n.link ?? "/activity"}
+                        href={n.link ?? "/transactions"}
                         onClick={() => setOpen(false)}
                         className={cn(
                           "flex gap-3 px-4 py-3 transition-colors hover:bg-accent",

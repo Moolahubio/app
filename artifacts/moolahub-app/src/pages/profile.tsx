@@ -47,7 +47,7 @@ const settingsItems: Item[] = [
   { icon: ShieldCheck, label: "Security", detail: "Passkeys & two-factor", href: "/profile/security" },
   { icon: Flame, label: "Streak frequency", detail: "Daily, weekly, or monthly", href: "/profile/streak" },
   { icon: Bell, label: "Notifications", detail: "Choose what reaches you", href: "/profile/notifications" },
-  { icon: Receipt, label: "Activity & yield", detail: "Ledger and earnings", href: "/activity" },
+  { icon: Receipt, label: "Transactions & yield", detail: "Ledger and earnings", href: "/transactions" },
 ];
 
 function SettingsList({ items }: { items: Item[] }) {

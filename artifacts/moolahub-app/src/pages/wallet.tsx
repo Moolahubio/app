@@ -224,7 +224,7 @@ export default function WalletPage() {
           Funds settle to your own Monad wallet address, and every movement is recorded on the
           ledger with an on-chain reference.{" "}
           {isPrivyCustody
-            ? "Your wallet is self-custodial — you approve each withdrawal by signing it yourself."
+            ? "Your wallet is self-custodial. You approve each withdrawal by signing it yourself."
             : "Withdrawals and goal payouts require a fresh confirmation (password, 2FA, or emailed code) before anything moves."}{" "}
           <Badge tone="jade" className="ml-1">Built on Monad</Badge>
         </p>

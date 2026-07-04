@@ -117,7 +117,7 @@ export default function CircleDetailPage() {
                     queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
                     toast({
                       title: "Streak kept alive 🔥",
-                      description: "Nice — that contribution counts toward your savings streak.",
+                      description: "Nice, that contribution counts toward your savings streak.",
                     });
                   }
                 });
@@ -148,7 +148,7 @@ export default function CircleDetailPage() {
             {isAccumulation
               ? `Invite people by email. Everyone saves into one shared pot for ${circle.totalRounds} rounds, then gets their savings back. Start the circle once everyone's in.`
               : circle.targetMembers
-                ? `Invite people by email. ${circle.members.length} of ${circle.targetMembers} have joined — the circle starts automatically the moment the last person joins.`
+                ? `Invite people by email. ${circle.members.length} of ${circle.targetMembers} have joined. The circle starts automatically the moment the last person joins.`
                 : "Invite people by email. Rounds equal members, so everyone gets exactly one payout. Start the circle once everyone's in."}
           </p>
 

@@ -38,19 +38,19 @@ function groupByDay(items: ActivityItem[]) {
   return Object.entries(groups);
 }
 
-export default function ActivityPage() {
+export default function TransactionsPage() {
   const { data: activity, isLoading: isActivityLoading } = useListActivity({ limit: 100 });
   const { data: summary } = useGetDashboardSummary();
 
   const grouped = groupByDay(activity ?? []);
   const reminder = summary?.upcomingReminder;
 
-  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">Loading activity…</div>;
+  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">Loading transactions…</div>;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
-        eyebrow="Activity"
+        eyebrow="Transactions"
         title="Your money, on the record"
         description="Every deposit, contribution, and payout. Each one is linked to its proof on Monad."
       />

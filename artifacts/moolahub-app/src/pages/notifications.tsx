@@ -50,7 +50,7 @@ export default function NotificationsPage() {
               return (
                 <li key={n.id}>
                   <Link
-                    href={n.link ?? "/activity"}
+                    href={n.link ?? "/transactions"}
                     onClick={() => {
                       if (!n.read) {
                         markOneMutation.mutate({ id: n.id }, {

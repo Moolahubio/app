@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Redirect, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,7 +19,7 @@ import Goals from "@/pages/goals";
 import GoalDetail from "@/pages/goal-detail";
 import Learn from "@/pages/learn";
 import LessonDetail from "@/pages/lesson-detail";
-import Activity from "@/pages/activity";
+import Transactions from "@/pages/transactions";
 import Notifications from "@/pages/notifications";
 import Profile from "@/pages/profile";
 import ProfileInformation from "@/pages/profile-information";
@@ -71,8 +71,11 @@ function Router() {
       <Route path="/learn/:slug">
         <ProtectedRoute component={LessonDetail} />
       </Route>
+      <Route path="/transactions">
+        <ProtectedRoute component={Transactions} />
+      </Route>
       <Route path="/activity">
-        <ProtectedRoute component={Activity} />
+        <Redirect to="/transactions" />
       </Route>
       <Route path="/notifications">
         <ProtectedRoute component={Notifications} />
