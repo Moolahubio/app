@@ -15,6 +15,7 @@ import {
   escrowEnabled,
   deployCircleEscrow,
   escrowHeldReserveCents,
+  platformAddress,
 } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
@@ -334,23 +335,43 @@ export async function contribute(userId: string, circleId: string) {
   // escrow contract (member wallet → escrow), which auto-settles the round when
   // the last member contributes. When on-chain is configured, a contribution is
   // only ever real once it settles on-chain, so a rotation circle without a live
-  // escrow must block rather than silently move ledger-only. Accumulation circles
-  // have no on-chain contribution path yet, so they always settle ledger-only.
-  const wantsOnchain = circle.type !== "accumulation" && onchainEnabled();
-  if (wantsOnchain && !circle.contractAddress) {
+  // escrow must block rather than silently move ledger-only.
+  //
+  // Accumulation circles have no per-circle contribution contract; instead a
+  // real contribution is a plain USDC transfer from the member's wallet to the
+  // platform-custody address (the same address that later funds this member's
+  // own savings-return payout). Without this real transfer, the ledger would
+  // book a contribution while the member's on-chain USDC stays fully spendable
+  // — letting them withdraw the same funds AND later collect a real,
+  // platform-funded payout (see moolahub financial-integrity fix). So once
+  // on-chain settlement is configured, accumulation contributions must settle
+  // on-chain too, exactly like rotation.
+  const isAccumulation = circle.type === "accumulation";
+  const wantsOnchain = onchainEnabled();
+  if (wantsOnchain && !isAccumulation && !circle.contractAddress) {
     throw new AppError(
       "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
     );
   }
-  const escrow = wantsOnchain ? circle.contractAddress : null;
+  const escrow = wantsOnchain && !isAccumulation ? circle.contractAddress : null;
+  const accumulationDest = wantsOnchain && isAccumulation ? platformAddress() : null;
+  if (wantsOnchain && isAccumulation && !accumulationDest) {
+    // Fail closed: on-chain is configured but there's no platform-custody
+    // address to receive the contribution, so it could never actually settle.
+    throw new AppError(
+      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+    );
+  }
+  const settlesOnchain = Boolean(escrow || accumulationDest);
 
-  // Gate on the spendable wallet balance. On-chain (escrow) contributions gate on
-  // the REAL on-chain balance minus in-flight outflows; ledger-only contributions
-  // (accumulation, or rotation offline) gate on the ledger wallet balance — using
-  // the on-chain gate there would ignore the ledger debit and allow double-spend.
-  const wallet = escrow ? await requireWalletForUser(userId) : null;
+  // Gate on the spendable wallet balance. On-chain contributions (escrow or
+  // accumulation) gate on the REAL on-chain balance minus in-flight outflows;
+  // ledger-only contributions (offline / on-chain not configured) gate on the
+  // ledger wallet balance — using the on-chain gate there would ignore the
+  // ledger debit and allow double-spend.
+  const wallet = settlesOnchain ? await requireWalletForUser(userId) : null;
   const spendable =
-    escrow && wallet
+    settlesOnchain && wallet
       ? await walletSpendableCents(userId, wallet.address)
       : await accountBalance(acct.wallet(userId));
   // A past recipient's payout withholds a reserve inside the escrow covering
@@ -360,7 +381,8 @@ export async function contribute(userId: string, circleId: string) {
   // check below doesn't apply — a member shouldn't be blocked from a round
   // they've already effectively prepaid for. The draw is all-or-nothing per
   // round (heldReserve is always an exact multiple of contributionCents), so
-  // there's no partial credit to blend in here.
+  // there's no partial credit to blend in here. Accumulation has no such
+  // reserve mechanism.
   const reserveCents =
     escrow && wallet ? await escrowHeldReserveCents(escrow, wallet.address) : 0;
   const coveredByReserve = reserveCents >= circle.contributionCents;
@@ -398,7 +420,7 @@ export async function contribute(userId: string, circleId: string) {
       fromKey: acct.wallet(userId),
       toKey: acct.pool(circleId),
       amountCents: circle.contributionCents,
-      onchain: { onchainStatus: escrow ? "pending" : "none" },
+      onchain: { onchainStatus: settlesOnchain ? "pending" : "none" },
       requireSufficientFrom: true,
       circleId,
       round,
@@ -412,6 +434,19 @@ export async function contribute(userId: string, circleId: string) {
           kind: "escrow_contribute",
           sourceUserId: userId,
           toAddress: escrow,
+          amountCents: circle.contributionCents,
+          memo: `susu:${circleId}:${round}`,
+        },
+        tx,
+      );
+    } else if (accumulationDest) {
+      await enqueueOnchainTransfer(
+        {
+          transactionId: t.id,
+          contributionId: reserved[0].id,
+          kind: "accumulation_contribute",
+          sourceUserId: userId,
+          toAddress: accumulationDest,
           amountCents: circle.contributionCents,
           memo: `susu:${circleId}:${round}`,
         },

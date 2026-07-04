@@ -167,6 +167,11 @@ export type QueueParams = {
   // - faucet: platform mints MockUSDC to a wallet.
   // - escrow_contribute: a member approves + contributes to the circle's escrow;
   //   the escrow auto-settles the round on the last contribution.
+  // - accumulation_contribute: a member sends their round's USDC directly to the
+  //   platform-custody address that later funds their own accumulation payout —
+  //   a plain ERC20 transfer (no per-circle contract). This is what actually
+  //   backs the ledger contribution; without it a member could "save" ledger-only
+  //   and still spend the same on-chain USDC. memo carries `susu:<circleId>:<round>`.
   // - goal_deposit: user approves + deposits USDC into their goal vault balance
   //   (free). memo carries the goal id: `goal:<goalId>`.
   // - goal_withdraw: user withdraws gross from their goal vault balance; the
@@ -179,6 +184,7 @@ export type QueueParams = {
     | "contribution"
     | "payout"
     | "escrow_contribute"
+    | "accumulation_contribute"
     | "goal_deposit"
     | "goal_withdraw";
   // null => the platform distributor wallet is the source.
@@ -452,6 +458,86 @@ async function unwindCircleRound(tx: Executor, circleId: string, round: number):
 }
 
 /**
+ * Undo an accumulation round whose real member→platform contribution
+ * permanently failed on-chain. If this was the FINAL round, `maybeProcessPayout`
+ * already booked every member's savings-return payout (pending) and marked them
+ * `paidOut`, funded from the platform-custody address that this failed transfer
+ * was supposed to top up — without it those payouts would pay out real money
+ * the platform never actually received. Reverse every member's still-pending
+ * payout for this circle, reopen their claims, and roll the circle back to
+ * `round` so it can refill and retry.
+ *
+ * A payout is only unsafe to touch once it has actually broadcast (a
+ * `txHash` was submitted) or settled (`confirmed`) — `processing` alone just
+ * means a reconciler batch claimed the row, which happens for every row in a
+ * batch (including these payouts) up front, before any of them are actually
+ * sent; see `processRow`'s live-status recheck, which is what actually stops
+ * a claimed-but-not-yet-sent payout from going out after we cancel it here.
+ * A payout already `failed` was already reversed by its own dead-letter path
+ * (e.g. an unrelated on-chain send failure) — skip it, since reversing it
+ * again would double-credit the member and double-debit the pool.
+ */
+async function unwindAccumulationRound(tx: Executor, circleId: string, round: number): Promise<void> {
+  const [circle] = await tx.select().from(circlesTable).where(eq(circlesTable.id, circleId));
+  if (!circle) return;
+
+  if (round >= circle.totalRounds) {
+    const payoutRows = await tx
+      .select({ txn: transactionsTable, transfer: onchainTransfersTable })
+      .from(onchainTransfersTable)
+      .innerJoin(transactionsTable, eq(onchainTransfersTable.transactionId, transactionsTable.id))
+      .where(
+        and(eq(onchainTransfersTable.kind, "payout"), eq(onchainTransfersTable.memo, `payout:${circleId}`)),
+      );
+    const alreadyBroadcastOrSettled = payoutRows.filter(
+      (r) => r.txn.onchainStatus === "confirmed" || r.transfer.status === "confirmed" || Boolean(r.transfer.txHash),
+    );
+    if (alreadyBroadcastOrSettled.length > 0) {
+      logger.error(
+        {
+          circleId,
+          round,
+          unsafe: alreadyBroadcastOrSettled.map((r) => ({ transactionId: r.txn.id, status: r.transfer.status })),
+        },
+        "cannot unwind accumulation round: a member's payout already broadcast or settled on-chain; manual reconciliation required",
+      );
+      return;
+    }
+    // Already-failed payouts were reversed by their own dead-letter path —
+    // skip them so we never reverse the same ledger transaction twice.
+    const stillOwed = payoutRows.filter((r) => r.transfer.status === "pending" || r.transfer.status === "processing");
+    for (const r of stillOwed) {
+      // CAS excludes 'confirmed'/'failed' so a row resolved by a concurrent
+      // path between the select above and here is left untouched rather than
+      // clobbered — the ledger reversal below only runs when the CAS wins.
+      const flipped = await tx
+        .update(onchainTransfersTable)
+        .set({ status: "failed", lastError: "canceled: accumulation contribution funding this round failed" })
+        .where(
+          and(
+            eq(onchainTransfersTable.id, r.transfer.id),
+            inArray(onchainTransfersTable.status, ["pending", "processing"]),
+          ),
+        )
+        .returning({ id: onchainTransfersTable.id });
+      if (flipped.length === 0) continue;
+      await reverseLedgerTransaction(tx, r.txn.id, `Reversal · ${r.txn.description}`);
+    }
+    await tx.update(circleMembersTable).set({ paidOut: false }).where(eq(circleMembersTable.circleId, circleId));
+  }
+
+  // Reopen the round so it can refill and re-settle once retried.
+  // `maybeProcessPayout` advanced it to round+1 (or marked 'completed' on the
+  // final round), so accept either.
+  await tx
+    .update(circlesTable)
+    .set({ status: "active", currentRound: round })
+    .where(
+      and(eq(circlesTable.id, circleId), inArray(circlesTable.currentRound, [round, round + 1])),
+    );
+}
+
+/**
  * Reverse the ledger side-effects of a dead-lettered transfer so the ledger
  * stops showing money that never moved on-chain. On-chain is the source of
  * truth: when a transfer permanently fails, its USDC never left (or never
@@ -489,6 +575,19 @@ async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void>
       }
       const parsed = circleRoundFromMemo(row.memo);
       if (parsed) await unwindCircleRound(tx, parsed.circleId, parsed.round);
+      return;
+    }
+    // An accumulation-circle contribution that never reached the platform
+    // custody address: reverse the ledger contribution, delete the
+    // contribution record (it never settled), and unwind any payout the
+    // (now-reversed) round completion may have triggered.
+    case "accumulation_contribute": {
+      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · circle contribution failed");
+      if (row.contributionId) {
+        await tx.delete(contributionsTable).where(eq(contributionsTable.id, row.contributionId));
+      }
+      const parsed = circleRoundFromMemo(row.memo);
+      if (parsed) await unwindAccumulationRound(tx, parsed.circleId, parsed.round);
       return;
     }
     // Accumulation savings-returned payout (platform → member wallet) that
@@ -587,6 +686,27 @@ async function requeueOrFail(row: OnchainTransfer, reason: string): Promise<void
 }
 
 async function processRow(row: OnchainTransfer): Promise<boolean> {
+  // Live-status guard: `row` is a snapshot captured when the whole batch was
+  // claimed. A row can be canceled (flipped straight to 'failed') by another
+  // row's reversal earlier in THIS SAME batch — e.g. an accumulation payout
+  // whose funding contribution dead-lettered a few rows earlier in the loop
+  // (see `unwindAccumulationRound`). Since the loop below iterates the
+  // in-memory `claimed` array rather than re-querying, re-check the row's
+  // current DB status before doing anything irreversible; a row that's no
+  // longer 'processing' was already resolved (or canceled) by that reversal
+  // and must not be sent.
+  const [live] = await db
+    .select({ status: onchainTransfersTable.status })
+    .from(onchainTransfersTable)
+    .where(eq(onchainTransfersTable.id, row.id));
+  if (live?.status !== "processing") {
+    logger.info(
+      { rowId: row.id, kind: row.kind, status: live?.status },
+      "settlement row no longer processing; skipping send (resolved or canceled concurrently)",
+    );
+    return false;
+  }
+
   // Idempotency guard: if the ledger transaction is already settled (e.g. a
   // duplicate queue row or a prior partial run), don't send again.
   const [txn] = await db

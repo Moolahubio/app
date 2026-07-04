@@ -31,7 +31,16 @@ const PENDING_STATES = ["pending", "processing"] as const;
 // subtract these from the confirmed on-chain balance so in-flight spends can't
 // be double-spent. `goal_withdraw` is excluded — it is an INFLOW to the wallet.
 // `faucet`/`payout` have a null source (platform), so they never match here.
-const WALLET_OUT_KINDS = ["withdrawal", "escrow_contribute", "goal_deposit"] as const;
+// `accumulation_contribute` is a member's real wallet → platform-custody send
+// for an accumulation-circle round; omitting it here would let a member
+// "save" into the circle and still withdraw the same on-chain USDC before the
+// transfer settles (see moolahub financial-integrity fix).
+const WALLET_OUT_KINDS = [
+  "withdrawal",
+  "escrow_contribute",
+  "goal_deposit",
+  "accumulation_contribute",
+] as const;
 
 const BALANCE_UNAVAILABLE_MSG =
   "We couldn't verify your on-chain balance right now. Please try again in a moment.";
