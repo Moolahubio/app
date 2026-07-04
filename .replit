@@ -104,6 +104,7 @@ ENABLE_TEST_FAUCET = "true"
 CHAIN_RPC_URL = "https://testnet-rpc.monad.xyz"
 MONAD_TESTNET_RPC_URL = "https://testnet-rpc.monad.xyz"
 CHAIN_NETWORK = "testnet"
+ENABLE_PRIVY_CUSTODY = "true"
 
 [userenv.development]
 
