@@ -27,3 +27,17 @@ that accepts an image path, add the same gate. Serve-side `downloadObject({sanit
 (nosniff + non-image → octet-stream attachment) remains the defense against
 spoofed content-type bytes; the metadata gate and the sanitized serve are
 complementary, keep both.
+
+**Orphaned uploads (never attached to any entity) bypass the gate entirely** —
+`isUsableImageObject` only runs at attach time, so an object minted a signed URL
+but never claimed (no ACL owner via `claimObjectEntityForOwner`) sat in storage
+forever with no size/type check and no deletion path. Fixed with
+`ObjectStorageService.sweepOrphanedUploads()`: deletes unclaimed objects whose
+real metadata violates the image/size policy immediately, and unclaimed objects
+older than a grace window (~2h) regardless of validity. Triggered opportunistically
+(self-throttled, fire-and-forget) from the request-url route rather than a cron
+job. Paired with a per-user `express-rate-limit` (keyed by user id, not just IP)
+on `POST /storage/uploads/request-url` to bound how many signed URLs one account
+can mint per window — since the signed PUT URL can't bind content-type/size
+itself, both the sweep and the per-user mint limit are necessary, not optional,
+hardening for any endpoint that returns a signed upload URL.

@@ -8,16 +8,15 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
   ALLOWED_IMAGE_TYPES,
+  MAX_UPLOAD_BYTES,
 } from "../lib/objectStorage";
 import { ObjectPermission } from "../lib/objectAcl";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireJsonAndAllowedOrigin } from "../lib/origins";
+import { uploadUrlLimiter, maybeTriggerUploadSweep } from "../lib/uploadThrottle";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
-
-/** Hard cap on uploads (avatars / circle images are small). */
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 /**
  * POST /storage/uploads/request-url
@@ -25,45 +24,67 @@ const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
  * Request a presigned URL for file upload.
  * The client sends JSON metadata (name, size, contentType) — NOT the file.
  * Then uploads the file directly to the returned presigned URL.
+ *
+ * The signed PUT URL itself cannot bind content-type/size (see
+ * objectStorage.getObjectEntityUploadURL), so this endpoint is deliberately
+ * defense-in-depth, not the only enforcement:
+ *  - uploadUrlLimiter bounds how many signed URLs (and therefore how much
+ *    unvetted storage) a single account can mint in a window.
+ *  - Real stored objects are still re-checked against this same policy later,
+ *    either when attached (isUsableImageObject) or by the background sweep
+ *    (sweepOrphanedUploads) for objects that are never attached at all.
  */
-router.post("/storage/uploads/request-url", requireJsonAndAllowedOrigin, requireAuth, async (req: Request, res: Response) => {
-  const parsed = RequestUploadUrlBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Missing or invalid required fields" });
-    return;
-  }
+router.post(
+  "/storage/uploads/request-url",
+  requireJsonAndAllowedOrigin,
+  requireAuth,
+  uploadUrlLimiter,
+  async (req: Request, res: Response) => {
+    const parsed = RequestUploadUrlBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Missing or invalid required fields" });
+      return;
+    }
 
-  const { name, size, contentType } = parsed.data;
+    const { name, size, contentType } = parsed.data;
 
-  // Only images may be uploaded into the private namespace, and only up to a
-  // sane size. This (together with sanitized serving below) prevents the bucket
-  // from being used to host arbitrary HTML/JS that would execute from our
-  // origin.
-  if (!contentType || !ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
-    res.status(400).json({ error: "Only PNG, JPEG, WebP, or GIF images can be uploaded." });
-    return;
-  }
-  if (typeof size === "number" && size > MAX_UPLOAD_BYTES) {
-    res.status(400).json({ error: "Image is too large (max 10MB)." });
-    return;
-  }
+    // Only images may be uploaded into the private namespace, and only up to a
+    // sane size. This (together with sanitized serving below) prevents the bucket
+    // from being used to host arbitrary HTML/JS that would execute from our
+    // origin. This is declared-metadata validation only — the real stored
+    // object is re-verified against the same policy by isUsableImageObject /
+    // sweepOrphanedUploads, since the signed PUT URL can't bind these itself.
+    if (!contentType || !ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
+      res.status(400).json({ error: "Only PNG, JPEG, WebP, or GIF images can be uploaded." });
+      return;
+    }
+    if (typeof size === "number" && size > MAX_UPLOAD_BYTES) {
+      res.status(400).json({ error: "Image is too large (max 10MB)." });
+      return;
+    }
 
-  try {
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-    const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
 
-    res.json(
-      RequestUploadUrlResponse.parse({
-        uploadURL,
-        objectPath,
-        metadata: { name, size, contentType },
-      }),
-    );
-  } catch (error) {
-    req.log.error({ err: error }, "Error generating upload URL");
-    res.status(500).json({ error: "Failed to generate upload URL" });
-  }
-});
+      // Opportunistically GC abandoned/invalid uploads on this hot path
+      // (fire-and-forget) so unclaimed storage doesn't grow unbounded even
+      // without a separate scheduler process.
+      maybeTriggerUploadSweep(objectStorageService);
+
+      res.json(
+        RequestUploadUrlResponse.parse({
+          uploadURL,
+          objectPath,
+          metadata: { name, size, contentType },
+        }),
+      );
+    } catch (error) {
+      req.log.error({ err: error }, "Error generating upload URL");
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  },
+);
 
 /**
  * GET /storage/public-objects/*

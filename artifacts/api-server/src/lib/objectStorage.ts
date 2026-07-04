@@ -47,6 +47,22 @@ export const ALLOWED_IMAGE_TYPES = new Set([
 ]);
 
 /**
+ * Hard cap on uploads (avatars / circle images are small). Shared by the
+ * request-url route (declared-metadata check) and isUsableImageObject /
+ * sweepOrphanedUploads (real stored-object check) so the policy can't drift
+ * between the two enforcement points.
+ */
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/**
+ * How long a freshly-signed upload URL may sit unused/unclaimed before the GC
+ * sweep considers it abandoned. Generous relative to the 900s PUT URL TTL so
+ * legitimate clients have time to upload and then attach the object (as an
+ * avatar / circle / goal image) before it's swept.
+ */
+const ORPHAN_GRACE_MS = 2 * 60 * 60 * 1000; // 2 hours
+
+/**
  * Whether a value is a safe internal object-storage reference (e.g. an avatar
  * or circle image previously uploaded through this app). Used to reject
  * arbitrary absolute/external URLs from being stored as image fields, which
@@ -177,7 +193,7 @@ export class ObjectStorageService {
    */
   async isUsableImageObject(
     objectPath: string,
-    maxBytes: number = 10 * 1024 * 1024,
+    maxBytes: number = MAX_UPLOAD_BYTES,
   ): Promise<boolean> {
     if (!isStoredObjectPath(objectPath)) return false;
     try {
@@ -193,6 +209,73 @@ export class ObjectStorageService {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Garbage-collect uploads sitting in the private `uploads/` namespace that
+   * were minted a signed PUT URL but never validly claimed. The signed URL
+   * itself can't bind content-type/size (see getObjectEntityUploadURL), so
+   * this is where that policy is actually enforced against every object that
+   * lands there, not just ones a user chooses to attach:
+   *
+   *  - Any unclaimed (no ACL policy set) object whose real stored metadata
+   *    violates the image/size policy is deleted immediately — it could never
+   *    legitimately pass isUsableImageObject anyway.
+   *  - Any unclaimed object older than ORPHAN_GRACE_MS is deleted regardless
+   *    of validity, so abandoned-but-otherwise-valid uploads don't accumulate
+   *    storage cost forever.
+   *  - Claimed objects (owner set via claimObjectEntityForOwner) are never
+   *    touched here; their lifecycle is owned by the feature that attached
+   *    them (profile/circle/goal).
+   *
+   * Best-effort: failures on an individual file are logged-by-omission (the
+   * file is simply left for the next sweep) so one bad object can't abort the
+   * whole pass.
+   */
+  async sweepOrphanedUploads(): Promise<{ scanned: number; deleted: number }> {
+    let privateObjectDir: string;
+    try {
+      privateObjectDir = this.getPrivateObjectDir();
+    } catch {
+      return { scanned: 0, deleted: 0 };
+    }
+
+    const uploadsDirPath = `${privateObjectDir.replace(/\/+$/, "")}/uploads/`;
+    const { bucketName, objectName: prefix } = parseObjectPath(uploadsDirPath);
+    const bucket = objectStorageClient.bucket(bucketName);
+
+    const [files] = await bucket.getFiles({ prefix });
+    let deleted = 0;
+    const now = Date.now();
+
+    for (const file of files) {
+      try {
+        const [metadata] = await file.getMetadata();
+        const policy = await getObjectAclPolicy(file);
+        if (policy) continue; // claimed — owned by profile/circle/goal lifecycle
+
+        const contentType = (metadata.contentType as string | undefined)?.toLowerCase();
+        const size = Number(metadata.size);
+        const isValidImage =
+          !!contentType &&
+          ALLOWED_IMAGE_TYPES.has(contentType) &&
+          Number.isFinite(size) &&
+          size > 0 &&
+          size <= MAX_UPLOAD_BYTES;
+
+        const createdMs = metadata.timeCreated ? new Date(metadata.timeCreated as string).getTime() : NaN;
+        const isExpired = !Number.isFinite(createdMs) || now - createdMs > ORPHAN_GRACE_MS;
+
+        if (!isValidImage || isExpired) {
+          await file.delete({ ignoreNotFound: true });
+          deleted++;
+        }
+      } catch {
+        // Leave this object for the next sweep rather than aborting the pass.
+      }
+    }
+
+    return { scanned: files.length, deleted };
   }
 
   async getObjectEntityFile(objectPath: string): Promise<File> {
