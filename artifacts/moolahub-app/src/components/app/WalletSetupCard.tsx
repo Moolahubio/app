@@ -1,5 +1,10 @@
 import { useRef, useState } from "react";
-import { usePrivy, useLogin as usePrivyLoginHook } from "@privy-io/react-auth";
+import {
+  usePrivy,
+  useLogin as usePrivyLoginHook,
+  useWallets,
+  useCreateWallet,
+} from "@privy-io/react-auth";
 import { Wallet, AlertCircle, ShieldCheck } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import {
@@ -18,6 +23,8 @@ const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
 function SetupButton() {
   const { getAccessToken, authenticated } = usePrivy();
+  const { wallets } = useWallets();
+  const { createWallet } = useCreateWallet();
   const { data: me } = useGetMe();
   const linkPrivy = useLinkPrivy();
   const queryClient = useQueryClient();
@@ -34,6 +41,19 @@ function SetupButton() {
       if (!token) {
         setBusy(false);
         return;
+      }
+      // This Privy app has embedded-wallet auto-creation ("create on login")
+      // disabled, so a freshly logged-in user may have NO embedded EOA. Provision
+      // one explicitly before linking — the backend links only when a Privy
+      // embedded wallet exists and refuses to fall back to server custody.
+      if (!wallets.some((w) => w.walletClientType === "privy")) {
+        try {
+          await createWallet();
+        } catch {
+          // A wallet may already exist (client wallet state can lag Privy's);
+          // linking will find it. A genuine failure surfaces below as a link
+          // error ("No Privy embedded wallet found").
+        }
       }
       const proof = await requestProof();
       if (!proof) {
