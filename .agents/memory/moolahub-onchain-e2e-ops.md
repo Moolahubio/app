@@ -25,3 +25,16 @@ If `createCircle` reverts with `0x118cdaa7` (OpenZeppelin `OwnableUnauthorizedAc
 **Why:** the codebase's operational model is platform = factory owner; the deployment defaulted the owner to the multisig-intended `OWNER_ADDRESS`.
 
 **Mainnet caveat:** `onlyOwner` `createCircle` is incompatible with a multisig owner (the backend can't sign as a multisig) — the factory needs a separate operator role before mainnet. Goals are unaffected: the goal vault is a permissionless singleton (deposit/withdraw are user-signed), so it never hits an owner gate at runtime.
+
+## Platform gas wallet drains → faucet/settlement stuck "settling on-chain…"
+ALL on-chain settlement — faucet mints, `ensureGas` user-wallet top-ups (for non-custodial withdrawals), and payouts/goal/circle sends — is gas-funded by ONE platform signer wallet (`PLATFORM_PRIVATE_KEY`). It is a single point of failure: as users claim the faucet and withdraw, its native MON drains to ~0 and every on-chain path stalls at once.
+
+Symptoms: a deposit sits at "settling on-chain…" in the activity UI (`transactions.onchain_status='pending'`, no `tx_hash`); its `onchain_transfers` row keeps `last_error` = `mint reverted "Signer had insufficient balance"`; the reconciler logs `settlement reconciler pass processed=1 confirmed=0` every pass (one poison row it re-claims each time); after `MAX_ATTEMPTS` (default 10) the row dead-letters to `status='failed'`.
+
+**"Signer had insufficient balance" is a NODE-level gas error, NOT a contract/treasury problem.** viem surfaces it under the "contract function reverted" umbrella, which is misleading. Prove the distinction with a read-only probe: `publicClient.call({ account: platform, to: mockUsdc, data: encodeFunctionData(mint,...) })` — `eth_call` runs the logic IGNORING the signer's gas, so if it SUCCEEDS the contract is fine and the failure is pure MON exhaustion. (MockUSDC.mint is a free permissionless `_mint`; platform's MockUSDC balance is irrelevant/0.)
+
+**Fix = refill the platform signer wallet with MON.** On testnet the `DEPLOYER` wallet (`DEPLOYER_PRIVATE_KEY`) holds the most MON and is the natural refill source: send native MON deployer→platform (viem `sendTransaction`, chainId 10143), then restart `artifacts/api-server` (or wait) so the reconciler retries and confirms. `GAS_MIN_WEI`≈0.01 / `GAS_TOPUP_WEI`≈0.05 MON per user top-up, so keep the platform wallet ≥~1 MON for a demo.
+
+**Do NOT manually re-queue a dead-lettered faucet row.** `markFailed`→`reverseForKind`→`reverseLedgerTransaction` already reversed its ledger credit exactly-once (CAS on `status='processing'`), so there is no phantom balance. Flipping a `failed` faucet row back to `pending` would mint 250 test USDC on-chain against a ledger that shows the credit reversed → mismatch. Correct recovery: the user simply re-claims the faucet (a fresh mint), which now succeeds once gas is restored.
+
+**Why:** the reconciler and mint logic are correct; the wallet was empty. Durable prevention (auto-refill platform from a treasury, and/or a fail-fast faucet pre-check that refuses to book a "pending" deposit when platform gas is low so it never shows "settling on-chain…" forever) is a follow-up, not a settlement bug.
