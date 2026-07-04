@@ -2,21 +2,58 @@ import {
   createCipheriv,
   createDecipheriv,
   randomBytes,
-  createHash,
+  scryptSync,
 } from "node:crypto";
 
 /**
- * AES-256-GCM encryption for secrets at rest (EVM private keys).
+ * AES-256-GCM encryption for secrets at rest (EVM private keys, 2FA seeds).
  *
  * On testnet we custody an encrypted key per user as a stand-in for a
- * non-custodial signer — encrypted with APP_ENCRYPTION_KEY.
+ * non-custodial signer — encrypted with a key derived from APP_ENCRYPTION_KEY.
+ *
+ * Key derivation:
+ *  - The recommended (and fastest-path) format is a 64-char hex string,
+ *    i.e. 32 bytes of real random entropy generated with e.g.
+ *    `openssl rand -hex 32`. That is used directly as the AES-256 key.
+ *  - Any other value is treated as a human-chosen passphrase and is
+ *    stretched through scrypt (a memory-hard KDF) with a high work factor
+ *    before use. This does not turn a weak passphrase into a strong key,
+ *    but it makes offline brute-forcing of a leaked-database scenario far
+ *    more expensive than the previous single-pass sha256, which could be
+ *    tested at billions of guesses/sec on commodity hardware.
+ *  - A minimum length is enforced so trivially short secrets are rejected
+ *    outright at startup instead of silently producing a weak key.
  */
+const KDF_SALT = "moolahub.app-encryption-key.kdf.v1";
+const MIN_PASSPHRASE_LENGTH = 20;
+// N=2^17, r=8, p=1 is an OWASP-recommended interactive scrypt work factor;
+// ~128MB memory and a few hundred ms per derivation. We cache the derived
+// key below so this cost is only paid once per process lifetime.
+const SCRYPT_OPTS = { N: 2 ** 17, r: 8, p: 1, maxmem: 256 * 1024 * 1024 };
+
+let cachedKey: Buffer | null = null;
+
 function key(): Buffer {
+  if (cachedKey) return cachedKey;
   const raw = process.env.APP_ENCRYPTION_KEY;
   if (!raw) throw new Error("APP_ENCRYPTION_KEY is not set");
-  // Accept hex (64 chars = 32 bytes) or any string (hashed to 32 bytes).
-  if (/^[0-9a-fA-F]{64}$/.test(raw)) return Buffer.from(raw, "hex");
-  return createHash("sha256").update(raw).digest();
+
+  // Preferred: 64 hex chars = 32 bytes of real random entropy, used as-is.
+  if (/^[0-9a-fA-F]{64}$/.test(raw)) {
+    cachedKey = Buffer.from(raw, "hex");
+    return cachedKey;
+  }
+
+  if (raw.length < MIN_PASSPHRASE_LENGTH) {
+    throw new Error(
+      `APP_ENCRYPTION_KEY is too weak (${raw.length} chars). Use a 64-character ` +
+        `hex string generated with \`openssl rand -hex 32\`, or a passphrase of ` +
+        `at least ${MIN_PASSPHRASE_LENGTH} characters with real entropy.`,
+    );
+  }
+
+  cachedKey = scryptSync(raw, KDF_SALT, 32, SCRYPT_OPTS);
+  return cachedKey;
 }
 
 export function encryptSecret(plain: string): string {

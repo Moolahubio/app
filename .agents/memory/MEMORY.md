@@ -28,3 +28,4 @@
 - [MoolaHub non-custodial custody](moolahub-noncustodial-custody.md) — privy-custody wallets: platform never signs (fail-closed); confirm-only withdrawal; persist+re-confirm-only on retry; Privy create-on-login is OFF so client must explicitly createWallet() before link.
 - [MoolaHub custody hardening](moolahub-custody-hardening.md) — for fully server-custodied wallets, gate fund-moving routes with step-up reauth rather than chasing non-custodial redesign; audit-log key decryption; fix false "non-custodial" copy.
 - [MoolaHub accumulation on-chain contributions](moolahub-accumulation-onchain-contribute.md) — contributions now settle to platformAddress() like rotation; final-round unwind must reverse ALL members' payouts, not just the failing one.
+- [MoolaHub encryption key derivation](moolahub-encryption-key-kdf.md) — APP_ENCRYPTION_KEY: 64-hex used raw; any other value stretched via cached scrypt (not sha256), min 20 chars enforced.
