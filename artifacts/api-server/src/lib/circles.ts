@@ -16,6 +16,9 @@ import {
   deployCircleEscrow,
   escrowHeldReserveCents,
   platformAddress,
+  verifyEscrowContributeReceipt,
+  verifyUsdcTransferReceipt,
+  findRoundSettledTx,
 } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
@@ -25,6 +28,8 @@ import { recordSave } from "./streaks";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
 import { formatMoney } from "./money";
+import { isUniqueViolation } from "./dbErrors";
+import { logger } from "./logger";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
 const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS) || 200;
@@ -478,8 +483,172 @@ export async function contribute(userId: string, circleId: string) {
   return txn;
 }
 
+/**
+ * Confirm a CLIENT-SIGNED (non-custodial / Privy) circle contribution. The
+ * member's own EOA already signed and broadcast the on-chain move — a rotation
+ * circle's escrow `contribute(round)` or an accumulation circle's plain USDC
+ * transfer to the platform-custody address; the server holds no key and never
+ * signs. We verify the on-chain receipt, then reserve the round slot and book the
+ * wallet → pool ledger contribution as confirmed.
+ *
+ * Booked WITHOUT requireSufficientFrom (funds already moved on-chain). Two dedupe
+ * layers: the (circle,user,round) unique reservation (a replayed submit for the
+ * SAME round is a no-op) and the partial unique index over (tx_hash) WHERE
+ * type='contribution' (catches a replayed broadcast reused across a DIFFERENT
+ * circle/round, which the per-round unique can't). Either surfaces as
+ * `alreadyRecorded`.
+ *
+ * When a rotation contribution FILLS the round the escrow settles it atomically
+ * (RoundSettled). We hand maybeProcessPayout the escrow + the settling client's
+ * own receipt hash so a fully-client-signed circle — which has no server-side
+ * escrow_contribute queue entry to drive the reconciler's backfill — still stamps
+ * its payout confirmed on-chain.
+ */
+export async function confirmClientContribute(
+  userId: string,
+  circleId: string,
+  txHash: string,
+): Promise<{ alreadyRecorded: boolean }> {
+  const ids = await memberCircleIds(userId);
+  if (!ids.includes(circleId)) throw new AppError("Circle not found");
+  const [circle] = await db.select().from(circlesTable).where(eq(circlesTable.id, circleId));
+  if (!circle) throw new AppError("Circle not found");
+  if (circle.status !== "active") throw new AppError("Circle is not active");
+  const round = circle.currentRound;
+
+  const wallet = await requireWalletForUser(userId);
+  if (wallet.custody !== "privy") {
+    // Server-custody members contribute via the server-signed contribute() path;
+    // only non-custodial wallets confirm a client-signed contribution here.
+    throw new AppError("This wallet doesn't use client-signed contributions.");
+  }
+
+  // Non-custodial contributions must settle on-chain — mirror contribute()'s
+  // routing: rotation → the circle's escrow; accumulation → platform-custody.
+  if (!onchainEnabled()) {
+    throw new AppError(
+      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+    );
+  }
+  const isAccumulation = circle.type === "accumulation";
+  const escrow = !isAccumulation ? circle.contractAddress : null;
+  if (!isAccumulation && !escrow) {
+    throw new AppError(
+      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+    );
+  }
+  const accumulationDest = isAccumulation ? platformAddress() : null;
+  if (isAccumulation && !accumulationDest) {
+    throw new AppError(
+      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+    );
+  }
+
+  // Verify the client-signed on-chain contribution and learn whether it settled
+  // the round (rotation escrow only; accumulation has no per-round settlement).
+  let settledRound: number | null = null;
+  if (escrow) {
+    const verified = await verifyEscrowContributeReceipt({
+      hash: txHash,
+      escrow,
+      member: wallet.address,
+      round,
+      amountCents: circle.contributionCents,
+    });
+    if (!verified.ok) {
+      logger.warn(
+        { userId, circleId, round, txHash, reason: verified.reason },
+        "client circle contribution receipt verification failed",
+      );
+      throw new AppError("We couldn't verify that contribution on-chain. Please try again.");
+    }
+    settledRound = verified.settledRound;
+  } else if (accumulationDest) {
+    const verified = await verifyUsdcTransferReceipt({
+      hash: txHash,
+      from: wallet.address,
+      to: accumulationDest,
+      amountCents: circle.contributionCents,
+    });
+    if (!verified.ok) {
+      logger.warn(
+        { userId, circleId, round, txHash, reason: verified.reason },
+        "client accumulation contribution receipt verification failed",
+      );
+      throw new AppError("We couldn't verify that contribution on-chain. Please try again.");
+    }
+  }
+
+  let txnId: string | null = null;
+  try {
+    await db.transaction(async (tx) => {
+      const reserved = await tx
+        .insert(contributionsTable)
+        .values({
+          circleId,
+          userId,
+          round,
+          amountCents: circle.contributionCents,
+          status: "confirmed",
+        })
+        .onConflictDoNothing({
+          target: [contributionsTable.circleId, contributionsTable.userId, contributionsTable.round],
+        })
+        .returning({ id: contributionsTable.id });
+      if (reserved.length === 0) return; // already contributed this round
+      const t = await transfer({
+        type: "contribution",
+        description: `${circle.name} · round ${round}`,
+        userId,
+        fromKey: acct.wallet(userId),
+        toKey: acct.pool(circleId),
+        amountCents: circle.contributionCents,
+        onchain: { txHash, onchainStatus: "confirmed" },
+        circleId,
+        round,
+        tx,
+      });
+      txnId = t.id;
+    });
+  } catch (e) {
+    // The contribution partial unique index rejects a re-used broadcast.
+    if (isUniqueViolation(e)) return { alreadyRecorded: true };
+    throw e;
+  }
+  if (!txnId) return { alreadyRecorded: true };
+
+  await notify(
+    userId,
+    {
+      type: "contribution",
+      title: "Contribution confirmed",
+      body: `You contributed ${formatMoney(circle.contributionCents)} to ${circle.name}, round ${round}.`,
+      link: `/circles/${circleId}`,
+    },
+    { email: true },
+  );
+  await recordSave(userId, txnId);
+
+  // Book this round's payout/fee (if it just filled) BEFORE kicking the
+  // reconciler, handing the client path the escrow + this client's settlement
+  // hash so a fully-client rotation circle stamps its payout confirmed.
+  await maybeProcessPayout(
+    circleId,
+    round,
+    escrow
+      ? { resolveSettlement: { escrow, knownHash: settledRound === round ? txHash : null } }
+      : undefined,
+  );
+  kickReconciler();
+  return { alreadyRecorded: false };
+}
+
 /** If every member has contributed this round, pay the round's recipient. */
-async function maybeProcessPayout(circleId: string, round: number) {
+async function maybeProcessPayout(
+  circleId: string,
+  round: number,
+  opts?: { resolveSettlement?: { escrow: string; knownHash: string | null } },
+) {
   const circle = await db.query.circlesTable.findFirst({
     where: eq(circlesTable.id, circleId),
     with: { members: { with: { user: { with: { wallet: true } } } } },
@@ -589,6 +758,24 @@ async function maybeProcessPayout(circleId: string, round: number) {
     // same economics in the ledger as "pending" and let the reconciler stamp the
     // settlement tx hash by circle+round once the escrow's RoundSettled fires.
     const onchainRotation = onchainEnabled() && !!circle.contractAddress;
+    // Resolve the escrow's RoundSettled tx hash when a CLIENT-signed contribution
+    // filled this round. In the server path (no opts) the rows stay pending and
+    // the reconciler backfills them via the settling member's escrow_contribute
+    // queue entry — but a fully-client-signed rotation circle has NO such queue
+    // entry, so its payout/fee would otherwise stay pending forever. We prefer the
+    // settling client's own receipt hash (knownHash — no read-your-write lag) and
+    // fall back to an on-chain event lookup; null means not settled yet on-chain
+    // (mixed custody: a server member is still pending), so we book pending and let
+    // the reconciler backfill via that member's queue entry.
+    let settlementHash: string | null = null;
+    if (onchainRotation && opts?.resolveSettlement) {
+      const { escrow, knownHash } = opts.resolveSettlement;
+      settlementHash = knownHash ?? (await findRoundSettledTx(escrow, round));
+    }
+    const payoutOnchain: { txHash?: string; onchainStatus: "confirmed" | "pending" | "none" } =
+      settlementHash != null
+        ? { txHash: settlementHash, onchainStatus: "confirmed" }
+        : { onchainStatus: onchainRotation ? "pending" : "none" };
     // payoutCents is the net the recipient receives; the fee is whatever remains
     // of the pot. This unifies every case: 0 for legacy ledger circles (payout
     // == pot), the 2%-on-top for target-payout circles, and the escrow fee for
@@ -603,7 +790,7 @@ async function maybeProcessPayout(circleId: string, round: number) {
         fromKey: acct.pool(circleId),
         toKey: acct.wallet(recipient.userId),
         amountCents: netCents,
-        onchain: onchainRotation ? { onchainStatus: "pending" } : { onchainStatus: "none" },
+        onchain: payoutOnchain,
         requireSufficientFrom: true,
         circleId,
         round,
@@ -618,7 +805,7 @@ async function maybeProcessPayout(circleId: string, round: number) {
           fromKey: acct.pool(circleId),
           toKey: acct.external,
           amountCents: feeCents,
-          onchain: onchainRotation ? { onchainStatus: "pending" } : { onchainStatus: "none" },
+          onchain: payoutOnchain,
           requireSufficientFrom: true,
           circleId,
           round,

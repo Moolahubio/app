@@ -8,6 +8,7 @@ export type OnchainConfig = {
   goalVault: `0x${string}` | null;
   circleFactory: `0x${string}` | null;
   accumulationFactory: `0x${string}` | null;
+  platform: `0x${string}` | null;
 };
 
 async function fetchOnchainConfig(): Promise<OnchainConfig> {

@@ -114,8 +114,8 @@ shape for per-circle clone contracts — it must be scoped to the syncing user.
 
 ## Retry/replay idempotency is by exact persisted tx hash, NOT amount/event heuristics
 Earlier design used amount-based event scanning (from/to/value match within a
-lookback window) to detect an already-landed retry. **Code review rejected
-this**: two independently legitimate transfers of the same amount between the
+lookback window) to detect an already-landed retry. **This is unsafe:**
+two independently legitimate transfers of the same amount between the
 same pair in the same window are indistinguishable from a replay, so it could
 misattribute someone else's transfer as "already confirmed" (false positive)
 or vice versa. It was replaced with deterministic hash-based reconciliation:
@@ -149,7 +149,7 @@ or vice versa. It was replaced with deterministic hash-based reconciliation:
   key, NOT the primary one; without a parsed round there is no safe way to
   retry at all. `settlement.ts` mirrors this by dead-lettering the row (not
   calling `escrowContribute` at all) when `circleRoundFromMemo` returns null.
-  Reviewer flagged that `hasContributed` alone is too coarse (false on a
+  `hasContributed` alone is too coarse (false on a
   still-pending prior contribution → double-send risk survives), so
   `escrowContribute` now ALSO takes the same `knownTxHash`/`onSubmitted` pair
   as the other flows: known hash confirmed → return it; pending/unknown → skip

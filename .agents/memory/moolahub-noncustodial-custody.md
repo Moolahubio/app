@@ -22,16 +22,32 @@ client-confirm path is gated to non-custodial only.
 **Why:** a single gate is one bug away from a custodial drain; defense in depth
 means a mistake in any one layer still cannot move user funds.
 
-## Client-signed withdrawal = confirm-only backend
-The user signs the transfer on-device; the backend only *confirms*. It verifies the
-on-chain receipt strictly (tx succeeded; exactly one token-transfer event matching
-the expected token, from = the user's wallet, to = destination, exact amount, all
-address-normalized) and then books the ledger entry — deliberately without a
-sufficient-funds precheck, because the money already left on-chain and postings net
-to zero. Replay/double-count is stopped by a uniqueness constraint on the tx hash
-scoped to withdrawals. No step-up on confirm: the on-device signature IS the
-authorization. Reject a self-transfer (destination = the user's own wallet): it
-verifies on-chain but moves nothing, so booking it would create a phantom entry.
+## Client-signed money movement = confirm-only backend (ALL flows, not just withdraw)
+Every non-custodial money-movement flow uses the same shape: the user signs
+on-device, the backend only *confirms*. This covers withdrawal AND Savings-Goal
+deposit/release AND Circle contribution — each has a `.../submitted` route that
+takes the broadcast tx hash. The confirm verifies the on-chain receipt strictly
+(tx succeeded; exactly one matching event — a typed contract event like
+GoalDeposited/GoalWithdrawn/Contributed, or a token-transfer — bound to the
+caller's own wallet address, the exact amount, and the goal/round id, requiring
+exactly one match) and then books the ledger entry as `onchainStatus:"confirmed"`
+— deliberately without a sufficient-funds precheck, because the money already left
+on-chain and postings net to zero. Replay/double-count is stopped by a uniqueness
+constraint on the tx hash (plus, for contributions, the per-round UNIQUE) — an
+`isUniqueViolation` is caught and returned as `alreadyRecorded`. No step-up on
+confirm: the on-device signature IS the authorization.
+- **Server-signed and client-confirm paths are mutually exclusive**: the confirm
+  fn rejects `custody!=="privy"`, and the server-signed path rejects non-server
+  custody. Both gates must exist or one custody type falls through to the wrong path.
+- **Reject internal destinations on withdraw-confirm** (platform, goalVault,
+  factory, AND per-user escrow clones): a transfer into a vault/escrow/platform
+  verifies on-chain but is NOT a withdrawal — booking it as one double-books money
+  that's already booked as a deposit/contribution. Also reject a self-transfer
+  (destination = the user's own wallet): moves nothing, would create a phantom entry.
+- **Circle contribute routing mirrors the server path**: rotation → approve then
+  `contribute()` on the circle escrow; accumulation → plain USDC `transfer` to the
+  platform-custody address (exposed as `platform` in `/onchain/config`, since the
+  client needs it to build the tx).
 
 ## Client retry rule (fund-safety critical)
 Any client flow that broadcasts a real transfer and THEN calls a backend confirm

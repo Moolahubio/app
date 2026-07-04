@@ -549,6 +549,24 @@ export interface ConfirmWithdrawalInput {
   destination: string;
 }
 
+export interface ConfirmGoalDepositInput {
+  /** Hash of the user-signed goal-vault deposit already broadcast on-chain. */
+  txHash: string;
+  amountCents: number;
+}
+
+export interface ConfirmGoalReleaseInput {
+  /** Hash of the user-signed goal-vault withdrawal already broadcast on-chain. */
+  txHash: string;
+  /** The gross amount withdrawn (before the on-chain fee). */
+  amountCents: number;
+}
+
+export interface ConfirmContributionInput {
+  /** Hash of the user-signed contribution already broadcast on-chain. */
+  txHash: string;
+}
+
 export interface ReleaseFromGoalInput {
   amountCents: number;
   /**

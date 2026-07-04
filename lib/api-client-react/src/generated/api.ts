@@ -30,6 +30,9 @@ import type {
   CircleInput,
   CircleInvite,
   CircleSummary,
+  ConfirmContributionInput,
+  ConfirmGoalDepositInput,
+  ConfirmGoalReleaseInput,
   ConfirmWithdrawalInput,
   DashboardSummary,
   DeleteAccountInput,
@@ -3282,6 +3285,78 @@ export const useContributeToCircle = <TError = ErrorType<unknown>,
       return useMutation(getContributeToCircleMutationOptions(options));
     }
 
+export const getConfirmContributionUrl = (id: string,) => {
+
+
+
+
+  return `/api/circles/${id}/contribute/submitted`
+}
+
+/**
+ * @summary Confirm a client-signed (non-custodial) contribution after broadcast
+ */
+export const confirmContribution = async (id: string,
+    confirmContributionInput: ConfirmContributionInput, options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getConfirmContributionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      confirmContributionInput,)
+  }
+);}
+
+
+
+
+export const getConfirmContributionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmContribution>>, TError,{id: string;data: BodyType<ConfirmContributionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmContribution>>, TError,{id: string;data: BodyType<ConfirmContributionInput>}, TContext> => {
+
+const mutationKey = ['confirmContribution'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmContribution>>, {id: string;data: BodyType<ConfirmContributionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  confirmContribution(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmContributionMutationResult = NonNullable<Awaited<ReturnType<typeof confirmContribution>>>
+    export type ConfirmContributionMutationBody = BodyType<ConfirmContributionInput>
+    export type ConfirmContributionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Confirm a client-signed (non-custodial) contribution after broadcast
+ */
+export const useConfirmContribution = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmContribution>>, TError,{id: string;data: BodyType<ConfirmContributionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmContribution>>,
+        TError,
+        {id: string;data: BodyType<ConfirmContributionInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmContributionMutationOptions(options));
+    }
+
 export const getAcceptInviteUrl = (id: string,) => {
 
 
@@ -3789,6 +3864,150 @@ export const useReleaseFromGoal = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getReleaseFromGoalMutationOptions(options));
+    }
+
+export const getConfirmGoalDepositUrl = (id: string,) => {
+
+
+
+
+  return `/api/goals/${id}/deposit/submitted`
+}
+
+/**
+ * @summary Confirm a client-signed (non-custodial) goal deposit after broadcast
+ */
+export const confirmGoalDeposit = async (id: string,
+    confirmGoalDepositInput: ConfirmGoalDepositInput, options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getConfirmGoalDepositUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      confirmGoalDepositInput,)
+  }
+);}
+
+
+
+
+export const getConfirmGoalDepositMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmGoalDeposit>>, TError,{id: string;data: BodyType<ConfirmGoalDepositInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmGoalDeposit>>, TError,{id: string;data: BodyType<ConfirmGoalDepositInput>}, TContext> => {
+
+const mutationKey = ['confirmGoalDeposit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmGoalDeposit>>, {id: string;data: BodyType<ConfirmGoalDepositInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  confirmGoalDeposit(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmGoalDepositMutationResult = NonNullable<Awaited<ReturnType<typeof confirmGoalDeposit>>>
+    export type ConfirmGoalDepositMutationBody = BodyType<ConfirmGoalDepositInput>
+    export type ConfirmGoalDepositMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Confirm a client-signed (non-custodial) goal deposit after broadcast
+ */
+export const useConfirmGoalDeposit = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmGoalDeposit>>, TError,{id: string;data: BodyType<ConfirmGoalDepositInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmGoalDeposit>>,
+        TError,
+        {id: string;data: BodyType<ConfirmGoalDepositInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmGoalDepositMutationOptions(options));
+    }
+
+export const getConfirmGoalReleaseUrl = (id: string,) => {
+
+
+
+
+  return `/api/goals/${id}/release/submitted`
+}
+
+/**
+ * @summary Confirm a client-signed (non-custodial) goal withdrawal after broadcast
+ */
+export const confirmGoalRelease = async (id: string,
+    confirmGoalReleaseInput: ConfirmGoalReleaseInput, options?: RequestInit): Promise<ReleaseFromGoalResult> => {
+
+  return customFetch<ReleaseFromGoalResult>(getConfirmGoalReleaseUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      confirmGoalReleaseInput,)
+  }
+);}
+
+
+
+
+export const getConfirmGoalReleaseMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmGoalRelease>>, TError,{id: string;data: BodyType<ConfirmGoalReleaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmGoalRelease>>, TError,{id: string;data: BodyType<ConfirmGoalReleaseInput>}, TContext> => {
+
+const mutationKey = ['confirmGoalRelease'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmGoalRelease>>, {id: string;data: BodyType<ConfirmGoalReleaseInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  confirmGoalRelease(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmGoalReleaseMutationResult = NonNullable<Awaited<ReturnType<typeof confirmGoalRelease>>>
+    export type ConfirmGoalReleaseMutationBody = BodyType<ConfirmGoalReleaseInput>
+    export type ConfirmGoalReleaseMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Confirm a client-signed (non-custodial) goal withdrawal after broadcast
+ */
+export const useConfirmGoalRelease = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmGoalRelease>>, TError,{id: string;data: BodyType<ConfirmGoalReleaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmGoalRelease>>,
+        TError,
+        {id: string;data: BodyType<ConfirmGoalReleaseInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmGoalReleaseMutationOptions(options));
     }
 
 export const getDeleteGoalUrl = (id: string,) => {

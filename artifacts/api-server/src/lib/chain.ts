@@ -504,6 +504,202 @@ export async function verifyUsdcTransferReceipt(params: {
   return { ok: true };
 }
 
+/**
+ * Verify a client-signed goal-vault DEPOSIT the server never signed. Matches the
+ * `GoalDeposited(owner, goalId, amount)` LOG emitted by the vault — bound to the
+ * owning wallet, the goal's on-chain id, and the exact amount — and requires
+ * EXACTLY ONE so a tx that also moves unrelated funds can't slip a wrong booking
+ * through. Mirrors `verifyUsdcTransferReceipt`.
+ */
+export async function verifyGoalDepositReceipt(params: {
+  hash: string;
+  owner: string;
+  goalId: string;
+  amountCents: number;
+}): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const vault = goalVaultContract();
+  if (!vault) return { ok: false, reason: "onchain-not-configured" };
+  const hash = params.hash;
+  if (!isLikelyTxHash(hash)) return { ok: false, reason: "malformed-hash" };
+  if (!isValidAddress(params.owner)) return { ok: false, reason: "malformed-address" };
+
+  let receipt: import("viem").TransactionReceipt;
+  try {
+    receipt = await publicClient().waitForTransactionReceipt({ hash, timeout: 60_000 });
+  } catch {
+    return { ok: false, reason: "receipt-unavailable" };
+  }
+  if (receipt.status !== "success") return { ok: false, reason: "tx-reverted" };
+
+  const want = centsToUnits(params.amountCents);
+  const ownerAddr = getAddress(params.owner);
+  const goalKey = goalIdToBytes32(params.goalId).toLowerCase();
+  const events = parseEventLogs({ abi: GOAL_VAULT_ABI, eventName: "GoalDeposited", logs: receipt.logs });
+  const matches = events.filter((log) => {
+    try {
+      const args = log.args as { owner: string; goalId: string; amount: bigint };
+      return (
+        getAddress(log.address) === vault &&
+        getAddress(args.owner) === ownerAddr &&
+        args.goalId.toLowerCase() === goalKey &&
+        args.amount === want
+      );
+    } catch {
+      return false;
+    }
+  });
+  if (matches.length !== 1) {
+    return { ok: false, reason: `expected one GoalDeposited, found ${matches.length}` };
+  }
+  return { ok: true };
+}
+
+/**
+ * Verify a client-signed goal-vault WITHDRAWAL. Matches the
+ * `GoalWithdrawn(owner, goalId, grossAmount, fee)` LOG bound to owner/goal/gross,
+ * requires exactly one, and RETURNS the on-chain fee (in cents) so the caller
+ * books net = gross − fee straight from the chain rather than re-deriving it.
+ */
+export async function verifyGoalWithdrawReceipt(params: {
+  hash: string;
+  owner: string;
+  goalId: string;
+  grossCents: number;
+}): Promise<{ ok: true; feeCents: number } | { ok: false; reason: string }> {
+  const vault = goalVaultContract();
+  if (!vault) return { ok: false, reason: "onchain-not-configured" };
+  const hash = params.hash;
+  if (!isLikelyTxHash(hash)) return { ok: false, reason: "malformed-hash" };
+  if (!isValidAddress(params.owner)) return { ok: false, reason: "malformed-address" };
+
+  let receipt: import("viem").TransactionReceipt;
+  try {
+    receipt = await publicClient().waitForTransactionReceipt({ hash, timeout: 60_000 });
+  } catch {
+    return { ok: false, reason: "receipt-unavailable" };
+  }
+  if (receipt.status !== "success") return { ok: false, reason: "tx-reverted" };
+
+  const want = centsToUnits(params.grossCents);
+  const ownerAddr = getAddress(params.owner);
+  const goalKey = goalIdToBytes32(params.goalId).toLowerCase();
+  const events = parseEventLogs({ abi: GOAL_VAULT_ABI, eventName: "GoalWithdrawn", logs: receipt.logs });
+  const matches = events.filter((log) => {
+    try {
+      const args = log.args as { owner: string; goalId: string; grossAmount: bigint; fee: bigint };
+      return (
+        getAddress(log.address) === vault &&
+        getAddress(args.owner) === ownerAddr &&
+        args.goalId.toLowerCase() === goalKey &&
+        args.grossAmount === want
+      );
+    } catch {
+      return false;
+    }
+  });
+  if (matches.length !== 1) {
+    return { ok: false, reason: `expected one GoalWithdrawn, found ${matches.length}` };
+  }
+  const feeUnits = ((matches[0].args as { fee?: bigint }).fee ?? 0n) as bigint;
+  return { ok: true, feeCents: unitsToCents(feeUnits) };
+}
+
+/**
+ * Verify a client-signed escrow CONTRIBUTION. Matches the escrow's
+ * `Contributed(member, round, amount)` LOG (emitted at the full contribution
+ * amount even when a reserve covers it — so this must match the event, never a
+ * raw USDC Transfer) bound to member/round/amount, and also returns
+ * `settledRound` when the same tx emitted `RoundSettled` (the escrow settled the
+ * round atomically as this contribution filled it).
+ */
+export async function verifyEscrowContributeReceipt(params: {
+  hash: string;
+  escrow: string;
+  member: string;
+  round: number;
+  amountCents: number;
+}): Promise<{ ok: true; settledRound: number | null } | { ok: false; reason: string }> {
+  const hash = params.hash;
+  if (!isLikelyTxHash(hash)) return { ok: false, reason: "malformed-hash" };
+  if (!isValidAddress(params.escrow) || !isValidAddress(params.member)) {
+    return { ok: false, reason: "malformed-address" };
+  }
+
+  let receipt: import("viem").TransactionReceipt;
+  try {
+    receipt = await publicClient().waitForTransactionReceipt({ hash, timeout: 60_000 });
+  } catch {
+    return { ok: false, reason: "receipt-unavailable" };
+  }
+  if (receipt.status !== "success") return { ok: false, reason: "tx-reverted" };
+
+  const want = centsToUnits(params.amountCents);
+  const escrowAddr = getAddress(params.escrow);
+  const memberAddr = getAddress(params.member);
+  const events = parseEventLogs({ abi: ESCROW_ABI, eventName: "Contributed", logs: receipt.logs });
+  const matches = events.filter((log) => {
+    try {
+      const args = log.args as { member: string; round: bigint; amount: bigint };
+      return (
+        getAddress(log.address) === escrowAddr &&
+        getAddress(args.member) === memberAddr &&
+        args.round === BigInt(params.round) &&
+        args.amount === want
+      );
+    } catch {
+      return false;
+    }
+  });
+  if (matches.length !== 1) {
+    return { ok: false, reason: `expected one Contributed, found ${matches.length}` };
+  }
+  let settledRound: number | null = null;
+  try {
+    const settled = parseEventLogs({ abi: ESCROW_ABI, eventName: "RoundSettled", logs: receipt.logs });
+    const fromEscrow = settled.filter((l) => getAddress(l.address) === escrowAddr);
+    if (fromEscrow.length > 0) settledRound = Number(fromEscrow[0].args.round);
+  } catch {
+    /* best-effort: settlement is also resolvable on-chain via findRoundSettledTx */
+  }
+  return { ok: true, settledRound };
+}
+
+/**
+ * Resolve the tx hash of a circle round's `RoundSettled` event on-chain. The
+ * escrow settles a round atomically as its last contribution lands, but
+ * client-signed confirms can arrive at the backend OUT OF on-chain order — so
+ * the confirm that fills the DB round is not necessarily the one whose receipt
+ * carried `RoundSettled`. Rather than trust a per-confirm hint, the payout
+ * booker queries the chain at DB-round-fill time (by then every contribution is
+ * mined, so the event is present). Returns null when not yet settled on-chain
+ * (mixed custody: a server member's contribution is still pending) so the caller
+ * books the payout pending and the reconciler backfills it later.
+ */
+export async function findRoundSettledTx(
+  escrow: string,
+  round: number,
+  lookbackBlocks = 5000n,
+): Promise<string | null> {
+  if (!isValidAddress(escrow)) return null;
+  try {
+    const pub = publicClient();
+    const latest = await pub.getBlockNumber();
+    const fromBlock = latest > lookbackBlocks ? latest - lookbackBlocks : 0n;
+    const logs = await pub.getContractEvents({
+      address: getAddress(escrow),
+      abi: ESCROW_ABI,
+      eventName: "RoundSettled",
+      args: { round: BigInt(round) },
+      fromBlock,
+      toBlock: latest,
+    });
+    if (logs.length === 0) return null;
+    return (logs[logs.length - 1].transactionHash as string | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Read a USDC balance, in cents. Returns 0 when the RPC is unreachable. */
 export async function usdcBalance(address: string): Promise<number> {
   const usdc = usdcContract();

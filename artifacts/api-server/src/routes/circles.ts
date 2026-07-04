@@ -6,6 +6,9 @@ import {
   InviteToCircleParams,
   StartCircleParams,
   ContributeToCircleParams,
+  ConfirmContributionParams,
+  ConfirmContributionBody,
+  ConfirmContributionResponse,
   AcceptInviteParams,
   DeclineInviteParams,
   DeleteCircleParams,
@@ -35,6 +38,7 @@ import {
   declineInvite,
   startCircle,
   deleteCircle,
+  confirmClientContribute,
 } from "../lib/circles";
 
 const router: IRouter = Router();
@@ -229,6 +233,39 @@ router.post("/circles/:id/contribute", requireAllowedOrigin, requireAuth, async 
 
   res.json(ContributeToCircleResponse.parse({ ok: true }));
 });
+
+// Confirm a client-signed (non-custodial) contribution after the user's own
+// device broadcast it on-chain (escrow contribute for rotation, or a USDC
+// transfer to platform-custody for accumulation). No step-up — the user's device
+// key already authorized the move. Server-custody members use /contribute.
+router.post(
+  "/circles/:id/contribute/submitted",
+  requireJsonAndAllowedOrigin,
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const user = (req as AuthRequest).user;
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const params = ConfirmContributionParams.safeParse({ id: rawId });
+    if (!params.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const parsed = ConfirmContributionBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+
+    try {
+      await confirmClientContribute(user.id, params.data.id, parsed.data.txHash);
+    } catch (e) {
+      sendError(res, e, "Couldn't confirm contribution");
+      return;
+    }
+
+    res.json(ConfirmContributionResponse.parse({ ok: true }));
+  },
+);
 
 router.post("/circles/invites/:id/accept", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;

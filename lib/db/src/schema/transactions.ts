@@ -70,6 +70,32 @@ export const transactionsTable = pgTable("transactions", {
   uniqueIndex("transactions_withdrawal_tx_hash_uniq")
     .on(t.txHash)
     .where(sql`${t.type} = 'withdrawal' and ${t.txHash} is not null`),
+  // Client-signed non-custodial goal deposits (POST /goals/:id/deposit/submitted)
+  // and releases (POST /goals/:id/release/submitted) are booked after verifying
+  // the on-chain GoalDeposited / GoalWithdrawn receipt. Each on-chain goal tx has
+  // a distinct hash (server settlements also stamp a distinct per-tx hash), so a
+  // type-scoped partial unique index is the authoritative guard against a
+  // replayed/duplicate submit booking the same broadcast twice. A release's fee
+  // row (type 'fee') deliberately shares the net row's hash and is NOT covered
+  // here (one on-chain event → several postings); the net 'goal_release' row is
+  // the single guarded row per withdrawal.
+  uniqueIndex("transactions_goal_allocate_tx_hash_uniq")
+    .on(t.txHash)
+    .where(sql`${t.type} = 'goal_allocate' and ${t.txHash} is not null`),
+  uniqueIndex("transactions_goal_release_tx_hash_uniq")
+    .on(t.txHash)
+    .where(sql`${t.type} = 'goal_release' and ${t.txHash} is not null`),
+  // A client-signed non-custodial circle contribution is booked after verifying
+  // the on-chain Contributed (escrow) or USDC Transfer (accumulation) receipt.
+  // UNIQUE(circle_id,user_id,round) only dedupes WITHIN one round; a bare
+  // accumulation USDC transfer carries no circle/round binding, so without this a
+  // user in two accumulation circles/rounds with equal contributions could
+  // confirm ONE transfer twice (real platform-funded payout loss). Type- and
+  // hash-scoped; server contributions each settle in their own tx so they never
+  // legitimately share a hash.
+  uniqueIndex("transactions_contribution_tx_hash_uniq")
+    .on(t.txHash)
+    .where(sql`${t.type} = 'contribution' and ${t.txHash} is not null`),
 ]);
 
 export const postingsTable = pgTable("postings", {

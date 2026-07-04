@@ -983,6 +983,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/OkResponse"
 
+  /circles/{id}/contribute/submitted:
+    post:
+      operationId: confirmContribution
+      tags: [circles]
+      summary: Confirm a client-signed (non-custodial) contribution after broadcast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmContributionInput"
+      responses:
+        "200":
+          description: Contribution confirmed and recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
   /circles/invites/{id}/accept:
     post:
       operationId: acceptInvite
@@ -1124,6 +1149,56 @@ paths:
       responses:
         "200":
           description: Released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReleaseFromGoalResult"
+
+  /goals/{id}/deposit/submitted:
+    post:
+      operationId: confirmGoalDeposit
+      tags: [goals]
+      summary: Confirm a client-signed (non-custodial) goal deposit after broadcast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmGoalDepositInput"
+      responses:
+        "200":
+          description: Deposit confirmed and recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /goals/{id}/release/submitted:
+    post:
+      operationId: confirmGoalRelease
+      tags: [goals]
+      summary: Confirm a client-signed (non-custodial) goal withdrawal after broadcast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmGoalReleaseInput"
+      responses:
+        "200":
+          description: Withdrawal confirmed and recorded
           content:
             application/json:
               schema:
@@ -2173,6 +2248,35 @@ components:
         destination:
           type: string
           description: The external address the user sent USDC to.
+
+    ConfirmGoalDepositInput:
+      type: object
+      required: [txHash, amountCents]
+      properties:
+        txHash:
+          type: string
+          description: Hash of the user-signed goal-vault deposit already broadcast on-chain.
+        amountCents:
+          type: integer
+
+    ConfirmGoalReleaseInput:
+      type: object
+      required: [txHash, amountCents]
+      properties:
+        txHash:
+          type: string
+          description: Hash of the user-signed goal-vault withdrawal already broadcast on-chain.
+        amountCents:
+          type: integer
+          description: The gross amount withdrawn (before the on-chain fee).
+
+    ConfirmContributionInput:
+      type: object
+      required: [txHash]
+      properties:
+        txHash:
+          type: string
+          description: Hash of the user-signed contribution already broadcast on-chain.
 
     ReleaseFromGoalInput:
       type: object

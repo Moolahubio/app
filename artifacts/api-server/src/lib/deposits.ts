@@ -279,6 +279,23 @@ export async function confirmClientWithdrawal(
     // booking it would inflate the ledger/history with a phantom withdrawal.
     throw new AppError("Enter a destination other than your own wallet.");
   }
+  // Reject internal platform addresses as destinations. A client could sign a raw
+  // USDC transfer straight into the goal vault / a circle escrow / the factory /
+  // the platform-custody address; verified on-chain it would book a plain
+  // 'withdrawal' here while the funds actually landed in a contract that credits
+  // them elsewhere (goal or circle balance, or a deposit re-import) — double-
+  // counting the same USDC. Money into or out of those contracts must flow
+  // through their own booked paths, never a raw withdrawal. Escrows are per-circle
+  // clones, so resolve them for this user rather than a fixed address.
+  const escrowAddresses = await getUserCircleEscrowAddresses(userId);
+  const internalAddresses = new Set<string>(
+    [platformAddress(), goalVaultContract(), factoryContract(), ...escrowAddresses]
+      .filter((a): a is string => Boolean(a))
+      .map((a) => a.toLowerCase()),
+  );
+  if (internalAddresses.has(destination.toLowerCase())) {
+    throw new AppError("That destination isn't allowed. Enter an external wallet address.");
+  }
 
   const verified = await verifyUsdcTransferReceipt({
     hash: txHash,

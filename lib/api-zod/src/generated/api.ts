@@ -803,6 +803,22 @@ export const ContributeToCircleResponse = zod.object({
 
 
 /**
+ * @summary Confirm a client-signed (non-custodial) contribution after broadcast
+ */
+export const ConfirmContributionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ConfirmContributionBody = zod.object({
+  "txHash": zod.string().describe('Hash of the user-signed contribution already broadcast on-chain.')
+})
+
+export const ConfirmContributionResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Accept a circle invite
  */
 export const AcceptInviteParams = zod.object({
@@ -941,6 +957,43 @@ export const ReleaseFromGoalBody = zod.object({
 })
 
 export const ReleaseFromGoalResponse = zod.object({
+  "ok": zod.boolean(),
+  "grossCents": zod.number(),
+  "netCents": zod.number(),
+  "feeCents": zod.number()
+})
+
+
+/**
+ * @summary Confirm a client-signed (non-custodial) goal deposit after broadcast
+ */
+export const ConfirmGoalDepositParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ConfirmGoalDepositBody = zod.object({
+  "txHash": zod.string().describe('Hash of the user-signed goal-vault deposit already broadcast on-chain.'),
+  "amountCents": zod.number()
+})
+
+export const ConfirmGoalDepositResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Confirm a client-signed (non-custodial) goal withdrawal after broadcast
+ */
+export const ConfirmGoalReleaseParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const ConfirmGoalReleaseBody = zod.object({
+  "txHash": zod.string().describe('Hash of the user-signed goal-vault withdrawal already broadcast on-chain.'),
+  "amountCents": zod.number().describe('The gross amount withdrawn (before the on-chain fee).')
+})
+
+export const ConfirmGoalReleaseResponse = zod.object({
   "ok": zod.boolean(),
   "grossCents": zod.number(),
   "netCents": zod.number(),

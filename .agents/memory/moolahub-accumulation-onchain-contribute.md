@@ -25,7 +25,7 @@ that contribution later dead-letters, unwinding it must, atomically:
    *broadcast or settled* (a `txHash` was submitted, or status/onchainStatus
    is `confirmed`) — money already moved or is irreversibly in flight.
 
-**The reconciler batch-claim trap (2nd review round found this):** the
+**The reconciler batch-claim trap:** the
 reconciler claims a whole batch of queue rows (flips ALL to `processing`)
 *before* looping through them one at a time. So `processing` alone does NOT
 mean "actively being sent" — it just means "claimed, awaiting its turn in

@@ -15,7 +15,10 @@ import {
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
-import { useGetCircle, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey, getGetStreaksQueryKey } from "@workspace/api-client-react";
+import { PrivyContributeButton } from "@/components/app/PrivyContributeButton";
+import { isWeb3Enabled } from "@/components/app/Web3Provider";
+import { useOnchainConfig } from "@/lib/onchain/config";
+import { useGetCircle, useGetWallet, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey, getGetStreaksQueryKey } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
 import { formatMoney, truncateAddress, apiErrorMessage, cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,7 +29,9 @@ export default function CircleDetailPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { data: circle, isLoading } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
-  
+  const { data: wallet } = useGetWallet();
+  const { data: onchainConfig } = useOnchainConfig();
+
   const queryClient = useQueryClient();
   const startMutation = useStartCircle();
   const contributeMutation = useContributeToCircle();
@@ -44,6 +49,22 @@ export default function CircleDetailPage() {
   const canStart = circle.canStart ?? false;
   const canInvite = circle.canInvite ?? false;
   const canDelete = circle.canDelete ?? false;
+  const canContribute = circle.canContribute ?? (isActive && circle.myContributionStatus !== "paid");
+
+  // Non-custodial (Privy) wallets can't be signed by the platform, so on-chain
+  // contributions must be signed by the user in-browser and only confirmed
+  // server-side. Server-custody wallets keep the server-signed contribute path.
+  const isPrivyCustody = wallet?.custody === "privy";
+  const useClientSigned = isPrivyCustody && isWeb3Enabled;
+
+  const onContributeSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) });
+    queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
+    toast({
+      title: "Streak kept alive 🔥",
+      description: "Nice, that contribution counts toward your savings streak.",
+    });
+  };
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -108,25 +129,31 @@ export default function CircleDetailPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-4">
-          {(circle.canContribute ?? (isActive && circle.myContributionStatus !== "paid")) ? (
-            <ActionButton
-              onClick={() => {
-                contributeMutation.mutate({ id: circle.id }, {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) });
-                    queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
-                    toast({
-                      title: "Streak kept alive 🔥",
-                      description: "Nice, that contribution counts toward your savings streak.",
-                    });
-                  }
-                });
-              }}
-              label={`Contribute ${formatMoney(circle.contributionCents)}`}
-              pendingLabel="Submitting…"
-              size="sm"
-              pending={contributeMutation.isPending}
-            />
+          {canContribute ? (
+            useClientSigned ? (
+              <PrivyContributeButton
+                circleId={circle.id}
+                escrow={circle.contractAddress ?? null}
+                isAccumulation={isAccumulation}
+                platform={onchainConfig?.platform ?? null}
+                usdcAddress={onchainConfig?.usdc ?? null}
+                contributionCents={circle.contributionCents}
+                label={`Contribute ${formatMoney(circle.contributionCents)}`}
+                onSuccess={onContributeSuccess}
+              />
+            ) : (
+              <ActionButton
+                onClick={() => {
+                  contributeMutation.mutate({ id: circle.id }, {
+                    onSuccess: onContributeSuccess,
+                  });
+                }}
+                label={`Contribute ${formatMoney(circle.contributionCents)}`}
+                pendingLabel="Submitting…"
+                size="sm"
+                pending={contributeMutation.isPending}
+              />
+            )
           ) : isActive ? (
             <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
               <CheckCircle2 className="h-3.5 w-3.5" /> Contributed this round

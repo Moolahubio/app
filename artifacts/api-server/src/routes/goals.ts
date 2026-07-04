@@ -13,6 +13,12 @@ import {
   DeleteGoalParams,
   DeleteGoalBody,
   DeleteGoalResponse,
+  ConfirmGoalDepositParams,
+  ConfirmGoalDepositBody,
+  ConfirmGoalDepositResponse,
+  ConfirmGoalReleaseParams,
+  ConfirmGoalReleaseBody,
+  ConfirmGoalReleaseResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
@@ -26,6 +32,8 @@ import {
   allocateToGoal,
   releaseFromGoal,
   deleteGoal,
+  confirmClientGoalDeposit,
+  confirmClientGoalRelease,
   type GoalHistoryItem,
 } from "../lib/goals";
 
@@ -244,5 +252,85 @@ router.post("/goals/:id/delete", requireJsonAndAllowedOrigin, requireAuth, async
     sendError(res, e, "Delete failed");
   }
 });
+
+// Confirm a client-signed (non-custodial) goal deposit after the user's own
+// device broadcast it. No step-up: the user's device key already authorized the
+// move and re-gating an already-settled transfer could only strand it. Server-
+// custody wallets are refused inside confirmClientGoalDeposit and use /allocate.
+router.post(
+  "/goals/:id/deposit/submitted",
+  requireJsonAndAllowedOrigin,
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const user = (req as AuthRequest).user;
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const params = ConfirmGoalDepositParams.safeParse({ id: rawId });
+    if (!params.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const parsed = ConfirmGoalDepositBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+
+    try {
+      await confirmClientGoalDeposit(
+        user.id,
+        params.data.id,
+        parsed.data.txHash,
+        parsed.data.amountCents,
+      );
+    } catch (e) {
+      sendError(res, e, "Couldn't confirm deposit");
+      return;
+    }
+
+    res.json(ConfirmGoalDepositResponse.parse({ ok: true }));
+  },
+);
+
+// Confirm a client-signed (non-custodial) goal withdrawal after broadcast. Like
+// the deposit path, no step-up — the user's own device key already signed the
+// on-chain withdraw. Server-custody wallets use the step-up-gated /release path.
+router.post(
+  "/goals/:id/release/submitted",
+  requireJsonAndAllowedOrigin,
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const user = (req as AuthRequest).user;
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const params = ConfirmGoalReleaseParams.safeParse({ id: rawId });
+    if (!params.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    const parsed = ConfirmGoalReleaseBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+
+    try {
+      const result = await confirmClientGoalRelease(
+        user.id,
+        params.data.id,
+        parsed.data.txHash,
+        parsed.data.amountCents,
+      );
+      res.json(
+        ConfirmGoalReleaseResponse.parse({
+          ok: true,
+          grossCents: result.grossCents,
+          netCents: result.netCents,
+          feeCents: result.feeCents,
+        }),
+      );
+    } catch (e) {
+      sendError(res, e, "Couldn't confirm withdrawal");
+    }
+  },
+);
 
 export default router;

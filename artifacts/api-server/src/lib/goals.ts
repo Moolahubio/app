@@ -14,6 +14,8 @@ import {
   goalVaultEnabled,
   goalVaultContract,
   goalVaultBalanceStrict,
+  verifyGoalDepositReceipt,
+  verifyGoalWithdrawReceipt,
   explorerUrl,
   networkName,
 } from "./chain";
@@ -26,6 +28,8 @@ import {
   goalBalancesView,
   pendingGoalTransfersExist,
 } from "./onchainBalances";
+import { isUniqueViolation } from "./dbErrors";
+import { logger } from "./logger";
 
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
 // feeBps (2%). Deposits are free; every withdrawal (including the auto-withdraw
@@ -265,6 +269,98 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
   return txn;
 }
 
+/**
+ * Confirm a CLIENT-SIGNED (non-custodial / Privy) deposit into a goal vault. The
+ * user's own EOA already signed and broadcast `deposit(goalId, amount)`; the
+ * server holds no key and never signs. We verify the on-chain GoalDeposited
+ * receipt, then book the wallet → goal ledger move as confirmed.
+ *
+ * Booked WITHOUT requireSufficientFrom (the funds already left the wallet
+ * on-chain, so a transient negative wallet:<uid> ledger balance is fine — see
+ * confirmClientWithdrawal). The partial unique index over (tx_hash) WHERE
+ * type='goal_allocate' is the authoritative guard against booking the same
+ * broadcast twice; a retrying client sees `alreadyRecorded`.
+ */
+export async function confirmClientGoalDeposit(
+  userId: string,
+  goalId: string,
+  txHash: string,
+  amountCents: number,
+): Promise<{ alreadyRecorded: boolean }> {
+  if (amountCents <= 0) throw new AppError("Enter a valid amount.");
+  if (!goalVaultEnabled() || !goalVaultContract()) {
+    throw new AppError("On-chain goal savings isn't configured.");
+  }
+  const wallet = await requireWalletForUser(userId);
+  if (wallet.custody !== "privy") {
+    // Server-custody wallets deposit via the server-signed allocateToGoal path;
+    // only non-custodial wallets confirm a client-signed deposit here.
+    throw new AppError("This wallet doesn't use client-signed goal deposits.");
+  }
+
+  // Pre-check ownership + active status for a friendly failure; the row-locked
+  // recheck inside the tx is the authoritative guard against a concurrent delete.
+  const [pre] = await db
+    .select({ id: goalsTable.id })
+    .from(goalsTable)
+    .where(
+      and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId), eq(goalsTable.status, ACTIVE)),
+    );
+  if (!pre) throw new AppError("Goal not found");
+
+  const verified = await verifyGoalDepositReceipt({
+    hash: txHash,
+    owner: wallet.address,
+    goalId,
+    amountCents,
+  });
+  if (!verified.ok) {
+    logger.warn(
+      { userId, goalId, txHash, reason: verified.reason },
+      "client goal deposit receipt verification failed",
+    );
+    throw new AppError("We couldn't verify that deposit on-chain. Please try again.");
+  }
+
+  let result: { txnId: string; goalName: string };
+  try {
+    result = await db.transaction(async (tx) => {
+      // Serialize against deleteGoal (which flips active→deleted under this same
+      // row lock) so we never fund a goal that's already being closed and drained.
+      const [goal] = await tx
+        .select()
+        .from(goalsTable)
+        .where(and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId)))
+        .for("update");
+      if (!goal || goal.status !== ACTIVE) throw new AppError("Goal not found");
+      const t = await transfer({
+        tx,
+        type: "goal_allocate",
+        description: `Allocation → ${goal.name}`,
+        userId,
+        fromKey: acct.wallet(userId),
+        toKey: acct.goal(goalId),
+        amountCents,
+        onchain: { txHash, onchainStatus: "confirmed" },
+      });
+      return { txnId: t.id, goalName: goal.name };
+    });
+  } catch (e) {
+    // The partial unique index rejects a second booking of the same broadcast.
+    if (isUniqueViolation(e)) return { alreadyRecorded: true };
+    throw e;
+  }
+
+  await recordSave(userId, result.txnId);
+  await notify(userId, {
+    type: "goal",
+    title: `Added to ${result.goalName}`,
+    body: `${formatMoney(amountCents)} moved into ${result.goalName}.`,
+    link: `/goals/${goalId}`,
+  });
+  return { alreadyRecorded: false };
+}
+
 export type ReleaseResult = {
   grossCents: number;
   netCents: number;
@@ -387,6 +483,100 @@ async function releaseFromGoalCore(
   return { grossCents: amountCents, netCents, feeCents };
 }
 
+/**
+ * Confirm a CLIENT-SIGNED (non-custodial / Privy) goal-vault withdrawal. The
+ * user's EOA already signed `withdraw(goalId, gross)`; the vault took its 2% fee
+ * on-chain and paid the net to the wallet. We verify the GoalWithdrawn receipt —
+ * which yields the exact on-chain fee — then book net (goal → wallet) and fee
+ * (goal → fees) as confirmed, sharing the tx hash (one on-chain event → two
+ * postings; only the net 'goal_release' row is uniqueness-guarded).
+ *
+ * Ownership-only (status-agnostic): the goal *account* still holds the balance
+ * after a soft-delete, so a client can drain a goal already flipped to
+ * "deleted". Booked WITHOUT requireSufficientFrom (money already moved on-chain).
+ */
+export async function confirmClientGoalRelease(
+  userId: string,
+  goalId: string,
+  txHash: string,
+  grossCents: number,
+): Promise<ReleaseResult & { alreadyRecorded: boolean }> {
+  if (grossCents <= 0) throw new AppError("Enter a valid amount.");
+  if (!goalVaultEnabled() || !goalVaultContract()) {
+    throw new AppError("On-chain goal savings isn't configured.");
+  }
+  const wallet = await requireWalletForUser(userId);
+  if (wallet.custody !== "privy") {
+    throw new AppError("This wallet doesn't use client-signed goal withdrawals.");
+  }
+  const [goal] = await db
+    .select({ name: goalsTable.name })
+    .from(goalsTable)
+    .where(and(eq(goalsTable.id, goalId), eq(goalsTable.userId, userId)));
+  if (!goal) throw new AppError("Goal not found");
+
+  const verified = await verifyGoalWithdrawReceipt({
+    hash: txHash,
+    owner: wallet.address,
+    goalId,
+    grossCents,
+  });
+  if (!verified.ok) {
+    logger.warn(
+      { userId, goalId, txHash, reason: verified.reason },
+      "client goal withdraw receipt verification failed",
+    );
+    throw new AppError("We couldn't verify that withdrawal on-chain. Please try again.");
+  }
+  const feeCents = verified.feeCents;
+  const netCents = grossCents - feeCents;
+
+  try {
+    await db.transaction(async (tx) => {
+      await transfer({
+        tx,
+        type: "goal_release",
+        description: `Released from ${goal.name}`,
+        userId,
+        fromKey: acct.goal(goalId),
+        toKey: acct.wallet(userId),
+        amountCents: netCents,
+        onchain: { txHash, onchainStatus: "confirmed" },
+      });
+      if (feeCents > 0) {
+        await transfer({
+          tx,
+          type: "fee",
+          description: `Withdrawal fee · ${goal.name}`,
+          userId,
+          fromKey: acct.goal(goalId),
+          toKey: acct.fees,
+          amountCents: feeCents,
+          onchain: { txHash, onchainStatus: "confirmed" },
+        });
+      }
+    });
+  } catch (e) {
+    // The net 'goal_release' partial unique index rejects a duplicate submit;
+    // report the (idempotent) computed amounts so a retrying client sees success.
+    if (isUniqueViolation(e)) {
+      return { grossCents, netCents, feeCents, alreadyRecorded: true };
+    }
+    throw e;
+  }
+
+  await notify(userId, {
+    type: "goal",
+    title: `Withdrawn from ${goal.name}`,
+    body:
+      feeCents > 0
+        ? `${formatMoney(netCents)} returned to your available balance (after a ${formatMoney(feeCents)} fee).`
+        : `${formatMoney(netCents)} returned to your available balance.`,
+    link: `/goals/${goalId}`,
+  });
+  return { grossCents, netCents, feeCents, alreadyRecorded: false };
+}
+
 export type DeleteGoalResult = {
   ok: true;
   withdrawnGrossCents: number;
@@ -447,6 +637,13 @@ export async function deleteGoal(userId: string, goalId: string): Promise<Delete
       balanceCents = await accountBalance(acct.goal(goalId));
     }
 
+    // Non-custodial (Privy) goals are drained by a client-signed withdrawal the
+    // server can't perform (releaseFromGoalCore requires server custody). Refuse
+    // to close while a balance remains — this throws inside the try, reverting the
+    // soft-delete — so the user withdraws the full balance client-side first.
+    if (wallet?.custody === "privy" && balanceCents > 0) {
+      throw new AppError("Withdraw your full goal balance first, then delete this goal.");
+    }
     let released: ReleaseResult = { grossCents: 0, netCents: 0, feeCents: 0 };
     if (balanceCents > 0) {
       released = await releaseFromGoalCore(userId, goalId, goal.name, balanceCents, false);

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { requireAuth } from "../lib/auth";
-import { networkName, explorerUrl, usdcContract } from "../lib/chain";
+import { networkName, explorerUrl, usdcContract, platformAddress } from "../lib/chain";
 
 /**
  * Exposes the on-chain addresses the client needs to build user-signed
@@ -17,6 +17,10 @@ router.get("/onchain/config", requireAuth, (_req, res): void => {
     goalVault: process.env.GOAL_VAULT_ADDRESS ?? null,
     circleFactory: process.env.CIRCLE_FACTORY_ADDRESS ?? null,
     accumulationFactory: process.env.ACCUMULATION_FACTORY_ADDRESS ?? null,
+    // Accumulation contributions are a plain USDC transfer to the platform
+    // account (there is no per-round escrow), so non-custodial clients need
+    // this address to build the transfer themselves.
+    platform: platformAddress(),
   });
 });
 

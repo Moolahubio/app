@@ -3,8 +3,12 @@ import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from 
 import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
 import { AmountForm } from "@/components/app/forms";
+import { PrivyGoalDepositForm, PrivyGoalReleaseForm } from "@/components/app/PrivyGoalForms";
+import { isWeb3Enabled } from "@/components/app/Web3Provider";
+import { useOnchainConfig } from "@/lib/onchain/config";
 import {
   useGetGoal,
+  useGetWallet,
   useAllocateToGoal,
   useReleaseFromGoal,
   useDeleteGoal,
@@ -15,6 +19,7 @@ import {
   getListNotificationsQueryKey,
   getGetStreaksQueryKey,
 } from "@workspace/api-client-react";
+import type { ReleaseFromGoalResult } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
 import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
@@ -28,6 +33,8 @@ export default function GoalDetailPage() {
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { data: goal, isLoading } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
+  const { data: wallet } = useGetWallet();
+  const { data: onchainConfig } = useOnchainConfig();
 
   const queryClient = useQueryClient();
   const allocateMutation = useAllocateToGoal();
@@ -55,6 +62,14 @@ export default function GoalDetailPage() {
   const feePct = (feeBps / 100).toFixed(feeBps % 100 === 0 ? 0 : 2);
   const explorer = goal.explorerUrl ?? EXPLORER_FALLBACK;
   const history = goal.history ?? [];
+
+  // Non-custodial (Privy) wallets can't be signed by the platform, so on-chain
+  // goal deposits/withdrawals must be signed by the user in-browser and only
+  // confirmed server-side. Server-custody wallets keep the server-signed paths.
+  const isPrivyCustody = wallet?.custody === "privy";
+  const useClientSigned = onchain && isPrivyCustody && isWeb3Enabled;
+  const goalVault = onchainConfig?.goalVault ?? goal.vaultAddress ?? null;
+  const usdcAddress = onchainConfig?.usdc ?? null;
 
   const refreshGoal = () => {
     queryClient.invalidateQueries({ queryKey: getGetGoalQueryKey(goal.id) });
@@ -116,27 +131,44 @@ export default function GoalDetailPage() {
                 : "Move funds from your available balance into this allocation."}
             </p>
             <div className="mt-4">
-              <AmountForm
-                onSubmit={(amountCents) => {
-                  setAllocOk(null);
-                  allocateMutation.mutate({ id: goal.id, data: { amountCents } }, {
-                    onSuccess: () => {
-                      refreshGoal();
-                      setAllocOk("Funds added to goal");
-                      queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
-                      toast({
-                        title: "Streak kept alive 🔥",
-                        description: "Nice, that deposit counts toward your savings streak.",
-                      });
-                    }
-                  });
-                }}
-                presets={[1000, 2500, 5000]}
-                submitLabel="Add funds"
-                pending={allocateMutation.isPending}
-                error={apiErrorMessage(allocateMutation.error)}
-                ok={allocOk}
-              />
+              {useClientSigned ? (
+                <PrivyGoalDepositForm
+                  goalId={goal.id}
+                  goalVault={goalVault}
+                  usdcAddress={usdcAddress}
+                  presets={[1000, 2500, 5000]}
+                  onSuccess={() => {
+                    refreshGoal();
+                    queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
+                    toast({
+                      title: "Streak kept alive 🔥",
+                      description: "Nice, that deposit counts toward your savings streak.",
+                    });
+                  }}
+                />
+              ) : (
+                <AmountForm
+                  onSubmit={(amountCents) => {
+                    setAllocOk(null);
+                    allocateMutation.mutate({ id: goal.id, data: { amountCents } }, {
+                      onSuccess: () => {
+                        refreshGoal();
+                        setAllocOk("Funds added to goal");
+                        queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
+                        toast({
+                          title: "Streak kept alive 🔥",
+                          description: "Nice, that deposit counts toward your savings streak.",
+                        });
+                      }
+                    });
+                  }}
+                  presets={[1000, 2500, 5000]}
+                  submitLabel="Add funds"
+                  pending={allocateMutation.isPending}
+                  error={apiErrorMessage(allocateMutation.error)}
+                  ok={allocOk}
+                />
+              )}
             </div>
             <div className="mt-5 border-t border-border pt-5">
               <p className="mb-1 text-sm font-medium text-foreground">Withdraw</p>
@@ -145,30 +177,50 @@ export default function GoalDetailPage() {
                   A {feePct}% withdrawal fee is taken on-chain. You receive the amount net of the fee.
                 </p>
               )}
-              <AmountForm
-                onSubmit={async (amountCents) => {
-                  setReleaseOk(null);
-                  // Withdrawing moves real funds out of the on-chain vault —
-                  // confirm it's really you before we move anything.
-                  const proof = await requestProof();
-                  if (!proof) return;
-                  releaseMutation.mutate({ id: goal.id, data: { amountCents, ...proof } }, {
-                    onSuccess: (res) => {
+              {useClientSigned ? (
+                <>
+                  <PrivyGoalReleaseForm
+                    goalId={goal.id}
+                    goalVault={goalVault}
+                    onSuccess={(res: ReleaseFromGoalResult) => {
                       refreshGoal();
                       setReleaseOk(
                         res.feeCents > 0
                           ? `${formatMoney(res.netCents)} released (after a ${formatMoney(res.feeCents)} fee)`
                           : `${formatMoney(res.netCents)} released to available`,
                       );
-                    }
-                  });
-                }}
-                submitLabel="Withdraw to available"
-                variant="secondary"
-                pending={releaseMutation.isPending}
-                error={apiErrorMessage(releaseMutation.error)}
-                ok={releaseOk}
-              />
+                    }}
+                  />
+                  {releaseOk && (
+                    <p className="mt-2 text-sm text-jade-600 dark:text-jade-400">{releaseOk}</p>
+                  )}
+                </>
+              ) : (
+                <AmountForm
+                  onSubmit={async (amountCents) => {
+                    setReleaseOk(null);
+                    // Withdrawing moves real funds out of the on-chain vault —
+                    // confirm it's really you before we move anything.
+                    const proof = await requestProof();
+                    if (!proof) return;
+                    releaseMutation.mutate({ id: goal.id, data: { amountCents, ...proof } }, {
+                      onSuccess: (res) => {
+                        refreshGoal();
+                        setReleaseOk(
+                          res.feeCents > 0
+                            ? `${formatMoney(res.netCents)} released (after a ${formatMoney(res.feeCents)} fee)`
+                            : `${formatMoney(res.netCents)} released to available`,
+                        );
+                      }
+                    });
+                  }}
+                  submitLabel="Withdraw to available"
+                  variant="secondary"
+                  pending={releaseMutation.isPending}
+                  error={apiErrorMessage(releaseMutation.error)}
+                  ok={releaseOk}
+                />
+              )}
             </div>
           </Card>
 
