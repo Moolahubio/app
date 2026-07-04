@@ -59,6 +59,17 @@ export const transactionsTable = pgTable("transactions", {
   uniqueIndex("transactions_deposit_tx_hash_uniq")
     .on(t.txHash)
     .where(sql`${t.type} = 'deposit' and ${t.txHash} is not null`),
+  // A client-signed non-custodial withdrawal (wallets.custody = 'privy') is
+  // recorded by POST /wallet/withdraw/submitted after verifying the on-chain
+  // receipt. Like the deposit guard above, this partial unique index is the
+  // authoritative defense against a replayed/duplicate tx hash being booked
+  // twice (two concurrent submits can both pass the app-level pre-check). It is
+  // withdrawal-scoped and deliberately separate from the deposit index so an
+  // in-app-to-in-app transfer can still record the SAME hash once as the
+  // sender's withdrawal and once as the recipient's deposit.
+  uniqueIndex("transactions_withdrawal_tx_hash_uniq")
+    .on(t.txHash)
+    .where(sql`${t.type} = 'withdrawal' and ${t.txHash} is not null`),
 ]);
 
 export const postingsTable = pgTable("postings", {

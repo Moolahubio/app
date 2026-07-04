@@ -27,4 +27,14 @@ export interface WalletInfo {
   faucetEnabled: boolean;
   /** Whether on-chain deposit sync is available on this deployment. */
   syncEnabled: boolean;
+  /**
+     * Wallet key custody: 'server' (legacy custodial — the platform signs), 'privy' (non-custodial — the user signs withdrawals on their device), or null when no wallet has been set up yet.
+     * @nullable
+     */
+  custody?: string | null;
+  /**
+     * The USDC ERC-20 contract address on this network, so a non-custodial (client-signed) withdrawal knows which token to transfer. Null when on-chain isn't configured.
+     * @nullable
+     */
+  usdcAddress?: string | null;
 }

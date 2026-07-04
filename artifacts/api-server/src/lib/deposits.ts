@@ -9,13 +9,15 @@ import {
   platformAddress,
   goalVaultContract,
   factoryContract,
+  verifyUsdcTransferReceipt,
 } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
-import { getWalletForUser } from "./wallet";
+import { getWalletForUser, requireWalletForUser, requireServerCustody } from "./wallet";
 import { getUserCircleEscrowAddresses } from "./circles";
 import { walletSpendableCents } from "./onchainBalances";
 import { notify } from "./notifications";
 import { formatMoney, truncateAddress } from "./money";
+import { logger } from "./logger";
 
 /**
  * Crypto rail (USDC on Monad). Deposits arrive on-chain to the user's wallet;
@@ -185,8 +187,15 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
     throw new AppError("Enter a valid Monad address (starts with 0x).");
   }
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
-  const wallet = await getWalletForUser(userId);
-  if (!wallet) throw new AppError("Set up your wallet first to withdraw.");
+  // Server-signed withdrawal path (custodial wallets only). A non-custodial
+  // (Privy) wallet has no server key, so this path would debit the ledger and
+  // then fail forever in the reconciler, stranding the debit. Refuse up front,
+  // before any booking; those wallets withdraw via the client-signed confirm
+  // path (POST /wallet/withdraw/submitted) instead.
+  const wallet = await requireServerCustody(
+    userId,
+    "This wallet is non-custodial — withdrawals are signed on your device.",
+  );
   // Gate on the spendable balance: on-chain (confirmed minus in-flight outflows)
   // when configured, else the ledger balance offline. On-chain USDC is the source
   // of truth for what can be spent whenever a chain is available.
@@ -234,4 +243,84 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
     { email: true },
   );
   return txn;
+}
+
+/**
+ * Confirm a client-signed (non-custodial) withdrawal. The user's Privy embedded
+ * EOA already signed and broadcast the USDC transfer; the server holds no key
+ * and NEVER signs. We independently verify the on-chain receipt, then record the
+ * withdrawal in the ledger for history/display.
+ *
+ * Because the transfer is already irreversibly on-chain, we book it WITHOUT
+ * requireSufficientFrom — a ledger shortfall can't unsend it, and integrity here
+ * is simply that the postings net to zero (the transient negative wallet:<uid>
+ * balance is fine; spendable balance is read on-chain). The partial unique index
+ * over (tx_hash) WHERE type='withdrawal' is the authoritative guard against
+ * booking the same broadcast twice (double-submit / retry).
+ */
+export async function confirmClientWithdrawal(
+  userId: string,
+  txHash: string,
+  amountCents: number,
+  destination: string,
+): Promise<{ alreadyRecorded: boolean }> {
+  if (amountCents <= 0) throw new AppError("Enter a valid amount.");
+  if (!isValidAddress(destination)) {
+    throw new AppError("Enter a valid Monad address (starts with 0x).");
+  }
+  const wallet = await requireWalletForUser(userId);
+  if (wallet.custody !== "privy") {
+    // Server-custody wallets withdraw via the server-signed /wallet/withdraw
+    // path; only non-custodial wallets confirm a client-signed send here.
+    throw new AppError("This wallet doesn't use client-signed withdrawals.");
+  }
+  if (destination.toLowerCase() === wallet.address.toLowerCase()) {
+    // A self-transfer verifies on-chain (from===to===wallet) but moves nothing;
+    // booking it would inflate the ledger/history with a phantom withdrawal.
+    throw new AppError("Enter a destination other than your own wallet.");
+  }
+
+  const verified = await verifyUsdcTransferReceipt({
+    hash: txHash,
+    from: wallet.address,
+    to: destination,
+    amountCents,
+  });
+  if (!verified.ok) {
+    logger.warn(
+      { userId, txHash, reason: verified.reason },
+      "client withdrawal receipt verification failed",
+    );
+    throw new AppError("We couldn't verify that withdrawal on-chain. Please try again.");
+  }
+
+  try {
+    await transfer({
+      type: "withdrawal",
+      description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
+      userId,
+      fromKey: acct.wallet(userId),
+      toKey: acct.external,
+      amountCents,
+      onchain: { txHash, onchainStatus: "confirmed" },
+    });
+  } catch (e) {
+    // The partial unique index rejects a second booking of the same broadcast.
+    // Treat that as already-recorded so a retrying client sees success and we
+    // never double-count the ledger.
+    if (isUniqueViolation(e)) return { alreadyRecorded: true };
+    throw e;
+  }
+
+  await notify(
+    userId,
+    {
+      type: "withdrawal",
+      title: "Withdrawal sent",
+      body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
+      link: "/activity",
+    },
+    { email: true },
+  );
+  return { alreadyRecorded: false };
 }

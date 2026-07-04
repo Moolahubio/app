@@ -790,6 +790,38 @@ paths:
               schema:
                 $ref: "#/components/schemas/SyncResult"
 
+  /wallet/withdraw/submitted:
+    post:
+      operationId: confirmWithdrawal
+      tags: [wallet]
+      summary: Confirm a client-signed (non-custodial) withdrawal after broadcast
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmWithdrawalInput"
+      responses:
+        "200":
+          description: Withdrawal confirmed and recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
+  /wallet/ensure-gas:
+    post:
+      operationId: ensureWalletGas
+      tags: [wallet]
+      summary: Top up gas (MON) on a non-custodial wallet before it signs
+      responses:
+        "200":
+          description: Gas ensured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
   # ---- Circles ----
   /circles:
     get:
@@ -1088,7 +1120,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AmountInput"
+              $ref: "#/components/schemas/ReleaseFromGoalInput"
       responses:
         "200":
           description: Released
@@ -1108,6 +1140,11 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StepUpProofInput"
       responses:
         "200":
           description: Deleted
@@ -2062,6 +2099,18 @@ components:
         syncEnabled:
           type: boolean
           description: Whether on-chain deposit sync is available on this deployment.
+        custody:
+          type: ["string", "null"]
+          description: >-
+            Wallet key custody: 'server' (legacy custodial — the platform signs),
+            'privy' (non-custodial — the user signs withdrawals on their device),
+            or null when no wallet has been set up yet.
+        usdcAddress:
+          type: ["string", "null"]
+          description: >-
+            The USDC ERC-20 contract address on this network, so a non-custodial
+            (client-signed) withdrawal knows which token to transfer. Null when
+            on-chain isn't configured.
 
     AmountInput:
       type: object
@@ -2078,6 +2127,48 @@ components:
           type: integer
         destination:
           type: string
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
+
+    ConfirmWithdrawalInput:
+      type: object
+      required: [txHash, amountCents, destination]
+      properties:
+        txHash:
+          type: string
+          description: Hash of the user-signed USDC transfer already broadcast on-chain.
+        amountCents:
+          type: integer
+        destination:
+          type: string
+          description: The external address the user sent USDC to.
+
+    ReleaseFromGoalInput:
+      type: object
+      required: [amountCents]
+      properties:
+        amountCents:
+          type: integer
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
 
     SyncResult:
       type: object

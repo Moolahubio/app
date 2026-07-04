@@ -87,9 +87,11 @@ const ESCROW_ABI = parseAbi([
 ]);
 
 // Singleton GoalVault: holds USDC per (owner, goalId). Deposits are free;
-// withdrawals charge a 2% fee to the treasury, collected on-chain. Strictly
-// non-custodial — only the owning account can withdraw, so every goal action is
-// signed by the user's key (the platform only pays gas).
+// withdrawals charge a 2% fee to the treasury, collected on-chain. At the
+// contract level only the owning account can withdraw its own balance — but
+// the platform currently custodies that account's private key server-side
+// and signs on its behalf, so this is access control against OTHER users,
+// not a non-custodial guarantee against the platform itself (see wallet.ts).
 const GOAL_VAULT_ABI = parseAbi([
   "function deposit(bytes32 goalId, uint256 amount)",
   "function withdraw(bytes32 goalId, uint256 grossAmount)",
@@ -166,6 +168,17 @@ export function depositSyncEnabled(): boolean {
   // Opt-in only: a mock-mintable testnet token would otherwise let anyone mint
   // then sync fabricated balance into the ledger. No Monad mainnet target exists yet.
   return process.env.ENABLE_DEPOSIT_SYNC === "true";
+}
+
+/**
+ * Whether NEW wallets are provisioned as non-custodial Privy embedded EOAs
+ * (custody='privy') instead of legacy server-custody wallets. Off by default:
+ * the client-signed withdrawal path must be verified end-to-end top-level before
+ * new users are made non-custodial. Existing server-custody wallets are
+ * unaffected by this flag either way (dual custody).
+ */
+export function privyCustodyEnabled(): boolean {
+  return process.env.ENABLE_PRIVY_CUSTODY === "true";
 }
 
 export function usdcContract(): Address | null {
@@ -432,6 +445,63 @@ export async function ensureGas(address: string): Promise<void> {
   } catch {
     /* gas top-up is best-effort on testnet */
   }
+}
+
+/**
+ * Verify that `hash` is a MINED, SUCCESSFUL on-chain USDC transfer of exactly
+ * `amountCents` from `from` to `to`.
+ *
+ * This is the sole source of truth for confirming a client-signed (non-custodial)
+ * withdrawal: the server never signs it, so it must independently prove the money
+ * left the user's wallet for the destination before booking the ledger. We match
+ * the ERC-20 Transfer LOG emitted by the USDC contract — NOT the tx's top-level
+ * `to`, which for a token transfer is the USDC contract, not the recipient. All
+ * addresses are checksum-normalized, and we require EXACTLY ONE matching Transfer
+ * so a tx that also moves an unrelated amount can't slip a wrong booking through.
+ */
+export async function verifyUsdcTransferReceipt(params: {
+  hash: string;
+  from: string;
+  to: string;
+  amountCents: number;
+}): Promise<{ ok: true } | { ok: false; reason: string }> {
+  const usdc = usdcContract();
+  if (!usdc) return { ok: false, reason: "onchain-not-configured" };
+  const hash = params.hash;
+  if (!isLikelyTxHash(hash)) return { ok: false, reason: "malformed-hash" };
+  if (!isValidAddress(params.from) || !isValidAddress(params.to)) {
+    return { ok: false, reason: "malformed-address" };
+  }
+
+  let receipt: import("viem").TransactionReceipt;
+  try {
+    receipt = await publicClient().waitForTransactionReceipt({ hash, timeout: 60_000 });
+  } catch {
+    return { ok: false, reason: "receipt-unavailable" };
+  }
+  if (receipt.status !== "success") return { ok: false, reason: "tx-reverted" };
+
+  const want = centsToUnits(params.amountCents);
+  const fromAddr = getAddress(params.from);
+  const toAddr = getAddress(params.to);
+  const transfers = parseEventLogs({ abi: ERC20_ABI, eventName: "Transfer", logs: receipt.logs });
+  const matches = transfers.filter((log) => {
+    try {
+      const args = log.args as { from: string; to: string; value: bigint };
+      return (
+        getAddress(log.address) === usdc &&
+        getAddress(args.from) === fromAddr &&
+        getAddress(args.to) === toAddr &&
+        args.value === want
+      );
+    } catch {
+      return false;
+    }
+  });
+  if (matches.length !== 1) {
+    return { ok: false, reason: `expected one USDC Transfer, found ${matches.length}` };
+  }
+  return { ok: true };
 }
 
 /** Read a USDC balance, in cents. Returns 0 when the RPC is unreachable. */
@@ -971,9 +1041,12 @@ export function goalVaultContract(): Address | null {
 }
 
 /**
- * Whether goals can settle on-chain. The vault is non-custodial (the user signs
- * their own deposit/withdraw), so we only need the vault + USDC configured and a
- * platform key to fund the user's gas top-ups.
+ * Whether goals can settle on-chain. Every deposit/withdraw transaction is
+ * sent from the user's own on-chain address (not a pooled platform account),
+ * so we only need the vault + USDC configured and a platform key to fund the
+ * user's gas top-ups. Note: the platform currently holds and uses that
+ * user's private key server-side (see wallet.ts) — this is per-account
+ * on-chain attribution, not a non-custodial security guarantee.
  */
 export function goalVaultEnabled(): boolean {
   return Boolean(platformKey() && goalVaultContract() && usdcContract());

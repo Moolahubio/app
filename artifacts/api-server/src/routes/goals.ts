@@ -11,12 +11,14 @@ import {
   AllocateToGoalResponse,
   ReleaseFromGoalResponse,
   DeleteGoalParams,
+  DeleteGoalBody,
   DeleteGoalResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { verifyStepUp } from "../lib/stepUp";
 import {
   listGoals,
   getGoal,
@@ -167,6 +169,9 @@ router.post("/goals/:id/allocate", requireJsonAndAllowedOrigin, requireAuth, asy
   res.json(AllocateToGoalResponse.parse({ ok: true }));
 });
 
+// Releasing/withdrawing goal savings moves real funds out of the on-chain
+// vault. A stolen session cookie alone must never be enough — require fresh
+// step-up proof of an existing login factor first, same as a wallet withdrawal.
 router.post("/goals/:id/release", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -178,6 +183,12 @@ router.post("/goals/:id/release", requireJsonAndAllowedOrigin, requireAuth, asyn
   const parsed = ReleaseFromGoalBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  const stepUp = await verifyStepUp(user, parsed.data);
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
     return;
   }
 
@@ -196,12 +207,26 @@ router.post("/goals/:id/release", requireJsonAndAllowedOrigin, requireAuth, asyn
   }
 });
 
-router.post("/goals/:id/delete", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
+// Deleting a goal auto-withdraws its full balance (net of fee) back to the
+// wallet. A stolen session cookie alone must never be enough to trigger that
+// fund movement — require fresh step-up proof first, same as any withdrawal.
+router.post("/goals/:id/delete", requireJsonAndAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const params = DeleteGoalParams.safeParse({ id: rawId });
   if (!params.success) {
     res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+  const parsed = DeleteGoalBody.safeParse(req.body ?? {});
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request" });
+    return;
+  }
+
+  const stepUp = await verifyStepUp(user, parsed.data);
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
     return;
   }
 

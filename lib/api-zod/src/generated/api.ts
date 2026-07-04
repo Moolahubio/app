@@ -568,7 +568,9 @@ export const GetWalletResponse = zod.object({
   "onchainEnabled": zod.boolean(),
   "hasWallet": zod.boolean().describe('Whether the user has provisioned a wallet (via \"Continue with Privy\").'),
   "faucetEnabled": zod.boolean().describe('Whether the testnet faucet is available on this deployment.'),
-  "syncEnabled": zod.boolean().describe('Whether on-chain deposit sync is available on this deployment.')
+  "syncEnabled": zod.boolean().describe('Whether on-chain deposit sync is available on this deployment.'),
+  "custody": zod.string().nullish().describe('Wallet key custody: \'server\' (legacy custodial — the platform signs), \'privy\' (non-custodial — the user signs withdrawals on their device), or null when no wallet has been set up yet.'),
+  "usdcAddress": zod.string().nullish().describe('The USDC ERC-20 contract address on this network, so a non-custodial (client-signed) withdrawal knows which token to transfer. Null when on-chain isn\'t configured.')
 })
 
 
@@ -589,7 +591,10 @@ export const DepositFaucetResponse = zod.object({
  */
 export const WithdrawFundsBody = zod.object({
   "amountCents": zod.number(),
-  "destination": zod.string()
+  "destination": zod.string(),
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
 export const WithdrawFundsResponse = zod.object({
@@ -604,6 +609,28 @@ export const SyncDepositsResponse = zod.object({
   "ok": zod.boolean(),
   "credited": zod.number(),
   "totalCents": zod.number().optional()
+})
+
+
+/**
+ * @summary Confirm a client-signed (non-custodial) withdrawal after broadcast
+ */
+export const ConfirmWithdrawalBody = zod.object({
+  "txHash": zod.string().describe('Hash of the user-signed USDC transfer already broadcast on-chain.'),
+  "amountCents": zod.number(),
+  "destination": zod.string().describe('The external address the user sent USDC to.')
+})
+
+export const ConfirmWithdrawalResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Top up gas (MON) on a non-custodial wallet before it signs
+ */
+export const EnsureWalletGasResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 
@@ -904,7 +931,10 @@ export const ReleaseFromGoalParams = zod.object({
 })
 
 export const ReleaseFromGoalBody = zod.object({
-  "amountCents": zod.number()
+  "amountCents": zod.number(),
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
 export const ReleaseFromGoalResponse = zod.object({
@@ -920,6 +950,12 @@ export const ReleaseFromGoalResponse = zod.object({
  */
 export const DeleteGoalParams = zod.object({
   "id": zod.coerce.string()
+})
+
+export const DeleteGoalBody = zod.object({
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
 export const DeleteGoalResponse = zod.object({

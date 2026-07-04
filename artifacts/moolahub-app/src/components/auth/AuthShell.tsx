@@ -43,7 +43,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/65">
           <span className="inline-flex items-center gap-2">
-            <Lock className="h-4 w-4 text-jade-400" /> You hold the keys
+            <Lock className="h-4 w-4 text-jade-400" /> Withdrawals need extra confirmation
           </span>
           <span className="inline-flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-jade-400" /> Verified on Monad

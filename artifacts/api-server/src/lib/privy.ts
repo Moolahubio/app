@@ -28,6 +28,29 @@ export async function verifyPrivyToken(token: string): Promise<string> {
   return claims.userId;
 }
 
+/**
+ * The address of a user's Privy EMBEDDED Ethereum wallet — the self-custody EOA
+ * Privy provisions for them and whose key only the user controls. Read
+ * server-side from Privy so the platform never trusts a client-supplied address.
+ * Returns null when the user has no embedded EOA (e.g. they authenticated with an
+ * external wallet rather than creating an embedded one), so callers fail closed.
+ */
+export async function getPrivyEmbeddedWalletAddress(did: string): Promise<string | null> {
+  const user = await privy().getUser(did);
+  for (const account of user.linkedAccounts ?? []) {
+    const a = account as unknown as Record<string, unknown>;
+    if (
+      a.type === "wallet" &&
+      a.walletClientType === "privy" &&
+      a.chainType === "ethereum" &&
+      typeof a.address === "string"
+    ) {
+      return a.address;
+    }
+  }
+  return null;
+}
+
 /** Pull email + display name from a Privy user's linked accounts. */
 export async function getPrivyProfile(did: string): Promise<{ email?: string; name?: string }> {
   const user = await privy().getUser(did);

@@ -213,7 +213,7 @@ async function resolveSourceKey(row: OnchainTransfer): Promise<string | null> {
     const raw = process.env.PLATFORM_PRIVATE_KEY;
     return raw ? raw : null;
   }
-  return getSigningSecret(row.sourceUserId);
+  return getSigningSecret(row.sourceUserId, `onchain_transfer:${row.kind}`);
 }
 
 async function markConfirmed(row: OnchainTransfer, hash: string): Promise<void> {

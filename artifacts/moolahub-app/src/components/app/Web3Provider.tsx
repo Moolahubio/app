@@ -29,6 +29,11 @@ export function Web3Provider({ children }: { children: ReactNode }) {
       config={{
         defaultChain: monadTestnet,
         supportedChains: [monadTestnet],
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: "users-without-wallets",
+          },
+        },
         appearance: {
           theme: resolvedTheme,
           accentColor: "#0E9E6E",

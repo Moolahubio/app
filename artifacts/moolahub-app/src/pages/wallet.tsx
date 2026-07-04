@@ -3,10 +3,13 @@ import { Card, Badge } from "@/components/ui";
 import { PageHeader, BackLink } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
 import { WalletSetupCard } from "@/components/app/WalletSetupCard";
+import { PrivyWithdrawForm } from "@/components/app/PrivyWithdrawForm";
+import { isWeb3Enabled } from "@/components/app/Web3Provider";
 import { useGetWallet, useDepositFaucet, useWithdrawFunds, useSyncDeposits, getGetWalletQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatMoney, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
@@ -21,6 +24,7 @@ export default function WalletPage() {
   const [depositOk, setDepositOk] = useState<string | null>(null);
   const [withdrawOk, setWithdrawOk] = useState<string | null>(null);
   const [syncOk, setSyncOk] = useState<string | null>(null);
+  const { requestProof, stepUpDialog } = useStepUpGate();
 
   if (isLoading || !wallet) {
     return <div className="p-8 text-center text-muted-foreground">Loading your wallet…</div>;
@@ -39,6 +43,8 @@ export default function WalletPage() {
       </div>
     );
   }
+
+  const isPrivyCustody = wallet.custody === "privy";
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -172,30 +178,54 @@ export default function WalletPage() {
             </div>
           </div>
           <div className="mt-5">
-            <WithdrawForm 
-              onSubmit={(data) => {
-                setWithdrawOk(null);
-                withdrawMutation.mutate({ data }, {
-                  onSuccess: () => {
+            {isPrivyCustody ? (
+              isWeb3Enabled ? (
+                <PrivyWithdrawForm
+                  usdcAddress={wallet.usdcAddress ?? null}
+                  onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
                     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-                    setWithdrawOk("Withdrawal successful");
-                  }
-                });
-              }}
-              pending={withdrawMutation.isPending}
-              error={apiErrorMessage(withdrawMutation.error)}
-              ok={withdrawOk}
-            />
+                  }}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  On-chain withdrawals aren't available on this deployment right now.
+                </p>
+              )
+            ) : (
+              <WithdrawForm
+                onSubmit={async (data) => {
+                  setWithdrawOk(null);
+                  // Withdrawals send funds to an address you choose — confirm
+                  // it's really you before we move anything.
+                  const proof = await requestProof();
+                  if (!proof) return;
+                  withdrawMutation.mutate({ data: { ...data, ...proof } }, {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+                      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+                      setWithdrawOk("Withdrawal successful");
+                    }
+                  });
+                }}
+                pending={withdrawMutation.isPending}
+                error={apiErrorMessage(withdrawMutation.error)}
+                ok={withdrawOk}
+              />
+            )}
           </div>
+          {!isPrivyCustody && stepUpDialog}
         </Card>
       </div>
 
       <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-muted-foreground">
-          MoolaHub is non-custodial: funds settle to your own Monad wallet, and every movement
-          is recorded on the ledger with an on-chain reference.{" "}
+          Funds settle to your own Monad wallet address, and every movement is recorded on the
+          ledger with an on-chain reference.{" "}
+          {isPrivyCustody
+            ? "Your wallet is self-custodial — you approve each withdrawal by signing it yourself."
+            : "Withdrawals and goal payouts require a fresh confirmation (password, 2FA, or emailed code) before anything moves."}{" "}
           <Badge tone="jade" className="ml-1">Built on Monad</Badge>
         </p>
       </Card>

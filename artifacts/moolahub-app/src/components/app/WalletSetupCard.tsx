@@ -106,7 +106,7 @@ function SetupButton() {
 
       <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-jade-600" />
-        Your wallet is yours. Funds settle on Monad and every movement is recorded on the ledger.
+        Your wallet settles funds on Monad, and every movement is recorded on the ledger. Sensitive actions like withdrawals require a fresh confirmation.
       </p>
 
       {stepUpDialog}

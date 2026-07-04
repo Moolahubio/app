@@ -495,6 +495,16 @@ export interface WalletInfo {
   faucetEnabled: boolean;
   /** Whether on-chain deposit sync is available on this deployment. */
   syncEnabled: boolean;
+  /**
+     * Wallet key custody: 'server' (legacy custodial — the platform signs), 'privy' (non-custodial — the user signs withdrawals on their device), or null when no wallet has been set up yet.
+     * @nullable
+     */
+  custody?: string | null;
+  /**
+     * The USDC ERC-20 contract address on this network, so a non-custodial (client-signed) withdrawal knows which token to transfer. Null when on-chain isn't configured.
+     * @nullable
+     */
+  usdcAddress?: string | null;
 }
 
 export interface AmountInput {
@@ -504,6 +514,48 @@ export interface AmountInput {
 export interface WithdrawInput {
   amountCents: number;
   destination: string;
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
+}
+
+export interface ConfirmWithdrawalInput {
+  /** Hash of the user-signed USDC transfer already broadcast on-chain. */
+  txHash: string;
+  amountCents: number;
+  /** The external address the user sent USDC to. */
+  destination: string;
+}
+
+export interface ReleaseFromGoalInput {
+  amountCents: number;
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
 }
 
 export interface SyncResult {

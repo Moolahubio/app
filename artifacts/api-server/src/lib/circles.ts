@@ -18,7 +18,7 @@ import {
 } from "./chain";
 import { accumulationOnchainEnabled, deployAccumulationCircle } from "./circleChain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
-import { requireWalletForUser } from "./wallet";
+import { getWalletForUser, requireWalletForUser } from "./wallet";
 import { walletSpendableCents } from "./onchainBalances";
 import { recordSave } from "./streaks";
 import { sendEmail, brandedEmail, appUrl } from "./email";
@@ -320,6 +320,15 @@ export async function contribute(userId: string, circleId: string) {
       ),
     );
   if (already) throw new AppError("You've already contributed this round");
+
+  // Non-custodial (Privy) wallets can't participate in savings groups yet — every
+  // contribution path (escrow or ledger-only) requires Phase-2 client signing for
+  // them. Gate only when a wallet exists so server-custody members (who may
+  // contribute to ledger-only accumulation circles without a wallet) are unaffected.
+  const custodyWallet = await getWalletForUser(userId);
+  if (custodyWallet && custodyWallet.custody !== "server") {
+    throw new AppError("Savings groups aren't available for non-custodial wallets yet.");
+  }
 
   // On-chain settlement routes a rotation contribution into the circle's own
   // escrow contract (member wallet → escrow), which auto-settles the round when

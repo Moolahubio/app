@@ -18,7 +18,7 @@ import {
   networkName,
 } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
-import { getWalletForUser, requireWalletForUser } from "./wallet";
+import { getWalletForUser, requireWalletForUser, requireServerCustody } from "./wallet";
 import { recordSave } from "./streaks";
 import {
   walletSpendableCents,
@@ -192,7 +192,12 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
   if (!pre) throw new AppError("Goal not found");
   const settle = goalVaultEnabled();
   const vault = goalVaultContract();
-  const wallet = await requireWalletForUser(userId);
+  // Goal vault deposits are still server-signed (Phase 2 makes them
+  // non-custodial), so refuse Privy-custody wallets before booking anything.
+  const wallet = await requireServerCustody(
+    userId,
+    "Goal savings isn't available for non-custodial wallets yet.",
+  );
   // Gate on the spendable wallet balance: real on-chain (confirmed minus
   // in-flight outflows) when the vault is configured, else the ledger balance.
   // Done before the transaction so a slow on-chain read doesn't hold the goal
@@ -304,7 +309,12 @@ async function releaseFromGoalCore(
   const goal = { name: goalName };
   const settle = goalVaultEnabled();
   const vault = goalVaultContract();
-  const wallet = await requireWalletForUser(userId);
+  // Goal vault releases are still server-signed (Phase 2 makes them
+  // non-custodial), so refuse Privy-custody wallets before booking anything.
+  const wallet = await requireServerCustody(
+    userId,
+    "Goal savings isn't available for non-custodial wallets yet.",
+  );
   // Gate on the spendable savings balance: real on-chain vault balance (confirmed
   // minus in-flight withdrawals) when configured, else the goal's ledger balance.
   if ((await goalSpendableCents(wallet.address, userId, goalId)) < amountCents) {

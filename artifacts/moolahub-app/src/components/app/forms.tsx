@@ -39,7 +39,7 @@ export function AmountForm({
   error,
   ok,
 }: {
-  onSubmit: (amountCents: number) => void;
+  onSubmit: (amountCents: number) => void | Promise<void>;
   presets?: number[];
   submitLabel?: string;
   variant?: "primary" | "secondary" | "dark";
@@ -52,7 +52,7 @@ export function AmountForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!value) return;
-    onSubmit(Math.floor(parseFloat(value) * 100));
+    void onSubmit(Math.floor(parseFloat(value) * 100));
   };
 
   return (
@@ -110,7 +110,7 @@ export function WithdrawForm({
   error,
   ok
 }: {
-  onSubmit: (data: { destination: string, amountCents: number }) => void;
+  onSubmit: (data: { destination: string, amountCents: number }) => void | Promise<void>;
   pending?: boolean;
   error?: string | null;
   ok?: string | null;
@@ -121,7 +121,7 @@ export function WithdrawForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !destination) return;
-    onSubmit({ destination, amountCents: Math.floor(parseFloat(amount) * 100) });
+    void onSubmit({ destination, amountCents: Math.floor(parseFloat(amount) * 100) });
   };
 
   return (

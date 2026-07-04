@@ -20,6 +20,7 @@ import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils"
 import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 const EXPLORER_FALLBACK = "https://testnet.monadvision.com";
 
@@ -36,6 +37,7 @@ export default function GoalDetailPage() {
   const [allocOk, setAllocOk] = useState<string | null>(null);
   const [releaseOk, setReleaseOk] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { requestProof, stepUpDialog } = useStepUpGate();
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading goal…</div>;
   if (!goal) return <div className="p-8 text-center text-muted-foreground">We couldn't find that goal.</div>;
@@ -144,9 +146,13 @@ export default function GoalDetailPage() {
                 </p>
               )}
               <AmountForm
-                onSubmit={(amountCents) => {
+                onSubmit={async (amountCents) => {
                   setReleaseOk(null);
-                  releaseMutation.mutate({ id: goal.id, data: { amountCents } }, {
+                  // Withdrawing moves real funds out of the on-chain vault —
+                  // confirm it's really you before we move anything.
+                  const proof = await requestProof();
+                  if (!proof) return;
+                  releaseMutation.mutate({ id: goal.id, data: { amountCents, ...proof } }, {
                     onSuccess: (res) => {
                       refreshGoal();
                       setReleaseOk(
@@ -318,9 +324,13 @@ export default function GoalDetailPage() {
                   <button
                     type="button"
                     disabled={deleteMutation.isPending}
-                    onClick={() =>
+                    onClick={async () => {
+                      // Deleting auto-withdraws the full balance — confirm
+                      // it's really you before we move anything.
+                      const proof = await requestProof();
+                      if (!proof) return;
                       deleteMutation.mutate(
-                        { id: goal.id },
+                        { id: goal.id, data: proof },
                         {
                           onSuccess: () => {
                             queryClient.invalidateQueries({ queryKey: getListGoalsQueryKey() });
@@ -330,8 +340,8 @@ export default function GoalDetailPage() {
                             navigate("/goals");
                           },
                         },
-                      )
-                    }
+                      );
+                    }}
                     className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -351,6 +361,7 @@ export default function GoalDetailPage() {
           </Card>
         </div>
       </div>
+      {stepUpDialog}
     </div>
   );
 }

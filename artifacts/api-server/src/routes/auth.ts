@@ -32,8 +32,9 @@ import {
   sessionTtlMs,
   type AuthRequest,
 } from "../lib/auth";
-import { createWalletForUser, getWalletForUser } from "../lib/wallet";
-import { privyEnabled, verifyPrivyToken, getPrivyProfile } from "../lib/privy";
+import { createWalletForUser, createPrivyWalletForUser, getWalletForUser } from "../lib/wallet";
+import { privyEnabled, verifyPrivyToken, getPrivyProfile, getPrivyEmbeddedWalletAddress } from "../lib/privy";
+import { privyCustodyEnabled } from "../lib/chain";
 import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
 import { issuePasswordResetCode, consumePasswordResetCode } from "../lib/passwordReset";
@@ -671,7 +672,29 @@ router.post("/auth/privy/link", requireJsonAndAllowedOrigin, requireAuth, async 
     .set({ privyDid: did })
     .where(eq(usersTable.id, user.id))
     .returning();
-  const wallet = await createWalletForUser(user.id);
+
+  // Provision a wallet if the user doesn't have one yet. A re-link NEVER mutates
+  // an existing wallet's custody or address — whatever it was created with
+  // stands. New wallets become non-custodial Privy embedded EOAs only when
+  // ENABLE_PRIVY_CUSTODY is on; otherwise they keep legacy server custody.
+  let wallet = await getWalletForUser(user.id);
+  if (!wallet) {
+    if (privyCustodyEnabled()) {
+      const embeddedAddress = await getPrivyEmbeddedWalletAddress(did);
+      if (!embeddedAddress) {
+        // Fail closed — never silently fall back to server custody. The user has
+        // no Privy embedded EOA (e.g. they authenticated with an external wallet).
+        res.status(400).json({
+          error:
+            "No Privy embedded wallet found. Log in to Privy with your email to create your self-custody wallet, then try linking again.",
+        });
+        return;
+      }
+      wallet = await createPrivyWalletForUser(user.id, embeddedAddress);
+    } else {
+      wallet = await createWalletForUser(user.id);
+    }
+  }
 
   res.json(LinkPrivyResponse.parse(authUserFields(updated, wallet.address)));
 });

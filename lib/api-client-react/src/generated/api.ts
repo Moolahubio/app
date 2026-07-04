@@ -30,6 +30,7 @@ import type {
   CircleInput,
   CircleInvite,
   CircleSummary,
+  ConfirmWithdrawalInput,
   DashboardSummary,
   DeleteAccountInput,
   DeleteGoalResult,
@@ -58,6 +59,7 @@ import type {
   ProfileUpdate,
   RegisterInput,
   RegisterPasskeyOptionsInput,
+  ReleaseFromGoalInput,
   ReleaseFromGoalResult,
   ResendCodeInput,
   ResetPasswordInput,
@@ -2555,6 +2557,147 @@ export const useSyncDeposits = <TError = ErrorType<unknown>,
       return useMutation(getSyncDepositsMutationOptions(options));
     }
 
+export const getConfirmWithdrawalUrl = () => {
+
+
+
+
+  return `/api/wallet/withdraw/submitted`
+}
+
+/**
+ * @summary Confirm a client-signed (non-custodial) withdrawal after broadcast
+ */
+export const confirmWithdrawal = async (confirmWithdrawalInput: ConfirmWithdrawalInput, options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getConfirmWithdrawalUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      confirmWithdrawalInput,)
+  }
+);}
+
+
+
+
+export const getConfirmWithdrawalMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmWithdrawal>>, TError,{data: BodyType<ConfirmWithdrawalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmWithdrawal>>, TError,{data: BodyType<ConfirmWithdrawalInput>}, TContext> => {
+
+const mutationKey = ['confirmWithdrawal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmWithdrawal>>, {data: BodyType<ConfirmWithdrawalInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  confirmWithdrawal(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmWithdrawalMutationResult = NonNullable<Awaited<ReturnType<typeof confirmWithdrawal>>>
+    export type ConfirmWithdrawalMutationBody = BodyType<ConfirmWithdrawalInput>
+    export type ConfirmWithdrawalMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Confirm a client-signed (non-custodial) withdrawal after broadcast
+ */
+export const useConfirmWithdrawal = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmWithdrawal>>, TError,{data: BodyType<ConfirmWithdrawalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confirmWithdrawal>>,
+        TError,
+        {data: BodyType<ConfirmWithdrawalInput>},
+        TContext
+      > => {
+      return useMutation(getConfirmWithdrawalMutationOptions(options));
+    }
+
+export const getEnsureWalletGasUrl = () => {
+
+
+
+
+  return `/api/wallet/ensure-gas`
+}
+
+/**
+ * @summary Top up gas (MON) on a non-custodial wallet before it signs
+ */
+export const ensureWalletGas = async ( options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getEnsureWalletGasUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getEnsureWalletGasMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ensureWalletGas>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof ensureWalletGas>>, TError,void, TContext> => {
+
+const mutationKey = ['ensureWalletGas'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ensureWalletGas>>, void> = () => {
+
+
+          return  ensureWalletGas(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnsureWalletGasMutationResult = NonNullable<Awaited<ReturnType<typeof ensureWalletGas>>>
+
+    export type EnsureWalletGasMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Top up gas (MON) on a non-custodial wallet before it signs
+ */
+export const useEnsureWalletGas = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ensureWalletGas>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof ensureWalletGas>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getEnsureWalletGasMutationOptions(options));
+    }
+
 export const getListCirclesUrl = () => {
 
 
@@ -3588,7 +3731,7 @@ export const getReleaseFromGoalUrl = (id: string,) => {
  * @summary Release funds from a goal back to wallet
  */
 export const releaseFromGoal = async (id: string,
-    amountInput: AmountInput, options?: RequestInit): Promise<ReleaseFromGoalResult> => {
+    releaseFromGoalInput: ReleaseFromGoalInput, options?: RequestInit): Promise<ReleaseFromGoalResult> => {
 
   return customFetch<ReleaseFromGoalResult>(getReleaseFromGoalUrl(id),
   {
@@ -3596,7 +3739,7 @@ export const releaseFromGoal = async (id: string,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      amountInput,)
+      releaseFromGoalInput,)
   }
 );}
 
@@ -3604,8 +3747,8 @@ export const releaseFromGoal = async (id: string,
 
 
 export const getReleaseFromGoalMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseFromGoal>>, TError,{id: string;data: BodyType<AmountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof releaseFromGoal>>, TError,{id: string;data: BodyType<AmountInput>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseFromGoal>>, TError,{id: string;data: BodyType<ReleaseFromGoalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof releaseFromGoal>>, TError,{id: string;data: BodyType<ReleaseFromGoalInput>}, TContext> => {
 
 const mutationKey = ['releaseFromGoal'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -3617,7 +3760,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof releaseFromGoal>>, {id: string;data: BodyType<AmountInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof releaseFromGoal>>, {id: string;data: BodyType<ReleaseFromGoalInput>}> = (props) => {
           const {id,data} = props ?? {};
 
           return  releaseFromGoal(id,data,requestOptions)
@@ -3631,18 +3774,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type ReleaseFromGoalMutationResult = NonNullable<Awaited<ReturnType<typeof releaseFromGoal>>>
-    export type ReleaseFromGoalMutationBody = BodyType<AmountInput>
+    export type ReleaseFromGoalMutationBody = BodyType<ReleaseFromGoalInput>
     export type ReleaseFromGoalMutationError = ErrorType<unknown>
 
     /**
  * @summary Release funds from a goal back to wallet
  */
 export const useReleaseFromGoal = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseFromGoal>>, TError,{id: string;data: BodyType<AmountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof releaseFromGoal>>, TError,{id: string;data: BodyType<ReleaseFromGoalInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof releaseFromGoal>>,
         TError,
-        {id: string;data: BodyType<AmountInput>},
+        {id: string;data: BodyType<ReleaseFromGoalInput>},
         TContext
       > => {
       return useMutation(getReleaseFromGoalMutationOptions(options));
@@ -3659,14 +3802,16 @@ export const getDeleteGoalUrl = (id: string,) => {
 /**
  * @summary Delete a goal, auto-withdrawing all funds (net of the 2% fee)
  */
-export const deleteGoal = async (id: string, options?: RequestInit): Promise<DeleteGoalResult> => {
+export const deleteGoal = async (id: string,
+    stepUpProofInput?: StepUpProofInput, options?: RequestInit): Promise<DeleteGoalResult> => {
 
   return customFetch<DeleteGoalResult>(getDeleteGoalUrl(id),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      stepUpProofInput,)
   }
 );}
 
@@ -3674,8 +3819,8 @@ export const deleteGoal = async (id: string, options?: RequestInit): Promise<Del
 
 
 export const getDeleteGoalMutationOptions = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string;data?: BodyType<StepUpProofInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string;data?: BodyType<StepUpProofInput>}, TContext> => {
 
 const mutationKey = ['deleteGoal'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -3687,10 +3832,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGoal>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGoal>>, {id: string;data?: BodyType<StepUpProofInput>}> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  deleteGoal(id,requestOptions)
+          return  deleteGoal(id,data,requestOptions)
         }
 
 
@@ -3701,18 +3846,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type DeleteGoalMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGoal>>>
-
+    export type DeleteGoalMutationBody = BodyType<StepUpProofInput> | undefined
     export type DeleteGoalMutationError = ErrorType<ApiError>
 
     /**
  * @summary Delete a goal, auto-withdrawing all funds (net of the 2% fee)
  */
 export const useDeleteGoal = <TError = ErrorType<ApiError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGoal>>, TError,{id: string;data?: BodyType<StepUpProofInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof deleteGoal>>,
         TError,
-        {id: string},
+        {id: string;data?: BodyType<StepUpProofInput>},
         TContext
       > => {
       return useMutation(getDeleteGoalMutationOptions(options));

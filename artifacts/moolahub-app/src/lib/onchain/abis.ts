@@ -9,6 +9,7 @@ export const ERC20_ABI = parseAbi([
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function balanceOf(address owner) view returns (uint256)",
+  "function transfer(address to, uint256 amount) returns (bool)",
 ]);
 
 /** Rotation escrow + accumulation circle (shared selectors). */

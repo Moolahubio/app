@@ -40,3 +40,15 @@ a second React copy → "Invalid hook call / more than one copy of React".
 - `useSmartWallets().client` stays null until the user is Privy-authed with an embedded
   signer AND Monad 10143 bundler/paymaster is enabled in the Privy dashboard (user
   action). hooks/useOnchain.ts is currently dead code (imported nowhere).
+- Privy's auth/embedded-wallet iframe (auth.privy.io) is REFUSED inside the Replit
+  preview pane and the app-preview screenshot tool. Cause: those load the app nested
+  (screenshot at http://localhost:80; preview under Replit's origin), and Privy's
+  `frame-ancestors` CSP checks the FULL ancestor chain — the wrapper origin isn't (and
+  can't reliably be) allow-listed. Console shows either "Privy iframe failed to load"
+  (domain not yet in dashboard) or, once the dev domain IS added, "Refused to frame
+  'https://auth.privy.io/' because an ancestor violates ... frame-ancestors 'self'
+  <your allow-listed domains>". The SECOND form means dashboard config is CORRECT — the
+  only blocker left is nesting. **Test any Privy embedded flow TOP-LEVEL** (open the dev
+  domain in its own tab), never in the preview pane. Production is unaffected: real users
+  hit the allow-listed prod domain top-level. Dev-only `/privy-check` route (gated on
+  `import.meta.env.DEV`) exists as the top-level signing spike.

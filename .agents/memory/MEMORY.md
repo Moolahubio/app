@@ -25,3 +25,5 @@
 - [Auth throttle layering](moolahub-auth-throttle.md) — targeted per-IP/email auth throttles sit under the global express limiter (20/IP, plain-text 429); in-process e2e share that budget, so tolerate either 429 body.
 - [MoolaHub step-up reauth](moolahub-stepup-auth.md) — verifyStepUp gates passkey/Privy-link/first-password enrollment against stolen-session takeover; password > 2FA > emailed reauth-code fallback.
 - [MoolaHub Susu reserve/collateral](moolahub-susu-reserve-collateral.md) — early-recipient default fix: payout withholds own future dues as heldReserve; ledger deliberately untouched, only gate checks heldReserve.
+- [MoolaHub non-custodial custody](moolahub-noncustodial-custody.md) — privy-custody wallets: platform never signs (fail-closed at DB+signing+route); confirm-only withdrawal; client must persist broadcast tx & re-confirm-only on retry (never re-sign).
+- [MoolaHub custody hardening](moolahub-custody-hardening.md) — for fully server-custodied wallets, gate fund-moving routes with step-up reauth rather than chasing non-custodial redesign; audit-log key decryption; fix false "non-custodial" copy.
