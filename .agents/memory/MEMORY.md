@@ -29,3 +29,4 @@
 - [MoolaHub custody hardening](moolahub-custody-hardening.md) — for fully server-custodied wallets, gate fund-moving routes with step-up reauth rather than chasing non-custodial redesign; audit-log key decryption; fix false "non-custodial" copy.
 - [MoolaHub accumulation on-chain contributions](moolahub-accumulation-onchain-contribute.md) — contributions now settle to platformAddress() like rotation; final-round unwind must reverse ALL members' payouts, not just the failing one.
 - [MoolaHub encryption key derivation](moolahub-encryption-key-kdf.md) — APP_ENCRYPTION_KEY: 64-hex used raw; any other value stretched via cached scrypt (not sha256), min 20 chars enforced.
+- [MoolaHub object storage upload proxy](moolahub-object-storage-upload-proxy.md) — signed PUT URLs can't bind size/type; uploads proxy through the API server with a live byte-counting stream cap instead.

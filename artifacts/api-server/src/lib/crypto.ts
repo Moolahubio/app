@@ -1,8 +1,10 @@
 import {
   createCipheriv,
   createDecipheriv,
+  createHmac,
   randomBytes,
   scryptSync,
+  timingSafeEqual,
 } from "node:crypto";
 
 /**
@@ -74,4 +76,23 @@ export function decryptSecret(payload: string): string {
     decipher.update(Buffer.from(dataB64, "base64")),
     decipher.final(),
   ]).toString("utf8");
+}
+
+/**
+ * Sign an opaque payload string with an HMAC over APP_ENCRYPTION_KEY. Used to
+ * mint short-lived, single-purpose capability tokens (e.g. "this specific
+ * user may PUT this specific upload object id until this expiry") without
+ * needing any server-side state to verify them later.
+ */
+export function hmacSign(payload: string): string {
+  return createHmac("sha256", key()).update(payload).digest("hex");
+}
+
+/** Constant-time comparison of two HMAC hex digests. */
+export function hmacVerify(payload: string, signature: string): boolean {
+  const expected = hmacSign(payload);
+  const expectedBuf = Buffer.from(expected, "hex");
+  const gotBuf = Buffer.from(signature, "hex");
+  if (expectedBuf.length !== gotBuf.length) return false;
+  return timingSafeEqual(expectedBuf, gotBuf);
 }

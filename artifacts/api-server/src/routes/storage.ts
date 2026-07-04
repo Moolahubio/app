@@ -7,32 +7,40 @@ import {
 import {
   ObjectStorageService,
   ObjectNotFoundError,
+  UploadTooLargeError,
   ALLOWED_IMAGE_TYPES,
   MAX_UPLOAD_BYTES,
 } from "../lib/objectStorage";
 import { ObjectPermission } from "../lib/objectAcl";
 import { requireAuth, type AuthRequest } from "../lib/auth";
-import { requireJsonAndAllowedOrigin } from "../lib/origins";
-import { uploadUrlLimiter, maybeTriggerUploadSweep } from "../lib/uploadThrottle";
+import { requireJsonAndAllowedOrigin, requireAllowedOrigin } from "../lib/origins";
+import {
+  uploadUrlLimiter,
+  uploadBytesLimiter,
+  maybeTriggerUploadSweep,
+} from "../lib/uploadThrottle";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 
+/** Matches the v4 UUIDs minted by ObjectStorageService.allocateUploadObject. */
+const UPLOAD_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * POST /storage/uploads/request-url
  *
- * Request a presigned URL for file upload.
- * The client sends JSON metadata (name, size, contentType) — NOT the file.
- * Then uploads the file directly to the returned presigned URL.
+ * Allocate an upload id for a new object in the private namespace.
+ * The client sends JSON metadata (name, size, contentType) — NOT the file —
+ * then PUTs the file bytes to the returned `uploadURL`, which points back at
+ * this same server (see `PUT /storage/uploads/:objectId` below), not
+ * directly at the storage bucket.
  *
- * The signed PUT URL itself cannot bind content-type/size (see
- * objectStorage.getObjectEntityUploadURL), so this endpoint is deliberately
- * defense-in-depth, not the only enforcement:
- *  - uploadUrlLimiter bounds how many signed URLs (and therefore how much
- *    unvetted storage) a single account can mint in a window.
- *  - Real stored objects are still re-checked against this same policy later,
- *    either when attached (isUsableImageObject) or by the background sweep
- *    (sweepOrphanedUploads) for objects that are never attached at all.
+ * This endpoint's declared-metadata checks (contentType/size) are only a
+ * fast client-facing rejection; they are NOT the enforcement boundary, since
+ * a client can freely lie about them. The real size/type cap is enforced
+ * server-side while the bytes are streamed to storage (see
+ * objectStorage.receiveUpload). uploadUrlLimiter also bounds how many upload
+ * ids a single account can mint per window.
  */
 router.post(
   "/storage/uploads/request-url",
@@ -48,12 +56,6 @@ router.post(
 
     const { name, size, contentType } = parsed.data;
 
-    // Only images may be uploaded into the private namespace, and only up to a
-    // sane size. This (together with sanitized serving below) prevents the bucket
-    // from being used to host arbitrary HTML/JS that would execute from our
-    // origin. This is declared-metadata validation only — the real stored
-    // object is re-verified against the same policy by isUsableImageObject /
-    // sweepOrphanedUploads, since the signed PUT URL can't bind these itself.
     if (!contentType || !ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
       res.status(400).json({ error: "Only PNG, JPEG, WebP, or GIF images can be uploaded." });
       return;
@@ -64,8 +66,9 @@ router.post(
     }
 
     try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+      const requester = (req as AuthRequest).user;
+      const { objectId, objectPath, uploadToken } =
+        objectStorageService.allocateUploadObject(requester.id);
 
       // Opportunistically GC abandoned/invalid uploads on this hot path
       // (fire-and-forget) so unclaimed storage doesn't grow unbounded even
@@ -74,7 +77,7 @@ router.post(
 
       res.json(
         RequestUploadUrlResponse.parse({
-          uploadURL,
+          uploadURL: `/api/storage/uploads/${objectId}?token=${encodeURIComponent(uploadToken)}`,
           objectPath,
           metadata: { name, size, contentType },
         }),
@@ -82,6 +85,87 @@ router.post(
     } catch (error) {
       req.log.error({ err: error }, "Error generating upload URL");
       res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  },
+);
+
+/**
+ * PUT /storage/uploads/:objectId
+ *
+ * Receive the actual file bytes for an id allocated by request-url above.
+ * Uploads are proxied through this server (rather than a direct-to-bucket
+ * signed URL) specifically so the byte cap can be enforced in real time as
+ * the body streams in — see objectStorage.receiveUpload for why a signed URL
+ * can't bind content-length itself. uploadBytesLimiter additionally bounds
+ * how many upload attempts (successful or not) a single account can make per
+ * window, on top of the per-mint uploadUrlLimiter above.
+ */
+router.put(
+  "/storage/uploads/:objectId",
+  requireAllowedOrigin,
+  requireAuth,
+  uploadBytesLimiter,
+  async (req: Request, res: Response) => {
+    const rawObjectId = req.params.objectId;
+    const objectId = Array.isArray(rawObjectId) ? rawObjectId[0] : rawObjectId;
+    if (!objectId || !UPLOAD_ID_RE.test(objectId)) {
+      res.status(400).json({ error: "Invalid upload id" });
+      return;
+    }
+
+    // resolveUploadTarget derives the same bucket path for anyone who knows
+    // the objectId, so without this check any authenticated user could PUT
+    // bytes over an unrelated existing upload object just by guessing or
+    // observing its id (e.g. from a public image URL). The token proves the
+    // caller is the same user who minted THIS objectId via request-url above,
+    // and hasn't expired.
+    const rawToken = req.query.token;
+    const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
+    const requester = (req as AuthRequest).user;
+    if (
+      typeof token !== "string" ||
+      !objectStorageService.verifyUploadToken(objectId, requester.id, token)
+    ) {
+      res.status(403).json({ error: "Invalid or expired upload token" });
+      return;
+    }
+
+    const rawContentType = req.headers["content-type"];
+    const contentType = Array.isArray(rawContentType) ? rawContentType[0] : rawContentType;
+    if (!contentType || !ALLOWED_IMAGE_TYPES.has(contentType.toLowerCase())) {
+      res.status(400).json({ error: "Only PNG, JPEG, WebP, or GIF images can be uploaded." });
+      return;
+    }
+
+    // Content-Length is client-declared and not trustworthy on its own (it
+    // can be omitted or lied about), but reject the obviously-oversized case
+    // up front without even starting the GCS write. The authoritative check
+    // is the live byte count enforced inside receiveUpload.
+    const rawContentLength = req.headers["content-length"];
+    const declaredLength = Number(Array.isArray(rawContentLength) ? rawContentLength[0] : rawContentLength);
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_BYTES) {
+      res.status(413).json({ error: "Image is too large (max 10MB)." });
+      return;
+    }
+
+    try {
+      const { bucketName, objectName, objectPath } =
+        objectStorageService.resolveUploadTarget(objectId);
+      await objectStorageService.receiveUpload({
+        bucketName,
+        objectName,
+        contentType: contentType.toLowerCase(),
+        body: req,
+        maxBytes: MAX_UPLOAD_BYTES,
+      });
+      res.json({ objectPath });
+    } catch (error) {
+      if (error instanceof UploadTooLargeError) {
+        res.status(413).json({ error: "Image is too large (max 10MB)." });
+        return;
+      }
+      req.log.error({ err: error }, "Error receiving upload");
+      res.status(500).json({ error: "Failed to upload file" });
     }
   },
 );

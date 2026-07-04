@@ -1,5 +1,6 @@
 import { Storage, File } from "@google-cloud/storage";
-import { Readable } from "stream";
+import { Readable, Transform } from "stream";
+import { pipeline } from "stream/promises";
 import { randomUUID } from "crypto";
 import {
   ObjectAclPolicy,
@@ -8,6 +9,38 @@ import {
   getObjectAclPolicy,
   setObjectAclPolicy,
 } from "./objectAcl";
+import { hmacSign, hmacVerify } from "./crypto";
+
+/** Upload capability tokens are only valid for this long after minting. */
+const UPLOAD_TOKEN_TTL_MS = 15 * 60 * 1000;
+
+function uploadTokenPayload(objectId: string, userId: string, expiresAt: number): string {
+  return `${objectId}.${userId}.${expiresAt}`;
+}
+
+/**
+ * Mint a capability token binding a specific upload objectId to the specific
+ * user who requested it, with an expiry. This is what stops an unrelated
+ * authenticated user from PUTing bytes to an objectId they merely guessed or
+ * observed (e.g. from a public image URL) — resolveUploadTarget alone derives
+ * the same bucket path for anyone who knows the id, so without this binding
+ * `PUT /storage/uploads/:objectId` would let any logged-in user overwrite any
+ * existing upload object.
+ */
+export function signUploadToken(objectId: string, userId: string): string {
+  const expiresAt = Date.now() + UPLOAD_TOKEN_TTL_MS;
+  const signature = hmacSign(uploadTokenPayload(objectId, userId, expiresAt));
+  return `${expiresAt}.${signature}`;
+}
+
+/** Verify a token minted by signUploadToken for this exact objectId + userId pair. */
+export function verifyUploadToken(objectId: string, userId: string, token: string): boolean {
+  const [expiresAtRaw, signature] = token.split(".");
+  if (!expiresAtRaw || !signature) return false;
+  const expiresAt = Number(expiresAtRaw);
+  if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return false;
+  return hmacVerify(uploadTokenPayload(objectId, userId, expiresAt), signature);
+}
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 
@@ -34,6 +67,19 @@ export class ObjectNotFoundError extends Error {
     super("Object not found");
     this.name = "ObjectNotFoundError";
     Object.setPrototypeOf(this, ObjectNotFoundError.prototype);
+  }
+}
+
+/**
+ * Thrown by receiveUpload() when the client streams more than maxBytes.
+ * Distinct from a generic upload failure so the route can respond 413
+ * instead of 500/502.
+ */
+export class UploadTooLargeError extends Error {
+  constructor() {
+    super("Upload exceeds the maximum allowed size");
+    this.name = "UploadTooLargeError";
+    Object.setPrototypeOf(this, UploadTooLargeError.prototype);
   }
 }
 
@@ -75,6 +121,11 @@ export function isStoredObjectPath(value: string): boolean {
 
 export class ObjectStorageService {
   constructor() {}
+
+  /** See standalone verifyUploadToken() above for the security rationale. */
+  verifyUploadToken(objectId: string, userId: string, token: string): boolean {
+    return verifyUploadToken(objectId, userId, token);
+  }
 
   getPublicObjectSearchPaths(): Array<string> {
     const pathsStr = process.env.PUBLIC_OBJECT_SEARCH_PATHS || "";
@@ -161,26 +212,110 @@ export class ObjectStorageService {
     return new Response(webStream, { headers });
   }
 
-  async getObjectEntityUploadURL(): Promise<string> {
-    const privateObjectDir = this.getPrivateObjectDir();
-    if (!privateObjectDir) {
-      throw new Error(
-        "PRIVATE_OBJECT_DIR not set. Create a bucket in 'Object Storage' " +
-          "tool and set PRIVATE_OBJECT_DIR env var."
-      );
+  /**
+   * Deterministically resolve the bucket/object location for an upload id in
+   * the private `uploads/` namespace. Kept stateless (no DB/memory mapping)
+   * so the request-url route and the actual upload-receiving route can each
+   * independently derive the same location from the id alone.
+   */
+  resolveUploadTarget(objectId: string): {
+    objectPath: string;
+    bucketName: string;
+    objectName: string;
+  } {
+    let privateObjectDir = this.getPrivateObjectDir();
+    if (!privateObjectDir.endsWith("/")) {
+      privateObjectDir = `${privateObjectDir}/`;
+    }
+    const fullPath = `${privateObjectDir}uploads/${objectId}`;
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    return { objectPath: `/objects/uploads/${objectId}`, bucketName, objectName };
+  }
+
+  /**
+   * Allocate a new upload id in the private `uploads/` namespace.
+   *
+   * Deliberately does NOT mint a signed GCS URL: the Replit sidecar can only
+   * sign a bucket/object/method/expiry tuple, it cannot bind content-type or
+   * content-length (see receiveUpload below), so a signed PUT URL handed
+   * straight to the client would let it write an arbitrarily large body
+   * directly to the bucket. Instead, the caller uploads through this server
+   * (see routes/storage.ts `PUT /storage/uploads/:objectId`), which streams
+   * the body to GCS itself and can enforce the byte cap in real time.
+   */
+  allocateUploadObject(userId: string): {
+    objectId: string;
+    objectPath: string;
+    bucketName: string;
+    objectName: string;
+    uploadToken: string;
+  } {
+    const objectId = randomUUID();
+    return {
+      objectId,
+      ...this.resolveUploadTarget(objectId),
+      uploadToken: signUploadToken(objectId, userId),
+    };
+  }
+
+  /**
+   * Stream an incoming upload body into GCS, enforcing `maxBytes` in real
+   * time as bytes arrive from the client — this is the actual size
+   * enforcement for uploads (see allocateUploadObject for why a signed URL
+   * can't do this). As soon as more than `maxBytes` have been read, the
+   * pipeline is torn down: the in-flight GCS write is aborted (a GCS "simple"
+   * upload is atomic, so an aborted request never creates a partial object)
+   * and any object that did land is deleted defensively.
+   */
+  async receiveUpload({
+    bucketName,
+    objectName,
+    contentType,
+    body,
+    maxBytes = MAX_UPLOAD_BYTES,
+  }: {
+    bucketName: string;
+    objectName: string;
+    contentType: string;
+    body: Readable;
+    maxBytes?: number;
+  }): Promise<{ size: number }> {
+    const bucket = objectStorageClient.bucket(bucketName);
+    const file = bucket.file(objectName);
+    const writeStream = file.createWriteStream({
+      resumable: false,
+      metadata: { contentType },
+    });
+
+    let received = 0;
+    let tooLarge = false;
+
+    const limiter = new Transform({
+      transform(chunk: Buffer, _enc, callback) {
+        received += chunk.length;
+        if (received > maxBytes) {
+          tooLarge = true;
+          callback(new Error("upload_too_large"));
+          return;
+        }
+        callback(null, chunk);
+      },
+    });
+
+    try {
+      await pipeline(body, limiter, writeStream);
+    } catch (err) {
+      // Defensive cleanup: a simple (non-resumable) GCS upload only creates
+      // the object once the whole request completes, so aborting mid-stream
+      // should leave nothing behind — but delete unconditionally in case.
+      await file.delete({ ignoreNotFound: true }).catch(() => {});
+      if (tooLarge) {
+        throw new UploadTooLargeError();
+      }
+      throw err;
     }
 
-    const objectId = randomUUID();
-    const fullPath = `${privateObjectDir}/uploads/${objectId}`;
-
-    const { bucketName, objectName } = parseObjectPath(fullPath);
-
-    return signObjectURL({
-      bucketName,
-      objectName,
-      method: "PUT",
-      ttlSec: 900,
-    });
+    return { size: received };
   }
 
   /**

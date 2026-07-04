@@ -2687,7 +2687,7 @@ components:
       properties:
         uploadURL:
           type: string
-          format: uri
+          minLength: 1
         objectPath:
           type: string
         metadata:
