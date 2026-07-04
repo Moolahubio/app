@@ -68,7 +68,7 @@ export const DeletePasskeyResponse = zod.object({
  */
 export const RegisterPasskeyOptionsBody = zod.object({
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -352,7 +352,7 @@ export const UsernameAvailableResponse = zod.object({
 export const LinkPrivyBody = zod.object({
   "token": zod.string(),
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -378,7 +378,9 @@ export const changePasswordBodyNewPasswordMin = 8;
 
 
 export const ChangePasswordBody = zod.object({
-  "currentPassword": zod.string().nullish().describe('Required when the account already has a password set.'),
+  "currentPassword": zod.string().nullish().describe('Required when the account already has a password set. If the account ALSO has 2FA enabled, twoFactorCode is required as well — the current password alone is not sufficient step-up proof.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (in addition to currentPassword, if set) when the account has TOTP 2FA enabled.'),
+  "reauthCode": zod.string().nullish().describe('Required when the account has neither a password nor 2FA (first password on a legacy passwordless account). Obtain via POST \/auth\/stepup\/request-code.'),
   "newPassword": zod.string().min(changePasswordBodyNewPasswordMin)
 })
 
@@ -401,7 +403,7 @@ export const GetTwoFactorStatusResponse = zod.object({
  */
 export const SetupTwoFactorBody = zod.object({
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -455,7 +457,7 @@ export const RegenerateBackupCodesResponse = zod.object({
  */
 export const DeactivateAccountBody = zod.object({
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -470,7 +472,7 @@ export const DeactivateAccountResponse = zod.object({
 export const DeleteAccountBody = zod.object({
   "confirm": zod.string().describe('Must equal \"DELETE\" to confirm.'),
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -593,7 +595,7 @@ export const WithdrawFundsBody = zod.object({
   "amountCents": zod.number(),
   "destination": zod.string(),
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -933,7 +935,7 @@ export const ReleaseFromGoalParams = zod.object({
 export const ReleaseFromGoalBody = zod.object({
   "amountCents": zod.number(),
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 
@@ -954,7 +956,7 @@ export const DeleteGoalParams = zod.object({
 
 export const DeleteGoalBody = zod.object({
   "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
-  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled and no password.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
   "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
 })
 

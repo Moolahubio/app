@@ -15,7 +15,7 @@ export interface DeleteAccountInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;

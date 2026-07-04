@@ -1867,7 +1867,9 @@ components:
           description: Required (step-up) when the account already has a password set.
         twoFactorCode:
           type: ["string", "null"]
-          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
         reauthCode:
           type: ["string", "null"]
           description: >-
@@ -1880,7 +1882,21 @@ components:
       properties:
         currentPassword:
           type: ["string", "null"]
-          description: Required when the account already has a password set.
+          description: >-
+            Required when the account already has a password set. If the
+            account ALSO has 2FA enabled, twoFactorCode is required as well —
+            the current password alone is not sufficient step-up proof.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: >-
+            Required (in addition to currentPassword, if set) when the
+            account has TOTP 2FA enabled.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required when the account has neither a password nor 2FA (first
+            password on a legacy passwordless account). Obtain via
+            POST /auth/stepup/request-code.
         newPassword:
           type: string
           minLength: 8
@@ -1963,7 +1979,9 @@ components:
           description: Required (step-up) when the account already has a password set.
         twoFactorCode:
           type: ["string", "null"]
-          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
         reauthCode:
           type: ["string", "null"]
           description: >-
@@ -1978,7 +1996,9 @@ components:
           description: Required (step-up) when the account already has a password set.
         twoFactorCode:
           type: ["string", "null"]
-          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
         reauthCode:
           type: ["string", "null"]
           description: >-
@@ -2132,7 +2152,9 @@ components:
           description: Required (step-up) when the account already has a password set.
         twoFactorCode:
           type: ["string", "null"]
-          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
         reauthCode:
           type: ["string", "null"]
           description: >-
@@ -2163,7 +2185,9 @@ components:
           description: Required (step-up) when the account already has a password set.
         twoFactorCode:
           type: ["string", "null"]
-          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
         reauthCode:
           type: ["string", "null"]
           description: >-
@@ -2698,7 +2722,9 @@ components:
           description: Required (step-up) when the account already has a password set.
         twoFactorCode:
           type: ["string", "null"]
-          description: Required (step-up) when the account has TOTP 2FA enabled and no password.
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
         reauthCode:
           type: ["string", "null"]
           description: >-

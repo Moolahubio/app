@@ -247,7 +247,7 @@ async function run() {
 
   const setFirst = await api("POST", "/api/auth/password", {
     token: legacyToken,
-    body: { currentPassword: legacyReauthCode, newPassword: "First-Passw0rd!" },
+    body: { reauthCode: legacyReauthCode, newPassword: "First-Passw0rd!" },
   });
   assert.equal(setFirst.status, 200, `legacy account can set a first password with a valid reauth code (got ${setFirst.status})`);
 

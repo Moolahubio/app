@@ -260,7 +260,7 @@ export interface PrivyLinkInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;
@@ -273,10 +273,20 @@ export interface PrivyLinkInput {
 
 export interface ChangePasswordInput {
   /**
-     * Required when the account already has a password set.
+     * Required when the account already has a password set. If the account ALSO has 2FA enabled, twoFactorCode is required as well — the current password alone is not sufficient step-up proof.
      * @nullable
      */
   currentPassword?: string | null;
+  /**
+     * Required (in addition to currentPassword, if set) when the account has TOTP 2FA enabled.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required when the account has neither a password nor 2FA (first password on a legacy passwordless account). Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
   /** @minLength 8 */
   newPassword: string;
 }
@@ -333,7 +343,7 @@ export interface DeleteAccountInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;
@@ -351,7 +361,7 @@ export interface StepUpProofInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;
@@ -520,7 +530,7 @@ export interface WithdrawInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;
@@ -547,7 +557,7 @@ export interface ReleaseFromGoalInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;
@@ -794,7 +804,7 @@ export interface RegisterPasskeyOptionsInput {
      */
   currentPassword?: string | null;
   /**
-     * Required (step-up) when the account has TOTP 2FA enabled and no password.
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
      * @nullable
      */
   twoFactorCode?: string | null;

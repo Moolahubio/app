@@ -6,7 +6,9 @@ import {
   useChangePassword,
   useForgotPassword,
   useResetPassword,
+  useGetTwoFactorStatus,
   getGetMeQueryKey,
+  getGetTwoFactorStatusQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiErrorMessage } from "@/lib/utils";
@@ -23,9 +25,17 @@ export function ChangePasswordCard() {
 
   const hasPassword = user?.hasPassword ?? false;
   const emailVerified = user?.emailVerified ?? false;
+  const { data: twoFactor } = useGetTwoFactorStatus({
+    query: { queryKey: getGetTwoFactorStatusQueryKey() },
+  });
+  // The backend requires proof of EVERY factor the account has configured —
+  // when 2FA is also enabled, the current password alone is not enough
+  // step-up proof. See stepUp.ts.
+  const needsTotp = twoFactor?.enabled ?? false;
 
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState("");
+  const [totpCode, setTotpCode] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
@@ -39,6 +49,7 @@ export function ChangePasswordCard() {
   const resetForm = () => {
     setOpen(false);
     setCurrent("");
+    setTotpCode("");
     setNext("");
     setConfirm("");
     setCode("");
@@ -53,9 +64,16 @@ export function ChangePasswordCard() {
     setDone(false);
     if (next.length < 8) return setError("Password must be at least 8 characters.");
     if (next !== confirm) return setError("Passwords don't match.");
+    if (needsTotp && !totpCode.trim()) {
+      return setError("Enter your two-factor authentication code to continue.");
+    }
     try {
       await changePassword.mutateAsync({
-        data: { currentPassword: current, newPassword: next },
+        data: {
+          currentPassword: current,
+          newPassword: next,
+          ...(needsTotp ? { twoFactorCode: totpCode.trim() } : {}),
+        },
       });
       await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       resetForm();
@@ -150,6 +168,22 @@ export function ChangePasswordCard() {
               className={`mt-1.5 ${inputClass}`}
             />
           </label>
+          {needsTotp && (
+            <label className="block">
+              <span className="text-sm font-medium text-foreground">
+                Two-factor authentication code
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="6-digit code"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value)}
+                className={`mt-1.5 ${inputClass}`}
+              />
+            </label>
+          )}
           <label className="block">
             <span className="text-sm font-medium text-foreground">New password</span>
             <div className="relative mt-1.5">
@@ -189,7 +223,11 @@ export function ChangePasswordCard() {
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" size="sm" disabled={changePassword.isPending}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={changePassword.isPending || (needsTotp && !totpCode.trim())}
+            >
               {changePassword.isPending ? "Saving…" : "Save password"}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={resetForm}>

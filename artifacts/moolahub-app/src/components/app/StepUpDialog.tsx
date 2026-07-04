@@ -36,24 +36,30 @@ export function useStepUpGate() {
   const { data: me } = useGetMe();
   const hasPassword = me?.hasPassword ?? false;
   const { data: twoFactor } = useGetTwoFactorStatus({
-    query: { queryKey: getGetTwoFactorStatusQueryKey(), enabled: !hasPassword },
+    query: { queryKey: getGetTwoFactorStatusQueryKey() },
   });
   const requestCode = useRequestStepUpCode();
 
-  const method: "password" | "totp" | "email" = hasPassword
-    ? "password"
-    : twoFactor?.enabled
-      ? "totp"
-      : "email";
+  const needsPassword = hasPassword;
+  const needsTotp = twoFactor?.enabled ?? false;
+  // Only when the account has NEITHER a password nor 2FA do we fall back to
+  // an emailed one-time code. Whenever a password AND 2FA are both
+  // configured, the backend requires BOTH — asking for only one would let a
+  // stolen session + a single leaked factor bypass the second one.
+  const needsEmail = !needsPassword && !needsTotp;
 
   const [open, setOpen] = useState(false);
-  const [value, setValue] = useState("");
+  const [password, setPassword] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [emailCode, setEmailCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [codeSent, setCodeSent] = useState(false);
   const resolverRef = useRef<((proof: StepUpProof | null) => void) | null>(null);
 
   const requestProof = useCallback((): Promise<StepUpProof | null> => {
-    setValue("");
+    setPassword("");
+    setTotpCode("");
+    setEmailCode("");
     setError(null);
     setCodeSent(false);
     setOpen(true);
@@ -79,18 +85,29 @@ export function useStepUpGate() {
   };
 
   const handleConfirm = () => {
-    const trimmed = value.trim();
-    if (!trimmed) {
-      setError("Please enter a value to continue.");
+    if (needsEmail) {
+      const trimmed = emailCode.trim();
+      if (!trimmed) {
+        setError("Please enter the code we emailed you.");
+        return;
+      }
+      finish({ reauthCode: trimmed });
       return;
     }
-    if (method === "password") {
-      finish({ currentPassword: value });
-    } else if (method === "totp") {
-      finish({ twoFactorCode: trimmed });
-    } else {
-      finish({ reauthCode: trimmed });
+
+    if (needsPassword && !password) {
+      setError("Please enter your password to continue.");
+      return;
     }
+    if (needsTotp && !totpCode.trim()) {
+      setError("Please enter your two-factor authentication code to continue.");
+      return;
+    }
+
+    const proof: StepUpProof = {};
+    if (needsPassword) proof.currentPassword = password;
+    if (needsTotp) proof.twoFactorCode = totpCode.trim();
+    finish(proof);
   };
 
   const stepUpDialog = (
@@ -99,27 +116,57 @@ export function useStepUpGate() {
         <DialogHeader>
           <DialogTitle>Confirm it's you</DialogTitle>
           <DialogDescription>
-            {method === "password" && "Enter your password to continue."}
-            {method === "totp" && "Enter your two-factor authentication code to continue."}
-            {method === "email" && "We'll email you a one-time code to confirm this change."}
+            {needsPassword && needsTotp &&
+              "Enter your password and your two-factor authentication code to continue."}
+            {needsPassword && !needsTotp && "Enter your password to continue."}
+            {!needsPassword && needsTotp && "Enter your two-factor authentication code to continue."}
+            {needsEmail && "We'll email you a one-time code to confirm this change."}
           </DialogDescription>
         </DialogHeader>
 
-        {method === "email" && !codeSent ? (
-          <Button onClick={handleSendCode} disabled={requestCode.isPending}>
-            {requestCode.isPending ? "Sending…" : "Send code"}
-          </Button>
+        {needsEmail ? (
+          !codeSent ? (
+            <Button onClick={handleSendCode} disabled={requestCode.isPending}>
+              {requestCode.isPending ? "Sending…" : "Send code"}
+            </Button>
+          ) : (
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              autoFocus
+              value={emailCode}
+              onChange={(e) => setEmailCode(e.target.value)}
+              placeholder="6-digit code"
+              className={inputClass}
+            />
+          )
         ) : (
-          <input
-            type={method === "password" ? "password" : "text"}
-            inputMode={method === "password" ? undefined : "numeric"}
-            autoComplete={method === "password" ? "current-password" : "one-time-code"}
-            autoFocus
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={method === "password" ? "Current password" : "6-digit code"}
-            className={inputClass}
-          />
+          <div className="flex flex-col gap-3">
+            {needsPassword && (
+              <input
+                type="password"
+                autoComplete="current-password"
+                autoFocus
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Current password"
+                className={inputClass}
+              />
+            )}
+            {needsTotp && (
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus={!needsPassword}
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value)}
+                placeholder="6-digit code"
+                className={inputClass}
+              />
+            )}
+          </div>
         )}
 
         {error && (
@@ -132,7 +179,7 @@ export function useStepUpGate() {
           <Button variant="ghost" onClick={() => finish(null)}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={method === "email" && !codeSent}>
+          <Button onClick={handleConfirm} disabled={needsEmail && !codeSent}>
             Confirm
           </Button>
         </DialogFooter>

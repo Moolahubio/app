@@ -496,30 +496,20 @@ router.post("/auth/password", requireJsonAndAllowedOrigin, requireAuth, async (r
     return;
   }
 
-  // A passwordless (legacy Privy) account sets its FIRST password here, from an
-  // authenticated session. There is no current password to verify, so this is
-  // exactly the "durable factor enrollment" case that must be step-up gated:
-  // possession of the session cookie alone must not be enough to mint a
-  // password login an attacker controls. verifyStepUp falls back to the
-  // account's 2FA code, and then to an emailed reauth code, for accounts with
-  // neither a password nor 2FA. Completing the password also stamps
-  // emailVerifiedAt, finishing the account. Every other session is revoked
-  // below, limiting the blast radius of a stolen session.
-  if (user.passwordHash) {
-    const ok = await verifyPassword(parsed.data.currentPassword ?? "", user.passwordHash);
-    if (!ok) {
-      res.status(401).json({ error: "Your current password is incorrect." });
-      return;
-    }
-  } else {
-    const stepUp = await verifyStepUp(user, {
-      twoFactorCode: parsed.data.currentPassword,
-      reauthCode: parsed.data.currentPassword,
-    });
-    if (!stepUp.ok) {
-      res.status(stepUp.status).json({ error: stepUp.error });
-      return;
-    }
+  // Rotating (or, for a passwordless legacy Privy account, setting the FIRST)
+  // password is exactly the "durable factor enrollment" case that must be
+  // step-up gated: possession of the session cookie alone must not be enough
+  // to mint a password login an attacker controls. verifyStepUp requires
+  // proof of EVERY factor the account already has configured — so an account
+  // with both a password and 2FA must supply both, not just the password —
+  // falling back to an emailed reauth code only when there is neither.
+  // Completing the password also stamps emailVerifiedAt, finishing the
+  // account. Every other session is revoked below, limiting the blast radius
+  // of a stolen session.
+  const stepUp = await verifyStepUp(user, parsed.data);
+  if (!stepUp.ok) {
+    res.status(stepUp.status).json({ error: stepUp.error });
+    return;
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);
