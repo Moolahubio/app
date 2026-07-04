@@ -3,9 +3,9 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Sparkles,
-  Users,
-  Target,
-  GraduationCap,
+  UsersRound,
+  PiggyBank,
+  BookOpen,
   Bell,
   ChevronRight,
   TrendingUp,
@@ -24,8 +24,8 @@ const activityIcon: Record<string, typeof ArrowDownLeft> = {
   payout: ArrowDownLeft,
   yield: Sparkles,
   contribution: ArrowUpRight,
-  goal_allocate: Target,
-  goal_release: Target,
+  goal_allocate: PiggyBank,
+  goal_release: PiggyBank,
   withdrawal: ArrowUpRight,
 };
 
@@ -200,7 +200,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <IconChip tone="jade">
-                <Target className="h-5 w-5" />
+                <PiggyBank className="h-5 w-5" />
               </IconChip>
               <h2 className="font-display text-lg font-bold text-foreground">Personal savings</h2>
             </div>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <IconChip tone="jade">
-                <Users className="h-5 w-5" />
+                <UsersRound className="h-5 w-5" />
               </IconChip>
               <h2 className="font-display text-lg font-bold text-foreground">Active circle</h2>
             </div>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
         <Card className="flex flex-col p-6">
           <div className="flex items-center gap-3">
             <IconChip tone="amber">
-              <GraduationCap className="h-5 w-5" />
+              <BookOpen className="h-5 w-5" />
             </IconChip>
             <h2 className="font-display text-lg font-bold text-foreground">Keep learning</h2>
           </div>

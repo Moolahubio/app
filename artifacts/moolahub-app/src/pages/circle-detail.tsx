@@ -135,6 +135,9 @@ export default function CircleDetailPage() {
             <Badge tone="amber">This circle hasn't started yet</Badge>
           )}
         </div>
+        {contributeMutation.error && (
+          <p className="mt-3 text-sm text-rose-300">{apiErrorMessage(contributeMutation.error)}</p>
+        )}
       </Card>
 
       {/* ------------------------------------------------- forming controls */}
