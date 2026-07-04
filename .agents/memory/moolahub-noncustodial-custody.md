@@ -50,6 +50,24 @@ slot even when funded. If gas is truly missing the sign step fails with a clear
 wallet error; a top-up hiccup must not abort a withdrawal the user can already pay
 for.
 
+## Provision the embedded wallet explicitly — do NOT rely on create-on-login
+The MoolaHub Privy app has embedded-wallet **create-on-login disabled** (dashboard
+mode ~ user-controlled-server-wallets-only, `create_on_login: off`). So the
+PrivyProvider's `embeddedWallets.ethereum.createOnLogin: "users-without-wallets"`
+NEVER fires — a freshly logged-in user has NO embedded EOA, and `/auth/privy/link`
+(which fails closed when no embedded wallet exists) errors "No Privy embedded wallet
+found." The fix is client-side: after Privy login and before linking, call
+`useCreateWallet().createWallet()` when the user has no `walletClientType==="privy"`
+wallet. Because the app sets `require_user_owned_recovery_on_create=false`, creation
+is silent (no UI). Swallow createWallet() errors (a wallet may already exist and the
+client wallet list lags Privy) — the backend link is the source of truth.
+**Why:** relying on `createOnLogin` alone is fragile and here is simply inert given
+the dashboard config; explicit createWallet is Privy's recommended pattern and works
+regardless of the dashboard toggle. Verified live end-to-end on Monad testnet.
+**How to apply:** any client entry that must end with a linked non-custodial wallet
+must ensure-then-create the embedded EOA first; the withdrawal form needs no such
+step because a privy-custody DB row can only exist if the EOA already did.
+
 ## Scope boundary
 Making NEW wallets non-custodial does NOT fix legacy server-custody wallets —
 they stay drainable by a DB+env compromise until separately migrated or the service

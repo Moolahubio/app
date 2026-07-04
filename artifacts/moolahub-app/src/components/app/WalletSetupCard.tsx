@@ -49,10 +49,12 @@ function SetupButton() {
       if (!wallets.some((w) => w.walletClientType === "privy")) {
         try {
           await createWallet();
-        } catch {
+        } catch (createErr) {
           // A wallet may already exist (client wallet state can lag Privy's);
           // linking will find it. A genuine failure surfaces below as a link
-          // error ("No Privy embedded wallet found").
+          // error ("No Privy embedded wallet found"), but log it so a real
+          // creation failure is diagnosable rather than fully silent.
+          console.warn("Privy createWallet() failed (continuing to link):", createErr);
         }
       }
       const proof = await requestProof();
