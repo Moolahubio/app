@@ -7,6 +7,7 @@
 - [MoolaHub wallet-session coupling](moolahub-wallet-session-coupling.md) — connect Privy once per app login; end Privy only on getMe success+null (never error/!auth), prefill email to restore SAME embedded wallet, outer/inner isWeb3Enabled hook gating.
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.
+- [MoolaHub on-chain config route](moolahub-onchain-config-route.md) — "on-chain isn't available on this deployment" banners mean GET /api/onchain/config failed (undefined config→null addrs), NOT missing env; every api-server route must be registered in routes/index.ts (unmounted route 404s dev+prod).
 - [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; book pending (not none) on failure; no double-send via SKIP LOCKED + in-proc guard.
 - [MoolaHub on-chain e2e ops](moolahub-onchain-e2e-ops.md) — Monad RPC lag fixes; factory owner must==platform; platform gas wallet drains strand settlement (gas, not contract); refill from DEPLOYER; never re-queue a dead-lettered faucet.
 - [MoolaHub wallet provisioning](moolahub-wallet-provisioning.md) — wallets explicit-only (Privy-gated /auth/privy/link); never auto-create; money-movement calls requireWalletForUser; GET /wallet tolerates no wallet.
