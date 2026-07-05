@@ -15,4 +15,8 @@ The user's preferred moolahub-app web UI is the original "taste-upgrade / de-AI"
 - `.glass` sets `border/background/box-shadow` in the `@layer components` layer, so Tailwind border utilities (`border-y-0`, `border-s-0`, `border-x-0`) in the utilities layer still win and can strip specific sides (the shell keeps only its divider border this way).
 - Caveat: `.glass` uses `backdrop-filter`, which creates a containing block for descendant `position:fixed` and a new stacking context. Fine because overlays/menus are portaled to `<body>`; if you ever render a non-portaled fixed element inside a `Card`, it will anchor to the card, not the viewport.
 
+**Glass must NOT shift surface color.** The user rejected a first pass where `.glass` used a white/dark tinted gradient + `backdrop-filter: ... saturate(160%)`; the saturate amplified the app's green background bleeding through and visibly changed card color in BOTH light and dark mode.
+**Why:** they wanted the frosted/translucent *effect* + hover only, with the surface reading as its original `--card` color.
+**How to apply:** base `.glass` background on `hsl(var(--card) / <alpha>)` (high alpha ~0.72–0.88) and its border on `hsl(var(--card-border))`; use `backdrop-filter: blur(...)` WITHOUT `saturate()`. Keep only a subtle inset white highlight for the sheen. Never introduce a saturate() or an arbitrary white/ink tint that departs from the card token.
+
 Do not re-propose the wholesale restructure unless the user explicitly asks for a redesign.
