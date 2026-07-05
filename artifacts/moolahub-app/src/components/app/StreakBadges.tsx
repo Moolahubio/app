@@ -1,24 +1,22 @@
 import type { StreakBadge, StreakBadgeProgress } from "@workspace/api-client-react";
 import { Medal } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 type Tier = "bronze" | "silver" | "gold";
 
-const TIER_META: Record<Tier, { label: string; ring: string; text: string; chip: string }> = {
+const TIER_META: Record<Tier, { ring: string; text: string; chip: string }> = {
   bronze: {
-    label: "Bronze",
     ring: "ring-amber-700/30",
     text: "text-amber-700 dark:text-amber-500",
     chip: "bg-amber-700/15",
   },
   silver: {
-    label: "Silver",
     ring: "ring-slate-400/30",
     text: "text-slate-500 dark:text-slate-300",
     chip: "bg-slate-400/15",
   },
   gold: {
-    label: "Gold",
     ring: "ring-amber-400/40",
     text: "text-amber-500 dark:text-amber-400",
     chip: "bg-amber-400/15",
@@ -38,6 +36,7 @@ export function tierForCount(quarters: number): Tier | null {
  * tier the user has reached and how far into the current quarter they are.
  */
 export function StreakBadgeTier({ progress }: { progress: StreakBadgeProgress }) {
+  const { t } = useTranslation("streak");
   const current = tierForCount(progress.earnedQuarters);
   const nextMeta = TIER_META[progress.nextTier as Tier];
   const pct = Math.round(Math.max(0, Math.min(1, progress.pct)) * 100);
@@ -56,15 +55,15 @@ export function StreakBadgeTier({ progress }: { progress: StreakBadgeProgress })
           </span>
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {current ? `${TIER_META[current].label} saver` : "No badge yet"}
+              {current ? t("badges.saverTitle", { tier: t(`tier.${current}`) }) : t("badges.noBadgeYet")}
             </p>
             <p className="text-xs text-muted-foreground">
-              {progress.earnedQuarters} {progress.earnedQuarters === 1 ? "quarter" : "quarters"} kept
+              {t("badges.quartersKept", { count: progress.earnedQuarters })}
             </p>
           </div>
         </div>
         <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-semibold", nextMeta.chip, nextMeta.text)}>
-          Next: {nextMeta.label}
+          {t("badges.next", { tier: t(`tier.${progress.nextTier}`) })}
         </span>
       </div>
 
@@ -94,15 +93,15 @@ const QUARTER_TONE: Record<number, string> = {
   4: "bg-violet-500/15 text-violet-600 dark:text-violet-300 ring-violet-500/25",
 };
 
-const QUARTER_NAME: Record<number, string> = { 1: "Winter", 2: "Spring", 3: "Summer", 4: "Autumn" };
+const SEASON_KEY: Record<number, string> = { 1: "winter", 2: "spring", 3: "summer", 4: "autumn" };
 
 /** Collectible badge grid — one slot per calendar quarter, unique per year. */
 export function StreakBadges({ badges }: { badges: StreakBadge[] }) {
+  const { t } = useTranslation("streak");
   if (badges.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Keep a streak alive for three months to earn your first badge. There are four to collect each
-        year, one for every season.
+        {t("badges.empty")}
       </p>
     );
   }
@@ -136,8 +135,8 @@ export function StreakBadges({ badges }: { badges: StreakBadge[] }) {
                   )}
                 >
                   <Medal className={cn("h-7 w-7", earned ? "" : "opacity-40")} />
-                  <span className="text-[11px] font-semibold">Q{q}</span>
-                  <span className="text-[10px] text-muted-foreground">{QUARTER_NAME[q]}</span>
+                  <span className="text-[11px] font-semibold">{t("badges.quarterShort", { n: q })}</span>
+                  <span className="text-[10px] text-muted-foreground">{t(`season.${SEASON_KEY[q]}`)}</span>
                 </div>
               );
             })}

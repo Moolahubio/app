@@ -1,0 +1,145 @@
+{
+  "eyebrow": "Jeri",
+  "title": "Jerin tanadi",
+  "loading": "Ana loda jerin ka…",
+  "period": {
+    "day": "rana",
+    "week": "mako",
+    "month": "wata",
+    "twoWeek": "mako biyu"
+  },
+  "unit": {
+    "day_one": "rana",
+    "day_other": "kwanaki",
+    "week_one": "mako",
+    "week_other": "makonni",
+    "month_one": "wata",
+    "month_other": "watanni",
+    "twoWeek_one": "mako biyu",
+    "twoWeek_other": "mako biyu"
+  },
+  "status": {
+    "frozen": "An daskare",
+    "paused": "Yana hutu",
+    "broken": "Babu jeri har yanzu",
+    "onFire": "Yana ci da wuta",
+    "active": "Yana aiki"
+  },
+  "indicator": {
+    "aria": "Jerin tanadi: lokuta {{count}}"
+  },
+  "atRisk": {
+    "message": "Ajiya ɗaya kafin <strong>{{date}}</strong> na kiyaye jerin ka. Babu gaggawa, kowace ajiya ta buri ko da'ira tana ƙidaya."
+  },
+  "hero": {
+    "captionActive": "Jeri na {{count}}-{{period}} · ci gaba",
+    "captionEmpty": "Yi ajiya a wannan {{period}} don kunna harshen wutar ka"
+  },
+  "stats": {
+    "current": "{{unit}} na yanzu",
+    "lifetimeBest": "Mafi kyau a tarihi",
+    "periodsSaved": "Lokutan da aka yi tanadi"
+  },
+  "share": {
+    "title": "Raba jerin ka",
+    "description": "Katin ka yana nuna adadin jerin ka kaɗai. Adadin kuɗi na ci gaba da zama na sirri sai idan ka kunna su.",
+    "includeAmount": "Haɗa da adadin da aka yi tanadi",
+    "download": "Sauke",
+    "share": "Raba",
+    "shareTitle": "Jerina na MoolaHub",
+    "card": {
+      "amountSaved": "an yi tanadin {{amount}}"
+    }
+  },
+  "frequencyName": {
+    "daily": "Kullum",
+    "weekly": "Mako-mako",
+    "monthly": "Wata-wata",
+    "biweekly": "Mako biyu"
+  },
+  "card": {
+    "streakTitle": "Jerin {{frequency}}",
+    "oneDepositPer": "Ajiya ɗaya a kowace {{period}} na kiyaye harshen wutar ka.",
+    "change": "Canza",
+    "goalDepositsCount": "Ajiyar buri tana ƙidaya",
+    "circleContributionsCount": "Gudummawar da'ira tana ƙidaya",
+    "changeOncePerYear": "Ana iya canza yawan sau sau ɗaya a shekara.",
+    "changeOncePerYearNext": "Ana iya canza yawan sau sau ɗaya a shekara. Canji na gaba zai buɗe a {{year}}."
+  },
+  "badges": {
+    "title": "Tarin bajoji",
+    "saverTitle": "Mai tanadi na {{tier}}",
+    "noBadgeYet": "Babu baji tukuna",
+    "quartersKept_one": "An kiyaye kwata {{count}}",
+    "quartersKept_other": "An kiyaye kwata {{count}}",
+    "next": "Na gaba: {{tier}}",
+    "progressNone": "Kiyaye jerin ka na tsawon watanni uku don samun baji na gaba.",
+    "progressToday": "Baji na gaba na zuwa yau, ci gaba.",
+    "progressDays_one": "Rana {{count}} zuwa baji na gaba.",
+    "progressDays_other": "Kwanaki {{count}} zuwa baji na gaba.",
+    "empty": "Kiyaye jeri na tsawon watanni uku don samun baji na farko. Akwai huɗu da za a tara kowace shekara, ɗaya ga kowace kakar.",
+    "quarterShort": "K{{n}}"
+  },
+  "tier": {
+    "bronze": "Tagulla",
+    "silver": "Azurfa",
+    "gold": "Zinariya"
+  },
+  "season": {
+    "winter": "Hunturu",
+    "spring": "Bazara",
+    "summer": "Rani",
+    "autumn": "Kaka"
+  },
+  "freezes": {
+    "title": "Daskarar jeri",
+    "description": "Daskarewa yana kare jerin ka ta atomatik idan ka rasa lokaci ɗaya. Kana samun ɗaya kowane watanni uku (har huɗu a shekara), kuma ana iya amfani da ɗaya kaɗai a kowace kwata.",
+    "available": "{{count}} akwai"
+  },
+  "reminders": {
+    "title": "Tunatarwa mai laushi",
+    "description": "Tunatarwa ɗaya kafin {{period}} ya ƙare, sai idan kana so. An kashe ta ta asali."
+  },
+  "vacation": {
+    "title": "Yanayin hutu",
+    "description": "Rayuwa tana faruwa. Dakatar da jerin ka sau ɗaya a shekara (har kwanaki 30) ba tare da rasa ci gaban ka ba.",
+    "onVacation": "Yana hutu",
+    "onVacationUntil": "Yana hutu har {{date}}",
+    "ending": "Ana ƙarewa…",
+    "endEarly": "Ƙare hutu da wuri",
+    "usedThisYear": "An yi amfani da hutu wannan shekara",
+    "starting": "Ana farawa…",
+    "startDays": "Fara hutu na kwanaki {{count}}"
+  },
+  "footer": {
+    "disclaimer": "Jerin ka ba ya taɓa shafar ma'aunin ka ko kuɗin ka."
+  },
+  "milestone": {
+    "title": "An samu sabon baji",
+    "description": "Watanni uku na tanadi mai dorewa. Wannan daidaito shi ne komai. Madalla.",
+    "badgeUnlocked": "An buɗe baji na K{{n}}",
+    "keepItUp": "Ci gaba"
+  },
+  "profile": {
+    "title": "Yawan sau na jeri",
+    "description": "Zaɓi sau nawa ake buƙatar ajiya don kiyaye jerin tanadin ka.",
+    "frequencyError": "An kasa canza yawan sau na jerin ka.",
+    "recommended": "An ba da shawara",
+    "lockNote": "Kana iya canza yawan sau na jerin ka sau ɗaya a shekarar kalanda.",
+    "lockNoteNext": "Kana iya canza yawan sau na jerin ka sau ɗaya a shekarar kalanda. Canjin ka na gaba zai buɗe a {{year}}.",
+    "options": {
+      "daily": {
+        "label": "Kullum",
+        "description": "Kiyaye harshen wuta da ajiya kowace rana. Mafi kyau ga al'adar tanadi ta yau da kullum."
+      },
+      "weekly": {
+        "label": "Mako-mako",
+        "description": "Ajiya ɗaya a kowane lokaci a cikin mako na kiyaye jerin ka. Sannu-sannu, mai dorewa."
+      },
+      "monthly": {
+        "label": "Wata-wata",
+        "description": "Ajiya ɗaya kowane watan kalanda shi ne duk abin da ake buƙata. Mai laushi kuma ba matsi."
+      }
+    }
+  }
+}

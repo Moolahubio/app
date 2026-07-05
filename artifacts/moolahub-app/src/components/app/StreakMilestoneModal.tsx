@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { StreakBadge } from "@workspace/api-client-react";
 import { Medal, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
 import { Button } from "@/components/ui";
 
 const SEEN_KEY = "moolahub.streakBadgesSeen";
-const QUARTER_NAME: Record<number, string> = { 1: "Winter", 2: "Spring", 3: "Summer", 4: "Autumn" };
+const SEASON_KEY: Record<number, string> = { 1: "winter", 2: "spring", 3: "summer", 4: "autumn" };
 
 function readSeen(): string[] | null {
   try {
@@ -37,6 +38,7 @@ function writeSeen(keys: string[]): void {
  * only badges earned after the feature is live trigger the celebration.
  */
 export function StreakMilestoneModal({ badges }: { badges?: StreakBadge[] }) {
+  const { t } = useTranslation("streak");
   const [active, setActive] = useState<StreakBadge | null>(null);
 
   useEffect(() => {
@@ -65,10 +67,10 @@ export function StreakMilestoneModal({ badges }: { badges?: StreakBadge[] }) {
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" /> New badge earned
+            <Sparkles className="h-5 w-5 text-amber-500" /> {t("milestone.title")}
           </DialogTitle>
           <DialogDescription>
-            Three months of steady saving. That consistency is the whole game. Nicely done.
+            {t("milestone.description")}
           </DialogDescription>
         </DialogHeader>
         {active && (
@@ -77,12 +79,12 @@ export function StreakMilestoneModal({ badges }: { badges?: StreakBadge[] }) {
               <Medal className="h-12 w-12" />
             </div>
             <p className="font-display text-lg font-bold text-foreground">
-              {QUARTER_NAME[active.quarterIndex]} {active.year}
+              {t(`season.${SEASON_KEY[active.quarterIndex]}`)} {active.year}
             </p>
-            <p className="text-sm text-muted-foreground">Q{active.quarterIndex} badge unlocked</p>
+            <p className="text-sm text-muted-foreground">{t("milestone.badgeUnlocked", { n: active.quarterIndex })}</p>
           </div>
         )}
-        <Button onClick={dismiss}>Keep it up</Button>
+        <Button onClick={dismiss}>{t("milestone.keepItUp")}</Button>
       </DialogContent>
     </Dialog>
   );

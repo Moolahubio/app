@@ -1,0 +1,145 @@
+{
+  "eyebrow": "Mfululizo",
+  "title": "Mfululizo wa kuweka akiba",
+  "loading": "Inapakia mfululizo wako…",
+  "period": {
+    "day": "siku",
+    "week": "wiki",
+    "month": "mwezi",
+    "twoWeek": "wiki 2"
+  },
+  "unit": {
+    "day_one": "siku",
+    "day_other": "siku",
+    "week_one": "wiki",
+    "week_other": "wiki",
+    "month_one": "mwezi",
+    "month_other": "miezi",
+    "twoWeek_one": "wiki 2",
+    "twoWeek_other": "wiki 2"
+  },
+  "status": {
+    "frozen": "Umegandishwa",
+    "paused": "Likizoni",
+    "broken": "Bado hakuna mfululizo",
+    "onFire": "Umewaka moto",
+    "active": "Hai"
+  },
+  "indicator": {
+    "aria": "Mfululizo wa kuweka akiba: vipindi {{count}}"
+  },
+  "atRisk": {
+    "message": "Amana moja tu kabla ya <strong>{{date}}</strong> huweka mfululizo wako hai. Hakuna haraka, amana yoyote ya lengo au duara inahesabika."
+  },
+  "hero": {
+    "captionActive": "Mfululizo wa {{period}} {{count}} · endelea nao",
+    "captionEmpty": "Weka amana {{period}} huu ili kuwasha mwali wako"
+  },
+  "stats": {
+    "current": "{{unit}} ya sasa",
+    "lifetimeBest": "Rekodi bora zaidi",
+    "periodsSaved": "Vipindi vilivyowekewa akiba"
+  },
+  "share": {
+    "title": "Shiriki mfululizo wako",
+    "description": "Kadi yako inaonyesha idadi ya mfululizo wako pekee. Kiasi cha fedha hubaki cha faragha isipokuwa uwashe.",
+    "includeAmount": "Jumuisha kiasi kilichowekwa akiba",
+    "download": "Pakua",
+    "share": "Shiriki",
+    "shareTitle": "Mfululizo wangu wa MoolaHub",
+    "card": {
+      "amountSaved": "{{amount}} zimewekwa akiba"
+    }
+  },
+  "frequencyName": {
+    "daily": "Kila siku",
+    "weekly": "Kila wiki",
+    "monthly": "Kila mwezi",
+    "biweekly": "Kila wiki mbili"
+  },
+  "card": {
+    "streakTitle": "Mfululizo wa {{frequency}}",
+    "oneDepositPer": "Amana moja kwa {{period}} huweka mwali wako ukiwaka.",
+    "change": "Badilisha",
+    "goalDepositsCount": "Amana za malengo zinahesabika",
+    "circleContributionsCount": "Michango ya duara inahesabika",
+    "changeOncePerYear": "Marudio yanaweza kubadilika mara moja kwa mwaka.",
+    "changeOncePerYearNext": "Marudio yanaweza kubadilika mara moja kwa mwaka. Mabadiliko yanayofuata yatafunguliwa mwaka {{year}}."
+  },
+  "badges": {
+    "title": "Mkusanyiko wa beji",
+    "saverTitle": "Mwekaji akiba wa {{tier}}",
+    "noBadgeYet": "Bado hakuna beji",
+    "quartersKept_one": "Robo {{count}} imefikiwa",
+    "quartersKept_other": "Robo {{count}} zimefikiwa",
+    "next": "Inayofuata: {{tier}}",
+    "progressNone": "Weka mfululizo wako hai kwa miezi mitatu ili upate beji yako inayofuata.",
+    "progressToday": "Beji yako inayofuata inafika leo, endelea nayo.",
+    "progressDays_one": "Siku {{count}} hadi beji yako inayofuata.",
+    "progressDays_other": "Siku {{count}} hadi beji yako inayofuata.",
+    "empty": "Weka mfululizo hai kwa miezi mitatu ili upate beji yako ya kwanza. Kuna nne za kukusanya kila mwaka, moja kwa kila msimu.",
+    "quarterShort": "R{{n}}"
+  },
+  "tier": {
+    "bronze": "Shaba",
+    "silver": "Fedha",
+    "gold": "Dhahabu"
+  },
+  "season": {
+    "winter": "Baridi",
+    "spring": "Machipuko",
+    "summer": "Kiangazi",
+    "autumn": "Vuli"
+  },
+  "freezes": {
+    "title": "Kugandisha mfululizo",
+    "description": "Kugandisha hulinda mfululizo wako kiotomatiki iwapo utakosa kipindi kimoja. Unapata moja kila miezi mitatu (hadi nne kwa mwaka), na kimoja tu kinaweza kutumika kwa kila robo.",
+    "available": "{{count}} zinapatikana"
+  },
+  "reminders": {
+    "title": "Vikumbusho vya upole",
+    "description": "Kikumbusho kimoja tu kabla ya {{period}} kuisha, ikiwa tu unakitaka. Kimezimwa kwa chaguo-msingi."
+  },
+  "vacation": {
+    "title": "Hali ya likizo",
+    "description": "Maisha yana mambo yake. Simamisha mfululizo wako mara moja kwa mwaka (hadi siku 30) bila kupoteza maendeleo yako.",
+    "onVacation": "Likizoni",
+    "onVacationUntil": "Likizoni hadi {{date}}",
+    "ending": "Inamalizika…",
+    "endEarly": "Maliza likizo mapema",
+    "usedThisYear": "Likizo iliyotumika mwaka huu",
+    "starting": "Inaanza…",
+    "startDays": "Anza likizo ya siku {{count}}"
+  },
+  "footer": {
+    "disclaimer": "Mfululizo wako hauathiri kamwe salio lako wala fedha zako."
+  },
+  "milestone": {
+    "title": "Beji mpya imepatikana",
+    "description": "Miezi mitatu ya kuweka akiba kwa uthabiti. Uthabiti huo ndio jambo zima. Vizuri sana.",
+    "badgeUnlocked": "Beji ya R{{n}} imefunguliwa",
+    "keepItUp": "Endelea hivyo"
+  },
+  "profile": {
+    "title": "Marudio ya mfululizo",
+    "description": "Chagua ni mara ngapi amana inahitaji kutokea ili kuweka mfululizo wako wa kuweka akiba hai.",
+    "frequencyError": "Haikuwezekana kubadilisha marudio ya mfululizo wako.",
+    "recommended": "Inapendekezwa",
+    "lockNote": "Unaweza kubadilisha marudio ya mfululizo wako mara moja kwa mwaka wa kalenda.",
+    "lockNoteNext": "Unaweza kubadilisha marudio ya mfululizo wako mara moja kwa mwaka wa kalenda. Mabadiliko yako yanayofuata yatafunguliwa mwaka {{year}}.",
+    "options": {
+      "daily": {
+        "label": "Kila siku",
+        "description": "Weka mwali ukiwaka kwa amana kila siku. Bora kwa tabia ya kuweka akiba ya kila siku."
+      },
+      "weekly": {
+        "label": "Kila wiki",
+        "description": "Amana moja wakati wowote katika wiki huweka mfululizo wako ukiendelea. Kasi tulivu na thabiti."
+      },
+      "monthly": {
+        "label": "Kila mwezi",
+        "description": "Amana moja tu kila mwezi wa kalenda inatosha. Ya upole na bila shinikizo."
+      }
+    }
+  }
+}

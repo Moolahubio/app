@@ -1,0 +1,145 @@
+{
+  "eyebrow": "连续记录",
+  "title": "储蓄连续记录",
+  "loading": "正在加载你的连续记录…",
+  "period": {
+    "day": "天",
+    "week": "周",
+    "month": "月",
+    "twoWeek": "双周"
+  },
+  "unit": {
+    "day_one": "天",
+    "day_other": "天",
+    "week_one": "周",
+    "week_other": "周",
+    "month_one": "月",
+    "month_other": "月",
+    "twoWeek_one": "双周",
+    "twoWeek_other": "双周"
+  },
+  "status": {
+    "frozen": "已冻结",
+    "paused": "休假中",
+    "broken": "还没有连续记录",
+    "onFire": "火力全开",
+    "active": "进行中"
+  },
+  "indicator": {
+    "aria": "储蓄连续记录：{{count}} 个周期"
+  },
+  "atRisk": {
+    "message": "在 <strong>{{date}}</strong> 之前完成一笔存款即可延续你的连续记录。不必着急，任何目标或互助会存款都算数。"
+  },
+  "hero": {
+    "captionActive": "连续 {{count}} {{period}} · 继续保持",
+    "captionEmpty": "本{{period}}存一笔款，点燃你的火焰"
+  },
+  "stats": {
+    "current": "当前 {{unit}}",
+    "lifetimeBest": "历史最佳",
+    "periodsSaved": "已储蓄周期数"
+  },
+  "share": {
+    "title": "分享你的连续记录",
+    "description": "你的卡片仅显示连续记录次数。除非你开启，否则金额将保持私密。",
+    "includeAmount": "包含已储蓄金额",
+    "download": "下载",
+    "share": "分享",
+    "shareTitle": "我的 MoolaHub 连续记录",
+    "card": {
+      "amountSaved": "已储蓄 {{amount}}"
+    }
+  },
+  "frequencyName": {
+    "daily": "每日",
+    "weekly": "每周",
+    "monthly": "每月",
+    "biweekly": "每双周"
+  },
+  "card": {
+    "streakTitle": "{{frequency}}连续记录",
+    "oneDepositPer": "每{{period}}存一笔款即可让你的火焰持续燃烧。",
+    "change": "更改",
+    "goalDepositsCount": "目标存款计入",
+    "circleContributionsCount": "互助会缴款计入",
+    "changeOncePerYear": "频率每年可更改一次。",
+    "changeOncePerYearNext": "频率每年可更改一次。下次更改将于 {{year}} 解锁。"
+  },
+  "badges": {
+    "title": "徽章收藏",
+    "saverTitle": "{{tier}}储蓄者",
+    "noBadgeYet": "还没有徽章",
+    "quartersKept_one": "已保持 {{count}} 个季度",
+    "quartersKept_other": "已保持 {{count}} 个季度",
+    "next": "下一个：{{tier}}",
+    "progressNone": "连续储蓄三个月即可获得下一枚徽章。",
+    "progressToday": "你的下一枚徽章今天到手，继续保持。",
+    "progressDays_one": "距离下一枚徽章还有 {{count}} 天。",
+    "progressDays_other": "距离下一枚徽章还有 {{count}} 天。",
+    "empty": "连续储蓄三个月即可获得你的第一枚徽章。每年有四枚可收集，每个季节一枚。",
+    "quarterShort": "Q{{n}}"
+  },
+  "tier": {
+    "bronze": "铜牌",
+    "silver": "银牌",
+    "gold": "金牌"
+  },
+  "season": {
+    "winter": "冬季",
+    "spring": "春季",
+    "summer": "夏季",
+    "autumn": "秋季"
+  },
+  "freezes": {
+    "title": "连续记录冻结",
+    "description": "如果你错过了某一个周期，冻结会自动保护你的连续记录。你每三个月获得一次（每年最多四次），且每个季度最多使用一次。",
+    "available": "可用 {{count}} 次"
+  },
+  "reminders": {
+    "title": "温和提醒",
+    "description": "在一个{{period}}结束前提醒你一次，仅在你需要时。默认关闭。"
+  },
+  "vacation": {
+    "title": "休假模式",
+    "description": "生活总有意外。每年可暂停一次连续记录（最多 30 天），不会失去你的进度。",
+    "onVacation": "休假中",
+    "onVacationUntil": "休假至 {{date}}",
+    "ending": "正在结束…",
+    "endEarly": "提前结束休假",
+    "usedThisYear": "本年度已使用休假",
+    "starting": "正在开始…",
+    "startDays": "开始 {{count}} 天休假"
+  },
+  "footer": {
+    "disclaimer": "你的连续记录绝不会影响你的余额或你的资金。"
+  },
+  "milestone": {
+    "title": "获得新徽章",
+    "description": "三个月稳定储蓄。这份坚持才是关键所在。做得漂亮。",
+    "badgeUnlocked": "Q{{n}} 徽章已解锁",
+    "keepItUp": "继续保持"
+  },
+  "profile": {
+    "title": "连续记录频率",
+    "description": "选择需要多久存一次款才能延续你的储蓄连续记录。",
+    "frequencyError": "无法更改你的连续记录频率。",
+    "recommended": "推荐",
+    "lockNote": "你每个日历年可更改一次连续记录频率。",
+    "lockNoteNext": "你每个日历年可更改一次连续记录频率。下次更改将于 {{year}} 解锁。",
+    "options": {
+      "daily": {
+        "label": "每日",
+        "description": "每天存一笔款，让火焰持续燃烧。最适合日常储蓄习惯。"
+      },
+      "weekly": {
+        "label": "每周",
+        "description": "一周内任意时间存一笔款即可延续连续记录。节奏从容而稳定。"
+      },
+      "monthly": {
+        "label": "每月",
+        "description": "每个日历月只需存一笔款即可。轻松无压力。"
+      }
+    }
+  }
+}

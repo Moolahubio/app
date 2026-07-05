@@ -1,0 +1,161 @@
+{
+  "list": {
+    "loading": "Ana loda tanadin ku na kanku…",
+    "title": "Tanadin ku na kanku",
+    "description": "Saita manufa da kwanan wata, mu kuma za mu bibiyi ci gaban ku. Kowace manufa tulu ce a cikin walat ɗin ku ɗaya, ba wani asusu daban ba.",
+    "newGoal": "Sabuwar manufa",
+    "createGoal": "Ƙirƙiri manufa"
+  },
+  "cadence": {
+    "option": {
+      "daily": "Kullum",
+      "weekly": "Mako-mako",
+      "monthly": "Wata-wata"
+    },
+    "adverb": {
+      "daily": "kullum",
+      "weekly": "mako-mako",
+      "monthly": "wata-wata"
+    },
+    "short": {
+      "daily": "rana",
+      "weekly": "mako",
+      "monthly": "wata"
+    }
+  },
+  "create": {
+    "title": "Ƙirƙiri manufa",
+    "name": {
+      "label": "Sunan manufa",
+      "placeholder": "misali Kuɗin gaggawa"
+    },
+    "target": {
+      "label": "Adadin da ake nufi (USDC)"
+    },
+    "deadline": {
+      "label": "Kwanan wata da ake nufi"
+    },
+    "frequency": {
+      "label": "Yawan ba da gudummawa",
+      "hint": "Gudummawa na farawa da kaɗan don ƙirƙirar ɗabi'a sannan tana ƙaruwa a hankali har sai ka cimma manufar ka."
+    },
+    "plan": {
+      "eyebrow": "Shirin tanadin ku",
+      "daily": "Fara da <0></0> yau sannan ka ƙara zuwa <1></1> cikin kwanaki {{count}}.",
+      "weekly": "Fara da <0></0> wannan mako sannan ka ƙara zuwa <1></1> cikin makonni {{count}}.",
+      "monthly": "Fara da <0></0> wannan wata sannan ka ƙara zuwa <1></1> cikin watanni {{count}}."
+    },
+    "image": {
+      "label": "Hoto (na zaɓi)",
+      "hint": "Ƙara hoton abin da kake yin tanadi domin sa don kiyaye burin da rai."
+    },
+    "submit": "Ƙirƙiri Manufa",
+    "submitting": "Ana ƙirƙira…"
+  },
+  "summary": {
+    "allocated": "An ware zuwa tanadi",
+    "combinedTarget": "Jimillar manufa",
+    "overallProgress": "Ci gaba gaba ɗaya"
+  },
+  "card": {
+    "next": "na gaba <0></0>/{{unit}}",
+    "by": "kafin {{date}}",
+    "of": "daga cikin <0></0>",
+    "pctThere": "{{pct}}% an cimma",
+    "manage": "Sarrafa manufa"
+  },
+  "info": {
+    "unallocated": "A yanzu kana da <0></0> da ba a ware ba. Sanya shi ga wata manufa domin ci gaba da tanadin ka a kan turba."
+  },
+  "detail": {
+    "loading": "Ana loda manufa…",
+    "notFound": "Ba mu sami wannan manufar ba.",
+    "savedLabel": "an ajiye",
+    "savedOfTarget": "<0></0> daga cikin <1></1>",
+    "onChain": "A kan sarkar"
+  },
+  "deposit": {
+    "title": "Ƙara kuɗi",
+    "description": "Matsar da kuɗi daga ma'aunin ku da ke akwai zuwa wannan rabo.",
+    "descriptionOnchain": "Matsar da kuɗi daga ma'aunin ku da ke akwai zuwa ma'ajin wannan manufa da ke kan sarkar. Ajiya kyauta ce.",
+    "addFunds": "Ƙara kuɗi",
+    "success": "An ƙara kuɗi ga manufar"
+  },
+  "withdraw": {
+    "title": "Cire kuɗi",
+    "feeNote": "Ana ɗaukar kuɗin cirewa na {{fee}}% a kan sarkar. Kana samun adadin bayan an cire kuɗin.",
+    "submit": "Cire zuwa akwai",
+    "released": "An saki {{amount}} zuwa akwai",
+    "releasedWithFee": "An saki {{amount}} (bayan kuɗin {{fee}})"
+  },
+  "stats": {
+    "remaining": "Sauran",
+    "targetDate": "Kwanan wata da ake nufi"
+  },
+  "plan": {
+    "title": "Shirin ba da gudummawa",
+    "subtitle": "{{cadence}} · yana ƙaruwa a hankali",
+    "step": "Mataki {{current}}/{{total}}",
+    "complete": "An kammala",
+    "nextContribution": "Gudummawa ta gaba",
+    "thisCadence": {
+      "daily": "yau",
+      "weekly": "wannan mako",
+      "monthly": "wannan wata"
+    },
+    "allDone": "Ka kammala kowane mataki na shirin ka. 🎉",
+    "keepGoing": {
+      "daily": "Ci gaba kullum. Kimanin <0>kwanaki {{count}}</0> na gudummawa suka rage don cimma manufar ka.",
+      "weekly": "Ci gaba mako-mako. Kimanin <0>makonni {{count}}</0> na gudummawa suka rage don cimma manufar ka.",
+      "monthly": "Ci gaba wata-wata. Kimanin <0>watanni {{count}}</0> na gudummawa suka rage don cimma manufar ka."
+    }
+  },
+  "vault": {
+    "title": "Ma'ajin kan sarkar",
+    "description": "Kuɗin da ka ware ana ajiye su a cikin wannan ma'aji a kan Monad. Ana ɗaukar kuɗin ladar yarjejeniya na {{fee}}% a kowane cirewa."
+  },
+  "activity": {
+    "title": "Ayyuka",
+    "types": {
+      "goal_allocate": "Warewar manufa",
+      "goal_release": "Sakin manufa"
+    },
+    "status": {
+      "none": "Babu",
+      "pending": "Ana jira",
+      "confirmed": "An tabbatar",
+      "failed": "Ya kasa"
+    }
+  },
+  "delete": {
+    "title": "Share manufa",
+    "descEmpty": "Wannan zai rufe manufar har abada.",
+    "descWithBalance": "Wannan zai mayar da cikakken ma'aunin {{amount}} zuwa kuɗin ka da ke akwai sannan ya rufe manufar.",
+    "descWithFee": "Wannan zai cire cikakken ma'aunin {{amount}} zuwa kuɗin ka da ke akwai (ban da kuɗin cirewa na {{fee}}%) sannan ya rufe manufar.",
+    "confirm": "Tabbatar da sharewa",
+    "deleting": "Ana sharewa…"
+  },
+  "toast": {
+    "streakTitle": "An ci gaba da jerin 🔥",
+    "streakDescription": "Kyau, wannan ajiya tana ƙidaya ga jerin tanadin ka."
+  },
+  "privy": {
+    "loadingWallet": "Ana loda walat ɗin ku…",
+    "connect": {
+      "deposit": {
+        "prompt": "Walat ɗin ku na kanku ne. Haɗa shi don ka rattaba hannu kan ajiyar da kanka.",
+        "button": "Haɗa walat don ajiya"
+      },
+      "withdrawal": {
+        "prompt": "Walat ɗin ku na kanku ne. Haɗa shi don ka rattaba hannu kan cirewar da kanka.",
+        "button": "Haɗa walat don cirewa"
+      }
+    },
+    "errors": {
+      "unavailable": "Tanadin manufa a kan sarkar ba ya samuwa a wannan tsari.",
+      "invalidAmount": "Shigar da adadi mai inganci.",
+      "depositFailed": "Ajiya ta kasa. Da fatan za a sake gwadawa.",
+      "withdrawalFailed": "Cirewa ta kasa. Da fatan za a sake gwadawa."
+    }
+  }
+}

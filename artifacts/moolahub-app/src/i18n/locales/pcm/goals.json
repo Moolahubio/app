@@ -1,0 +1,161 @@
+{
+  "list": {
+    "loading": "Dey load your personal savings…",
+    "title": "Your personal savings",
+    "description": "Set target and date, and we go track how you dey go. Every goal na pot inside your one wallet, no be separate account.",
+    "newGoal": "New goal",
+    "createGoal": "Create goal"
+  },
+  "cadence": {
+    "option": {
+      "daily": "Every day",
+      "weekly": "Every week",
+      "monthly": "Every month"
+    },
+    "adverb": {
+      "daily": "every day",
+      "weekly": "every week",
+      "monthly": "every month"
+    },
+    "short": {
+      "daily": "day",
+      "weekly": "wk",
+      "monthly": "mo"
+    }
+  },
+  "create": {
+    "title": "Create goal",
+    "name": {
+      "label": "Goal name",
+      "placeholder": "e.g. Emergency fund"
+    },
+    "target": {
+      "label": "Target amount (USDC)"
+    },
+    "deadline": {
+      "label": "Target date"
+    },
+    "frequency": {
+      "label": "How often you go contribute",
+      "hint": "Contributions dey start small to build the habit and dey grow small small until you reach your target."
+    },
+    "plan": {
+      "eyebrow": "Your savings plan",
+      "daily": "Start with <0></0> today and build up reach <1></1> over {{count}} days.",
+      "weekly": "Start with <0></0> this week and build up reach <1></1> over {{count}} weeks.",
+      "monthly": "Start with <0></0> this month and build up reach <1></1> over {{count}} months."
+    },
+    "image": {
+      "label": "Picture (optional)",
+      "hint": "Add photo of wetin you dey save for so the dream go dey alive."
+    },
+    "submit": "Create Goal",
+    "submitting": "Dey create…"
+  },
+  "summary": {
+    "allocated": "Wey you don put for savings",
+    "combinedTarget": "Total target",
+    "overallProgress": "Overall progress"
+  },
+  "card": {
+    "next": "next <0></0>/{{unit}}",
+    "by": "by {{date}}",
+    "of": "of <0></0>",
+    "pctThere": "{{pct}}% don reach",
+    "manage": "Manage goal"
+  },
+  "info": {
+    "unallocated": "For now you get <0></0> wey you never allocate. Assign am to one goal make your savings dey on track."
+  },
+  "detail": {
+    "loading": "Dey load goal…",
+    "notFound": "We no fit find that goal.",
+    "savedLabel": "saved",
+    "savedOfTarget": "<0></0> of <1></1>",
+    "onChain": "On-chain"
+  },
+  "deposit": {
+    "title": "Add money",
+    "description": "Move money from your available balance go inside this allocation.",
+    "descriptionOnchain": "Move money from your available balance go inside this goal on-chain vault. Deposit na free.",
+    "addFunds": "Add money",
+    "success": "Money don enter goal"
+  },
+  "withdraw": {
+    "title": "Withdraw",
+    "feeNote": "Dem go collect {{fee}}% withdrawal fee on-chain. You go receive the amount after dem remove the fee.",
+    "submit": "Withdraw go available",
+    "released": "{{amount}} don release go available",
+    "releasedWithFee": "{{amount}} don release (after {{fee}} fee)"
+  },
+  "stats": {
+    "remaining": "Wey remain",
+    "targetDate": "Target date"
+  },
+  "plan": {
+    "title": "Contribution plan",
+    "subtitle": "{{cadence}} · dey grow small small",
+    "step": "Step {{current}}/{{total}}",
+    "complete": "Complete",
+    "nextContribution": "Next contribution",
+    "thisCadence": {
+      "daily": "today",
+      "weekly": "this week",
+      "monthly": "this month"
+    },
+    "allDone": "You don complete every step for your plan. 🎉",
+    "keepGoing": {
+      "daily": "Continue every day. About <0>{{count}} days</0> of contributions remain make you reach your target.",
+      "weekly": "Continue every week. About <0>{{count}} weeks</0> of contributions remain make you reach your target.",
+      "monthly": "Continue every month. About <0>{{count}} months</0> of contributions remain make you reach your target."
+    }
+  },
+  "vault": {
+    "title": "On-chain vault",
+    "description": "The money wey you allocate dey enter this vault for Monad. Dem dey collect {{fee}}% protocol fee for every withdrawal."
+  },
+  "activity": {
+    "title": "Activity",
+    "types": {
+      "goal_allocate": "Goal allocate",
+      "goal_release": "Goal release"
+    },
+    "status": {
+      "none": "None",
+      "pending": "Dey wait",
+      "confirmed": "Confirmed",
+      "failed": "Fail"
+    }
+  },
+  "delete": {
+    "title": "Delete goal",
+    "descEmpty": "This one go close the goal permanently.",
+    "descWithBalance": "This one go return the full {{amount}} balance back to your available money and close the goal.",
+    "descWithFee": "This one go withdraw the full {{amount}} balance back to your available money (after dem remove the {{fee}}% withdrawal fee) and close the goal.",
+    "confirm": "Confirm delete",
+    "deleting": "Dey delete…"
+  },
+  "toast": {
+    "streakTitle": "Streak still dey alive 🔥",
+    "streakDescription": "Nice, that deposit dey count for your savings streak."
+  },
+  "privy": {
+    "loadingWallet": "Dey load your wallet…",
+    "connect": {
+      "deposit": {
+        "prompt": "Your wallet na self-custodial. Connect am make you sign the deposit yourself.",
+        "button": "Connect wallet to deposit"
+      },
+      "withdrawal": {
+        "prompt": "Your wallet na self-custodial. Connect am make you sign the withdrawal yourself.",
+        "button": "Connect wallet to withdraw"
+      }
+    },
+    "errors": {
+      "unavailable": "On-chain goal savings no dey available for this deployment.",
+      "invalidAmount": "Enter valid amount.",
+      "depositFailed": "Deposit fail. Abeg try again.",
+      "withdrawalFailed": "Withdrawal fail. Abeg try again."
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "list": {
+    "loading": "正在加载你的团体储蓄…",
+    "title": "你的团体储蓄",
+    "description": "与你信任的人一起进行轮转储蓄。每一轮都由链上合约托管，而非个人。",
+    "emptyHint": "邀请亲友并设定你的缴款金额"
+  },
+  "info": {
+    "susu": "<b>Susu 的运作方式：</b>每一轮每人缴纳固定金额。在<em>轮转</em>圈中，每一轮由一名成员领取全部资金池，直到每个人都轮到为止。在<em>累积</em>圈中，所有人存入一个共享资金池，最后各自取回自己的储蓄。一切都可在 Monad 上验证。"
+  },
+  "frequency": {
+    "weekly": "每周",
+    "biweekly": "每两周",
+    "monthly": "每月"
+  },
+  "status": {
+    "active": "进行中",
+    "forming": "组建中",
+    "completed": "已完成"
+  },
+  "type": {
+    "rotation": "轮转",
+    "accumulation": "累积"
+  },
+  "create": {
+    "startCircle": "创建储蓄圈",
+    "title": "新建储蓄圈",
+    "submit": "创建储蓄圈",
+    "submitting": "正在创建…",
+    "name": {
+      "label": "名称",
+      "placeholder": "例如：家庭储蓄"
+    },
+    "type": {
+      "label": "储蓄圈类型",
+      "rotation": {
+        "title": "轮转",
+        "description": "轮流领取。每一轮每人缴款，由一名成员领取全部资金池，直到每个人都轮到为止。"
+      },
+      "accumulation": {
+        "title": "累积",
+        "description": "共同储蓄。所有人存入一个共享资金池，最后各自取回自己的储蓄。"
+      }
+    },
+    "targetPayout": {
+      "label": "每人目标领取金额（USDC）",
+      "hint": "轮到某成员时其领取的金额。"
+    },
+    "groupSize": {
+      "label": "人数（包括你在内）"
+    },
+    "contribution": {
+      "label": "每轮缴款（USDC）"
+    },
+    "numRounds": {
+      "label": "轮数"
+    },
+    "frequency": {
+      "label": "频率"
+    },
+    "emails": {
+      "label": "成员邮箱",
+      "hintRotation": "（最多邀请 {{count}} 人，以逗号分隔）",
+      "hintAccumulation": "（最多 19 人，以逗号分隔）",
+      "placeholder": "friend@example.com, cousin@example.com",
+      "tooManyRotation": "邀请人数过多。{{size}} 人的储蓄圈除你之外还可容纳 {{count}} 人。",
+      "tooManyAccumulation": "成员过多。一个储蓄圈最多可有 20 人（你 + 19 名受邀者）。"
+    },
+    "summary": {
+      "youPay": "你每轮缴款",
+      "youReceive": "你领取",
+      "youReceiveEnd": "你在结束时领取",
+      "rotationDetail": "{{count}} 名成员每人缴纳 {{base}} 本金 + {{fee}} 手续费（2%）。轮到你时你将领取 {{payout}}。所有人加入后储蓄圈将自动开始。",
+      "accumulationDetail": "在 {{count}} 轮后取回你自己的储蓄。"
+    },
+    "image": {
+      "label": "储蓄圈图片（可选）",
+      "hint": "作为储蓄圈管理员，添加一张照片，凝聚你的团队朝目标努力。"
+    }
+  },
+  "invites": {
+    "title": "邀请（{{count}}）",
+    "invitedBy": "{{name}} 邀请了你",
+    "accept": "接受",
+    "decline": "拒绝"
+  },
+  "card": {
+    "members": "{{count}} 名成员",
+    "perRound": "每轮",
+    "youReceive": "你领取",
+    "roundOf": "第 {{current}} 轮，共 {{total}} 轮",
+    "joinedProgress": "{{joined}}/{{target}} 已加入 · 满员后自动开始",
+    "forming": "组建中。等待开始。",
+    "viewCircle": "查看储蓄圈"
+  },
+  "detail": {
+    "loading": "正在加载储蓄圈…",
+    "notFound": "我们找不到该储蓄圈。",
+    "onChain": "链上",
+    "formingSuffix": "组建中",
+    "submitting": "正在提交…",
+    "contribute": "缴款 {{amount}}",
+    "contributedThisRound": "本轮已缴款",
+    "notStarted": "该储蓄圈尚未开始",
+    "stats": {
+      "rounds": "轮数",
+      "yourPosition": "你的位置",
+      "started": "已开始"
+    },
+    "build": {
+      "title": "组建你的储蓄圈",
+      "descAccumulation": "通过邮箱邀请成员。所有人存入一个共享资金池，持续 {{count}} 轮，然后取回各自的储蓄。所有人加入后即可开始储蓄圈。",
+      "descTargeted": "通过邮箱邀请成员。{{joined}}/{{target}} 已加入。最后一人加入的那一刻，储蓄圈将自动开始。",
+      "descRotation": "通过邮箱邀请成员。轮数等于成员数，因此每人恰好领取一次。所有人加入后即可开始储蓄圈。",
+      "sent": "已发送",
+      "start": "开始储蓄圈",
+      "starting": "正在开始…",
+      "needMore": "再邀请至少一名成员即可开始储蓄圈。"
+    },
+    "delete": {
+      "title": "删除储蓄圈",
+      "description": "尚无其他人加入，因此你可以删除此储蓄圈。一旦有其他成员加入，便无法删除。此操作将永久移除该储蓄圈及所有待处理的邀请。",
+      "confirm": "确认删除",
+      "deleting": "正在删除…"
+    },
+    "schedule": {
+      "membersTitle": "成员",
+      "payoutTitle": "领取时间表",
+      "descAccumulation": "所有人存入一个共享资金池。经过 {{count}} 轮后，每名成员取回各自的储蓄，并在链上锁定。",
+      "descRotation": "轮转顺序已在链上锁定，因此每个人都知道谁在何时领取资金池。",
+      "you": "（你）",
+      "savingsReturned": "储蓄已返还",
+      "saving": "储蓄中",
+      "receivedPot": "已领取资金池",
+      "receivingNow": "正在领取",
+      "current": "当前"
+    },
+    "progress": {
+      "title": "轮次进度",
+      "roundsOf": "{{current}}/{{total}} 轮"
+    },
+    "escrow": {
+      "title": "链上托管",
+      "description": "缴款结算至 Monad 上的这个 Susu 托管账户。每次领取会收取 {{fee}}% 的协议费。"
+    },
+    "history": {
+      "title": "你的缴款记录",
+      "round": "第 {{round}} 轮"
+    },
+    "toast": {
+      "streakTitle": "连续记录已保持 🔥",
+      "streakDescription": "很好，这笔缴款计入你的储蓄连续记录。"
+    }
+  },
+  "privy": {
+    "loadingWallet": "正在加载你的钱包…",
+    "selfCustody": "你的钱包由你自行托管。连接钱包以自行签署此次缴款。",
+    "connect": "连接钱包以缴款",
+    "notAvailable": "此部署环境不支持链上缴款。",
+    "failed": "缴款失败。请重试。",
+    "submitting": "正在提交…"
+  }
+}

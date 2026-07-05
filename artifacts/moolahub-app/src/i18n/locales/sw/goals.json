@@ -1,0 +1,161 @@
+{
+  "list": {
+    "loading": "Inapakia akiba yako binafsi…",
+    "title": "Akiba yako binafsi",
+    "description": "Weka lengo na tarehe, nasi tutafuatilia maendeleo yako. Kila lengo ni kifuko ndani ya pochi yako moja, si akaunti tofauti.",
+    "newGoal": "Lengo jipya",
+    "createGoal": "Tengeneza lengo"
+  },
+  "cadence": {
+    "option": {
+      "daily": "Kila siku",
+      "weekly": "Kila wiki",
+      "monthly": "Kila mwezi"
+    },
+    "adverb": {
+      "daily": "kila siku",
+      "weekly": "kila wiki",
+      "monthly": "kila mwezi"
+    },
+    "short": {
+      "daily": "siku",
+      "weekly": "wiki",
+      "monthly": "mwezi"
+    }
+  },
+  "create": {
+    "title": "Tengeneza lengo",
+    "name": {
+      "label": "Jina la lengo",
+      "placeholder": "mf. Mfuko wa dharura"
+    },
+    "target": {
+      "label": "Kiasi lengwa (USDC)"
+    },
+    "deadline": {
+      "label": "Tarehe lengwa"
+    },
+    "frequency": {
+      "label": "Marudio ya michango",
+      "hint": "Michango huanza kidogo ili kujenga tabia na huongezeka taratibu hadi ufikie lengo lako."
+    },
+    "plan": {
+      "eyebrow": "Mpango wako wa kuweka akiba",
+      "daily": "Anza kwa <0></0> leo na uongeze hadi <1></1> ndani ya siku {{count}}.",
+      "weekly": "Anza kwa <0></0> wiki hii na uongeze hadi <1></1> ndani ya wiki {{count}}.",
+      "monthly": "Anza kwa <0></0> mwezi huu na uongeze hadi <1></1> ndani ya miezi {{count}}."
+    },
+    "image": {
+      "label": "Picha (hiari)",
+      "hint": "Ongeza picha ya kitu unachowekea akiba ili kuweka ndoto hai."
+    },
+    "submit": "Tengeneza Lengo",
+    "submitting": "Inatengeneza…"
+  },
+  "summary": {
+    "allocated": "Iliyotengwa kwa akiba",
+    "combinedTarget": "Lengo la jumla",
+    "overallProgress": "Maendeleo ya jumla"
+  },
+  "card": {
+    "next": "ijayo <0></0>/{{unit}}",
+    "by": "ifikapo {{date}}",
+    "of": "kati ya <0></0>",
+    "pctThere": "{{pct}}% umefika",
+    "manage": "Dhibiti lengo"
+  },
+  "info": {
+    "unallocated": "Kwa sasa una <0></0> ambayo haijatengwa. Itenge kwa lengo ili akiba yako iendelee vizuri."
+  },
+  "detail": {
+    "loading": "Inapakia lengo…",
+    "notFound": "Hatukuweza kupata lengo hilo.",
+    "savedLabel": "imewekwa",
+    "savedOfTarget": "<0></0> kati ya <1></1>",
+    "onChain": "Kwenye mnyororo"
+  },
+  "deposit": {
+    "title": "Ongeza pesa",
+    "description": "Hamisha fedha kutoka salio lako lililopo hadi mgao huu.",
+    "descriptionOnchain": "Hamisha fedha kutoka salio lako lililopo hadi hazina ya lengo hili kwenye mnyororo. Amana ni bure.",
+    "addFunds": "Ongeza fedha",
+    "success": "Fedha zimeongezwa kwenye lengo"
+  },
+  "withdraw": {
+    "title": "Toa",
+    "feeNote": "Ada ya kutoa ya {{fee}}% hukatwa kwenye mnyororo. Utapokea kiasi baada ya kutoa ada.",
+    "submit": "Toa hadi salio lililopo",
+    "released": "{{amount}} imetolewa hadi salio lililopo",
+    "releasedWithFee": "{{amount}} imetolewa (baada ya ada ya {{fee}})"
+  },
+  "stats": {
+    "remaining": "Iliyobaki",
+    "targetDate": "Tarehe lengwa"
+  },
+  "plan": {
+    "title": "Mpango wa michango",
+    "subtitle": "{{cadence}} · huongezeka taratibu",
+    "step": "Hatua {{current}}/{{total}}",
+    "complete": "Imekamilika",
+    "nextContribution": "Mchango ujao",
+    "thisCadence": {
+      "daily": "leo",
+      "weekly": "wiki hii",
+      "monthly": "mwezi huu"
+    },
+    "allDone": "Umekamilisha kila hatua ya mpango wako. 🎉",
+    "keepGoing": {
+      "daily": "Endelea kila siku. Takriban <0>siku {{count}}</0> za michango zimebaki ili kufikia lengo lako.",
+      "weekly": "Endelea kila wiki. Takriban <0>wiki {{count}}</0> za michango zimebaki ili kufikia lengo lako.",
+      "monthly": "Endelea kila mwezi. Takriban <0>miezi {{count}}</0> ya michango imebaki ili kufikia lengo lako."
+    }
+  },
+  "vault": {
+    "title": "Hazina kwenye mnyororo",
+    "description": "Fedha unazotenga huwekwa kwenye hazina hii kwenye Monad. Ada ya itifaki ya {{fee}}% hukatwa kwa kila utoaji."
+  },
+  "activity": {
+    "title": "Shughuli",
+    "types": {
+      "goal_allocate": "Kutenga kwa lengo",
+      "goal_release": "Kutoa kutoka lengo"
+    },
+    "status": {
+      "none": "Hakuna",
+      "pending": "Inasubiri",
+      "confirmed": "Imethibitishwa",
+      "failed": "Imeshindwa"
+    }
+  },
+  "delete": {
+    "title": "Futa lengo",
+    "descEmpty": "Hii inafunga lengo kabisa.",
+    "descWithBalance": "Hii inarudisha salio kamili la {{amount}} kwenye fedha zako zilizopo na kufunga lengo.",
+    "descWithFee": "Hii inatoa salio kamili la {{amount}} kurudi kwenye fedha zako zilizopo (baada ya kupunguza ada ya kutoa ya {{fee}}%) na kufunga lengo.",
+    "confirm": "Thibitisha kufuta",
+    "deleting": "Inafuta…"
+  },
+  "toast": {
+    "streakTitle": "Mfululizo umedumishwa 🔥",
+    "streakDescription": "Vizuri, amana hiyo inahesabika kwenye mfululizo wako wa kuweka akiba."
+  },
+  "privy": {
+    "loadingWallet": "Inapakia pochi yako…",
+    "connect": {
+      "deposit": {
+        "prompt": "Pochi yako inajitunza yenyewe. Iunganishe ili usaini amana mwenyewe.",
+        "button": "Unganisha pochi ili kuweka amana"
+      },
+      "withdrawal": {
+        "prompt": "Pochi yako inajitunza yenyewe. Iunganishe ili usaini utoaji mwenyewe.",
+        "button": "Unganisha pochi ili kutoa"
+      }
+    },
+    "errors": {
+      "unavailable": "Kuweka akiba ya malengo kwenye mnyororo hakupatikani kwenye toleo hili.",
+      "invalidAmount": "Weka kiasi sahihi.",
+      "depositFailed": "Amana imeshindikana. Tafadhali jaribu tena.",
+      "withdrawalFailed": "Utoaji umeshindikana. Tafadhali jaribu tena."
+    }
+  }
+}

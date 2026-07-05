@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Download, Share2 } from "lucide-react";
 import {
   Dialog,
@@ -29,6 +30,7 @@ export function StreakShareCard({
   caption: string;
   amountCents?: number | null;
 }) {
+  const { t } = useTranslation("streak");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showAmount, setShowAmount] = useState(false);
 
@@ -37,16 +39,18 @@ export function StreakShareCard({
     if (open) setShowAmount(false);
   }, [open]);
 
+  const amountLabel =
+    showAmount && amountCents != null
+      ? t("share.card.amountSaved", { amount: formatMoney(amountCents) })
+      : null;
+  const brand = `MoolaHub · ${t("common:app.tagline")}`;
+
   useEffect(() => {
     if (!open) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    drawCard(canvas, {
-      count,
-      caption,
-      amount: showAmount && amountCents != null ? formatMoney(amountCents) : null,
-    });
-  }, [open, count, caption, amountCents, showAmount]);
+    drawCard(canvas, { count, caption, amount: amountLabel, brand });
+  }, [open, count, caption, amountLabel, brand]);
 
   const download = () => {
     const canvas = canvasRef.current;
@@ -71,7 +75,7 @@ export function StreakShareCard({
       const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
       if (nav.canShare?.({ files: [file] })) {
         try {
-          await nav.share({ files: [file], title: "My MoolaHub streak" } as ShareData);
+          await nav.share({ files: [file], title: t("share.shareTitle") } as ShareData);
           return;
         } catch {
           /* user cancelled — fall through to download */
@@ -85,9 +89,9 @@ export function StreakShareCard({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Share your streak</DialogTitle>
+          <DialogTitle>{t("share.title")}</DialogTitle>
           <DialogDescription>
-            Your card shows your streak count only. Dollar amounts stay private unless you turn them on.
+            {t("share.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -97,17 +101,17 @@ export function StreakShareCard({
 
         {amountCents != null && (
           <label className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
-            <span className="text-sm font-medium text-foreground">Include amount saved</span>
+            <span className="text-sm font-medium text-foreground">{t("share.includeAmount")}</span>
             <Switch checked={showAmount} onCheckedChange={setShowAmount} />
           </label>
         )}
 
         <div className="flex gap-3">
           <Button variant="secondary" className="flex-1" onClick={download}>
-            <Download className="h-4 w-4" /> Download
+            <Download className="h-4 w-4" /> {t("share.download")}
           </Button>
           <Button className="flex-1" onClick={() => void share()}>
-            <Share2 className="h-4 w-4" /> Share
+            <Share2 className="h-4 w-4" /> {t("share.share")}
           </Button>
         </div>
       </DialogContent>
@@ -117,7 +121,12 @@ export function StreakShareCard({
 
 function drawCard(
   canvas: HTMLCanvasElement,
-  { count, caption, amount }: { count: number; caption: string; amount: string | null },
+  {
+    count,
+    caption,
+    amount,
+    brand,
+  }: { count: number; caption: string; amount: string | null; brand: string },
 ) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -148,10 +157,10 @@ function drawCard(
   if (amount) {
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.font = "600 56px 'Hanken Grotesk', system-ui, sans-serif";
-    ctx.fillText(`${amount} saved`, S / 2, S / 2 + 350);
+    ctx.fillText(amount, S / 2, S / 2 + 350);
   }
 
   ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.font = "600 38px 'Space Grotesk', system-ui, sans-serif";
-  ctx.fillText("MoolaHub · Save. Earn. Belong.", S / 2, S - 80);
+  ctx.fillText(brand, S / 2, S - 80);
 }

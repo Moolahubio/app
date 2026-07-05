@@ -1,0 +1,145 @@
+{
+  "eyebrow": "Séries",
+  "title": "Série d'épargne",
+  "loading": "Chargement de votre série…",
+  "period": {
+    "day": "jour",
+    "week": "semaine",
+    "month": "mois",
+    "twoWeek": "2 semaines"
+  },
+  "unit": {
+    "day_one": "jour",
+    "day_other": "jours",
+    "week_one": "semaine",
+    "week_other": "semaines",
+    "month_one": "mois",
+    "month_other": "mois",
+    "twoWeek_one": "2 semaines",
+    "twoWeek_other": "2 semaines"
+  },
+  "status": {
+    "frozen": "Gelée",
+    "paused": "En vacances",
+    "broken": "Pas encore de série",
+    "onFire": "En feu",
+    "active": "Active"
+  },
+  "indicator": {
+    "aria": "Série d'épargne : {{count}} périodes"
+  },
+  "atRisk": {
+    "message": "Un seul dépôt avant le <strong>{{date}}</strong> maintient votre série en vie. Pas de précipitation, tout dépôt vers un objectif ou un cercle compte."
+  },
+  "hero": {
+    "captionActive": "Série de {{count}} {{period}} · continuez ainsi",
+    "captionEmpty": "Faites un dépôt ce {{period}} pour allumer votre flamme"
+  },
+  "stats": {
+    "current": "{{unit}} en cours",
+    "lifetimeBest": "Meilleur record",
+    "periodsSaved": "Périodes épargnées"
+  },
+  "share": {
+    "title": "Partagez votre série",
+    "description": "Votre carte affiche uniquement le nombre de votre série. Les montants restent privés sauf si vous les activez.",
+    "includeAmount": "Inclure le montant épargné",
+    "download": "Télécharger",
+    "share": "Partager",
+    "shareTitle": "Ma série MoolaHub",
+    "card": {
+      "amountSaved": "{{amount}} épargnés"
+    }
+  },
+  "frequencyName": {
+    "daily": "Quotidienne",
+    "weekly": "Hebdomadaire",
+    "monthly": "Mensuelle",
+    "biweekly": "Bimensuelle"
+  },
+  "card": {
+    "streakTitle": "Série {{frequency}}",
+    "oneDepositPer": "Un dépôt par {{period}} garde votre flamme allumée.",
+    "change": "Modifier",
+    "goalDepositsCount": "Les dépôts vers un objectif comptent",
+    "circleContributionsCount": "Les contributions à un cercle comptent",
+    "changeOncePerYear": "La fréquence peut changer une fois par an.",
+    "changeOncePerYearNext": "La fréquence peut changer une fois par an. Le prochain changement se débloque en {{year}}."
+  },
+  "badges": {
+    "title": "Collection de badges",
+    "saverTitle": "Épargnant {{tier}}",
+    "noBadgeYet": "Pas encore de badge",
+    "quartersKept_one": "{{count}} trimestre tenu",
+    "quartersKept_other": "{{count}} trimestres tenus",
+    "next": "Suivant : {{tier}}",
+    "progressNone": "Maintenez votre série pendant trois mois pour gagner votre prochain badge.",
+    "progressToday": "Votre prochain badge arrive aujourd'hui, continuez ainsi.",
+    "progressDays_one": "{{count}} jour avant votre prochain badge.",
+    "progressDays_other": "{{count}} jours avant votre prochain badge.",
+    "empty": "Maintenez une série pendant trois mois pour gagner votre premier badge. Il y en a quatre à collectionner chaque année, un pour chaque saison.",
+    "quarterShort": "T{{n}}"
+  },
+  "tier": {
+    "bronze": "Bronze",
+    "silver": "Argent",
+    "gold": "Or"
+  },
+  "season": {
+    "winter": "Hiver",
+    "spring": "Printemps",
+    "summer": "Été",
+    "autumn": "Automne"
+  },
+  "freezes": {
+    "title": "Gels de série",
+    "description": "Un gel protège automatiquement votre série si vous manquez une seule période. Vous en gagnez un tous les trois mois (jusqu'à quatre par an), et un seul peut être utilisé par trimestre.",
+    "available": "{{count}} disponible(s)"
+  },
+  "reminders": {
+    "title": "Rappels en douceur",
+    "description": "Un seul rappel avant la fin d'un(e) {{period}}, uniquement si vous le souhaitez. Désactivé par défaut."
+  },
+  "vacation": {
+    "title": "Mode vacances",
+    "description": "La vie continue. Mettez votre série en pause une fois par an (jusqu'à 30 jours) sans perdre votre progression.",
+    "onVacation": "En vacances",
+    "onVacationUntil": "En vacances jusqu'au {{date}}",
+    "ending": "Fin en cours…",
+    "endEarly": "Terminer les vacances plus tôt",
+    "usedThisYear": "Vacances utilisées cette année",
+    "starting": "Démarrage…",
+    "startDays": "Démarrer des vacances de {{count}} jours"
+  },
+  "footer": {
+    "disclaimer": "Votre série n'affecte jamais votre solde ni votre argent."
+  },
+  "milestone": {
+    "title": "Nouveau badge obtenu",
+    "description": "Trois mois d'épargne régulière. Cette constance, c'est tout l'essentiel. Bien joué.",
+    "badgeUnlocked": "Badge T{{n}} débloqué",
+    "keepItUp": "Continuez ainsi"
+  },
+  "profile": {
+    "title": "Fréquence de la série",
+    "description": "Choisissez à quelle fréquence un dépôt doit avoir lieu pour maintenir votre série d'épargne en vie.",
+    "frequencyError": "Impossible de modifier la fréquence de votre série.",
+    "recommended": "Recommandé",
+    "lockNote": "Vous pouvez modifier la fréquence de votre série une fois par année civile.",
+    "lockNoteNext": "Vous pouvez modifier la fréquence de votre série une fois par année civile. Votre prochain changement se débloque en {{year}}.",
+    "options": {
+      "daily": {
+        "label": "Quotidienne",
+        "description": "Gardez la flamme allumée avec un dépôt chaque jour. Idéal pour une habitude d'épargne quotidienne."
+      },
+      "weekly": {
+        "label": "Hebdomadaire",
+        "description": "Un dépôt à tout moment de la semaine maintient votre série. Un rythme calme et régulier."
+      },
+      "monthly": {
+        "label": "Mensuelle",
+        "description": "Un seul dépôt par mois civil suffit. Doux et sans pression."
+      }
+    }
+  }
+}

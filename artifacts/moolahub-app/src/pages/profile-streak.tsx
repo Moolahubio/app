@@ -6,29 +6,18 @@ import { useStreak, getGetStreaksQueryKey } from "@/hooks/use-streak";
 import { useSetStreakFrequency } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiErrorMessage, cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type Frequency = "daily" | "weekly" | "monthly";
 
-const OPTIONS: { key: Frequency; label: string; description: string; recommended?: boolean }[] = [
-  {
-    key: "daily",
-    label: "Daily",
-    description: "Keep the flame alive with a deposit every day. Best for an everyday saving habit.",
-  },
-  {
-    key: "weekly",
-    label: "Weekly",
-    description: "One deposit any time during the week keeps your streak going. A calm, steady pace.",
-    recommended: true,
-  },
-  {
-    key: "monthly",
-    label: "Monthly",
-    description: "A single deposit each calendar month is all it takes. Gentle and low-pressure.",
-  },
+const OPTIONS: { key: Frequency; recommended?: boolean }[] = [
+  { key: "daily" },
+  { key: "weekly", recommended: true },
+  { key: "monthly" },
 ];
 
 export default function ProfileStreakPage() {
+  const { t } = useTranslation("streak");
   const { data, isLoading } = useStreak();
   const setFrequency = useSetStreakFrequency();
   const queryClient = useQueryClient();
@@ -36,7 +25,8 @@ export default function ProfileStreakPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
+  if (isLoading)
+    return <div className="p-8 text-center text-muted-foreground">{t("common:actions.loading")}</div>;
   if (!data) return null;
 
   const current = data.frequency as Frequency;
@@ -51,17 +41,17 @@ export default function ProfileStreakPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not change your streak frequency.");
+      setError(apiErrorMessage(err) ?? t("profile.frequencyError"));
     }
   };
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <BackLink href="/profile" label="Account" />
+      <BackLink href="/profile" label={t("common:nav.account")} />
       <PageHeader
-        eyebrow="Streaks"
-        title="Streak frequency"
-        description="Choose how often a deposit needs to happen to keep your savings streak alive."
+        eyebrow={t("eyebrow")}
+        title={t("profile.title")}
+        description={t("profile.description")}
       />
 
       {error && (
@@ -71,7 +61,7 @@ export default function ProfileStreakPage() {
       )}
       {saved && (
         <p className="flex items-center gap-1.5 text-sm text-jade-600 dark:text-jade-400">
-          <Check className="h-4 w-4 shrink-0" /> Saved.
+          <Check className="h-4 w-4 shrink-0" /> {t("common:actions.saved")}
         </p>
       )}
 
@@ -85,7 +75,7 @@ export default function ProfileStreakPage() {
               onClick={() => select(opt.key)}
               disabled={!canChange && !active}
               className={cn(
-                "w-full rounded-2xl border bg-card p-4 text-left transition-colors focus-ring",
+                "w-full rounded-2xl border bg-card p-4 text-start transition-colors focus-ring",
                 active
                   ? "border-jade-500 ring-1 ring-jade-500/40"
                   : canChange
@@ -96,8 +86,10 @@ export default function ProfileStreakPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Flame className="h-4 w-4 text-jade-600 dark:text-jade-400" />
-                  <span className="text-sm font-semibold text-foreground">{opt.label}</span>
-                  {opt.recommended && <Badge tone="jade">Recommended</Badge>}
+                  <span className="text-sm font-semibold text-foreground">
+                    {t(`profile.options.${opt.key}.label`)}
+                  </span>
+                  {opt.recommended && <Badge tone="jade">{t("profile.recommended")}</Badge>}
                 </div>
                 {active && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-jade-500 text-white">
@@ -105,7 +97,9 @@ export default function ProfileStreakPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{opt.description}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t(`profile.options.${opt.key}.description`)}
+              </p>
             </button>
           );
         })}
@@ -115,8 +109,9 @@ export default function ProfileStreakPage() {
         <div className="flex items-start gap-2 rounded-2xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
-            You can change your streak frequency once per calendar year
-            {data.nextChangeYear ? `. Your next change unlocks in ${data.nextChangeYear}.` : "."}
+            {data.nextChangeYear
+              ? t("profile.lockNoteNext", { year: data.nextChangeYear })
+              : t("profile.lockNote")}
           </p>
         </div>
       )}

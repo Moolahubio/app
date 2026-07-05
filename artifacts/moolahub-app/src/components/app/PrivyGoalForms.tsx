@@ -13,6 +13,7 @@ import {
 } from "@workspace/api-client-react";
 import type { ReleaseFromGoalResult } from "@workspace/api-client-react";
 import { apiErrorMessage } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 /**
  * On-chain goal deposit / withdraw UI for a NON-CUSTODIAL (Privy embedded EOA)
@@ -26,14 +27,15 @@ import { apiErrorMessage } from "@/lib/utils";
  */
 
 /** Gate shown until the user connects Privy in this browser. */
-function ConnectPrompt({ verb, onConnect }: { verb: string; onConnect: () => void }) {
+function ConnectPrompt({ kind, onConnect }: { kind: "deposit" | "withdrawal"; onConnect: () => void }) {
+  const { t } = useTranslation("goals");
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Your wallet is self-custodial. Connect it to sign the {verb} yourself.
+        {t(`privy.connect.${kind}.prompt`)}
       </p>
       <Button variant="secondary" className="w-full" onClick={onConnect}>
-        Connect wallet to {verb}
+        {t(`privy.connect.${kind}.button`)}
       </Button>
     </div>
   );
@@ -52,6 +54,7 @@ export function PrivyGoalDepositForm({
   presets?: number[];
   onSuccess: () => void;
 }) {
+  const { t } = useTranslation("goals");
   const { ready, authenticated } = usePrivy();
   const { login } = useLogin();
   const { wallets } = useWallets();
@@ -67,21 +70,21 @@ export function PrivyGoalDepositForm({
   const embedded = wallets.find((w) => w.walletClientType === "privy");
 
   if (!ready) {
-    return <p className="text-sm text-muted-foreground">Loading your wallet…</p>;
+    return <p className="text-sm text-muted-foreground">{t("privy.loadingWallet")}</p>;
   }
   if (!authenticated || !embedded) {
-    return <ConnectPrompt verb="deposit" onConnect={() => login()} />;
+    return <ConnectPrompt kind="deposit" onConnect={() => login()} />;
   }
 
   const handleSubmit = async (amountCents: number) => {
     setError(null);
     setOk(null);
     if (!goalVault || !usdcAddress) {
-      setError("On-chain goal savings isn't available on this deployment.");
+      setError(t("privy.errors.unavailable"));
       return;
     }
     if (amountCents <= 0) {
-      setError("Enter a valid amount.");
+      setError(t("privy.errors.invalidAmount"));
       return;
     }
     setPending(true);
@@ -155,12 +158,12 @@ export function PrivyGoalDepositForm({
       }
 
       pendingTx.current = null;
-      setOk("Funds added to goal");
+      setOk(t("deposit.success"));
       onSuccess();
     } catch (e) {
       setError(
         apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : "Deposit failed. Please try again."),
+          (e instanceof Error ? e.message : t("privy.errors.depositFailed")),
       );
     } finally {
       setPending(false);
@@ -171,7 +174,7 @@ export function PrivyGoalDepositForm({
     <AmountForm
       onSubmit={handleSubmit}
       presets={presets}
-      submitLabel="Add funds"
+      submitLabel={t("deposit.addFunds")}
       pending={pending}
       error={error}
       ok={ok}
@@ -188,6 +191,7 @@ export function PrivyGoalReleaseForm({
   goalVault: string | null;
   onSuccess: (res: ReleaseFromGoalResult) => void;
 }) {
+  const { t } = useTranslation("goals");
   const { ready, authenticated } = usePrivy();
   const { login } = useLogin();
   const { wallets } = useWallets();
@@ -201,21 +205,21 @@ export function PrivyGoalReleaseForm({
   const embedded = wallets.find((w) => w.walletClientType === "privy");
 
   if (!ready) {
-    return <p className="text-sm text-muted-foreground">Loading your wallet…</p>;
+    return <p className="text-sm text-muted-foreground">{t("privy.loadingWallet")}</p>;
   }
   if (!authenticated || !embedded) {
-    return <ConnectPrompt verb="withdrawal" onConnect={() => login()} />;
+    return <ConnectPrompt kind="withdrawal" onConnect={() => login()} />;
   }
 
   const handleSubmit = async (amountCents: number) => {
     setError(null);
     setOk(null);
     if (!goalVault) {
-      setError("On-chain goal savings isn't available on this deployment.");
+      setError(t("privy.errors.unavailable"));
       return;
     }
     if (amountCents <= 0) {
-      setError("Enter a valid amount.");
+      setError(t("privy.errors.invalidAmount"));
       return;
     }
     setPending(true);
@@ -266,7 +270,7 @@ export function PrivyGoalReleaseForm({
     } catch (e) {
       setError(
         apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : "Withdrawal failed. Please try again."),
+          (e instanceof Error ? e.message : t("privy.errors.withdrawalFailed")),
       );
     } finally {
       setPending(false);
@@ -276,7 +280,7 @@ export function PrivyGoalReleaseForm({
   return (
     <AmountForm
       onSubmit={handleSubmit}
-      submitLabel="Withdraw to available"
+      submitLabel={t("withdraw.submit")}
       variant="secondary"
       pending={pending}
       error={error}

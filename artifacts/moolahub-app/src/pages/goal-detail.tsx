@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
-import { BackLink } from "@/components/app/bits";
+import { BackLink, Money, Addr } from "@/components/app/bits";
 import { AmountForm } from "@/components/app/forms";
 import { PrivyGoalDepositForm, PrivyGoalReleaseForm } from "@/components/app/PrivyGoalForms";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
@@ -21,8 +21,9 @@ import {
 } from "@workspace/api-client-react";
 import type { ReleaseFromGoalResult } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
-import { formatMoney, pct, apiErrorMessage, truncateAddress } from "@/lib/utils";
-import { asFrequency, buildGoalPlan, nextContribution, FREQUENCY_ADVERB, FREQUENCY_NOUN } from "@/lib/contribution-plan";
+import { formatMoney, formatDate, pct, apiErrorMessage } from "@/lib/utils";
+import { asFrequency, buildGoalPlan, nextContribution } from "@/lib/contribution-plan";
+import { useTranslation, Trans } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
@@ -30,6 +31,7 @@ import { useStepUpGate } from "@/components/app/StepUpDialog";
 const EXPLORER_FALLBACK = "https://testnet.monadvision.com";
 
 export default function GoalDetailPage() {
+  const { t } = useTranslation("goals");
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { data: goal, isLoading } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
@@ -46,8 +48,8 @@ export default function GoalDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { requestProof, stepUpDialog } = useStepUpGate();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading goal…</div>;
-  if (!goal) return <div className="p-8 text-center text-muted-foreground">We couldn't find that goal.</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;
+  if (!goal) return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
 
   const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
@@ -80,7 +82,7 @@ export default function GoalDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackLink href="/goals" label="Personal Savings" />
+      <BackLink href="/goals" label={t("common:nav.personalSavings")} />
 
       <div className="grid gap-6 md:grid-cols-5">
         {/* progress ring */}
@@ -106,17 +108,21 @@ export default function GoalDetailPage() {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="font-display text-3xl font-bold text-foreground">{progress}%</span>
               <span className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                saved
+                {t("detail.savedLabel")}
               </span>
             </div>
           </div>
           <h1 className="mt-5 font-display text-xl font-bold text-foreground">{goal.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {formatMoney(goal.savedCents)} of {formatMoney(goal.targetCents)}
+            <Trans
+              t={t}
+              i18nKey="detail.savedOfTarget"
+              components={[<Money cents={goal.savedCents} />, <Money cents={goal.targetCents} />]}
+            />
           </p>
           {onchain && (
             <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300">
-              <Link2 className="h-3.5 w-3.5" /> On-chain
+              <Link2 className="h-3.5 w-3.5" /> {t("detail.onChain")}
             </Badge>
           )}
         </Card>
@@ -124,11 +130,9 @@ export default function GoalDetailPage() {
         {/* details + actions */}
         <div className="space-y-6 md:col-span-3">
           <Card className="p-6">
-            <h2 className="font-display text-lg font-bold text-foreground">Add money</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("deposit.title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {onchain
-                ? "Move funds from your available balance into this goal's on-chain vault. Deposits are free."
-                : "Move funds from your available balance into this allocation."}
+              {onchain ? t("deposit.descriptionOnchain") : t("deposit.description")}
             </p>
             <div className="mt-4">
               {useClientSigned ? (
@@ -141,8 +145,8 @@ export default function GoalDetailPage() {
                     refreshGoal();
                     queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
                     toast({
-                      title: "Streak kept alive 🔥",
-                      description: "Nice, that deposit counts toward your savings streak.",
+                      title: t("toast.streakTitle"),
+                      description: t("toast.streakDescription"),
                     });
                   }}
                 />
@@ -153,17 +157,17 @@ export default function GoalDetailPage() {
                     allocateMutation.mutate({ id: goal.id, data: { amountCents } }, {
                       onSuccess: () => {
                         refreshGoal();
-                        setAllocOk("Funds added to goal");
+                        setAllocOk(t("deposit.success"));
                         queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
                         toast({
-                          title: "Streak kept alive 🔥",
-                          description: "Nice, that deposit counts toward your savings streak.",
+                          title: t("toast.streakTitle"),
+                          description: t("toast.streakDescription"),
                         });
                       }
                     });
                   }}
                   presets={[1000, 2500, 5000]}
-                  submitLabel="Add funds"
+                  submitLabel={t("deposit.addFunds")}
                   pending={allocateMutation.isPending}
                   error={apiErrorMessage(allocateMutation.error)}
                   ok={allocOk}
@@ -171,10 +175,10 @@ export default function GoalDetailPage() {
               )}
             </div>
             <div className="mt-5 border-t border-border pt-5">
-              <p className="mb-1 text-sm font-medium text-foreground">Withdraw</p>
+              <p className="mb-1 text-sm font-medium text-foreground">{t("withdraw.title")}</p>
               {onchain && feeBps > 0 && (
                 <p className="mb-3 text-xs text-muted-foreground">
-                  A {feePct}% withdrawal fee is taken on-chain. You receive the amount net of the fee.
+                  {t("withdraw.feeNote", { fee: feePct })}
                 </p>
               )}
               {useClientSigned ? (
@@ -186,8 +190,8 @@ export default function GoalDetailPage() {
                       refreshGoal();
                       setReleaseOk(
                         res.feeCents > 0
-                          ? `${formatMoney(res.netCents)} released (after a ${formatMoney(res.feeCents)} fee)`
-                          : `${formatMoney(res.netCents)} released to available`,
+                          ? t("withdraw.releasedWithFee", { amount: formatMoney(res.netCents), fee: formatMoney(res.feeCents) })
+                          : t("withdraw.released", { amount: formatMoney(res.netCents) }),
                       );
                     }}
                   />
@@ -208,13 +212,13 @@ export default function GoalDetailPage() {
                         refreshGoal();
                         setReleaseOk(
                           res.feeCents > 0
-                            ? `${formatMoney(res.netCents)} released (after a ${formatMoney(res.feeCents)} fee)`
-                            : `${formatMoney(res.netCents)} released to available`,
+                            ? t("withdraw.releasedWithFee", { amount: formatMoney(res.netCents), fee: formatMoney(res.feeCents) })
+                            : t("withdraw.released", { amount: formatMoney(res.netCents) }),
                         );
                       }
                     });
                   }}
-                  submitLabel="Withdraw to available"
+                  submitLabel={t("withdraw.submit")}
                   variant="secondary"
                   pending={releaseMutation.isPending}
                   error={apiErrorMessage(releaseMutation.error)}
@@ -228,23 +232,19 @@ export default function GoalDetailPage() {
             <Card className="p-5">
               <div className="flex items-center gap-2 text-jade-600 dark:text-jade-400">
                 <Target className="h-4 w-4" />
-                <p className="font-mono text-[10px] uppercase tracking-[0.15em]">Remaining</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.15em]">{t("stats.remaining")}</p>
               </div>
               <p className="mt-1.5 font-display text-xl font-bold text-foreground">
-                {formatMoney(remaining)}
+                <Money cents={remaining} />
               </p>
             </Card>
             <Card className="p-5">
               <div className="flex items-center gap-2 text-jade-600 dark:text-jade-400">
                 <Calendar className="h-4 w-4" />
-                <p className="font-mono text-[10px] uppercase tracking-[0.15em]">Target date</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.15em]">{t("stats.targetDate")}</p>
               </div>
               <p className="mt-1.5 font-display text-xl font-bold text-foreground">
-                {new Date(goal.deadline).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                {formatDate(goal.deadline, { month: "short", day: "numeric", year: "numeric" })}
               </p>
             </Card>
           </div>
@@ -256,29 +256,29 @@ export default function GoalDetailPage() {
                   <Repeat className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-foreground">Contribution plan</p>
-                  <p className="text-sm text-muted-foreground capitalize">{FREQUENCY_ADVERB[frequency]} · grows gradually</p>
+                  <p className="font-semibold text-foreground">{t("plan.title")}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{t("plan.subtitle", { cadence: t(`cadence.adverb.${frequency}`) })}</p>
                 </div>
               </div>
-              {next ? <Badge tone="jade">Step {next.index}/{next.total}</Badge> : <Badge tone="jade">Complete</Badge>}
+              {next ? <Badge tone="jade">{t("plan.step", { current: next.index, total: next.total })}</Badge> : <Badge tone="jade">{t("plan.complete")}</Badge>}
             </div>
             {next ? (
               <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-                    Next contribution
+                    {t("plan.nextContribution")}
                   </p>
                   <p className="mt-1 font-display text-2xl font-bold text-foreground">
-                    {formatMoney(next.amountCents)}
+                    <Money cents={next.amountCents} />
                   </p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  this {FREQUENCY_NOUN[frequency]}
+                  {t(`plan.thisCadence.${frequency}`)}
                 </p>
               </div>
             ) : (
               <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
-                You&apos;ve completed every step of your plan. 🎉
+                {t("plan.allDone")}
               </p>
             )}
           </Card>
@@ -286,11 +286,12 @@ export default function GoalDetailPage() {
           {next && remaining > 0 && (
             <p className="flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
               <Sparkles className="h-4 w-4 text-jade-500" />
-              Keep going {FREQUENCY_ADVERB[frequency]}. About{" "}
-              <span className="font-semibold text-foreground">
-                {periodsLeft} {FREQUENCY_NOUN[frequency]}{periodsLeft === 1 ? "" : "s"}
-              </span>{" "}
-              of contributions left to reach your target.
+              <Trans
+                t={t}
+                i18nKey={`plan.keepGoing.${frequency}`}
+                values={{ count: periodsLeft }}
+                components={[<span className="font-semibold text-foreground" />]}
+              />
             </p>
           )}
 
@@ -298,11 +299,10 @@ export default function GoalDetailPage() {
             <Card className="p-6">
               <div className="flex items-center gap-2">
                 <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
-                <h2 className="font-display text-lg font-bold text-foreground">On-chain vault</h2>
+                <h2 className="font-display text-lg font-bold text-foreground">{t("vault.title")}</h2>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Funds you allocate are deposited into this vault on Monad. A {feePct}% protocol fee is
-                taken on each withdrawal.
+                {t("vault.description", { fee: feePct })}
               </p>
               <a
                 href={`${explorer}/address/${goal.vaultAddress}`}
@@ -310,7 +310,7 @@ export default function GoalDetailPage() {
                 rel="noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700 dark:hover:text-jade-300"
               >
-                {truncateAddress(goal.vaultAddress)}
+                <Addr address={goal.vaultAddress} />
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </Card>
@@ -318,7 +318,7 @@ export default function GoalDetailPage() {
 
           {history.length > 0 && (
             <Card className="p-6">
-              <h2 className="font-display text-lg font-bold text-foreground">Activity</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{t("activity.title")}</h2>
               <ul className="mt-4 space-y-2">
                 {history.map((h) => (
                   <li
@@ -327,9 +327,9 @@ export default function GoalDetailPage() {
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold capitalize text-foreground">
-                        {h.type.replace(/_/g, " ")}
+                        {t(`activity.types.${h.type}`, { defaultValue: h.type.replace(/_/g, " ") })}
                       </p>
-                      <p className="text-xs text-muted-foreground">{formatMoney(h.amountCents)}</p>
+                      <p className="text-xs text-muted-foreground"><Money cents={h.amountCents} /></p>
                     </div>
                     {h.txHash ? (
                       <a
@@ -338,11 +338,11 @@ export default function GoalDetailPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800 dark:text-jade-300"
                       >
-                        {truncateAddress(h.txHash)}
+                        <Addr address={h.txHash} />
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     ) : (
-                      <Badge tone="neutral" className="capitalize">{h.onchainStatus}</Badge>
+                      <Badge tone="neutral" className="capitalize">{t(`activity.status.${h.onchainStatus}`, { defaultValue: h.onchainStatus })}</Badge>
                     )}
                   </li>
                 ))}
@@ -351,13 +351,13 @@ export default function GoalDetailPage() {
           )}
 
           <Card className="border-rose-500/20 p-6">
-            <h2 className="font-display text-lg font-bold text-foreground">Delete goal</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("delete.title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {goal.savedCents > 0
                 ? onchain && feeBps > 0
-                  ? `This withdraws the full ${formatMoney(goal.savedCents)} balance back to your available funds (minus the ${feePct}% withdrawal fee) and closes the goal.`
-                  : `This returns the full ${formatMoney(goal.savedCents)} balance to your available funds and closes the goal.`
-                : "This permanently closes the goal."}
+                  ? t("delete.descWithFee", { amount: formatMoney(goal.savedCents), fee: feePct })
+                  : t("delete.descWithBalance", { amount: formatMoney(goal.savedCents) })
+                : t("delete.descEmpty")}
             </p>
             {deleteMutation.error && (
               <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
@@ -369,7 +369,7 @@ export default function GoalDetailPage() {
                   onClick={() => setConfirmDelete(true)}
                   className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-card px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                 >
-                  <Trash2 className="h-4 w-4" /> Delete goal
+                  <Trash2 className="h-4 w-4" /> {t("delete.title")}
                 </button>
               ) : (
                 <>
@@ -397,7 +397,7 @@ export default function GoalDetailPage() {
                     className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
                   >
                     <Trash2 className="h-4 w-4" />
-                    {deleteMutation.isPending ? "Deleting…" : "Confirm delete"}
+                    {deleteMutation.isPending ? t("delete.deleting") : t("delete.confirm")}
                   </button>
                   <button
                     type="button"
@@ -405,7 +405,7 @@ export default function GoalDetailPage() {
                     onClick={() => setConfirmDelete(false)}
                     className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent"
                   >
-                    Cancel
+                    {t("common:actions.cancel")}
                   </button>
                 </>
               )}

@@ -1,0 +1,163 @@
+{
+  "list": {
+    "loading": "Ana loda tanadin ƙungiyarka…",
+    "title": "Tanadin ƙungiyarka",
+    "description": "Tanadi mai juyawa tare da mutanen da ka amince da su. Kowane zagaye ana riƙe shi da kwangilar on-chain, ba mutum ba.",
+    "emptyHint": "Gayyaci abokai ko dangi ka kuma saita gudummawarka"
+  },
+  "info": {
+    "susu": "<b>Yadda Susu ke aiki:</b> kowa yana ba da kuɗi ƙayyadadde kowane zagaye. A cikin da'irar <em>juyawa</em>, memba ɗaya yana karɓar dukan tulu kowane zagaye har sai kowa ya sami damarsa. A cikin da'irar <em>tarawa</em>, kowa yana tanadi cikin tulu ɗaya na gama-gari sannan ya karɓi tanadinsa a ƙarshe. Komai ana iya tabbatar da shi a kan Monad."
+  },
+  "frequency": {
+    "weekly": "Kowane mako",
+    "biweekly": "Kowane mako biyu",
+    "monthly": "Kowane wata"
+  },
+  "status": {
+    "active": "Mai aiki",
+    "forming": "Ana kafawa",
+    "completed": "An kammala"
+  },
+  "type": {
+    "rotation": "Juyawa",
+    "accumulation": "Tarawa"
+  },
+  "create": {
+    "startCircle": "Fara da'ira",
+    "title": "Sabuwar da'ira",
+    "submit": "Ƙirƙiri da'ira",
+    "submitting": "Ana ƙirƙira…",
+    "name": {
+      "label": "Suna",
+      "placeholder": "misali Tanadin iyali"
+    },
+    "type": {
+      "label": "Nau'in da'ira",
+      "rotation": {
+        "title": "Juyawa",
+        "description": "Ku yi ta juyawa. Kowa yana biya kowane zagaye, kuma memba ɗaya yana karɓar dukan tulu har sai kowa ya sami damarsa."
+      },
+      "accumulation": {
+        "title": "Tarawa",
+        "description": "Ku yi tanadi tare. Kowa yana biya cikin tulu ɗaya na gama-gari sannan ya karɓi tanadinsa a ƙarshe."
+      }
+    },
+    "targetPayout": {
+      "label": "Adadin biyan da ake nufi ga kowane mutum (USDC)",
+      "hint": "Abin da kowane memba ke karɓa lokacin da ya kai damarsa."
+    },
+    "groupSize": {
+      "label": "Adadin mutane (haɗe da kai)"
+    },
+    "contribution": {
+      "label": "Gudummawa kowane zagaye (USDC)"
+    },
+    "numRounds": {
+      "label": "Adadin zagaye"
+    },
+    "frequency": {
+      "label": "Yawaita"
+    },
+    "emails": {
+      "label": "Imel na membobi",
+      "hintRotation": "(gayyaci har zuwa {{count}}, a raba da waƙafi)",
+      "hintAccumulation": "(har zuwa 19, a raba da waƙafi)",
+      "placeholder": "friend@example.com, cousin@example.com",
+      "tooManyRotation": "Gayyata sun yi yawa. Da'ira ta {{size}} tana da wuri ga {{count}} ban da kai.",
+      "tooManyAccumulation": "Membobi sun yi yawa. Da'ira za ta iya ƙunsar mutane 20 kawai (kai + gayyatattu 19)."
+    },
+    "summary": {
+      "youPay": "Kana biya kowane zagaye",
+      "youReceive": "Kana karɓa",
+      "youReceiveEnd": "Kana karɓa a ƙarshe",
+      "rotationDetail": "Kowane memba na {{count}} yana biyan {{base}} na asali + {{fee}} na caji (2%). Lokacin da ka kai damarka kana karɓar {{payout}}. Da'irar tana farawa kai tsaye da zarar kowa ya shiga.",
+      "accumulationDetail": "Tanadinka za a mayar maka bayan zagaye {{count}}."
+    },
+    "image": {
+      "label": "Hoton da'ira (na zaɓi)",
+      "hint": "A matsayinka na shugaban da'ira, ƙara hoto don haɗa ƙungiyarka kan burin."
+    }
+  },
+  "invites": {
+    "title": "Gayyatoni ({{count}})",
+    "invitedBy": "{{name}} ya gayyace ka",
+    "accept": "Karɓa",
+    "decline": "Ƙi"
+  },
+  "card": {
+    "members": "membobi {{count}}",
+    "perRound": "Kowane zagaye",
+    "youReceive": "Kana karɓa",
+    "roundOf": "Zagaye {{current}} daga {{total}}",
+    "joinedProgress": "{{joined}} daga {{target}} sun shiga · yana farawa kai tsaye idan ya cika",
+    "forming": "Ana kafawa. Ana jiran farawa.",
+    "viewCircle": "Duba da'ira"
+  },
+  "detail": {
+    "loading": "Ana loda da'ira…",
+    "notFound": "Ba mu sami wannan da'irar ba.",
+    "onChain": "On-chain",
+    "formingSuffix": "ana kafawa",
+    "submitting": "Ana aikawa…",
+    "contribute": "Ba da gudummawa {{amount}}",
+    "contributedThisRound": "An ba da gudummawa a wannan zagaye",
+    "notStarted": "Wannan da'irar ba ta fara ba tukuna",
+    "stats": {
+      "rounds": "Zagaye",
+      "yourPosition": "Matsayinka",
+      "started": "An fara"
+    },
+    "build": {
+      "title": "Gina da'irarka",
+      "descAccumulation": "Gayyaci mutane ta imel. Kowa yana tanadi cikin tulu ɗaya na gama-gari na zagaye {{count}}, sannan ya karɓi tanadinsa. Fara da'irar da zarar kowa ya shiga.",
+      "descTargeted": "Gayyaci mutane ta imel. {{joined}} daga {{target}} sun shiga. Da'irar tana farawa kai tsaye da zarar mutum na ƙarshe ya shiga.",
+      "descRotation": "Gayyaci mutane ta imel. Zagaye sun yi daidai da membobi, don haka kowa yana samun biya guda ɗaya. Fara da'irar da zarar kowa ya shiga.",
+      "sent": "An aika",
+      "start": "Fara da'ira",
+      "starting": "Ana farawa…",
+      "needMore": "Gayyaci aƙalla memba ɗaya kuma don fara da'irar."
+    },
+    "delete": {
+      "title": "Share da'ira",
+      "description": "Babu wani da ya shiga tukuna, don haka za ka iya share wannan da'irar. Da zarar wani memba ya shiga, ba za a iya share ta ba. Wannan yana cire da'irar da duk gayyatonin da ke jira har abada.",
+      "confirm": "Tabbatar da sharewa",
+      "deleting": "Ana sharewa…"
+    },
+    "schedule": {
+      "membersTitle": "Membobi",
+      "payoutTitle": "Jadawalin biya",
+      "descAccumulation": "Kowa yana tanadi cikin tulu ɗaya na gama-gari. Bayan zagaye {{count}}, kowane memba yana karɓar tanadinsa, wanda aka kulle a on-chain.",
+      "descRotation": "An kulle juyawar a on-chain, don haka kowa ya san wa zai karɓi tulu, da kuma yaushe.",
+      "you": "(kai)",
+      "savingsReturned": "An mayar da tanadi",
+      "saving": "Ana tanadi",
+      "receivedPot": "An karɓi tulu",
+      "receivingNow": "Yana karɓa yanzu",
+      "current": "Na yanzu"
+    },
+    "progress": {
+      "title": "Ci gaban zagaye",
+      "roundsOf": "{{current}} daga zagaye {{total}}"
+    },
+    "escrow": {
+      "title": "Ajiya ta on-chain",
+      "description": "Gudummawa suna zama cikin wannan ajiyar Susu a kan Monad. Ana ɗaukar cajin yarjejeniya na {{fee}}% daga kowace biya."
+    },
+    "history": {
+      "title": "Gudummawarka",
+      "round": "Zagaye {{round}}"
+    },
+    "toast": {
+      "streakTitle": "An ci gaba da jerin 🔥",
+      "streakDescription": "Kyau, wannan gudummawar tana ƙidaya cikin jerin tanadinka."
+    }
+  },
+  "privy": {
+    "loadingWallet": "Ana loda walat ɗinka…",
+    "selfCustody": "Walat ɗinka na kanka ne. Haɗa shi don ka rattaba hannu kan gudummawar da kanka.",
+    "connect": "Haɗa walat don ba da gudummawa",
+    "notAvailable": "Gudummawar on-chain ba ta samuwa a wannan tsarin.",
+    "failed": "Gudummawa ta gaza. Da fatan za a sake gwadawa.",
+    "submitting": "Ana aikawa…"
+  }
+}
