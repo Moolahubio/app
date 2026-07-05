@@ -1,10 +1,10 @@
 import { Link } from "wouter";
-import { Plus, Users, ArrowRight, ShieldCheck, Inbox, Repeat, Coins } from "lucide-react";
-import { Button, Badge, Eyebrow, Skeleton, GlassCard, MetricCard, StatusPill, ProgressLine } from "@/components/ui";
+import { Plus, Users, ArrowRight, ShieldCheck, Inbox } from "lucide-react";
+import { Card, Button, Badge, ProgressBar, Avatar, Eyebrow, Skeleton } from "@/components/ui";
 import { PageHeader, Money } from "@/components/app/bits";
 import { ActionButton } from "@/components/app/forms";
 import { useListCircles, useListInvites, useAcceptInvite, useDeclineInvite, useCreateCircle, getListCirclesQueryKey, getListInvitesQueryKey } from "@workspace/api-client-react";
-import { formatMoney, pct } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,11 +16,11 @@ import { avatarSrc, cn } from "@/lib/utils";
 import { useTranslation, Trans } from "react-i18next";
 import { useState } from "react";
 
-const statusTone: Record<string, "jade" | "amber" | "neutral"> = {
+const statusTone = {
   active: "jade",
   forming: "amber",
   completed: "neutral",
-};
+} as const;
 
 export default function CirclesPage() {
   const { t } = useTranslation("circles");
@@ -107,29 +107,11 @@ export default function CirclesPage() {
   };
 
   if (circlesLoading || invitesLoading) {
-    return (
-      <div className="mx-auto max-w-6xl space-y-6">
-        <span className="sr-only">{t("list.loading")}</span>
-        <Skeleton className="h-24 w-full" />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-          <Skeleton className="h-28" />
-        </div>
-        <div className="grid gap-5 md:grid-cols-2">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-        </div>
-      </div>
-    );
+    return <div className="p-8 text-center text-muted-foreground">{t("list.loading")}</div>;
   }
 
   const visible = circles?.filter((c) => c.status !== "completed") ?? [];
   const inviteList = invites ?? [];
-
-  const activeCount = visible.filter((c) => c.status === "active").length;
-  const totalPerRound = visible.reduce((s, c) => s + (c.contributionCents ?? 0), 0);
-  const totalPayout = visible.reduce((s, c) => s + (c.payoutCents ?? 0), 0);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -144,14 +126,14 @@ export default function CirclesPage() {
                 <Plus className="h-4 w-4" /> {t("create.startCircle")}
               </Button>
             </DialogTrigger>
-            <DialogContent className="mh-glass-strong border-white/10">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>{t("create.title")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label>{t("create.name.label")}</Label>
-                  <Input className="mh-input" value={name} onChange={e => setName(e.target.value)} required placeholder={t("create.name.placeholder")} />
+                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder={t("create.name.placeholder")} />
                 </div>
                 <div className="space-y-2">
                   <Label>{t("create.type.label")}</Label>
@@ -197,7 +179,6 @@ export default function CirclesPage() {
                     <div className="space-y-2">
                       <Label>{t("create.targetPayout.label")}</Label>
                       <Input
-                        className="mh-input"
                         type="number"
                         min={1}
                         value={targetPayout}
@@ -212,7 +193,6 @@ export default function CirclesPage() {
                     <div className="space-y-2">
                       <Label>{t("create.groupSize.label")}</Label>
                       <Input
-                        className="mh-input"
                         type="number"
                         min={2}
                         max={20}
@@ -227,12 +207,11 @@ export default function CirclesPage() {
                   <>
                     <div className="space-y-2">
                       <Label>{t("create.contribution.label")}</Label>
-                      <Input className="mh-input" type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
+                      <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
                     </div>
                     <div className="space-y-2">
                       <Label>{t("create.numRounds.label")}</Label>
                       <Input
-                        className="mh-input"
                         type="number"
                         min={2}
                         value={numRounds}
@@ -263,7 +242,7 @@ export default function CirclesPage() {
                         : t("create.emails.hintAccumulation")}
                     </span>
                   </Label>
-                  <Input className="mh-input" value={emails} onChange={e => setEmails(e.target.value)} placeholder={t("create.emails.placeholder")} />
+                  <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder={t("create.emails.placeholder")} />
                   {emailCount > maxInvites && (
                     <p className="text-xs text-destructive">
                       {type === "rotation"
@@ -317,28 +296,8 @@ export default function CirclesPage() {
         }
       />
 
-      {visible.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-3">
-          <MetricCard
-            label={t("status.active")}
-            value={activeCount}
-            icon={<Users className="h-5 w-5" />}
-          />
-          <MetricCard
-            label={t("card.perRound")}
-            value={<Money cents={totalPerRound} />}
-            icon={<Repeat className="h-5 w-5" />}
-          />
-          <MetricCard
-            label={t("card.youReceive")}
-            value={<Money cents={totalPayout} />}
-            icon={<Coins className="h-5 w-5" />}
-          />
-        </div>
-      )}
-
-      <GlassCard className="flex items-center gap-4 mh-card-highlight">
-        <span className="hidden size-11 shrink-0 items-center justify-center rounded-2xl bg-jade-500 text-white sm:flex">
+      <Card className="flex items-center gap-4 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
+        <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-jade-500 text-white sm:flex">
           <ShieldCheck className="h-6 w-6" />
         </span>
         <p className="text-sm text-foreground">
@@ -351,10 +310,10 @@ export default function CirclesPage() {
             }}
           />
         </p>
-      </GlassCard>
+      </Card>
 
       {inviteList.length > 0 && (
-        <GlassCard>
+        <Card className="border-jade-500/20 bg-jade-50/50 p-6 dark:bg-jade-500/10">
           <div className="flex items-center gap-2">
             <Inbox className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">
@@ -365,7 +324,7 @@ export default function CirclesPage() {
             {inviteList.map((inv) => (
               <li
                 key={inv.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)] p-4"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4"
               >
                 <div>
                   <p className="font-semibold text-foreground">{inv.circleName}</p>
@@ -406,13 +365,13 @@ export default function CirclesPage() {
               </li>
             ))}
           </ul>
-        </GlassCard>
+        </Card>
       )}
 
       <div className="grid gap-5 md:grid-cols-2">
         {visible.map((circle) => (
           <Link key={circle.id} href={`/circles/${circle.id}`} className="group block">
-            <GlassCard hover className="h-full overflow-hidden p-0">
+            <Card className="h-full overflow-hidden p-0 transition-[border-color,background-color] duration-150 group-hover:border-jade-500/25">
               {circle.imageUrl && (
                 <div className="h-32 w-full overflow-hidden bg-background">
                   <img
@@ -423,22 +382,22 @@ export default function CirclesPage() {
                 </div>
               )}
               <div className="p-6">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-ink-900 text-white">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink-900 text-white">
                     <Users className="h-5 w-5" />
                   </span>
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-foreground">{circle.name}</p>
+                  <div>
+                    <p className="font-semibold text-foreground">{circle.name}</p>
                     <p className="text-xs capitalize text-muted-foreground">
                       {t(`frequency.${circle.frequency}`, { defaultValue: circle.frequency })} · {t("card.members", { count: circle.memberCount })}
                     </p>
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
-                  <StatusPill tone={statusTone[circle.status] ?? "neutral"} className="capitalize">
+                <div className="flex flex-col items-end gap-1.5">
+                  <Badge tone={statusTone[circle.status as keyof typeof statusTone] ?? "neutral"} className="capitalize">
                     {t(`status.${circle.status}`, { defaultValue: circle.status })}
-                  </StatusPill>
+                  </Badge>
                   <Badge tone="neutral">
                     {circle.type === "accumulation" ? t("type.accumulation") : t("type.rotation")}
                   </Badge>
@@ -446,17 +405,17 @@ export default function CirclesPage() {
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)] px-4 py-3">
-                  <p className="mh-kicker">
+                <div className="rounded-2xl bg-background px-4 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                     {t("card.perRound")}
                   </p>
-                  <p className="mt-1 font-semibold text-foreground">
+                  <p className="font-semibold text-foreground">
                     <Money cents={circle.contributionCents} />
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)] px-4 py-3">
-                  <p className="mh-kicker">{t("card.youReceive")}</p>
-                  <p className="mt-1 font-semibold text-foreground"><Money cents={circle.payoutCents} /></p>
+                <div className="rounded-2xl bg-background px-4 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{t("card.youReceive")}</p>
+                  <p className="font-semibold text-foreground"><Money cents={circle.payoutCents} /></p>
                 </div>
               </div>
 
@@ -467,7 +426,7 @@ export default function CirclesPage() {
                       {t("card.roundOf", { current: circle.currentRound, total: circle.totalRounds })}
                     </span>
                   </div>
-                  <ProgressLine value={pct(circle.currentRound, circle.totalRounds)} className="mt-2" />
+                  <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
                 </div>
               ) : (
                 <div className="mt-5 flex items-center gap-2">
@@ -484,15 +443,15 @@ export default function CirclesPage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
               </div>
               </div>
-            </GlassCard>
+            </Card>
           </Link>
         ))}
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="mh-glass-hover flex min-h-[230px] flex-col items-center justify-center gap-3 rounded-[var(--mh-radius-lg)] border-2 border-dashed border-[var(--mh-border)] p-6 text-muted-foreground transition-[color,border-color,transform] duration-150 hover:border-jade-500/35 hover:text-jade-600 active:scale-[0.99] focus-ring"
+          className="flex min-h-[230px] flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border p-6 text-muted-foreground transition-[color,border-color,transform] duration-150 hover:border-jade-500/35 hover:text-jade-600 active:scale-[0.99] focus-ring"
         >
-          <span className="flex size-12 items-center justify-center rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)]">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card">
             <Plus className="h-6 w-6" />
           </span>
           <span className="text-sm font-semibold">{t("create.startCircle")}</span>

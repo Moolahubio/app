@@ -64,7 +64,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const unreadCount = notifData?.unreadCount ?? 0;
 
   return (
-    <div className="mh-bg-grid min-h-[100dvh]">
+    <div className="min-h-[100dvh] bg-background">
       <aside className="glass fixed inset-y-0 start-0 z-30 hidden w-64 flex-col rounded-none border-y-0 border-s-0 px-4 py-6 lg:flex">
         <Link href="/" className="px-2 transition-opacity hover:opacity-80">
           <Logo />
@@ -75,12 +75,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {reminder && (
-          <div className="mh-card-highlight mt-6 rounded-[var(--mh-radius-md)] p-4 text-white">
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/70">
+          <div className="hover-lift mt-6 rounded-xl border border-white/10 bg-ink-950 p-4 text-white">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
               {t("labels.nextDue")}
             </p>
             <p className="mt-1 text-sm font-semibold">{reminder.title}</p>
-            <p className="text-xs text-white/80">
+            <p className="text-xs text-white/70">
               <span dir="ltr">{formatMoney(reminder.amountCents)}</span> ·{" "}
               {formatDate(reminder.dueDate)}
             </p>
@@ -89,7 +89,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         <Link
           href="/profile"
-          className="mt-auto flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-white/5 active:bg-white/10"
+          className="mt-auto flex items-center gap-3 rounded-xl px-2 py-2 transition-colors duration-150 hover:bg-accent active:bg-accent"
         >
           {user ? (
             <Avatar name={user.name} src={avatarSrc(user.avatarUrl)} tone="jade" />
@@ -112,12 +112,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
             <Link
               href="/wallet"
-              className="hover-lift focus-ring flex items-center gap-2 rounded-xl border border-[var(--mh-border)] bg-[var(--mh-glass)] px-3 py-1.5 backdrop-blur-md transition-colors hover:border-[var(--mh-border-strong)] sm:px-4 sm:py-2"
+              className="hover-lift flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 hover:border-jade-500/40 sm:px-4 sm:py-2"
             >
-              <span className="mh-kicker text-[10px]">
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                 {t("labels.balance")}
               </span>
-              <span dir="ltr" className="text-sm font-bold tabular-nums text-[var(--mh-text-strong)]">
+              <span dir="ltr" className="text-sm font-bold tabular-nums text-foreground">
                 {isSummaryLoading ? "…" : formatMoney(summary?.totalCents ?? 0)}
               </span>
             </Link>
@@ -145,10 +145,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="relative z-0 px-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-6 lg:px-8 lg:pb-12">
-          <div className="mx-auto w-full max-w-6xl">
-            <WalletSessionBanner />
-            {children}
-          </div>
+          <WalletSessionBanner />
+          {children}
         </main>
       </div>
 

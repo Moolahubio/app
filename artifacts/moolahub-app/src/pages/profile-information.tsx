@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, AlertCircle, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { GlassCard, Avatar, Button } from "@/components/ui";
+import { Card, Avatar, Button } from "@/components/ui";
 import { PageHeader, BackLink } from "@/components/app/bits";
 import {
   useGetProfile,
@@ -33,7 +33,7 @@ function Field({
 }
 
 const inputClass =
-  "mh-input w-full rounded-xl px-3.5 py-2.5 text-sm outline-none focus-ring";
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-jade-500/60 focus-ring";
 
 export default function ProfileInformationPage() {
   const { t } = useTranslation("account");
@@ -127,7 +127,7 @@ export default function ProfileInformationPage() {
         description={t("information.description")}
       />
 
-      <GlassCard>
+      <Card className="p-6">
         <div className="flex items-center gap-4">
           <div className="relative">
             <Avatar
@@ -140,7 +140,7 @@ export default function ProfileInformationPage() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="mh-glass-strong absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full text-[var(--mh-text-strong)] transition-colors hover:text-[var(--mh-mint)] focus-ring disabled:opacity-60"
+              className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-accent focus-ring disabled:opacity-60"
               aria-label={t("avatar.change")}
             >
               <Camera className="h-3.5 w-3.5" />
@@ -160,9 +160,9 @@ export default function ProfileInformationPage() {
             </p>
           </div>
         </div>
-      </GlassCard>
+      </Card>
 
-      <GlassCard>
+      <Card className="p-6">
         <form onSubmit={handleSave} className="space-y-5">
           <Field label={t("information.fields.fullName")}>
             <input
@@ -222,7 +222,7 @@ export default function ProfileInformationPage() {
             </Button>
           </div>
         </form>
-      </GlassCard>
+      </Card>
     </div>
   );
 }

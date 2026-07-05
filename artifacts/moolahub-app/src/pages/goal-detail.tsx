@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from "lucide-react";
-import { GlassCard, StatusPill } from "@/components/ui";
+import { Card, Badge } from "@/components/ui";
 import { BackLink, Money, Addr } from "@/components/app/bits";
 import { AmountForm } from "@/components/app/forms";
 import { PrivyGoalDepositForm, PrivyGoalReleaseForm } from "@/components/app/PrivyGoalForms";
@@ -48,8 +48,8 @@ export default function GoalDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const { requestProof, stepUpDialog } = useStepUpGate();
 
-  if (isLoading) return <div className="p-8 text-center text-[var(--mh-muted)]">{t("detail.loading")}</div>;
-  if (!goal) return <div className="p-8 text-center text-[var(--mh-muted)]">{t("detail.notFound")}</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;
+  if (!goal) return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
 
   const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
@@ -86,19 +86,19 @@ export default function GoalDetailPage() {
 
       <div className="grid gap-6 md:grid-cols-5">
         {/* progress ring */}
-        <GlassCard className="flex flex-col items-center justify-center p-8 text-center md:col-span-2">
-          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--mh-border)] bg-[rgba(45,212,166,0.09)] text-3xl">
+        <Card className="flex flex-col items-center justify-center p-8 text-center md:col-span-2">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-background text-3xl">
             {goal.emoji || "🎯"}
           </span>
           <div className="relative h-40 w-40">
             <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--mh-track)" strokeWidth="12" />
+              <circle cx="60" cy="60" r="52" fill="none" stroke="#0C151212" strokeWidth="12" />
               <circle
                 cx="60"
                 cy="60"
                 r="52"
                 fill="none"
-                stroke="#2DD4A6"
+                stroke="#0E9E6E"
                 strokeWidth="12"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
@@ -106,14 +106,14 @@ export default function GoalDetailPage() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-display text-3xl font-bold text-[var(--mh-text-strong)]">{progress}%</span>
-              <span className="font-mono text-[10px] uppercase tracking-wide text-[var(--mh-muted)]">
+              <span className="font-display text-3xl font-bold text-foreground">{progress}%</span>
+              <span className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                 {t("detail.savedLabel")}
               </span>
             </div>
           </div>
-          <h1 className="mt-5 font-display text-xl font-bold text-[var(--mh-text-strong)]">{goal.name}</h1>
-          <p className="text-sm text-[var(--mh-muted)]">
+          <h1 className="mt-5 font-display text-xl font-bold text-foreground">{goal.name}</h1>
+          <p className="text-sm text-muted-foreground">
             <Trans
               t={t}
               i18nKey="detail.savedOfTarget"
@@ -121,17 +121,17 @@ export default function GoalDetailPage() {
             />
           </p>
           {onchain && (
-            <StatusPill tone="jade" className="mt-3">
+            <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300">
               <Link2 className="h-3.5 w-3.5" /> {t("detail.onChain")}
-            </StatusPill>
+            </Badge>
           )}
-        </GlassCard>
+        </Card>
 
         {/* details + actions */}
         <div className="space-y-6 md:col-span-3">
-          <GlassCard>
-            <h2 className="font-display text-lg font-bold text-[var(--mh-text-strong)]">{t("deposit.title")}</h2>
-            <p className="mt-1 text-sm text-[var(--mh-muted)]">
+          <Card className="p-6">
+            <h2 className="font-display text-lg font-bold text-foreground">{t("deposit.title")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               {onchain ? t("deposit.descriptionOnchain") : t("deposit.description")}
             </p>
             <div className="mt-4">
@@ -174,11 +174,10 @@ export default function GoalDetailPage() {
                 />
               )}
             </div>
-            <div className="mt-5 mh-divider" />
-            <div className="mt-5">
-              <p className="mb-1 text-sm font-semibold text-[var(--mh-text-strong)]">{t("withdraw.title")}</p>
+            <div className="mt-5 border-t border-border pt-5">
+              <p className="mb-1 text-sm font-medium text-foreground">{t("withdraw.title")}</p>
               {onchain && feeBps > 0 && (
-                <p className="mb-3 text-xs text-[var(--mh-muted)]">
+                <p className="mb-3 text-xs text-muted-foreground">
                   {t("withdraw.feeNote", { fee: feePct })}
                 </p>
               )}
@@ -197,7 +196,7 @@ export default function GoalDetailPage() {
                     }}
                   />
                   {releaseOk && (
-                    <p className="mt-2 text-sm text-[var(--mh-mint)]">{releaseOk}</p>
+                    <p className="mt-2 text-sm text-jade-600 dark:text-jade-400">{releaseOk}</p>
                   )}
                 </>
               ) : (
@@ -227,133 +226,133 @@ export default function GoalDetailPage() {
                 />
               )}
             </div>
-          </GlassCard>
+          </Card>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <GlassCard hover>
-              <div className="flex items-center gap-2 text-[var(--mh-mint)]">
+            <Card className="p-5">
+              <div className="flex items-center gap-2 text-jade-600 dark:text-jade-400">
                 <Target className="h-4 w-4" />
                 <p className="font-mono text-[10px] uppercase tracking-[0.15em]">{t("stats.remaining")}</p>
               </div>
-              <p className="mt-1.5 font-display text-xl font-bold text-[var(--mh-text-strong)]">
+              <p className="mt-1.5 font-display text-xl font-bold text-foreground">
                 <Money cents={remaining} />
               </p>
-            </GlassCard>
-            <GlassCard hover>
-              <div className="flex items-center gap-2 text-[var(--mh-mint)]">
+            </Card>
+            <Card className="p-5">
+              <div className="flex items-center gap-2 text-jade-600 dark:text-jade-400">
                 <Calendar className="h-4 w-4" />
                 <p className="font-mono text-[10px] uppercase tracking-[0.15em]">{t("stats.targetDate")}</p>
               </div>
-              <p className="mt-1.5 font-display text-xl font-bold text-[var(--mh-text-strong)]">
+              <p className="mt-1.5 font-display text-xl font-bold text-foreground">
                 {formatDate(goal.deadline, { month: "short", day: "numeric", year: "numeric" })}
               </p>
-            </GlassCard>
+            </Card>
           </div>
 
-          <GlassCard>
-            <div className="flex items-center justify-between gap-3">
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(45,212,166,0.18)] bg-[rgba(45,212,166,0.09)] text-[var(--mh-mint)]">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
                   <Repeat className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-[var(--mh-text-strong)]">{t("plan.title")}</p>
-                  <p className="text-sm text-[var(--mh-muted)] capitalize">{t("plan.subtitle", { cadence: t(`cadence.adverb.${frequency}`) })}</p>
+                  <p className="font-semibold text-foreground">{t("plan.title")}</p>
+                  <p className="text-sm text-muted-foreground capitalize">{t("plan.subtitle", { cadence: t(`cadence.adverb.${frequency}`) })}</p>
                 </div>
               </div>
-              {next ? <StatusPill tone="jade">{t("plan.step", { current: next.index, total: next.total })}</StatusPill> : <StatusPill tone="jade">{t("plan.complete")}</StatusPill>}
+              {next ? <Badge tone="jade">{t("plan.step", { current: next.index, total: next.total })}</Badge> : <Badge tone="jade">{t("plan.complete")}</Badge>}
             </div>
             {next ? (
-              <div className="mt-4 flex items-end justify-between gap-3 border-t border-[var(--mh-border)] pt-4">
+              <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-[var(--mh-muted)]">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
                     {t("plan.nextContribution")}
                   </p>
-                  <p className="mt-1 font-display text-2xl font-bold text-[var(--mh-text-strong)]">
+                  <p className="mt-1 font-display text-2xl font-bold text-foreground">
                     <Money cents={next.amountCents} />
                   </p>
                 </div>
-                <p className="text-sm text-[var(--mh-muted)]">
+                <p className="text-sm text-muted-foreground">
                   {t(`plan.thisCadence.${frequency}`)}
                 </p>
               </div>
             ) : (
-              <p className="mt-4 border-t border-[var(--mh-border)] pt-4 text-sm text-[var(--mh-muted)]">
+              <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground">
                 {t("plan.allDone")}
               </p>
             )}
-          </GlassCard>
+          </Card>
 
           {next && remaining > 0 && (
-            <p className="flex items-center justify-center gap-2 text-center text-sm text-[var(--mh-muted)]">
-              <Sparkles className="h-4 w-4 text-[var(--mh-mint)]" />
+            <p className="flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-jade-500" />
               <Trans
                 t={t}
                 i18nKey={`plan.keepGoing.${frequency}`}
                 values={{ count: periodsLeft }}
-                components={[<span className="font-semibold text-[var(--mh-text-strong)]" />]}
+                components={[<span className="font-semibold text-foreground" />]}
               />
             </p>
           )}
 
           {onchain && goal.vaultAddress && (
-            <GlassCard>
+            <Card className="p-6">
               <div className="flex items-center gap-2">
-                <Link2 className="h-5 w-5 text-[var(--mh-mint)]" />
-                <h2 className="font-display text-lg font-bold text-[var(--mh-text-strong)]">{t("vault.title")}</h2>
+                <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
+                <h2 className="font-display text-lg font-bold text-foreground">{t("vault.title")}</h2>
               </div>
-              <p className="mt-1 text-sm text-[var(--mh-muted)]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {t("vault.description", { fee: feePct })}
               </p>
               <a
                 href={`${explorer}/address/${goal.vaultAddress}`}
                 target="_blank"
                 rel="noreferrer"
-                className="focus-ring mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--mh-border)] bg-[var(--mh-track)] px-3 py-2 font-mono text-xs text-[var(--mh-text-strong)] transition hover:border-[rgba(45,212,166,0.4)] hover:text-[var(--mh-mint)]"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700 dark:hover:text-jade-300"
               >
                 <Addr address={goal.vaultAddress} />
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
-            </GlassCard>
+            </Card>
           )}
 
           {history.length > 0 && (
-            <GlassCard>
-              <h2 className="font-display text-lg font-bold text-[var(--mh-text-strong)]">{t("activity.title")}</h2>
+            <Card className="p-6">
+              <h2 className="font-display text-lg font-bold text-foreground">{t("activity.title")}</h2>
               <ul className="mt-4 space-y-2">
                 {history.map((h) => (
                   <li
                     key={h.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)] px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold capitalize text-[var(--mh-text-strong)]">
+                      <p className="text-sm font-semibold capitalize text-foreground">
                         {t(`activity.types.${h.type}`, { defaultValue: h.type.replace(/_/g, " ") })}
                       </p>
-                      <p className="text-xs text-[var(--mh-muted)]"><Money cents={h.amountCents} /></p>
+                      <p className="text-xs text-muted-foreground"><Money cents={h.amountCents} /></p>
                     </div>
                     {h.txHash ? (
                       <a
                         href={`${explorer}/tx/${h.txHash}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="focus-ring inline-flex items-center gap-1.5 font-mono text-xs text-[var(--mh-mint)] transition hover:opacity-80"
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 transition hover:text-jade-800 dark:text-jade-300"
                       >
                         <Addr address={h.txHash} />
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     ) : (
-                      <StatusPill tone="neutral" className="capitalize">{t(`activity.status.${h.onchainStatus}`, { defaultValue: h.onchainStatus })}</StatusPill>
+                      <Badge tone="neutral" className="capitalize">{t(`activity.status.${h.onchainStatus}`, { defaultValue: h.onchainStatus })}</Badge>
                     )}
                   </li>
                 ))}
               </ul>
-            </GlassCard>
+            </Card>
           )}
 
-          <GlassCard className="border-[rgba(255,107,107,0.28)]">
-            <h2 className="font-display text-lg font-bold text-[var(--mh-text-strong)]">{t("delete.title")}</h2>
-            <p className="mt-1 text-sm text-[var(--mh-muted)]">
+          <Card className="border-rose-500/20 p-6">
+            <h2 className="font-display text-lg font-bold text-foreground">{t("delete.title")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               {goal.savedCents > 0
                 ? onchain && feeBps > 0
                   ? t("delete.descWithFee", { amount: formatMoney(goal.savedCents), fee: feePct })
@@ -361,14 +360,14 @@ export default function GoalDetailPage() {
                 : t("delete.descEmpty")}
             </p>
             {deleteMutation.error && (
-              <p className="mt-3 text-sm text-[var(--mh-danger)]">{apiErrorMessage(deleteMutation.error)}</p>
+              <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {!confirmDelete ? (
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
-                  className="focus-ring inline-flex items-center gap-2 rounded-xl border border-[rgba(255,107,107,0.32)] bg-[rgba(255,107,107,0.06)] px-4 py-2 text-sm font-medium text-[var(--mh-danger)] transition hover:bg-[rgba(255,107,107,0.12)]"
+                  className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-card px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                 >
                   <Trash2 className="h-4 w-4" /> {t("delete.title")}
                 </button>
@@ -395,7 +394,7 @@ export default function GoalDetailPage() {
                         },
                       );
                     }}
-                    className="focus-ring inline-flex items-center gap-2 rounded-xl bg-[var(--mh-danger)] px-4 py-2 text-sm font-medium text-white transition hover:brightness-105 disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
                   >
                     <Trash2 className="h-4 w-4" />
                     {deleteMutation.isPending ? t("delete.deleting") : t("delete.confirm")}
@@ -404,14 +403,14 @@ export default function GoalDetailPage() {
                     type="button"
                     disabled={deleteMutation.isPending}
                     onClick={() => setConfirmDelete(false)}
-                    className="mh-btn-secondary focus-ring rounded-xl px-4 py-2 text-sm font-medium"
+                    className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent"
                   >
                     {t("common:actions.cancel")}
                   </button>
                 </>
               )}
             </div>
-          </GlassCard>
+          </Card>
         </div>
       </div>
       {stepUpDialog}

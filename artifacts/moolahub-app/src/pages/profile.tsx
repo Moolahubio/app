@@ -13,12 +13,10 @@ import {
   Receipt,
   Flame,
   Languages,
-  TrendingUp,
-  Percent,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
-import { Card, Avatar, Eyebrow, MetricCard, IconChip } from "@/components/ui";
+import { Card, Avatar, Eyebrow } from "@/components/ui";
 import { PageHeader, Money, Addr } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
 import { ManageAccountCard } from "@/components/app/ManageAccountCard";
@@ -44,26 +42,26 @@ type Item = {
 
 function SettingsList({ items }: { items: Item[] }) {
   return (
-    <Card className="overflow-hidden p-1.5">
-      <div className="divide-y divide-[var(--mh-border)]">
+    <Card className="overflow-hidden p-1">
+      <div className="divide-y divide-border">
         {items.map((item) => {
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="group flex items-center justify-between rounded-2xl px-3 py-3 transition-colors hover:bg-[var(--mh-btn-secondary-bg-hover)] focus-ring"
+              className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-accent"
             >
               <div className="flex items-center gap-3">
-                <IconChip tone="jade" className="h-10 w-10">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
                   <Icon className="h-5 w-5" />
-                </IconChip>
+                </span>
                 <div>
-                  <p className="text-sm font-semibold text-[var(--mh-text-strong)]">{item.label}</p>
-                  <p className="text-xs text-[var(--mh-muted)]">{item.detail}</p>
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">{item.detail}</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-[var(--mh-muted)] transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground rtl:rotate-180" />
             </Link>
           );
         })}
@@ -73,7 +71,11 @@ function SettingsList({ items }: { items: Item[] }) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="mh-kicker px-1">{children}</p>;
+  return (
+    <p className="px-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+      {children}
+    </p>
+  );
 }
 
 export default function ProfilePage() {
@@ -165,9 +167,9 @@ export default function ProfilePage() {
       <PageHeader eyebrow={t("common:nav.profile")} title={t("common:nav.account")} />
 
       {/* identity card */}
-      <Card className="mh-card-highlight relative overflow-hidden p-6 text-white lg:p-8">
+      <Card className="relative overflow-hidden border-ink-900 bg-ink-950 p-6 text-white lg:p-8">
         <div
-          className="pointer-events-none absolute inset-0 bg-grid-dark [background-size:32px_32px] opacity-25"
+          className="pointer-events-none absolute inset-0 bg-grid-dark [background-size:32px_32px] opacity-35"
           aria-hidden
         />
         <div className="relative z-10 flex flex-wrap items-center gap-4">
@@ -263,25 +265,26 @@ export default function ProfilePage() {
 
       {/* balance snapshot */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard
-          label={t("common:labels.balance")}
-          value={<Money cents={summary.totalCents} />}
-          icon={<WalletIcon className="h-5 w-5" />}
-        />
-        <MetricCard
-          label={t("profile.stats.yieldEarned")}
-          value={
-            <span className="text-[var(--mh-mint)]">
-              <Money cents={Math.floor(summary.totalCents * 0.041)} />
-            </span>
-          }
-          icon={<TrendingUp className="h-5 w-5" />}
-        />
-        <MetricCard
-          label={t("profile.stats.yieldApy")}
-          value={`${(summary.yieldApy * 100).toFixed(1)}%`}
-          icon={<Percent className="h-5 w-5" />}
-        />
+        <Card className="p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("common:labels.balance")}</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">
+            <Money cents={summary.totalCents} />
+          </p>
+        </Card>
+        <Card className="p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+            {t("profile.stats.yieldEarned")}
+          </p>
+          <p className="mt-1 font-display text-2xl font-bold text-jade-600 dark:text-jade-400">
+            <Money cents={Math.floor(summary.totalCents * 0.041)} />
+          </p>
+        </Card>
+        <Card className="p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("profile.stats.yieldApy")}</p>
+          <p className="mt-1 font-display text-2xl font-bold text-foreground">
+            {(summary.yieldApy * 100).toFixed(1)}%
+          </p>
+        </Card>
       </div>
 
       {/* account */}
@@ -322,7 +325,7 @@ export default function ProfilePage() {
           });
         }}
         disabled={logoutMutation.isPending}
-        className="mh-btn-secondary focus-ring flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-semibold text-muted-foreground transition-[color,background-color] duration-150 hover:bg-accent hover:text-foreground focus-ring"
       >
         <LogOut className="h-4 w-4" /> {logoutMutation.isPending ? t("common:actions.signingOut") : t("common:actions.signOut")}
       </button>

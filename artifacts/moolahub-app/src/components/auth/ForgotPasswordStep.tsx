@@ -143,7 +143,7 @@ export function ForgotPasswordStep({
           placeholder={t("fields.codePlaceholder")}
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="mt-1.5 mh-input w-full rounded-xl px-3.5 py-3 text-center font-mono text-lg tracking-[0.3em] outline-none focus-ring"
+          className="mt-1.5 w-full rounded-xl border border-border bg-background px-3.5 py-3 text-center font-mono text-lg tracking-[0.3em] text-foreground outline-none focus:border-jade-500/60 focus-ring"
         />
       </label>
 

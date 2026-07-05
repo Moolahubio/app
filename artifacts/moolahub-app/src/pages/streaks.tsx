@@ -88,7 +88,7 @@ export default function StreaksPage() {
       {/* Hero */}
       <Card className="p-8">
         <StreakFlameHero count={heroCount} status={heroStatus} caption={heroCaption} />
-        <div className="mt-6 grid grid-cols-3 gap-3 border-t border-[var(--mh-border)] pt-6 text-center">
+        <div className="mt-6 grid grid-cols-3 gap-3 border-t border-border pt-6 text-center">
           <Stat label={t("stats.current", { unit })} value={String(heroCount)} />
           <Stat label={t("stats.lifetimeBest")} value={String(data.lifetimeBest)} />
           <Stat label={t("stats.periodsSaved")} value={String(data.totalPeriodsSaved)} />
@@ -118,17 +118,17 @@ export default function StreaksPage() {
           </Link>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="mh-glass flex items-center gap-3 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-jade-500/15 text-jade-600 dark:text-jade-400">
               <Target className="h-5 w-5" />
             </span>
-            <p className="text-sm text-[var(--mh-muted)]">{t("card.goalDepositsCount")}</p>
+            <p className="text-sm text-muted-foreground">{t("card.goalDepositsCount")}</p>
           </div>
-          <div className="mh-glass flex items-center gap-3 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-border bg-background px-4 py-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-jade-500/15 text-jade-600 dark:text-jade-400">
               <Users className="h-5 w-5" />
             </span>
-            <p className="text-sm text-[var(--mh-muted)]">{t("card.circleContributionsCount")}</p>
+            <p className="text-sm text-muted-foreground">{t("card.circleContributionsCount")}</p>
           </div>
         </div>
         {!data.canChangeFrequency && (

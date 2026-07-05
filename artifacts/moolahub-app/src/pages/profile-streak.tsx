@@ -75,18 +75,18 @@ export default function ProfileStreakPage() {
               onClick={() => select(opt.key)}
               disabled={!canChange && !active}
               className={cn(
-                "mh-glass w-full rounded-2xl p-4 text-start focus-ring",
+                "w-full rounded-2xl border bg-card p-4 text-start transition-colors focus-ring",
                 active
-                  ? "border-[rgba(45,212,166,0.55)] ring-1 ring-[rgba(45,212,166,0.35)]"
+                  ? "border-jade-500 ring-1 ring-jade-500/40"
                   : canChange
-                    ? "mh-glass-hover"
-                    : "opacity-60",
+                    ? "border-card-border hover:bg-accent"
+                    : "border-card-border opacity-60",
               )}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Flame className="h-4 w-4 text-[var(--mh-mint)]" />
-                  <span className="text-sm font-semibold text-[var(--mh-text-strong)]">
+                  <Flame className="h-4 w-4 text-jade-600 dark:text-jade-400" />
+                  <span className="text-sm font-semibold text-foreground">
                     {t(`profile.options.${opt.key}.label`)}
                   </span>
                   {opt.recommended && <Badge tone="jade">{t("profile.recommended")}</Badge>}
@@ -97,7 +97,7 @@ export default function ProfileStreakPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-[var(--mh-muted)]">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {t(`profile.options.${opt.key}.description`)}
               </p>
             </button>
@@ -106,7 +106,7 @@ export default function ProfileStreakPage() {
       </div>
 
       {!canChange && (
-        <div className="mh-glass flex items-start gap-2 rounded-2xl p-4 text-sm text-[var(--mh-muted)]">
+        <div className="flex items-start gap-2 rounded-2xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
           <Lock className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             {data.nextChangeYear

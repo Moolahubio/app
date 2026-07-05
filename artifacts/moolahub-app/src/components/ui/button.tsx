@@ -7,19 +7,19 @@ export type ButtonSize = "sm" | "md" | "lg";
 
 const buttonBase = cn(
   "inline-flex cursor-pointer select-none items-center justify-center gap-2 rounded-xl font-semibold",
-  "transition-[color,background-color,border-color,transform] duration-150 ease-out",
-  "active:scale-[0.98] active:duration-75",
-  "focus-ring disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100",
+  "transition-[color,background-color,border-color,transform,box-shadow] duration-150 ease-out",
+  "hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] active:duration-75",
+  "focus-ring disabled:pointer-events-none disabled:opacity-50 disabled:translate-y-0 disabled:active:scale-100 disabled:hover:translate-y-0",
   "whitespace-nowrap",
 );
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "border border-jade-500/40 bg-gradient-to-b from-jade-500 to-jade-600 text-white shadow-[0_12px_32px_-12px_rgba(14,158,110,0.55)] hover:brightness-[1.06] hover:shadow-[0_18px_44px_-14px_rgba(14,158,110,0.6)] active:brightness-95",
+    "border border-jade-600 bg-jade-500 text-white hover:bg-jade-600 hover:shadow-glow active:bg-jade-700",
   secondary:
-    "border border-border bg-card text-foreground hover:bg-muted active:bg-accent",
+    "border border-border bg-card text-foreground hover:border-jade-500/40 hover:bg-muted active:bg-accent",
   ghost: "border border-transparent text-foreground hover:bg-accent active:bg-accent",
-  dark: "border border-ink-800 bg-ink-900 text-white hover:bg-ink-800 active:bg-ink-850",
+  dark: "border border-ink-800 bg-ink-900 text-white hover:bg-ink-800 hover:shadow-glow active:bg-ink-850",
 };
 
 const buttonSizes: Record<ButtonSize, string> = {

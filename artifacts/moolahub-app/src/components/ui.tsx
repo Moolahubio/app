@@ -4,17 +4,6 @@ import { cn, pct } from "@/lib/utils";
 export { Button } from "./ui/button";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "./ui/button";
 
-export {
-  GlassPanel,
-  GlassCard,
-  MetricCard,
-  PrimaryAction,
-  SecondaryAction,
-  StatusPill,
-  ProgressLine,
-  GlowLineChart,
-} from "./ui/moola";
-
 /* ------------------------------------------------------------------- Card */
 
 export function Card({
@@ -24,7 +13,10 @@ export function Card({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("mh-glass rounded-2xl", className)}
+      className={cn(
+        "glass hover-lift rounded-2xl",
+        className,
+      )}
       {...props}
     >
       {children}
@@ -204,10 +196,7 @@ export function IconChip({
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn(
-        "animate-pulse rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)]",
-        className,
-      )}
+      className={cn("animate-pulse rounded-2xl bg-muted", className)}
       aria-hidden
     />
   );
@@ -216,25 +205,18 @@ export function Skeleton({ className }: { className?: string }) {
 /* ------------------------------------------------------------- EmptyState */
 
 export function EmptyState({
-  icon,
   title,
   description,
   action,
 }: {
-  icon?: React.ReactNode;
   title: string;
   description: string;
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mh-glass flex flex-col items-center rounded-[var(--mh-radius-lg)] px-6 py-12 text-center">
-      {icon ? (
-        <div className="mb-4 grid size-12 place-items-center rounded-2xl border border-[rgba(45,212,166,0.18)] bg-[rgba(45,212,166,0.09)] text-[var(--mh-mint)]">
-          {icon}
-        </div>
-      ) : null}
-      <p className="font-display text-lg font-bold text-[var(--mh-text-strong)]">{title}</p>
-      <p className="mt-2 max-w-sm text-sm text-[var(--mh-muted)]">{description}</p>
+    <div className="glass flex flex-col items-center rounded-3xl border border-dashed border-border px-6 py-12 text-center">
+      <p className="font-display text-lg font-bold text-foreground">{title}</p>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">{description}</p>
       {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
