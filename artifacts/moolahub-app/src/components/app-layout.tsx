@@ -11,6 +11,7 @@ import {
 import { Logo, MoolaMark } from "@/components/brand/Logo";
 import { Avatar, Skeleton } from "@/components/ui";
 import { NotificationBell } from "@/components/app/NotificationBell";
+import { WalletSessionBanner } from "@/components/app/WalletSession";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
 import { ShellNavList, type NavItem } from "@/components/app/ShellNav";
 import { StreakIndicator } from "@/components/app/StreakFlame";
@@ -145,6 +146,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="relative z-0 px-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-6 lg:px-8 lg:pb-12">
+          <WalletSessionBanner />
           {children}
         </main>
       </div>

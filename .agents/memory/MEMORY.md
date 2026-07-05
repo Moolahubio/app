@@ -4,6 +4,7 @@
 - [MoolaHub Account section](moolahub-account.md) — STALE on auth ("email/password removed" is wrong; it is PRIMARY). Still valid: NO KYC; WebAuthn challenges single-use; private object route auth-guarded.
 - [MoolaHub email+password auth](moolahub-email-password-auth.md) — email+password is PRIMARY; Privy never logs into a password account; forgot-password reports plainly (404/409/200, NOT silent {ok:true}); codes burn after N attempts; username public+CI-unique; completion gate for legacy Privy accounts.
 - [MoolaHub client auth/logout](moolahub-auth-logout.md) — logout: setQueryData(getMe,null) then removeQueries excluding getMe, then navigate; invalidate/remove-all race refetch and keep stale auth.
+- [MoolaHub wallet-session coupling](moolahub-wallet-session-coupling.md) — connect Privy once per app login; end Privy only on getMe success+null (never error/!auth), prefill email to restore SAME embedded wallet, outer/inner isWeb3Enabled hook gating.
 - [api-server consumes @workspace/db](api-server-db-composite.md) — rebuild lib/db .d.ts after any schema change or consumers typecheck against stale types.
 - [Monorepo composite tsconfig](monorepo-tsconfig.md) — a lib referenced via TS project references must set `composite: true` or `tsc --build` fails with TS6306.
 - [MoolaHub on-chain settlement](moolahub-onchain-settlement.md) — USDC settles async via onchain_transfers queue + reconciler; book pending (not none) on failure; no double-send via SKIP LOCKED + in-proc guard.

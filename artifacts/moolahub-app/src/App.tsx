@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { Web3Provider } from "@/components/app/Web3Provider";
+import { WalletSessionSync } from "@/components/app/WalletSession";
 import { AppLayout } from "@/components/app-layout";
 import NotFound from "@/pages/not-found";
 
@@ -113,6 +114,7 @@ function App() {
         <Web3Provider>
           <TooltipProvider>
             <AuthProvider>
+              <WalletSessionSync />
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
                 <Router />
               </WouterRouter>
