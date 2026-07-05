@@ -12,7 +12,7 @@ import {
   ExternalLink,
   Trash2
 } from "lucide-react";
-import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
+import { Card, Badge, Avatar, GlassCard, StatusPill, ProgressLine } from "@/components/ui";
 import { BackLink, Money, Addr } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
 import { PrivyContributeButton } from "@/components/app/PrivyContributeButton";
@@ -20,7 +20,7 @@ import { isWeb3Enabled } from "@/components/app/Web3Provider";
 import { useOnchainConfig } from "@/lib/onchain/config";
 import { useGetCircle, useGetWallet, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey, getGetStreaksQueryKey } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
-import { formatMoney, formatDate, apiErrorMessage, cn } from "@/lib/utils";
+import { formatMoney, formatDate, apiErrorMessage, cn, pct } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -171,7 +171,7 @@ export default function CircleDetailPage() {
 
       {/* ------------------------------------------------- forming controls */}
       {isForming && (
-        <Card className="p-6">
+        <GlassCard>
           <div className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">{t("detail.build.title")}</h2>
@@ -199,7 +199,7 @@ export default function CircleDetailPage() {
           )}
 
           {isCreator && (
-            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-border pt-5">
+            <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--mh-border)] pt-5">
               {canStart ? (
                 <ActionButton
                   onClick={() => {
@@ -219,12 +219,12 @@ export default function CircleDetailPage() {
               )}
             </div>
           )}
-        </Card>
+        </GlassCard>
       )}
 
       {/* ----------------------------------------------------- delete circle */}
       {canDelete && (
-        <Card className="border-rose-500/20 p-6">
+        <GlassCard className="border-rose-500/20">
           <h2 className="font-display text-lg font-bold text-foreground">{t("detail.delete.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("detail.delete.description")}
@@ -273,12 +273,12 @@ export default function CircleDetailPage() {
               </>
             )}
           </div>
-        </Card>
+        </GlassCard>
       )}
 
       <div className="grid gap-6 lg:grid-cols-5">
         {/* ------------------------------------------------ payout schedule */}
-        <Card className="p-6 lg:col-span-3">
+        <GlassCard className="lg:col-span-3">
           <div className="flex items-center gap-2">
             <CalendarClock className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">
@@ -302,7 +302,7 @@ export default function CircleDetailPage() {
                   key={m.id}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl border px-4 py-3",
-                    current ? "border-jade-500/30 bg-jade-50 dark:bg-jade-500/15" : "border-border bg-card",
+                    current ? "border-jade-500/30 bg-jade-50 dark:bg-jade-500/15" : "border-[var(--mh-border)] bg-[var(--mh-track)]",
                   )}
                 >
                   {!isAccumulation && (
@@ -332,25 +332,25 @@ export default function CircleDetailPage() {
                             : m.state}
                     </p>
                   </div>
-                  {current && <Badge tone="jade">{t("detail.schedule.current")}</Badge>}
+                  {current && <StatusPill tone="jade">{t("detail.schedule.current")}</StatusPill>}
                 </li>
               );
             })}
           </ol>
-        </Card>
+        </GlassCard>
 
         {/* ------------------------------------------ contribution history */}
         <div className="space-y-6 lg:col-span-2">
-          <Card className="p-6">
+          <GlassCard>
             <h2 className="font-display text-lg font-bold text-foreground">{t("detail.progress.title")}</h2>
             <p className="mt-3 text-sm text-muted-foreground">
               {t("detail.progress.roundsOf", { current: circle.currentRound, total: circle.totalRounds })}
             </p>
-            <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
-          </Card>
+            <ProgressLine value={pct(circle.currentRound, circle.totalRounds)} className="mt-2" />
+          </GlassCard>
 
           {circle.contractAddress && (
-            <Card className="p-6">
+            <GlassCard>
               <div className="flex items-center gap-2">
                 <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
                 <h2 className="font-display text-lg font-bold text-foreground">{t("detail.escrow.title")}</h2>
@@ -362,22 +362,22 @@ export default function CircleDetailPage() {
                 href={`${circle.explorerUrl ?? "https://testnet.monadvision.com"}/address/${circle.contractAddress}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--mh-border)] bg-[var(--mh-track)] px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700 focus-ring"
               >
                 <Addr address={circle.contractAddress} />
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
-            </Card>
+            </GlassCard>
           )}
 
           {(circle.history?.length ?? 0) > 0 && (
-            <Card className="p-6">
+            <GlassCard>
               <h2 className="font-display text-lg font-bold text-foreground">{t("detail.history.title")}</h2>
               <ul className="mt-4 space-y-2">
                 {circle.history!.map((h) => (
                   <li
                     key={h.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--mh-border)] bg-[var(--mh-track)] px-4 py-3"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground">{t("detail.history.round", { round: h.round })}</p>
@@ -399,7 +399,7 @@ export default function CircleDetailPage() {
                   </li>
                 ))}
               </ul>
-            </Card>
+            </GlassCard>
           )}
         </div>
       </div>

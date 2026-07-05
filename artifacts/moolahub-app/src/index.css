@@ -349,3 +349,266 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================================================
+   Liquid-glass design system ("mh-*")
+   A premium frosted-glass layer that sits on top of the existing jade/ink
+   theme. Tokens are theme-aware: light values live in :root, dark values
+   override in .dark, so the same primitives (GlassCard, mh-btn-primary, …)
+   render correctly in both modes. The immersive dark ink/gradient backdrop is
+   scoped to .dark so light mode stays clean and readable.
+   ========================================================================= */
+:root {
+  /* Brand accents + geometry — constant across themes */
+  --mh-jade: #0e9e6e;
+  --mh-jade-2: #12b981;
+  --mh-mint: #2dd4a6;
+  --mh-ink: #0c1512;
+  --mh-ink-2: #101b17;
+  --mh-danger: #ff6b6b;
+  --mh-warning: #f2b84b;
+  --mh-radius-sm: 10px;
+  --mh-radius-md: 16px;
+  --mh-radius-lg: 22px;
+  --mh-radius-xl: 28px;
+  --mh-shadow-glow: 0 0 0 1px rgba(45, 212, 166, 0.12), 0 24px 80px rgba(14, 158, 110, 0.12);
+
+  /* Theme-aware surface tokens — light */
+  --mh-glass: rgba(255, 255, 255, 0.72);
+  --mh-glass-strong: rgba(255, 255, 255, 0.88);
+  --mh-glass-tint-1: rgba(255, 255, 255, 0.5);
+  --mh-glass-tint-2: rgba(255, 255, 255, 0.2);
+  --mh-border: rgba(12, 21, 18, 0.1);
+  --mh-border-strong: rgba(14, 158, 110, 0.36);
+  --mh-text: #0c1512;
+  --mh-text-strong: #06110d;
+  --mh-muted: #55655d;
+  --mh-shadow-soft: 0 18px 50px -20px rgba(12, 21, 18, 0.22);
+  --mh-input-bg: rgba(255, 255, 255, 0.82);
+  --mh-input-bg-focus: #ffffff;
+  --mh-btn-secondary-bg: rgba(12, 21, 18, 0.035);
+  --mh-btn-secondary-bg-hover: rgba(12, 21, 18, 0.06);
+  --mh-track: rgba(12, 21, 18, 0.09);
+  --mh-grid-line: rgba(12, 21, 18, 0.05);
+}
+
+.dark {
+  --mh-glass: rgba(20, 31, 27, 0.68);
+  --mh-glass-strong: rgba(17, 26, 23, 0.86);
+  --mh-glass-tint-1: rgba(255, 255, 255, 0.075);
+  --mh-glass-tint-2: rgba(255, 255, 255, 0.025);
+  --mh-border: rgba(230, 243, 239, 0.105);
+  --mh-border-strong: rgba(45, 212, 166, 0.24);
+  --mh-text: #e6f3ef;
+  --mh-text-strong: #f8fffc;
+  --mh-muted: #8fa39b;
+  --mh-shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.28);
+  --mh-input-bg: rgba(5, 12, 10, 0.48);
+  --mh-input-bg-focus: rgba(5, 12, 10, 0.68);
+  --mh-btn-secondary-bg: rgba(255, 255, 255, 0.045);
+  --mh-btn-secondary-bg-hover: rgba(255, 255, 255, 0.07);
+  --mh-track: rgba(230, 243, 239, 0.09);
+  --mh-grid-line: rgba(230, 243, 239, 0.035);
+}
+
+/* Immersive dark backdrop — dark mode only. */
+.dark {
+  background: var(--mh-ink);
+}
+.dark body {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(14, 158, 110, 0.22), transparent 32rem),
+    radial-gradient(circle at 88% 18%, rgba(45, 212, 166, 0.14), transparent 28rem),
+    linear-gradient(135deg, #08100d 0%, var(--mh-ink) 42%, #07110e 100%);
+  background-attachment: fixed;
+}
+
+/* Ambient grid + glow environment behind app content. */
+.mh-bg-grid {
+  position: relative;
+  isolation: isolate;
+}
+.mh-bg-grid::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+  background-image:
+    linear-gradient(var(--mh-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mh-grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(circle at center, black, transparent 78%);
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+.dark .mh-bg-grid::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 212, 166, 0.08), transparent 40rem),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent 22rem);
+}
+
+/* Frosted glass surfaces */
+.mh-glass {
+  background:
+    linear-gradient(180deg, var(--mh-glass-tint-1), var(--mh-glass-tint-2)),
+    var(--mh-glass);
+  border: 1px solid var(--mh-border);
+  box-shadow: var(--mh-shadow-soft);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  backdrop-filter: blur(22px) saturate(135%);
+}
+.mh-glass-strong {
+  background:
+    linear-gradient(180deg, var(--mh-glass-tint-1), var(--mh-glass-tint-2)),
+    var(--mh-glass-strong);
+  border: 1px solid var(--mh-border);
+  box-shadow: var(--mh-shadow-soft);
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+  backdrop-filter: blur(26px) saturate(145%);
+}
+.mh-glass-hover {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+.mh-glass-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--mh-border-strong);
+  box-shadow: var(--mh-shadow-glow);
+}
+.mh-card-highlight {
+  background:
+    radial-gradient(circle at 85% 18%, rgba(45, 212, 166, 0.34), transparent 13rem),
+    linear-gradient(135deg, rgba(14, 158, 110, 0.82), rgba(14, 158, 110, 0.22) 52%, rgba(20, 31, 27, 0.78));
+  border: 1px solid rgba(45, 212, 166, 0.34);
+  box-shadow: 0 24px 90px rgba(14, 158, 110, 0.2);
+}
+
+/* Buttons */
+.mh-btn-primary {
+  border: 1px solid rgba(45, 212, 166, 0.36);
+  background:
+    linear-gradient(180deg, rgba(45, 212, 166, 0.96), rgba(14, 158, 110, 0.92)),
+    #0e9e6e;
+  color: #ffffff;
+  box-shadow: 0 16px 42px rgba(14, 158, 110, 0.24);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+.mh-btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 22px 60px rgba(14, 158, 110, 0.34);
+}
+.mh-btn-primary:active {
+  transform: translateY(0);
+}
+.mh-btn-primary:disabled {
+  opacity: 0.55;
+  transform: none;
+  filter: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.mh-btn-secondary {
+  background: var(--mh-btn-secondary-bg);
+  border: 1px solid var(--mh-border);
+  color: var(--mh-text);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+.mh-btn-secondary:hover {
+  transform: translateY(-1px);
+  background: var(--mh-btn-secondary-bg-hover);
+  border-color: rgba(45, 212, 166, 0.22);
+}
+.mh-btn-secondary:disabled {
+  opacity: 0.55;
+  transform: none;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+.mh-input {
+  background: var(--mh-input-bg);
+  border: 1px solid var(--mh-border);
+  color: var(--mh-text-strong);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+.mh-input::placeholder {
+  color: var(--mh-muted);
+  opacity: 0.85;
+}
+.mh-input:focus,
+.mh-input:focus-visible {
+  outline: none;
+  border-color: rgba(45, 212, 166, 0.64);
+  box-shadow: 0 0 0 4px rgba(45, 212, 166, 0.12);
+  background: var(--mh-input-bg-focus);
+}
+
+/* Typography + dividers + progress */
+.mh-kicker {
+  color: var(--mh-jade);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.dark .mh-kicker {
+  color: var(--mh-mint);
+}
+.mh-page-title {
+  color: var(--mh-text-strong);
+  letter-spacing: -0.045em;
+}
+.mh-muted {
+  color: var(--mh-muted);
+}
+.mh-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mh-border), transparent);
+}
+.mh-progress-track {
+  background: var(--mh-track);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mh-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mh-jade), var(--mh-mint));
+  box-shadow: 0 0 24px rgba(45, 212, 166, 0.42);
+  transition: width 700ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mh-glass-hover,
+  .mh-btn-primary,
+  .mh-btn-secondary,
+  .mh-progress-bar {
+    transition: none;
+  }
+  .mh-glass-hover:hover,
+  .mh-btn-primary:hover,
+  .mh-btn-secondary:hover {
+    transform: none;
+  }
+}
+
+/* Solid fallbacks where transparency is reduced or backdrop-filter is absent. */
+@media (prefers-reduced-transparency: reduce) {
+  .mh-glass,
+  .mh-glass-strong {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: hsl(var(--card));
+  }
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .mh-glass,
+  .mh-glass-strong {
+    background: hsl(var(--card));
+  }
+}

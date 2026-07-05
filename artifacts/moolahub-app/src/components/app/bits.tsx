@@ -17,13 +17,13 @@ export function PageHeader({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        {eyebrow && <p className="eyebrow text-jade-600 dark:text-jade-400">{eyebrow}</p>}
-        <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight text-foreground">
+        {eyebrow && <p className="mh-kicker mb-2">{eyebrow}</p>}
+        <h1 className="mh-page-title font-display text-3xl font-bold md:text-4xl">
           {title}
         </h1>
         {description && <p className="mt-2 max-w-xl text-muted-foreground">{description}</p>}
       </div>
-      {action}
+      {action ? <div className="flex shrink-0 items-center gap-3">{action}</div> : null}
     </div>
   );
 }

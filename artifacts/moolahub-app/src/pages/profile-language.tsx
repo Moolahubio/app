@@ -56,19 +56,17 @@ export default function ProfileLanguagePage() {
               onClick={() => void select(lng.code)}
               disabled={isSaving && !active}
               className={cn(
-                "w-full rounded-2xl border bg-card p-4 text-start transition-colors focus-ring",
-                active
-                  ? "border-jade-500 ring-1 ring-jade-500/40"
-                  : "border-card-border hover:bg-accent",
+                "mh-glass mh-glass-hover w-full rounded-2xl p-4 text-start focus-ring",
+                active && "border-[rgba(45,212,166,0.55)] ring-1 ring-[rgba(45,212,166,0.35)]",
                 isSaving && !active && "opacity-60",
               )}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <span className="block text-sm font-semibold text-foreground">
+                  <span className="block text-sm font-semibold text-[var(--mh-text-strong)]">
                     {lng.nativeName}
                   </span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                  <span className="mt-0.5 block text-xs text-[var(--mh-muted)]">
                     {t(`language.names.${lng.code}`)}
                   </span>
                 </div>

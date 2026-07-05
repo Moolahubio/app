@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui";
+import { GlassPanel, EmptyState, Skeleton } from "@/components/ui";
 import { PageHeader, BackLink } from "@/components/app/bits";
 import { useListNotifications, useMarkNotificationRead, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,7 +26,23 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const markOneMutation = useMarkNotificationRead();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>;
+  if (isLoading) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <BackLink href="/" label={t("common:nav.home")} />
+        <PageHeader
+          eyebrow={t("page.eyebrow")}
+          title={t("page.title")}
+          description={t("page.description")}
+        />
+        <GlassPanel className="space-y-4 p-5">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </GlassPanel>
+      </div>
+    );
+  }
 
   const notifications = data?.notifications ?? [];
 
@@ -39,14 +55,15 @@ export default function NotificationsPage() {
         description={t("page.description")}
       />
 
-      <Card className="overflow-hidden p-0">
-        {notifications.length === 0 ? (
-          <div className="px-4 py-10 text-center">
-            <Bell className="mx-auto h-6 w-6 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground">{t("empty")}</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-border">
+      {notifications.length === 0 ? (
+        <EmptyState
+          icon={<Bell className="size-5" />}
+          title={t("empty")}
+          description={t("page.description")}
+        />
+      ) : (
+        <GlassPanel className="overflow-hidden p-0">
+          <ul className="divide-y divide-[var(--mh-border)]">
             {notifications.map((n) => {
               const { icon: Icon, tone } = ICONS[n.type] ?? ICONS.system;
               return (
@@ -61,8 +78,8 @@ export default function NotificationsPage() {
                       }
                     }}
                     className={cn(
-                      "flex gap-4 p-5 transition-colors hover:bg-accent",
-                      !n.read && "bg-jade-50/40 dark:bg-jade-500/10",
+                      "focus-ring flex gap-4 p-5 transition-colors hover:bg-[rgba(45,212,166,0.06)]",
+                      !n.read && "bg-[rgba(45,212,166,0.08)]",
                     )}
                   >
                     <span
@@ -74,20 +91,20 @@ export default function NotificationsPage() {
                       <Icon className="h-5 w-5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-foreground">{n.title}</p>
-                      <p className="mt-1 text-sm leading-snug text-muted-foreground">{n.body}</p>
-                      <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                      <p className="text-sm font-bold text-[var(--mh-text-strong)]">{n.title}</p>
+                      <p className="mt-1 text-sm leading-snug text-[var(--mh-muted)]">{n.body}</p>
+                      <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-[var(--mh-muted)]">
                         {timeAgo(n.createdAt)}
                       </p>
                     </div>
-                    {!n.read && <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-jade-500" />}
+                    {!n.read && <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--mh-mint)]" />}
                   </Link>
                 </li>
               );
             })}
           </ul>
-        )}
-      </Card>
+        </GlassPanel>
+      )}
     </div>
   );
 }

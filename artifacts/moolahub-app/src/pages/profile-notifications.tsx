@@ -126,15 +126,13 @@ export default function ProfileNotificationsPage() {
               type="button"
               onClick={() => selectTier(tier.key)}
               className={cn(
-                "w-full rounded-2xl border bg-card p-4 text-start transition-colors focus-ring",
-                active
-                  ? "border-jade-500 ring-1 ring-jade-500/40"
-                  : "border-card-border hover:bg-accent",
+                "mh-glass mh-glass-hover w-full rounded-2xl p-4 text-start focus-ring",
+                active && "border-[rgba(45,212,166,0.55)] ring-1 ring-[rgba(45,212,166,0.35)]",
               )}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-foreground">{t(`tiers.${tier.key}.label`)}</span>
+                  <span className="text-sm font-semibold text-[var(--mh-text-strong)]">{t(`tiers.${tier.key}.label`)}</span>
                   {tier.recommended && <Badge tone="jade">{t("settings.recommended")}</Badge>}
                 </div>
                 {active && (
@@ -143,19 +141,19 @@ export default function ProfileNotificationsPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{t(`tiers.${tier.key}.description`)}</p>
+              <p className="mt-1 text-xs text-[var(--mh-muted)]">{t(`tiers.${tier.key}.description`)}</p>
             </button>
           );
         })}
       </div>
 
       {preference === "custom" && (
-        <Card className="divide-y divide-border p-1">
+        <Card className="divide-y divide-[var(--mh-border)] p-1.5">
           {CATEGORIES.map((cat) => (
-            <div key={cat.key} className="flex items-center justify-between gap-4 px-4 py-3.5">
+            <div key={cat.key} className="flex items-center justify-between gap-4 px-3 py-3.5">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">{t(`categories.${cat.key}.label`)}</p>
-                <p className="text-xs text-muted-foreground">{t(`categories.${cat.key}.description`)}</p>
+                <p className="text-sm font-semibold text-[var(--mh-text-strong)]">{t(`categories.${cat.key}.label`)}</p>
+                <p className="text-xs text-[var(--mh-muted)]">{t(`categories.${cat.key}.description`)}</p>
               </div>
               <Switch
                 checked={categories[cat.key]}

@@ -1,5 +1,5 @@
-import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles } from "lucide-react";
-import { Card, Badge } from "@/components/ui";
+import { ArrowDownLeft, ArrowUpRight, Wallet as WalletIcon, ShieldCheck, Sparkles, PiggyBank } from "lucide-react";
+import { GlassCard, MetricCard, StatusPill, Skeleton, GlowLineChart } from "@/components/ui";
 import { PageHeader, BackLink, Money } from "@/components/app/bits";
 import { AmountForm, WithdrawForm, CopyButton, ActionButton } from "@/components/app/forms";
 import { WalletSetupCard } from "@/components/app/WalletSetupCard";
@@ -29,7 +29,21 @@ export default function WalletPage() {
   const { requestProof, stepUpDialog } = useStepUpGate();
 
   if (isLoading || !wallet) {
-    return <div className="p-8 text-center text-muted-foreground">{t("states.loadingWallet")}</div>;
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <Skeleton className="h-5 w-24" />
+        <Skeleton className="h-16 w-72" />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <Skeleton className="h-52 w-full" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-72" />
+          <Skeleton className="h-72" />
+        </div>
+      </div>
+    );
   }
 
   if (!wallet.hasWallet) {
@@ -58,50 +72,64 @@ export default function WalletPage() {
       />
 
       {/* balance + receive address */}
-      <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">
-        <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:32px_32px] [mask-image:radial-gradient(70%_80%_at_90%_0%,black,transparent)]" />
+      <div className="mh-card-highlight relative isolate overflow-hidden rounded-[var(--mh-radius-lg)] p-6 text-white lg:p-8">
+        <GlowLineChart className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-36 w-full opacity-70" />
         <div className="flex items-center justify-between">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/70">
             {t("balance.available")}
           </p>
-          <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
             {NETWORK}
-          </Badge>
+          </span>
         </div>
-        <p className="mt-1.5 font-display text-4xl font-bold">
+        <p className="mt-1.5 font-display text-4xl font-bold tracking-[-0.04em]">
           <Money cents={wallet.availableCents} />
         </p>
-        <p className="mt-1 text-sm text-white/70">
+        <p className="mt-1 text-sm text-white/75">
           <Money cents={wallet.goalAllocatedCents} /> {t("balance.allocatedToSavings")}
         </p>
 
         {wallet.address && (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="mt-5 rounded-2xl border border-white/15 bg-white/[0.06] p-4 backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <WalletIcon className="h-4 w-4 text-jade-400" />
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
+              <WalletIcon className="h-4 w-4 text-white" />
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/70">
                 {t("receive.depositAddressLabel")}
               </p>
             </div>
             <div className="mt-2 flex items-center justify-between gap-3">
-              <code dir="ltr" className="truncate font-mono text-sm text-white/80">{wallet.address}</code>
+              <code dir="ltr" className="truncate font-mono text-sm text-white/85">{wallet.address}</code>
               <CopyButton value={wallet.address} />
             </div>
-            <p className="mt-2 text-xs text-white/60">
+            <p className="mt-2 text-xs text-white/70">
               <Trans
                 t={t}
                 i18nKey="receive.sendOnly"
                 values={{ network: NETWORK }}
-                components={[<span key="hl" className="text-white/70" />]}
+                components={[<span key="hl" className="text-white/90 font-medium" />]}
               />
             </p>
           </div>
         )}
-      </Card>
+      </div>
+
+      {/* balance breakdown */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <MetricCard
+          label={t("balance.available")}
+          value={<Money cents={wallet.availableCents} />}
+          icon={<WalletIcon className="h-5 w-5" />}
+        />
+        <MetricCard
+          label={t("balance.allocatedToSavings")}
+          value={<Money cents={wallet.goalAllocatedCents} />}
+          icon={<PiggyBank className="h-5 w-5" />}
+        />
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* receive */}
-        <Card className="p-6">
+        <GlassCard>
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
               <ArrowDownLeft className="h-5 w-5" />
@@ -144,7 +172,10 @@ export default function WalletPage() {
           )}
 
           {wallet.faucetEnabled && (
-            <div className="mt-5 border-t border-border pt-5">
+            <div className="mt-5 mh-divider" />
+          )}
+          {wallet.faucetEnabled && (
+            <div className="mt-5">
               <p className="mb-1 flex items-center gap-1.5 text-sm font-medium text-foreground">
                 <Sparkles className="h-4 w-4 text-jade-500" /> {t("receive.faucet.title")}
               </p>
@@ -170,10 +201,10 @@ export default function WalletPage() {
               />
             </div>
           )}
-        </Card>
+        </GlassCard>
 
         {/* withdraw */}
-        <Card className="p-6">
+        <GlassCard>
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-muted text-foreground">
               <ArrowUpRight className="h-5 w-5" />
@@ -221,17 +252,19 @@ export default function WalletPage() {
             )}
           </div>
           {!isPrivyCustody && stepUpDialog}
-        </Card>
+        </GlassCard>
       </div>
 
-      <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
+      <GlassCard className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
+          <ShieldCheck className="h-5 w-5" />
+        </span>
         <p className="text-sm text-muted-foreground">
           {t("footer.settle")}{" "}
           {isPrivyCustody ? t("footer.selfCustody") : t("footer.stepUp")}{" "}
-          <Badge tone="jade" className="ms-1">{t("footer.builtOnMonad")}</Badge>
+          <StatusPill tone="jade" className="ms-1">{t("footer.builtOnMonad")}</StatusPill>
         </p>
-      </Card>
+      </GlassCard>
     </div>
   );
 }

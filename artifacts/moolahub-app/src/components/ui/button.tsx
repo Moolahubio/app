@@ -15,7 +15,7 @@ const buttonBase = cn(
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "border border-jade-600 bg-jade-500 text-white hover:bg-jade-600 active:bg-jade-700",
+    "border border-jade-500/40 bg-gradient-to-b from-jade-500 to-jade-600 text-white shadow-[0_12px_32px_-12px_rgba(14,158,110,0.55)] hover:brightness-[1.06] hover:shadow-[0_18px_44px_-14px_rgba(14,158,110,0.6)] active:brightness-95",
   secondary:
     "border border-border bg-card text-foreground hover:bg-muted active:bg-accent",
   ghost: "border border-transparent text-foreground hover:bg-accent active:bg-accent",
