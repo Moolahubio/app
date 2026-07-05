@@ -1,0 +1,721 @@
+You are a senior product designer + senior React frontend engineer. Upgrade the MoolaHub web app UI/UX to match the attached design previews.
+
+Repository:
+https://github.com/Moolahubio/app
+
+Frontend path:
+artifacts/moolahub-app
+
+Important: Do not rewrite backend logic, API hooks, auth logic, routing, or database code. This is a UI/UX refresh only. Keep existing API data bindings and existing user flows working.
+
+Use the attached design boards as the visual target:
+- moolahub_ui_design_showcase.png
+- moolahub_fintech_app_ui_design.png
+- moolahub_ui_concept_for_savings.png
+- moolahub_ui_design_presentation_board.png
+
+Goal:
+Transform the MoolaHub app into a premium, clean, sleek fintech interface with a dark “liquid glass” design system, jade green accents, strong readability, refined spacing, smooth hover/focus states, excellent mobile responsiveness, and no generic AI-looking UI.
+
+Current app routes/screens to upgrade:
+- /login
+- /register
+- /complete-profile
+- /dashboard
+- /wallet
+- /goals
+- /goals/:id
+- /circles
+- /circles/:id
+- /learn
+- /learn/:slug
+- /transactions
+- /notifications
+- /profile
+- /profile/information
+- /profile/security
+- /profile/notifications
+- /profile/streak
+- /streaks
+- not-found / empty states
+
+Design direction:
+- Deep ink background: #0C1512
+- Jade primary: #0E9E6E
+- Emerald/mint accent: #22C78B / #2DD4A6
+- Paper text: #E6F3EF / #F8FFFC
+- Muted text: #8FA39B
+- Glass surfaces: translucent dark panels with subtle blur, inner highlights, soft borders, and soft green glow
+- Typography: clean, modern, fintech-grade; use the current font stack unless the project already supports custom fonts
+- Use generous spacing, consistent radii, polished card hierarchy, and restrained animation
+- Every interactive element needs proper hover, focus-visible, active, disabled states
+- Mobile first: every page must look excellent from 360px width upward
+
+Hard rules:
+1. Do not hardcode fake balances where real API data exists.
+2. Keep all existing hooks from @workspace/api-client-react working.
+3. Preserve auth and protected-route behavior.
+4. Preserve accessibility: labels, focus rings, keyboard navigation, contrast.
+5. Do not introduce heavy new libraries unless absolutely necessary.
+6. Do not break pnpm build/typecheck.
+7. Prefer reusable components over one-off styling.
+8. The UI must feel premium and production-ready, not like a generated mockup.
+
+First, inspect the repo structure and identify the actual files for each page/component. Then implement the redesign in small, safe steps.
+
+Create or update the following design system files/components.
+
+1. Update `artifacts/moolahub-app/src/index.css` with these tokens/utilities, merging with existing Tailwind/shadcn styles if present:
+
+```css
+:root {
+  --mh-jade: #0e9e6e;
+  --mh-jade-2: #12b981;
+  --mh-mint: #2dd4a6;
+  --mh-ink: #0c1512;
+  --mh-ink-2: #101b17;
+  --mh-surface: #141f1b;
+  --mh-surface-2: #192722;
+  --mh-glass: rgba(20, 31, 27, 0.68);
+  --mh-glass-strong: rgba(17, 26, 23, 0.86);
+  --mh-border: rgba(230, 243, 239, 0.105);
+  --mh-border-strong: rgba(45, 212, 166, 0.24);
+  --mh-text: #e6f3ef;
+  --mh-text-strong: #f8fffc;
+  --mh-muted: #8fa39b;
+  --mh-danger: #ff6b6b;
+  --mh-warning: #f2b84b;
+  --mh-radius-sm: 10px;
+  --mh-radius-md: 16px;
+  --mh-radius-lg: 22px;
+  --mh-radius-xl: 28px;
+  --mh-shadow-soft: 0 18px 60px rgba(0, 0, 0, 0.28);
+  --mh-shadow-glow: 0 0 0 1px rgba(45, 212, 166, 0.12), 0 24px 80px rgba(14, 158, 110, 0.12);
+}
+
+html {
+  background: var(--mh-ink);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(14, 158, 110, 0.22), transparent 32rem),
+    radial-gradient(circle at 88% 18%, rgba(45, 212, 166, 0.14), transparent 28rem),
+    linear-gradient(135deg, #08100d 0%, var(--mh-ink) 42%, #07110e 100%);
+  color: var(--mh-text);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(45, 212, 166, 0.28);
+  color: var(--mh-text-strong);
+}
+
+.mh-bg-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.mh-bg-grid::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -2;
+  background-image:
+    linear-gradient(rgba(230, 243, 239, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(230, 243, 239, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+}
+
+.mh-bg-grid::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(45, 212, 166, 0.08), transparent 40rem),
+    linear-gradient(to bottom, rgba(255,255,255,0.02), transparent 22rem);
+}
+
+.mh-glass {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025)),
+    var(--mh-glass);
+  border: 1px solid var(--mh-border);
+  box-shadow: var(--mh-shadow-soft);
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+.mh-glass-strong {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.028)),
+    var(--mh-glass-strong);
+  border: 1px solid var(--mh-border);
+  box-shadow: var(--mh-shadow-soft);
+  backdrop-filter: blur(26px) saturate(145%);
+  -webkit-backdrop-filter: blur(26px) saturate(145%);
+}
+
+.mh-glass-hover {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.mh-glass-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--mh-border-strong);
+  box-shadow: var(--mh-shadow-glow);
+}
+
+.mh-card-highlight {
+  background:
+    radial-gradient(circle at 85% 18%, rgba(45, 212, 166, 0.34), transparent 13rem),
+    linear-gradient(135deg, rgba(14, 158, 110, 0.82), rgba(14, 158, 110, 0.22) 52%, rgba(20, 31, 27, 0.78));
+  border: 1px solid rgba(45, 212, 166, 0.34);
+  box-shadow: 0 24px 90px rgba(14, 158, 110, 0.2);
+}
+
+.mh-btn-primary {
+  border: 1px solid rgba(45, 212, 166, 0.36);
+  background:
+    linear-gradient(180deg, rgba(45, 212, 166, 0.96), rgba(14, 158, 110, 0.92)),
+    #0e9e6e;
+  color: white;
+  box-shadow: 0 16px 42px rgba(14, 158, 110, 0.24);
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.mh-btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 22px 60px rgba(14, 158, 110, 0.34);
+}
+
+.mh-btn-primary:active {
+  transform: translateY(0);
+}
+
+.mh-btn-secondary {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--mh-border);
+  color: var(--mh-text);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.mh-btn-secondary:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(45, 212, 166, 0.22);
+}
+
+.mh-input {
+  background: rgba(5, 12, 10, 0.48);
+  border: 1px solid rgba(230, 243, 239, 0.11);
+  color: var(--mh-text-strong);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.mh-input::placeholder {
+  color: rgba(143, 163, 155, 0.8);
+}
+
+.mh-input:focus,
+.mh-input:focus-visible {
+  outline: none;
+  border-color: rgba(45, 212, 166, 0.64);
+  box-shadow: 0 0 0 4px rgba(45, 212, 166, 0.12);
+  background: rgba(5, 12, 10, 0.68);
+}
+
+.mh-kicker {
+  color: var(--mh-mint);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mh-page-title {
+  color: var(--mh-text-strong);
+  letter-spacing: -0.045em;
+}
+
+.mh-muted {
+  color: var(--mh-muted);
+}
+
+.mh-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230, 243, 239, 0.12), transparent);
+}
+
+.mh-progress-track {
+  background: rgba(230, 243, 239, 0.09);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mh-progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--mh-jade), var(--mh-mint));
+  box-shadow: 0 0 24px rgba(45, 212, 166, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mh-glass-hover,
+  .mh-btn-primary,
+  .mh-btn-secondary {
+    transition: none;
+  }
+
+  .mh-glass-hover:hover,
+  .mh-btn-primary:hover,
+  .mh-btn-secondary:hover {
+    transform: none;
+  }
+}
+Add reusable UI primitives. Create artifacts/moolahub-app/src/components/ui/moola.tsx:
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { ArrowUpRight } from "lucide-react";
+
+export function GlassPanel({
+  className,
+  children,
+  hover = false,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { hover?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "mh-glass rounded-[var(--mh-radius-lg)]",
+        hover && "mh-glass-hover",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function GlassCard({
+  className,
+  children,
+  hover = true,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & { hover?: boolean }) {
+  return (
+    <GlassPanel
+      hover={hover}
+      className={cn("p-5 md:p-6", className)}
+      {...props}
+    >
+      {children}
+    </GlassPanel>
+  );
+}
+
+export function MetricCard({
+  label,
+  value,
+  helper,
+  icon,
+  trend,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  helper?: React.ReactNode;
+  icon?: React.ReactNode;
+  trend?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <GlassCard className={cn("min-h-[112px]", className)}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm text-[var(--mh-muted)]">{label}</p>
+          <div className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-[var(--mh-text-strong)]">
+            {value}
+          </div>
+          {helper ? (
+            <div className="mt-2 text-sm text-[var(--mh-muted)]">{helper}</div>
+          ) : null}
+        </div>
+        {icon ? (
+          <div className="grid size-11 place-items-center rounded-2xl border border-[rgba(45,212,166,0.18)] bg-[rgba(45,212,166,0.09)] text-[var(--mh-mint)]">
+            {icon}
+          </div>
+        ) : null}
+      </div>
+      {trend ? (
+        <div className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--mh-mint)]">
+          {trend}
+        </div>
+      ) : null}
+    </GlassCard>
+  );
+}
+
+export function PrimaryAction({
+  children,
+  className,
+  arrow = false,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { arrow?: boolean }) {
+  return (
+    <button
+      className={cn(
+        "mh-btn-primary inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      {arrow ? <ArrowUpRight className="size-4" /> : null}
+    </button>
+  );
+}
+
+export function SecondaryAction({
+  children,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      className={cn(
+        "mh-btn-secondary inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function StatusPill({
+  children,
+  tone = "jade",
+  className,
+}: {
+  children: React.ReactNode;
+  tone?: "jade" | "amber" | "danger" | "neutral";
+  className?: string;
+}) {
+  const toneClass = {
+    jade: "border-[rgba(45,212,166,0.24)] bg-[rgba(45,212,166,0.1)] text-[var(--mh-mint)]",
+    amber: "border-[rgba(242,184,75,0.28)] bg-[rgba(242,184,75,0.1)] text-[var(--mh-warning)]",
+    danger: "border-[rgba(255,107,107,0.28)] bg-[rgba(255,107,107,0.1)] text-[var(--mh-danger)]",
+    neutral: "border-[rgba(230,243,239,0.14)] bg-[rgba(230,243,239,0.06)] text-[var(--mh-muted)]",
+  }[tone];
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+        toneClass,
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function ProgressLine({
+  value,
+  className,
+}: {
+  value: number;
+  className?: string;
+}) {
+  const safeValue = Math.max(0, Math.min(100, value));
+
+  return (
+    <div className={cn("mh-progress-track h-2", className)}>
+      <div className="mh-progress-bar" style={{ width: `${safeValue}%` }} />
+    </div>
+  );
+}
+
+export function PageHeader({
+  eyebrow,
+  title,
+  description,
+  action,
+}: {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        {eyebrow ? <p className="mh-kicker mb-2">{eyebrow}</p> : null}
+        <h1 className="mh-page-title text-3xl font-semibold md:text-4xl">
+          {title}
+        </h1>
+        {description ? (
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mh-muted)] md:text-base">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {action ? <div className="flex shrink-0 items-center gap-3">{action}</div> : null}
+    </div>
+  );
+}
+Upgrade the app shell in src/components/app-layout.tsx.
+
+Requirements:
+
+Add mh-bg-grid to the top-level layout.
+Sidebar should be glassy, compact, and elegant.
+Active nav item should use jade highlight.
+Add top bar with search, notifications, profile, and balance summary where possible.
+Mobile should use a fixed bottom nav with Home, Savings, Groups, Learn, More/Transactions.
+Content area should use max width, good padding, and responsive spacing.
+Do not break redirect logic or auth checks.
+
+Use the existing nav routes but restyle them heavily. Keep the same imports and hooks where possible.
+
+Upgrade each page to the new visual system.
+
+For auth pages:
+
+src/pages/login.tsx
+src/pages/register.tsx
+src/pages/complete-profile.tsx
+
+Implement:
+
+Split desktop layout: left brand/value story panel, right glass auth card.
+Mobile stacked layout.
+Keep existing form handlers and auth hooks.
+Add passkey button styling if already present.
+Use mh-input, mh-btn-primary, GlassCard.
+Add trust/footer details: Secure, On-chain, Together, Built on Monad.
+Keep forms accessible with labels.
+
+For dashboard:
+
+src/pages/dashboard.tsx
+
+Implement:
+
+Big total balance hero card with chart-like decorative SVG, using real summary.totalCents.
+Metric cards for available balance, in savings, current APY.
+Quick actions row: Add Money, Withdraw, Transfer/New Goal/Invite.
+Savings split, streak, upcoming reminder, recent activity, active circles.
+Skeletons should look glassy.
+Mobile layout should become single-column with bottom nav.
+
+For wallet:
+
+src/pages/wallet.tsx
+
+Implement:
+
+Available balance, in savings, on hold.
+Deposit, withdraw, transfer action cards.
+Linked funding sources.
+Recent receipts with on-chain badge.
+Transfer/funding drawer or modal styled as liquid glass.
+Do not alter actual wallet actions; only restyle and improve UX.
+
+For goals:
+
+src/pages/goals.tsx
+src/pages/goal-detail.tsx
+
+Implement:
+
+Goals list with summary metric cards.
+Goal cards with progress, frequency, target date, projected status.
+Create Goal dialog/drawer styled exactly like the design board.
+Goal detail rich view with overview tabs, contribution schedule, recent activity, upcoming payment, action bar.
+Use existing create-goal mutation and data shape.
+Keep image upload if present but restyle it.
+
+For circles:
+
+src/pages/circles.tsx
+src/pages/circle-detail.tsx
+
+Implement:
+
+Circles list with active circles, total saved, members.
+Circle cards with avatars, status badges, contribution/payout progress.
+Circle detail with rich overview, member activity, payout order, savings plan, security card.
+Create circle modal/drawer should be polished and easy to use.
+Preserve rotation vs accumulation logic and existing create mutation behavior.
+
+For learn:
+
+src/pages/learn.tsx
+src/pages/lesson-detail.tsx
+
+Implement:
+
+Featured lesson hero.
+Continue learning cards.
+Category cards.
+Lesson detail with media card, progress sidebar, checklist, next lesson CTA.
+Empty states should look intentional.
+
+For transactions:
+
+src/pages/transactions.tsx
+
+Implement:
+
+Search, filters, transaction chips.
+Table on desktop.
+Card/list rows on mobile.
+Detail receipt side panel if the current data supports it; otherwise create a UI-only selected-state using current rows.
+Use clear positive/negative amount colors.
+
+For notifications:
+
+src/pages/notifications.tsx
+
+Implement:
+
+Grouped alerts: Today, Yesterday, Earlier.
+Filter chips: All, Accounts, Circles, Reminders, Security.
+Mark all as read.
+Security alerts and reminder cards.
+
+For profile:
+
+src/pages/profile.tsx
+src/pages/profile-information.tsx
+src/pages/profile-security.tsx
+src/pages/profile-notifications.tsx
+src/pages/profile-streak.tsx
+src/pages/streaks.tsx
+
+Implement:
+
+Profile overview card with level, XP, total saved, active circles, streak.
+Information settings form with glass inputs.
+Security settings: password, passkey, 2FA, sessions, logout all devices.
+Notification settings with polished toggles.
+Streak calendar, milestones, badges, rewards.
+Mobile profile should be clean and compact.
+
+For not-found and empty states:
+
+Restyle src/pages/not-found.tsx.
+Create reusable empty state pattern with icon, copy, CTA.
+Use these UI patterns for page cards:
+<GlassCard>
+  <div className="flex items-start justify-between gap-4">
+    <div>
+      <p className="text-sm text-[var(--mh-muted)]">Total Saved</p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-[-0.035em] text-[var(--mh-text-strong)]">
+        {formatMoney(totalSaved)}
+      </h3>
+    </div>
+  </div>
+</GlassCard>
+
+Progress card pattern:
+
+<GlassCard>
+  <div className="flex items-center justify-between gap-4">
+    <div>
+      <div className="flex items-center gap-2">
+        <h3 className="font-semibold text-[var(--mh-text-strong)]">{goal.name}</h3>
+        <StatusPill>Active</StatusPill>
+      </div>
+      <p className="mt-3 text-2xl font-semibold tracking-[-0.04em]">
+        {formatMoney(goal.savedCents)}
+        <span className="ml-1 text-sm font-normal text-[var(--mh-muted)]">
+          of {formatMoney(goal.targetCents)}
+        </span>
+      </p>
+    </div>
+    <span className="text-lg font-semibold text-[var(--mh-mint)]">
+      {Math.round((goal.savedCents / goal.targetCents) * 100)}%
+    </span>
+  </div>
+  <ProgressLine
+    className="mt-4"
+    value={Math.round((goal.savedCents / goal.targetCents) * 100)}
+  />
+</GlassCard>
+Add a decorative chart component for hero cards if one does not already exist:
+export function GlowLineChart({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 420 180"
+      className={className}
+      fill="none"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="mhChartLine" x1="0" x2="420" y1="0" y2="0">
+          <stop stopColor="#0E9E6E" stopOpacity="0.15" />
+          <stop offset="0.55" stopColor="#22C78B" />
+          <stop offset="1" stopColor="#B8FFE7" />
+        </linearGradient>
+        <linearGradient id="mhChartFill" x1="0" x2="0" y1="0" y2="180">
+          <stop stopColor="#2DD4A6" stopOpacity="0.26" />
+          <stop offset="1" stopColor="#2DD4A6" stopOpacity="0" />
+        </linearGradient>
+        <filter id="mhGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <path
+        d="M10 142 C58 132 80 154 120 120 C152 92 184 118 220 84 C260 45 286 92 326 54 C358 22 382 44 410 8"
+        stroke="url(#mhChartLine)"
+        strokeWidth="4"
+        strokeLinecap="round"
+        filter="url(#mhGlow)"
+      />
+      <path
+        d="M10 142 C58 132 80 154 120 120 C152 92 184 118 220 84 C260 45 286 92 326 54 C358 22 382 44 410 8 L410 180 L10 180 Z"
+        fill="url(#mhChartFill)"
+      />
+      <circle cx="410" cy="8" r="4" fill="#DFFFF3" />
+    </svg>
+  );
+}
+Quality bar:
+Run pnpm --filter ./artifacts/moolahub-app run build if that script exists.
+Run pnpm run typecheck.
+Fix all TypeScript errors.
+Check all pages manually at desktop width, tablet width, and 390px mobile width.
+No horizontal scroll on mobile.
+No clipped cards.
+Buttons and inputs must have clear hover/focus states.
+Dark mode contrast must be readable.
+Loading and empty states must not look unfinished.
+Final response should include:
+Files changed
+Screens upgraded
+Any assumptions made
+Any routes that could not be tested
+Confirmation that typecheck/build passed, or exact errors if not
+
+Do not stop after only redesigning the dashboard. Upgrade the whole app UI/UX consistently across all screens listed above.
