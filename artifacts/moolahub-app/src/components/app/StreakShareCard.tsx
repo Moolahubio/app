@@ -138,20 +138,20 @@ function drawCard(
   ctx.fillText("🔥", S / 2, S / 2 - 170);
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 320px Inter, system-ui, sans-serif";
+  ctx.font = "700 320px 'Space Grotesk', system-ui, sans-serif";
   ctx.fillText(String(count), S / 2, S / 2 + 90);
 
   ctx.fillStyle = "rgba(255,255,255,0.82)";
-  ctx.font = "500 50px Inter, system-ui, sans-serif";
+  ctx.font = "500 50px 'Hanken Grotesk', system-ui, sans-serif";
   ctx.fillText(caption, S / 2, S / 2 + 270);
 
   if (amount) {
     ctx.fillStyle = "rgba(255,255,255,0.92)";
-    ctx.font = "600 56px Inter, system-ui, sans-serif";
+    ctx.font = "600 56px 'Hanken Grotesk', system-ui, sans-serif";
     ctx.fillText(`${amount} saved`, S / 2, S / 2 + 350);
   }
 
   ctx.fillStyle = "rgba(255,255,255,0.7)";
-  ctx.font = "600 38px Inter, system-ui, sans-serif";
+  ctx.font = "600 38px 'Space Grotesk', system-ui, sans-serif";
   ctx.fillText("MoolaHub · Save. Earn. Belong.", S / 2, S - 80);
 }

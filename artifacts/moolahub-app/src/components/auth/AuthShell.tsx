@@ -20,7 +20,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
             Built on Monad
           </p>
-          <h1 className="mt-4 font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
+          <h1 className="mt-4 font-display text-5xl font-bold leading-[1.05] tracking-tight">
             Save. Earn.
             <br />
             <span className="text-jade-400">Belong.</span>

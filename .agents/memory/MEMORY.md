@@ -30,3 +30,4 @@
 - [MoolaHub accumulation on-chain contributions](moolahub-accumulation-onchain-contribute.md) — contributions now settle to platformAddress() like rotation; final-round unwind must reverse ALL members' payouts, not just the failing one.
 - [MoolaHub encryption key derivation](moolahub-encryption-key-kdf.md) — APP_ENCRYPTION_KEY: 64-hex used raw; any other value stretched via cached scrypt (not sha256), min 20 chars enforced.
 - [MoolaHub object storage upload proxy](moolahub-object-storage-upload-proxy.md) — signed PUT URLs can't bind size/type; uploads proxy through the API server with a live byte-counting stream cap instead.
+- [MoolaHub typography system](moolahub-typography.md) — Space Grotesk (display) + Hanken Grotesk (body) + IBM Plex Mono; chosen over Inter/Poppins to de-AI the UI. Space Grotesk caps at 700 → never font-extrabold on display; canvas fonts must mirror the stack.
