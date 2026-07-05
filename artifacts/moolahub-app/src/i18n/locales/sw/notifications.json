@@ -1,0 +1,56 @@
+{
+  "title": "Arifa",
+  "page": {
+    "eyebrow": "Arifa",
+    "title": "Kila kilichotokea",
+    "description": "Mialiko, michango, malipo, na kila kinachotokea kwenye akaunti yako."
+  },
+  "loading": "Inapakia arifa…",
+  "empty": "Umeshapata kila kitu.",
+  "bell": {
+    "viewAll": "Ona zote"
+  },
+  "settings": {
+    "title": "Mipangilio ya arifa",
+    "description": "Chagua kiasi cha taarifa unazotaka kupokea kutoka MoolaHub.",
+    "recommended": "Inapendekezwa",
+    "saveError": "Imeshindwa kuhifadhi mapendeleo."
+  },
+  "tiers": {
+    "everything": {
+      "label": "Kila kitu",
+      "description": "Arifa zote: shughuli za duara, hatua za malengo, amana, vikumbusho, na vidokezo."
+    },
+    "essential": {
+      "label": "Muhimu",
+      "description": "Taarifa muhimu tu, kama malipo, tarehe za mwisho za michango, na shughuli za akaunti."
+    },
+    "minimal": {
+      "label": "Chache",
+      "description": "Arifa muhimu zaidi za akaunti na fedha pekee."
+    },
+    "custom": {
+      "label": "Maalum",
+      "description": "Chagua kwa usahihi aina za arifa unazotaka kupokea."
+    }
+  },
+  "categories": {
+    "money": {
+      "label": "Fedha na miamala",
+      "description": "Amana, utoaji, malipo, na vikumbusho vya michango."
+    },
+    "social": {
+      "label": "Akiba ya kikundi na kijamii",
+      "description": "Mialiko, shughuli za wanachama, na masasisho ya duara."
+    },
+    "engagement": {
+      "label": "Vidokezo na ushiriki",
+      "description": "Mfululizo, vikumbusho vya kujifunza, na habari za bidhaa."
+    }
+  },
+  "notFound": {
+    "title": "Ukurasa haujapatikana",
+    "description": "Ukurasa unaoutafuta haupo au huenda umehamishwa.",
+    "backHome": "Rudi Mwanzo"
+  }
+}

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { usePrivy, useLogin, useWallets } from "@privy-io/react-auth";
 import { createWalletClient, custom, isAddress } from "viem";
 import { monadTestnet } from "viem/chains";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 import { WithdrawForm } from "@/components/app/forms";
 import { ERC20_ABI } from "@/lib/onchain/abis";
@@ -26,6 +27,7 @@ export function PrivyWithdrawForm({
   usdcAddress: string | null;
   onSuccess: () => void;
 }) {
+  const { t } = useTranslation("wallet");
   const { ready, authenticated } = usePrivy();
   const { login } = useLogin();
   const { wallets } = useWallets();
@@ -41,7 +43,7 @@ export function PrivyWithdrawForm({
   const embedded = wallets.find((w) => w.walletClientType === "privy");
 
   if (!ready) {
-    return <p className="text-sm text-muted-foreground">Loading your wallet…</p>;
+    return <p className="text-sm text-muted-foreground">{t("states.loadingWallet")}</p>;
   }
 
   // The app session and the Privy session are separate: a returning user may be
@@ -51,10 +53,10 @@ export function PrivyWithdrawForm({
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          Your wallet is self-custodial. Connect it to sign the withdrawal yourself.
+          {t("privyWithdraw.connectPrompt")}
         </p>
         <Button variant="secondary" className="w-full" onClick={() => login()}>
-          Connect wallet to withdraw
+          {t("privyWithdraw.connectButton")}
         </Button>
       </div>
     );
@@ -64,15 +66,15 @@ export function PrivyWithdrawForm({
     setError(null);
     setOk(null);
     if (!usdcAddress) {
-      setError("On-chain withdrawals aren't available on this deployment.");
+      setError(t("privyWithdraw.errors.unavailable"));
       return;
     }
     if (!isAddress(data.destination)) {
-      setError("Enter a valid Monad address (starts with 0x).");
+      setError(t("privyWithdraw.errors.invalidAddress"));
       return;
     }
     if (data.amountCents <= 0) {
-      setError("Enter a valid amount.");
+      setError(t("privyWithdraw.errors.invalidAmount"));
       return;
     }
     setPending(true);
@@ -133,12 +135,12 @@ export function PrivyWithdrawForm({
       }
 
       pendingTx.current = null;
-      setOk("Withdrawal sent");
+      setOk(t("privyWithdraw.success"));
       onSuccess();
     } catch (e) {
       setError(
         apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : "Withdrawal failed. Please try again."),
+          (e instanceof Error ? e.message : t("privyWithdraw.errors.failed")),
       );
     } finally {
       setPending(false);

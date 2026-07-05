@@ -1,0 +1,163 @@
+{
+  "list": {
+    "loading": "Dey load your group savings…",
+    "title": "Your group savings",
+    "description": "Rotating savings with people wey you trust. Every round dey hold by on-chain contract, no be person.",
+    "emptyHint": "Invite friends or family and set your contribution"
+  },
+  "info": {
+    "susu": "<b>How Susu dey work:</b> everybody dey put fixed amount every round. For <em>rotation</em> circle, one member dey collect the whole pot every round until everybody don get turn. For <em>accumulation</em> circle, everybody dey save inside one shared pot and collect im own savings for the end. Everything dey verifiable for Monad."
+  },
+  "frequency": {
+    "weekly": "Every week",
+    "biweekly": "Every two weeks",
+    "monthly": "Every month"
+  },
+  "status": {
+    "active": "Active",
+    "forming": "Dey form",
+    "completed": "Don complete"
+  },
+  "type": {
+    "rotation": "Rotation",
+    "accumulation": "Accumulation"
+  },
+  "create": {
+    "startCircle": "Start circle",
+    "title": "New circle",
+    "submit": "Create circle",
+    "submitting": "Dey create…",
+    "name": {
+      "label": "Name",
+      "placeholder": "e.g. Family savings"
+    },
+    "type": {
+      "label": "Circle type",
+      "rotation": {
+        "title": "Rotation",
+        "description": "Take turns. Everybody dey pay every round, and one member dey collect the whole pot until all don get turn."
+      },
+      "accumulation": {
+        "title": "Accumulation",
+        "description": "Save together. Everybody dey pay inside one shared pot and collect im own savings for the end."
+      }
+    },
+    "targetPayout": {
+      "label": "Target payout per person (USDC)",
+      "hint": "Wetin each member go collect when e be im turn."
+    },
+    "groupSize": {
+      "label": "Number of people (you sef included)"
+    },
+    "contribution": {
+      "label": "Contribution per round (USDC)"
+    },
+    "numRounds": {
+      "label": "Number of rounds"
+    },
+    "frequency": {
+      "label": "How often"
+    },
+    "emails": {
+      "label": "Member emails",
+      "hintRotation": "(invite up to {{count}}, put comma between dem)",
+      "hintAccumulation": "(up to 19, put comma between dem)",
+      "placeholder": "friend@example.com, cousin@example.com",
+      "tooManyRotation": "Too many invites. Circle of {{size}} get space for {{count}} apart from you.",
+      "tooManyAccumulation": "Too many members. Circle fit get 20 people max (you + 19 wey you invite)."
+    },
+    "summary": {
+      "youPay": "You dey pay per round",
+      "youReceive": "You go collect",
+      "youReceiveEnd": "You go collect for the end",
+      "rotationDetail": "Each of the {{count}} members dey pay {{base}} base + {{fee}} fee (2%). When e be your turn you go collect {{payout}}. The circle go start by itself once everybody don join.",
+      "accumulationDetail": "Your own savings go come back after {{count}} rounds."
+    },
+    "image": {
+      "label": "Circle picture (optional)",
+      "hint": "As the circle admin, add photo to gather your group around the goal."
+    }
+  },
+  "invites": {
+    "title": "Invitations ({{count}})",
+    "invitedBy": "{{name}} invite you",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "card": {
+    "members": "{{count}} members",
+    "perRound": "Per round",
+    "youReceive": "You go collect",
+    "roundOf": "Round {{current}} of {{total}}",
+    "joinedProgress": "{{joined}} of {{target}} don join · e go start by itself when e full",
+    "forming": "Dey form. Dey wait to start.",
+    "viewCircle": "View circle"
+  },
+  "detail": {
+    "loading": "Dey load circle…",
+    "notFound": "We no fit find that circle.",
+    "onChain": "On-chain",
+    "formingSuffix": "dey form",
+    "submitting": "Dey submit…",
+    "contribute": "Contribute {{amount}}",
+    "contributedThisRound": "You don contribute this round",
+    "notStarted": "This circle never start",
+    "stats": {
+      "rounds": "Rounds",
+      "yourPosition": "Your position",
+      "started": "Start"
+    },
+    "build": {
+      "title": "Build your circle",
+      "descAccumulation": "Invite people by email. Everybody dey save inside one shared pot for {{count}} rounds, then dem go collect their savings. Start the circle once everybody don enter.",
+      "descTargeted": "Invite people by email. {{joined}} of {{target}} don join. The circle go start by itself the moment the last person join.",
+      "descRotation": "Invite people by email. Rounds equal members, so everybody go get exactly one payout. Start the circle once everybody don enter.",
+      "sent": "Don send",
+      "start": "Start circle",
+      "starting": "Dey start…",
+      "needMore": "Invite at least one more member to start the circle."
+    },
+    "delete": {
+      "title": "Delete circle",
+      "description": "Nobody else never join, so you fit delete this circle. Once another member join, you no fit delete am again. This one go remove the circle and any pending invite for good.",
+      "confirm": "Confirm delete",
+      "deleting": "Dey delete…"
+    },
+    "schedule": {
+      "membersTitle": "Members",
+      "payoutTitle": "Payout schedule",
+      "descAccumulation": "Everybody dey save inside one shared pot. After {{count}} rounds, each member go collect im own savings, locked on-chain.",
+      "descRotation": "The rotation lock on-chain, so everybody know who go collect the pot, and when.",
+      "you": "(you)",
+      "savingsReturned": "Savings don return",
+      "saving": "Dey save",
+      "receivedPot": "Don collect pot",
+      "receivingNow": "Dey collect now",
+      "current": "Current"
+    },
+    "progress": {
+      "title": "Round progress",
+      "roundsOf": "{{current}} of {{total}} rounds"
+    },
+    "escrow": {
+      "title": "On-chain escrow",
+      "description": "Contributions dey settle inside this Susu escrow for Monad. Dem dey take {{fee}}% protocol fee from every payout."
+    },
+    "history": {
+      "title": "Your contributions",
+      "round": "Round {{round}}"
+    },
+    "toast": {
+      "streakTitle": "You keep your streak alive 🔥",
+      "streakDescription": "Nice, this contribution dey count for your savings streak."
+    }
+  },
+  "privy": {
+    "loadingWallet": "Dey load your wallet…",
+    "selfCustody": "Your wallet na self-custody. Connect am make you sign the contribution yourself.",
+    "connect": "Connect wallet to contribute",
+    "notAvailable": "On-chain contributions no dey available for this deployment.",
+    "failed": "Contribution fail. Abeg try again.",
+    "submitting": "Dey submit…"
+  }
+}

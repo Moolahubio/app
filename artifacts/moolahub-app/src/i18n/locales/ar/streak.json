@@ -1,0 +1,169 @@
+{
+  "eyebrow": "التتابع",
+  "title": "سلسلة الادخار",
+  "loading": "جارٍ تحميل سلسلتك…",
+  "period": {
+    "day": "يوم",
+    "week": "أسبوع",
+    "month": "شهر",
+    "twoWeek": "أسبوعين"
+  },
+  "unit": {
+    "day_zero": "يوم",
+    "day_one": "يوم",
+    "day_two": "يومان",
+    "day_few": "أيام",
+    "day_many": "يومًا",
+    "day_other": "يوم",
+    "week_zero": "أسبوع",
+    "week_one": "أسبوع",
+    "week_two": "أسبوعان",
+    "week_few": "أسابيع",
+    "week_many": "أسبوعًا",
+    "week_other": "أسبوع",
+    "month_zero": "شهر",
+    "month_one": "شهر",
+    "month_two": "شهران",
+    "month_few": "أشهر",
+    "month_many": "شهرًا",
+    "month_other": "شهر",
+    "twoWeek_zero": "أسبوعين",
+    "twoWeek_one": "أسبوعين",
+    "twoWeek_two": "أسبوعين",
+    "twoWeek_few": "أسبوعين",
+    "twoWeek_many": "أسبوعين",
+    "twoWeek_other": "أسبوعين"
+  },
+  "status": {
+    "frozen": "مُجمَّدة",
+    "paused": "في إجازة",
+    "broken": "لا توجد سلسلة بعد",
+    "onFire": "مشتعلة",
+    "active": "نشطة"
+  },
+  "indicator": {
+    "aria": "سلسلة الادخار: {{count}} فترة"
+  },
+  "atRisk": {
+    "message": "إيداع واحد قبل <strong>{{date}}</strong> يُبقي سلسلتك مستمرة. لا داعي للعجلة، أي إيداع في هدف أو دائرة يُحتسب."
+  },
+  "hero": {
+    "captionActive": "سلسلة من {{count}} {{period}} · واصل التقدّم",
+    "captionEmpty": "قم بإيداع خلال هذا الـ{{period}} لإشعال شعلتك"
+  },
+  "stats": {
+    "current": "الحالي: {{unit}}",
+    "lifetimeBest": "أفضل سلسلة على الإطلاق",
+    "periodsSaved": "الفترات المُدَّخرة"
+  },
+  "share": {
+    "title": "شارك سلسلتك",
+    "description": "تعرض بطاقتك عدد سلسلتك فقط. تبقى المبالغ خاصة ما لم تُفعّلها.",
+    "includeAmount": "أدرج المبلغ المُدَّخر",
+    "download": "تنزيل",
+    "share": "مشاركة",
+    "shareTitle": "سلسلتي في MoolaHub",
+    "card": {
+      "amountSaved": "تم ادخار {{amount}}"
+    }
+  },
+  "frequencyName": {
+    "daily": "يومية",
+    "weekly": "أسبوعية",
+    "monthly": "شهرية",
+    "biweekly": "كل أسبوعين"
+  },
+  "card": {
+    "streakTitle": "سلسلة {{frequency}}",
+    "oneDepositPer": "إيداع واحد كل {{period}} يُبقي شعلتك مضيئة.",
+    "change": "تغيير",
+    "goalDepositsCount": "إيداعات الأهداف تُحتسب",
+    "circleContributionsCount": "مساهمات الدوائر تُحتسب",
+    "changeOncePerYear": "يمكن تغيير التكرار مرة واحدة في السنة.",
+    "changeOncePerYearNext": "يمكن تغيير التكرار مرة واحدة في السنة. يُتاح التغيير التالي في {{year}}."
+  },
+  "badges": {
+    "title": "مجموعة الأوسمة",
+    "saverTitle": "مُدَّخِر {{tier}}",
+    "noBadgeYet": "لا وسام بعد",
+    "quartersKept_zero": "تم الحفاظ على {{count}} ربع سنة",
+    "quartersKept_one": "تم الحفاظ على ربع سنة واحد",
+    "quartersKept_two": "تم الحفاظ على ربعَي سنة",
+    "quartersKept_few": "تم الحفاظ على {{count}} أرباع سنة",
+    "quartersKept_many": "تم الحفاظ على {{count}} ربع سنة",
+    "quartersKept_other": "تم الحفاظ على {{count}} ربع سنة",
+    "next": "التالي: {{tier}}",
+    "progressNone": "حافظ على سلسلتك لمدة ثلاثة أشهر لتكسب وسامك التالي.",
+    "progressToday": "وسامك التالي يصل اليوم، واصل التقدّم.",
+    "progressDays_zero": "{{count}} يوم على وسامك التالي.",
+    "progressDays_one": "يوم واحد على وسامك التالي.",
+    "progressDays_two": "يومان على وسامك التالي.",
+    "progressDays_few": "{{count}} أيام على وسامك التالي.",
+    "progressDays_many": "{{count}} يومًا على وسامك التالي.",
+    "progressDays_other": "{{count}} يوم على وسامك التالي.",
+    "empty": "حافظ على سلسلة لمدة ثلاثة أشهر لتكسب وسامك الأول. هناك أربعة أوسمة لجمعها كل عام، واحد لكل فصل.",
+    "quarterShort": "الربع {{n}}"
+  },
+  "tier": {
+    "bronze": "برونزي",
+    "silver": "فضّي",
+    "gold": "ذهبي"
+  },
+  "season": {
+    "winter": "الشتاء",
+    "spring": "الربيع",
+    "summer": "الصيف",
+    "autumn": "الخريف"
+  },
+  "freezes": {
+    "title": "تجميدات السلسلة",
+    "description": "يحمي التجميد سلسلتك تلقائيًا إذا فوّتّ فترة واحدة. تحصل على واحد كل ثلاثة أشهر (حتى أربعة سنويًا)، ويمكن استخدام واحد كحد أقصى في كل ربع سنة.",
+    "available": "{{count}} متاح"
+  },
+  "reminders": {
+    "title": "تذكيرات لطيفة",
+    "description": "تنبيه واحد قبل انتهاء الـ{{period}}، فقط إذا رغبت في ذلك. مُعطَّل افتراضيًا."
+  },
+  "vacation": {
+    "title": "وضع الإجازة",
+    "description": "الحياة لها ظروفها. أوقف سلسلتك مؤقتًا مرة واحدة في السنة (حتى 30 يومًا) دون فقدان تقدّمك.",
+    "onVacation": "في إجازة",
+    "onVacationUntil": "في إجازة حتى {{date}}",
+    "ending": "جارٍ الإنهاء…",
+    "endEarly": "إنهاء الإجازة مبكرًا",
+    "usedThisYear": "تم استخدام الإجازة هذا العام",
+    "starting": "جارٍ البدء…",
+    "startDays": "ابدأ إجازة لمدة {{count}} يومًا"
+  },
+  "footer": {
+    "disclaimer": "سلسلتك لا تؤثر أبدًا على رصيدك أو أموالك."
+  },
+  "milestone": {
+    "title": "وسام جديد",
+    "description": "ثلاثة أشهر من الادخار الثابت. هذا الانتظام هو جوهر اللعبة. أحسنت.",
+    "badgeUnlocked": "تم فتح وسام الربع {{n}}",
+    "keepItUp": "واصل التقدّم"
+  },
+  "profile": {
+    "title": "تكرار السلسلة",
+    "description": "اختر عدد مرات الإيداع اللازمة للحفاظ على سلسلة ادخارك.",
+    "frequencyError": "تعذّر تغيير تكرار سلسلتك.",
+    "recommended": "موصى به",
+    "lockNote": "يمكنك تغيير تكرار سلسلتك مرة واحدة في السنة الميلادية.",
+    "lockNoteNext": "يمكنك تغيير تكرار سلسلتك مرة واحدة في السنة الميلادية. يُتاح تغييرك التالي في {{year}}.",
+    "options": {
+      "daily": {
+        "label": "يومي",
+        "description": "أبقِ الشعلة مشتعلة بإيداع كل يوم. الأفضل لعادة ادخار يومية."
+      },
+      "weekly": {
+        "label": "أسبوعي",
+        "description": "إيداع واحد في أي وقت خلال الأسبوع يُبقي سلسلتك مستمرة. وتيرة هادئة وثابتة."
+      },
+      "monthly": {
+        "label": "شهري",
+        "description": "إيداع واحد كل شهر ميلادي هو كل ما يلزم. لطيف وبلا ضغط."
+      }
+    }
+  }
+}

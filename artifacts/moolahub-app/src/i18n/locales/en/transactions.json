@@ -1,0 +1,28 @@
+{
+  "loading": "Loading transactions…",
+  "header": {
+    "title": "Your money, on the record",
+    "description": "Every deposit, contribution, and payout. Each one is linked to its proof on Monad."
+  },
+  "reminders": {
+    "title": "Upcoming reminders",
+    "tag": "reminder"
+  },
+  "history": {
+    "title": "Transaction history",
+    "empty": "No transactions yet."
+  },
+  "onchain": {
+    "settling": "settling on-chain…",
+    "offchain": "off-chain"
+  },
+  "types": {
+    "deposit": "Deposit",
+    "payout": "Payout",
+    "yield": "Yield",
+    "contribution": "Contribution",
+    "goal_allocate": "Allocation",
+    "goal_release": "Release",
+    "withdrawal": "Withdrawal"
+  }
+}

@@ -12,10 +12,12 @@ import {
   UserCircle,
   Receipt,
   Flame,
+  Languages,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Card, Avatar, Eyebrow } from "@/components/ui";
-import { PageHeader } from "@/components/app/bits";
+import { PageHeader, Money, Addr } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
 import { ManageAccountCard } from "@/components/app/ManageAccountCard";
 import {
@@ -27,7 +29,7 @@ import {
   getGetProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
-import { formatMoney, truncateAddress, avatarSrc, apiErrorMessage } from "@/lib/utils";
+import { avatarSrc, apiErrorMessage } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 
@@ -38,18 +40,6 @@ type Item = {
   href: string;
 };
 
-const accountItems: Item[] = [
-  { icon: UserCircle, label: "Profile information", detail: "Name, username, date of birth", href: "/profile/information" },
-  { icon: WalletIcon, label: "Wallets", detail: "Balance & address on Monad", href: "/wallet" },
-];
-
-const settingsItems: Item[] = [
-  { icon: ShieldCheck, label: "Security", detail: "Passkeys & two-factor", href: "/profile/security" },
-  { icon: Flame, label: "Streak frequency", detail: "Daily, weekly, or monthly", href: "/profile/streak" },
-  { icon: Bell, label: "Notifications", detail: "Choose what reaches you", href: "/profile/notifications" },
-  { icon: Receipt, label: "Transactions & yield", detail: "Ledger and earnings", href: "/transactions" },
-];
-
 function SettingsList({ items }: { items: Item[] }) {
   return (
     <Card className="overflow-hidden p-1">
@@ -58,7 +48,7 @@ function SettingsList({ items }: { items: Item[] }) {
           const Icon = item.icon;
           return (
             <Link
-              key={item.label}
+              key={item.href}
               href={item.href}
               className="flex items-center justify-between px-4 py-3.5 transition-colors hover:bg-accent"
             >
@@ -71,7 +61,7 @@ function SettingsList({ items }: { items: Item[] }) {
                   <p className="text-xs text-muted-foreground">{item.detail}</p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground rtl:rotate-180" />
             </Link>
           );
         })}
@@ -89,6 +79,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation("account");
   const { data: user, isLoading: isUserLoading } = useGetMe();
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const logoutMutation = useLogout();
@@ -113,24 +104,24 @@ export default function ProfilePage() {
         await updateProfile.mutateAsync({ data: { avatarUrl: res.objectPath } });
         await invalidateUser();
       } catch (err) {
-        setProfileError(apiErrorMessage(err) ?? "Could not save profile picture.");
+        setProfileError(apiErrorMessage(err) ?? t("profile.errors.savePicture"));
       }
     },
-    onError: () => setProfileError("Could not upload image."),
+    onError: () => setProfileError(t("profile.errors.uploadImage")),
   });
 
   if (isUserLoading || isSummaryLoading)
-    return <div className="p-8 text-center text-muted-foreground">Loading your profile…</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t("profile.loading")}</div>;
   if (!user || !summary) return null;
 
-  const address = user.walletAddress ?? "Not provisioned";
+  const address = user.walletAddress ?? t("profile.wallet.notProvisioned");
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setProfileError("Please choose an image file.");
+      setProfileError(t("profile.errors.chooseImage"));
       return;
     }
     setProfileError(null);
@@ -154,13 +145,26 @@ export default function ProfilePage() {
       await invalidateUser();
       setEditingName(false);
     } catch (err) {
-      setProfileError(apiErrorMessage(err) ?? "Could not update name.");
+      setProfileError(apiErrorMessage(err) ?? t("profile.errors.updateName"));
     }
   };
 
+  const accountItems: Item[] = [
+    { icon: UserCircle, label: t("menu.profileInformation.label"), detail: t("menu.profileInformation.detail"), href: "/profile/information" },
+    { icon: WalletIcon, label: t("menu.wallets.label"), detail: t("menu.wallets.detail"), href: "/wallet" },
+  ];
+
+  const settingsItems: Item[] = [
+    { icon: ShieldCheck, label: t("menu.security.label"), detail: t("menu.security.detail"), href: "/profile/security" },
+    { icon: Flame, label: t("menu.streak.label"), detail: t("menu.streak.detail"), href: "/profile/streak" },
+    { icon: Languages, label: t("common:language.title"), detail: t("common:language.detail"), href: "/profile/language" },
+    { icon: Bell, label: t("menu.notifications.label"), detail: t("menu.notifications.detail"), href: "/profile/notifications" },
+    { icon: Receipt, label: t("menu.transactions.label"), detail: t("menu.transactions.detail"), href: "/transactions" },
+  ];
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader eyebrow="Profile" title="Account" />
+      <PageHeader eyebrow={t("common:nav.profile")} title={t("common:nav.account")} />
 
       {/* identity card */}
       <Card className="relative overflow-hidden border-ink-900 bg-ink-950 p-6 text-white lg:p-8">
@@ -179,8 +183,8 @@ export default function ProfilePage() {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-ink-900 text-white transition-colors hover:bg-ink-800 focus-ring disabled:opacity-60"
-              aria-label="Change profile picture"
+              className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-ink-900 text-white transition-colors hover:bg-ink-800 focus-ring disabled:opacity-60"
+              aria-label={t("avatar.change")}
             >
               <Camera className="h-3.5 w-3.5" />
             </button>
@@ -210,14 +214,14 @@ export default function ProfilePage() {
                   onClick={() => void saveName()}
                   disabled={updateProfile.isPending}
                   className="flex h-8 w-8 items-center justify-center rounded-lg bg-jade-500 text-white transition-colors hover:bg-jade-400 focus-ring"
-                  aria-label="Save name"
+                  aria-label={t("profile.saveName")}
                 >
                   <Check className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setEditingName(false)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white transition-colors hover:bg-white/20 focus-ring"
-                  aria-label="Cancel"
+                  aria-label={t("common:actions.cancel")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -228,14 +232,14 @@ export default function ProfilePage() {
                 <button
                   onClick={startEditName}
                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white focus-ring"
-                  aria-label="Edit name"
+                  aria-label={t("profile.editName")}
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
               </div>
             )}
             <p className="mt-0.5 text-sm text-white/70">{user.email}</p>
-            {isUploading && <p className="mt-1 text-xs text-jade-300">Uploading picture…</p>}
+            {isUploading && <p className="mt-1 text-xs text-jade-300">{t("profile.uploadingPicture")}</p>}
           </div>
         </div>
 
@@ -249,13 +253,11 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2">
             <WalletIcon className="h-4 w-4 text-jade-400" />
             <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
-              Monad wallet · non-custodial
+              {t("profile.wallet.label")}
             </p>
           </div>
           <div className="mt-2 flex items-center justify-between gap-3">
-            <code className="truncate font-mono text-sm text-white/80">
-              {truncateAddress(address, 8, 8)}
-            </code>
+            <Addr address={address} lead={8} tail={8} className="truncate text-sm text-white/80" />
             {user.walletAddress && <CopyButton value={address} />}
           </div>
         </div>
@@ -264,21 +266,21 @@ export default function ProfilePage() {
       {/* balance snapshot */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Balance</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("common:labels.balance")}</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">
-            {formatMoney(summary.totalCents)}
+            <Money cents={summary.totalCents} />
           </p>
         </Card>
         <Card className="p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            Yield earned
+            {t("profile.stats.yieldEarned")}
           </p>
           <p className="mt-1 font-display text-2xl font-bold text-jade-600 dark:text-jade-400">
-            {formatMoney(Math.floor(summary.totalCents * 0.041))}
+            <Money cents={Math.floor(summary.totalCents * 0.041)} />
           </p>
         </Card>
         <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">Yield APY</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("profile.stats.yieldApy")}</p>
           <p className="mt-1 font-display text-2xl font-bold text-foreground">
             {(summary.yieldApy * 100).toFixed(1)}%
           </p>
@@ -287,19 +289,19 @@ export default function ProfilePage() {
 
       {/* account */}
       <div className="space-y-2">
-        <SectionLabel>Account</SectionLabel>
+        <SectionLabel>{t("common:nav.account")}</SectionLabel>
         <SettingsList items={accountItems} />
       </div>
 
       {/* settings */}
       <div className="space-y-2">
-        <SectionLabel>Settings</SectionLabel>
+        <SectionLabel>{t("sections.settings")}</SectionLabel>
         <SettingsList items={settingsItems} />
       </div>
 
       {/* manage account */}
       <div className="space-y-2">
-        <SectionLabel>Manage account</SectionLabel>
+        <SectionLabel>{t("sections.manageAccount")}</SectionLabel>
         <ManageAccountCard />
       </div>
 
@@ -315,8 +317,8 @@ export default function ProfilePage() {
             },
             onError: () => {
               toast({
-                title: "Could not sign out",
-                description: "Please try again.",
+                title: t("profile.signOutError.title"),
+                description: t("profile.signOutError.description"),
                 variant: "destructive",
               });
             },
@@ -325,11 +327,11 @@ export default function ProfilePage() {
         disabled={logoutMutation.isPending}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-3.5 text-sm font-semibold text-muted-foreground transition-[color,background-color] duration-150 hover:bg-accent hover:text-foreground focus-ring"
       >
-        <LogOut className="h-4 w-4" /> {logoutMutation.isPending ? "Signing out…" : "Sign out"}
+        <LogOut className="h-4 w-4" /> {logoutMutation.isPending ? t("common:actions.signingOut") : t("common:actions.signOut")}
       </button>
 
       <div className="flex flex-wrap items-center justify-center gap-2 pt-2 text-center text-sm text-muted-foreground">
-        <Eyebrow className="text-muted-foreground">Save. Earn. Belong.</Eyebrow>
+        <Eyebrow className="text-muted-foreground">{t("common:app.tagline")}</Eyebrow>
       </div>
     </div>
   );

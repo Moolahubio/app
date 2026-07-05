@@ -5,6 +5,7 @@
  * MoolaHub API — social savings platform on Monad blockchain
  * OpenAPI spec version: 0.1.0
  */
+import type { ProfileUpdateLanguage } from './profileUpdateLanguage';
 
 export interface ProfileUpdate {
   name?: string;
@@ -16,4 +17,5 @@ export interface ProfileUpdate {
   nationality?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
+  language?: ProfileUpdateLanguage;
 }

@@ -13,6 +13,7 @@ import {
 import { cn, timeAgo } from "@/lib/utils";
 import { useMarkAllNotificationsRead, getListNotificationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 export type NotificationItem = {
   id: string;
@@ -44,6 +45,7 @@ export function NotificationBell({
   notifications: NotificationItem[];
   unreadCount: number;
 }) {
+  const { t } = useTranslation("notifications");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const markAllRead = useMarkAllNotificationsRead();
@@ -82,33 +84,33 @@ export function NotificationBell({
       <button
         onClick={toggle}
         className="relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border border-border bg-card text-muted-foreground transition-[color,background-color,transform] duration-150 hover:bg-muted hover:text-foreground active:scale-95 focus-ring"
-        aria-label="Notifications"
+        aria-label={t("title")}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jade-500 px-1 text-[10px] font-bold text-white ring-2 ring-background">
+          <span className="absolute -end-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-jade-500 px-1 text-[10px] font-bold text-white ring-2 ring-background">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 z-[70] mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-popover shadow-xl shadow-black/20">
+        <div className="absolute end-0 z-[70] mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-popover shadow-xl shadow-black/20">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <p className="font-display text-sm font-bold text-foreground">Notifications</p>
+              <p className="font-display text-sm font-bold text-foreground">{t("title")}</p>
               <Link
                 href="/notifications"
                 onClick={() => setOpen(false)}
                 className="text-xs font-medium text-jade-600 hover:text-jade-700 dark:text-jade-400 dark:hover:text-jade-300"
               >
-                View all
+                {t("bell.viewAll")}
               </Link>
             </div>
 
             {notifications.length === 0 ? (
               <div className="px-4 py-10 text-center">
                 <Bell className="mx-auto h-6 w-6 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">You&apos;re all caught up.</p>
+                <p className="mt-2 text-sm text-muted-foreground">{t("empty")}</p>
               </div>
             ) : (
               <ul className="max-h-[26rem] divide-y divide-border overflow-y-auto">

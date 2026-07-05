@@ -1,0 +1,72 @@
+{
+  "eyebrow": "Walat",
+  "states": {
+    "loadingWallet": "Ana loda walat ɗinka…"
+  },
+  "setup": {
+    "title": "Saita walat ɗinka",
+    "description": "Ci gaba da Privy don ƙirƙirar walat ɗinka na {{network}}. Privy yana ba ka damar yin rajista da imel ko haɗa walat ɗin web3 da kake da shi. Ta kowace hanya, za ka iya ajiye, tara, da fitar da USDC.",
+    "settingUp": "Ana saitawa…",
+    "continueWithPrivy": "Ci gaba da Privy",
+    "error": "An kasa saita walat ɗinka. Da fatan a sake gwadawa.",
+    "securityNote": "Walat ɗinka yana biyan kuɗi a kan Monad, kuma ana rubuta kowane motsi a cikin littafin ajiya. Ayyuka masu mahimmanci kamar fitar da kuɗi suna buƙatar sabon tabbaci.",
+    "unavailableTitle": "Saitin walat babu shi",
+    "unavailableDescription": "Ba a saita samar da walat a wannan tura ba tukuna. Da fatan a sake dubawa daga baya."
+  },
+  "intro": {
+    "getReadyTitle": "Shirya walat ɗinka",
+    "getReadyDescription": "MoolaHub yana aiki da USDC ta Monad. Saita walat ɗinka don ajiye, tara, da fitarwa.",
+    "manageTitle": "Ajiye da fitar da USDC",
+    "manageDescription": "MoolaHub yana aiki da USDC ta Monad. Ƙara USDC a walat ɗinka, ko ka aika shi zuwa kowane adireshin walat na Monad."
+  },
+  "balance": {
+    "available": "Ma'auni da ake da shi",
+    "allocatedToSavings": "an ware don tanadi"
+  },
+  "receive": {
+    "title": "Karɓa",
+    "subtitle": "Ƙara USDC",
+    "depositAddressLabel": "Adireshin ajiyar USDC ɗinka",
+    "sendOnly": "Aika <0>USDC a kan {{network}}</0> kaɗai zuwa wannan adireshin.",
+    "instructions": "Aika USDC zuwa adireshin ka da ke sama daga kowace walat na Monad.",
+    "instructionsSync": "Aika USDC zuwa adireshin ka da ke sama daga kowace walat na Monad, sannan ka duba shi:",
+    "checkForDeposits": "Duba ajiya",
+    "checking": "Ana dubawa…",
+    "creditedDeposits": "An shigar da ajiya {{count}} da jimillar {{amount}}",
+    "noNewDeposits": "Ba a sami sabbin ajiya ba",
+    "faucet": {
+      "title": "Famfon testnet",
+      "description": "Karɓi USDC na gwaji don gwada abubuwa kafin kuɗi na gaske.",
+      "submit": "Karɓi USDC na gwaji",
+      "success": "An karɓi USDC na gwaji"
+    }
+  },
+  "withdraw": {
+    "title": "Fitarwa",
+    "subtitle": "Aika USDC zuwa kowane adireshin Monad",
+    "unavailable": "Fitar da kuɗi a kan sarkar ba ya samuwa a wannan tura a yanzu.",
+    "success": "Fitarwa ta yi nasara"
+  },
+  "footer": {
+    "settle": "Ana biyan kuɗi zuwa adireshin walat ɗinka na Monad, kuma ana rubuta kowane motsi a cikin littafin ajiya tare da nuni a kan sarkar.",
+    "selfCustody": "Walat ɗinka na kanka ne. Kai kake amincewa da kowace fitarwa ta hanyar sa hannu da kanka.",
+    "stepUp": "Fitar da kuɗi da biyan buri suna buƙatar sabon tabbaci (kalmar sirri, 2FA, ko lambar imel) kafin komai ya motsa.",
+    "builtOnMonad": "An gina shi a kan Monad"
+  },
+  "banner": {
+    "title": "Haɗa walat ɗinka don wannan zama",
+    "description": "Haɗa sau ɗaya yanzu kuma za ka iya ajiye, tara, da fitarwa ba tare da sake haɗawa ba har sai ka fita.",
+    "connect": "Haɗa walat"
+  },
+  "privyWithdraw": {
+    "connectPrompt": "Walat ɗinka na kanka ne. Haɗa shi don ka sa hannu kan fitarwar da kanka.",
+    "connectButton": "Haɗa walat don fitarwa",
+    "success": "An aika fitarwa",
+    "errors": {
+      "unavailable": "Fitar da kuɗi a kan sarkar ba ya samuwa a wannan tura.",
+      "invalidAddress": "Shigar da adireshin Monad mai inganci (yana farawa da 0x).",
+      "invalidAmount": "Shigar da adadin da ya dace.",
+      "failed": "Fitarwa ta gaza. Da fatan a sake gwadawa."
+    }
+  }
+}

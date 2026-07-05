@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Fingerprint, Plus, Trash2, AlertCircle } from "lucide-react";
 import { startRegistration, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/browser";
@@ -10,11 +11,12 @@ import {
   useDeletePasskey,
   getListPasskeysQueryKey,
 } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { apiErrorMessage, formatDate } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 export function PasskeysCard() {
+  const { t } = useTranslation("account");
   const queryClient = useQueryClient();
   const { data, isLoading } = useListPasskeys();
   const optionsMutation = useRegisterPasskeyOptions();
@@ -42,16 +44,16 @@ export function PasskeysCard() {
       const deviceName =
         typeof navigator !== "undefined" && navigator.platform
           ? navigator.platform
-          : "Passkey";
+          : t("passkeys.defaultName");
       await verifyMutation.mutateAsync({
         data: { flowId, response: response as unknown as Record<string, unknown>, deviceName },
       });
       await invalidate();
     } catch (err) {
       if (err instanceof Error && err.name === "NotAllowedError") {
-        setError("Setup cancelled.");
+        setError(t("passkeys.errors.cancelled"));
       } else {
-        setError(apiErrorMessage(err) ?? "We couldn't add that passkey. Please try again.");
+        setError(apiErrorMessage(err) ?? t("passkeys.errors.add"));
       }
     }
   };
@@ -62,7 +64,7 @@ export function PasskeysCard() {
       await deleteMutation.mutateAsync({ id });
       await invalidate();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "We couldn't remove that passkey. Please try again.");
+      setError(apiErrorMessage(err) ?? t("passkeys.errors.remove"));
     }
   };
 
@@ -74,20 +76,20 @@ export function PasskeysCard() {
             <Fingerprint className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-foreground">Passkeys</p>
-            <p className="text-xs text-muted-foreground">Sign in with Face ID, Touch ID, or a security key</p>
+            <p className="text-sm font-semibold text-foreground">{t("passkeys.title")}</p>
+            <p className="text-xs text-muted-foreground">{t("passkeys.description")}</p>
           </div>
         </div>
         {supported && (
           <Button size="sm" variant="secondary" onClick={handleAdd} disabled={adding}>
-            <Plus className="h-4 w-4" /> {adding ? "Adding…" : "Add passkey"}
+            <Plus className="h-4 w-4" /> {adding ? t("passkeys.adding") : t("passkeys.add")}
           </Button>
         )}
       </div>
 
       {!supported && (
         <p className="mt-4 text-xs text-muted-foreground">
-          This browser does not support passkeys.
+          {t("passkeys.unsupported")}
         </p>
       )}
 
@@ -98,19 +100,19 @@ export function PasskeysCard() {
       )}
 
       {isLoading ? (
-        <p className="mt-4 text-xs text-muted-foreground">Loading passkeys…</p>
+        <p className="mt-4 text-xs text-muted-foreground">{t("passkeys.loading")}</p>
       ) : passkeys.length === 0 ? (
-        <p className="mt-4 text-xs text-muted-foreground">No passkeys yet. Add one for faster, safer sign-in.</p>
+        <p className="mt-4 text-xs text-muted-foreground">{t("passkeys.empty")}</p>
       ) : (
         <ul className="mt-4 divide-y divide-border">
           {passkeys.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">{p.deviceName ?? "Passkey"}</p>
+                <p className="truncate text-sm font-medium text-foreground">{p.deviceName ?? t("passkeys.defaultName")}</p>
                 <p className="text-xs text-muted-foreground">
-                  Added {new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {t("passkeys.added", { date: formatDate(p.createdAt, { month: "short", day: "numeric", year: "numeric" }) })}
                   {p.lastUsedAt
-                    ? ` · Last used ${new Date(p.lastUsedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                    ? ` · ${t("passkeys.lastUsed", { date: formatDate(p.lastUsedAt, { month: "short", day: "numeric" }) })}`
                     : ""}
                 </p>
               </div>
@@ -118,7 +120,7 @@ export function PasskeysCard() {
                 onClick={() => handleRemove(p.id)}
                 disabled={deleteMutation.isPending}
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/15 dark:hover:text-red-400 focus-ring"
-                aria-label="Remove passkey"
+                aria-label={t("passkeys.remove")}
               >
                 <Trash2 className="h-4 w-4" />
               </button>

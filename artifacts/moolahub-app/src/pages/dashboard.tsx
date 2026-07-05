@@ -12,10 +12,12 @@ import {
 } from "lucide-react";
 import { Card, Button, Badge, ProgressBar, IconChip, Eyebrow, Skeleton } from "@/components/ui";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
+import { Money } from "@/components/app/bits";
 import { useGetDashboardSummary, useGetMe } from "@workspace/api-client-react";
 import { useStreak } from "@/hooks/use-streak";
-import { streakVisual, streakUnit, periodNoun } from "@/components/app/StreakFlame";
-import { formatMoney, pct, timeAgo } from "@/lib/utils";
+import { streakVisual } from "@/components/app/StreakFlame";
+import { formatMoney, pct, timeAgo, formatDate } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const YIELD_APY = 0.041;
 
@@ -29,7 +31,13 @@ const activityIcon: Record<string, typeof ArrowDownLeft> = {
   withdrawal: ArrowUpRight,
 };
 
+function streakFreqKey(frequency: string): "daily" | "weekly" | "biweekly" | "monthly" {
+  if (frequency === "daily" || frequency === "monthly" || frequency === "biweekly") return frequency;
+  return "weekly";
+}
+
 export default function DashboardPage() {
+  const { t } = useTranslation("dashboard");
   const { data: user } = useGetMe();
   const { data: summary, isLoading } = useGetDashboardSummary();
   const { data: streak } = useStreak();
@@ -60,9 +68,9 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <Eyebrow>Welcome back</Eyebrow>
+        <Eyebrow>{t("hero.eyebrow")}</Eyebrow>
         <h1 className="mt-1.5 font-display text-3xl font-bold tracking-tight text-foreground">
-          Good to see you{firstName ? `, ${firstName}` : ""}
+          {firstName ? t("hero.greetingNamed", { name: firstName }) : t("hero.greeting")}
         </h1>
       </div>
 
@@ -77,34 +85,30 @@ export default function DashboardPage() {
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60">
-                Total balance
+                {t("hero.totalBalance")}
               </p>
               <p className="mt-1.5 font-display text-4xl font-bold sm:text-5xl">
-                {formatMoney(totalCents)}
+                <Money cents={totalCents} />
               </p>
               <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/70">
                 <span>
-                  Available{" "}
-                  <span className="font-semibold text-white">
-                    {formatMoney(availableCents)}
-                  </span>
+                  {t("hero.available")}{" "}
+                  <Money cents={availableCents} className="font-semibold text-white" />
                 </span>
                 <span>
-                  In savings{" "}
-                  <span className="font-semibold text-white">
-                    {formatMoney(goalTotalCents)}
-                  </span>
+                  {t("hero.inSavings")}{" "}
+                  <Money cents={goalTotalCents} className="font-semibold text-white" />
                 </span>
               </div>
             </div>
             <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-              <TrendingUp className="h-3.5 w-3.5" /> +{(YIELD_APY * 100).toFixed(1)}% APY
+              <TrendingUp className="h-3.5 w-3.5" /> {t("hero.apy", { apy: (YIELD_APY * 100).toFixed(1) })}
             </Badge>
           </div>
 
           <div className="relative z-10 mt-6 flex flex-wrap gap-3">
             <Button href="/wallet" size="sm">
-              Add money
+              {t("hero.addMoney")}
             </Button>
             <Button
               href="/wallet"
@@ -112,15 +116,15 @@ export default function DashboardPage() {
               variant="secondary"
               className="border-white/15 bg-white/10 text-white hover:bg-white/15"
             >
-              Withdraw
+              {t("hero.withdraw")}
             </Button>
           </div>
 
           <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-center justify-between text-xs text-white/65">
-              <span className="font-mono uppercase tracking-[0.15em]">Growth · 6 months</span>
+              <span className="font-mono uppercase tracking-[0.15em]">{t("hero.growthLabel")}</span>
               <span className="text-jade-400">
-                +{formatMoney(Math.floor(totalCents * YIELD_APY), { sign: true })} earned
+                {t("hero.earned", { amount: formatMoney(Math.floor(totalCents * YIELD_APY), { sign: true }) })}
               </span>
             </div>
             <AscendingChart className="mt-1 max-h-28" />
@@ -130,7 +134,7 @@ export default function DashboardPage() {
         {/* --------------------------------------------------- Reminders */}
         <Card className="flex flex-col p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg font-bold text-foreground">Up next</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("reminders.title")}</h2>
             <IconChip tone="jade" className="h-9 w-9">
               <Bell className="h-4 w-4" />
             </IconChip>
@@ -138,19 +142,19 @@ export default function DashboardPage() {
           <ul className="mt-4 flex-1 space-y-3">
             {!upcomingReminder ? (
               <li className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                You&apos;re all caught up.
+                {t("reminders.allCaughtUp")}
               </li>
             ) : (
               <li className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-foreground">{upcomingReminder.title}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="text-sm font-semibold text-foreground">
-                    {formatMoney(upcomingReminder.amountCents, { compact: true })}
+                    <Money cents={upcomingReminder.amountCents} compact />
                   </p>
                   <p className="font-mono text-[10px] uppercase tracking-wide text-jade-600 dark:text-jade-400">
-                    {new Date(upcomingReminder.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    {formatDate(upcomingReminder.dueDate, { month: "short", day: "numeric" })}
                   </p>
                 </div>
               </li>
@@ -177,19 +181,19 @@ export default function DashboardPage() {
               <div>
                 <p className="font-display text-lg font-bold text-foreground">
                   {streak.hero
-                    ? `${streak.hero.count} ${streakUnit(streak.frequency, streak.hero.count)}`
-                    : "No streak yet"}
+                    ? t(`streak.count.${streakFreqKey(streak.frequency)}`, { count: streak.hero.count })
+                    : t("streak.none")}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {streak.hero
                     ? streak.currentPeriodSatisfied
-                      ? `Saved this ${periodNoun(streak.frequency)}, nicely done`
-                      : `One deposit keeps your ${periodNoun(streak.frequency)} streak alive`
-                    : `Make a deposit to light your first flame`}
+                      ? t(`streak.saved.${streakFreqKey(streak.frequency)}`)
+                      : t(`streak.keepAlive.${streakFreqKey(streak.frequency)}`)
+                    : t("streak.firstFlame")}
                 </p>
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground rtl:rotate-180" />
           </Card>
         </Link>
       )}
@@ -202,15 +206,15 @@ export default function DashboardPage() {
               <IconChip tone="jade">
                 <PiggyBank className="h-5 w-5" />
               </IconChip>
-              <h2 className="font-display text-lg font-bold text-foreground">Personal savings</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{t("savings.title")}</h2>
             </div>
             <Link href="/goals" className="text-muted-foreground transition-colors hover:text-muted-foreground">
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </div>
           <div className="mt-5 space-y-4">
             {activeGoals.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nothing here yet. Create your first goal.</p>
+              <p className="text-sm text-muted-foreground">{t("savings.empty")}</p>
             )}
             {activeGoals.slice(0, 3).map((g) => (
               <Link key={g.id} href={`/goals/${g.id}`} className="block group">
@@ -232,29 +236,32 @@ export default function DashboardPage() {
               <IconChip tone="jade">
                 <UsersRound className="h-5 w-5" />
               </IconChip>
-              <h2 className="font-display text-lg font-bold text-foreground">Active circle</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{t("circle.title")}</h2>
             </div>
             <Link href="/circles" className="text-muted-foreground transition-colors hover:text-muted-foreground">
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5 rtl:rotate-180" />
             </Link>
           </div>
           {activeCircle ? (
             <Link href={`/circles/${activeCircle.id}`} className="mt-5 block group">
               <p className="font-semibold text-foreground group-hover:text-jade-600 dark:group-hover:text-jade-400 transition-colors">{activeCircle.name}</p>
               <p className="text-sm capitalize text-muted-foreground">
-                Round {activeCircle.currentRound} of {activeCircle.totalRounds} ·{" "}
-                {activeCircle.frequency}
+                {t("circle.round", {
+                  current: activeCircle.currentRound,
+                  total: activeCircle.totalRounds,
+                  frequency: t(`frequency.${activeCircle.frequency}`, { defaultValue: activeCircle.frequency }),
+                })}
               </p>
               <div className="mt-4 flex items-center justify-between rounded-2xl bg-background px-4 py-3">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">Pot</p>
-                  <p className="font-semibold text-foreground">{formatMoney(activeCircle.potCents)}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{t("circle.pot")}</p>
+                  <p className="font-semibold text-foreground"><Money cents={activeCircle.potCents} /></p>
                 </div>
-                <Badge tone="jade">{activeCircle.memberCount} members</Badge>
+                <Badge tone="jade">{t("circle.members", { count: activeCircle.memberCount })}</Badge>
               </div>
             </Link>
           ) : (
-            <p className="mt-5 text-sm text-muted-foreground">No active circles yet.</p>
+            <p className="mt-5 text-sm text-muted-foreground">{t("circle.empty")}</p>
           )}
         </Card>
 
@@ -263,13 +270,13 @@ export default function DashboardPage() {
             <IconChip tone="amber">
               <BookOpen className="h-5 w-5" />
             </IconChip>
-            <h2 className="font-display text-lg font-bold text-foreground">Keep learning</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("learn.title")}</h2>
           </div>
           <div className="mt-5 flex-1">
             <span className="text-3xl">⛓️</span>
-            <p className="mt-3 font-semibold leading-snug text-foreground">Blockchain, explained simply</p>
+            <p className="mt-3 font-semibold leading-snug text-foreground">{t("learn.lessonTitle")}</p>
             <p className="mt-1 font-mono text-xs uppercase tracking-wide text-muted-foreground">
-              5 min · Beginner
+              {t("learn.lessonMeta")}
             </p>
           </div>
           <Button
@@ -278,7 +285,7 @@ export default function DashboardPage() {
             size="sm"
             className="mt-5 w-full"
           >
-            Start lesson
+            {t("learn.startLesson")}
           </Button>
         </Card>
       </div>
@@ -286,14 +293,14 @@ export default function DashboardPage() {
       {/* ---------------------------------------------------- Recent transactions */}
       <Card className="p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-foreground">Recent transactions</h2>
+          <h2 className="font-display text-lg font-bold text-foreground">{t("transactions.title")}</h2>
           <Link href="/transactions" className="text-sm font-medium text-jade-600 dark:text-jade-400 hover:text-jade-700">
-            View all
+            {t("transactions.viewAll")}
           </Link>
         </div>
         <ul className="mt-4 divide-y divide-border">
           {recentActivity.length === 0 && (
-            <li className="py-6 text-center text-sm text-muted-foreground">No transactions yet.</li>
+            <li className="py-6 text-center text-sm text-muted-foreground">{t("transactions.empty")}</li>
           )}
           {recentActivity.slice(0, 5).map((item) => {
             const Icon = activityIcon[item.type] ?? ArrowUpRight;
@@ -313,7 +320,7 @@ export default function DashboardPage() {
                   <p
                     className={`text-sm font-semibold ${positive ? "text-jade-600 dark:text-jade-400" : "text-foreground"}`}
                   >
-                    {formatMoney(item.amountCents, { sign: true })}
+                    <Money cents={item.amountCents} sign />
                   </p>
                 )}
               </li>

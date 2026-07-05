@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export type SegmentOption<T extends string> = {
@@ -10,7 +11,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   className,
-  "aria-label": ariaLabel = "Options",
+  "aria-label": ariaLabel,
 }: {
   options: SegmentOption<T>[];
   value: T;
@@ -18,10 +19,11 @@ export function SegmentedControl<T extends string>({
   className?: string;
   "aria-label"?: string;
 }) {
+  const { t } = useTranslation("account");
   return (
     <div
       role="tablist"
-      aria-label={ariaLabel}
+      aria-label={ariaLabel ?? t("segmented.optionsLabel")}
       className={cn(
         "inline-flex w-full rounded-xl border border-border bg-muted p-1",
         className,

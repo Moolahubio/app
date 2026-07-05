@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ type ImageUploadFieldProps = {
 /** Cover-image picker that mirrors the avatar upload flow: presigned PUT to
  * object storage, then stores the returned objectPath on the parent form. */
 export function ImageUploadField({ label, hint, value, onChange, disabled }: ImageUploadFieldProps) {
+  const { t } = useTranslation("account");
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   // A just-uploaded object has no ACL policy until the parent form is submitted,
@@ -34,7 +36,7 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
       onChange(res.objectPath);
     },
     onError: () => {
-      setError("Could not upload image.");
+      setError(t("imageUpload.error"));
       setLocalPreview(null);
     },
   });
@@ -44,7 +46,7 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
+      setError(t("imageUpload.chooseImage"));
       return;
     }
     setError(null);
@@ -67,7 +69,7 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
             "relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted text-muted-foreground transition-colors hover:border-jade-500/40 hover:text-jade-600 dark:hover:text-jade-300 focus-ring disabled:opacity-60",
             preview && "border-solid border-border",
           )}
-          aria-label={preview ? "Change picture" : "Upload a picture"}
+          aria-label={preview ? t("imageUpload.changePicture") : t("imageUpload.uploadPicture")}
         >
           {isUploading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -79,7 +81,7 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
         </button>
         <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-foreground">
-            {hint ?? "Add a photo to keep the dream alive."}
+            {hint ?? t("imageUpload.defaultHint")}
           </p>
           {value && !isUploading && (
             <button
@@ -90,7 +92,7 @@ export function ImageUploadField({ label, hint, value, onChange, disabled }: Ima
               }}
               className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
             >
-              <X className="h-3 w-3" /> Remove
+              <X className="h-3 w-3" /> {t("imageUpload.remove")}
             </button>
           )}
         </div>

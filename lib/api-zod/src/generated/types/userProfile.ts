@@ -26,4 +26,6 @@ export interface UserProfile {
   hasPassword?: boolean;
   privyLinked?: boolean;
   createdAt: string;
+  /** Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh"). */
+  language?: string;
 }

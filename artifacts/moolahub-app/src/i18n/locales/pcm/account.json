@@ -1,0 +1,237 @@
+{
+  "avatar": {
+    "change": "Change your profile picture"
+  },
+  "sections": {
+    "settings": "Settings",
+    "manageAccount": "Manage account"
+  },
+  "menu": {
+    "profileInformation": {
+      "label": "Profile information",
+      "detail": "Name, username, date wey you born"
+    },
+    "wallets": {
+      "label": "Wallets",
+      "detail": "Balance & address for Monad"
+    },
+    "security": {
+      "label": "Security",
+      "detail": "Passkeys & two-factor"
+    },
+    "streak": {
+      "label": "Streak frequency",
+      "detail": "Every day, every week, or every month"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "detail": "Choose wetin go reach you"
+    },
+    "transactions": {
+      "label": "Transactions & yield",
+      "detail": "Ledger and money wey you don earn"
+    }
+  },
+  "profile": {
+    "loading": "We dey load your profile…",
+    "uploadingPicture": "We dey upload picture…",
+    "saveName": "Save name",
+    "editName": "Edit name",
+    "wallet": {
+      "label": "Monad wallet · na you dey hold am",
+      "notProvisioned": "Never set up"
+    },
+    "stats": {
+      "yieldEarned": "Yield wey you don earn",
+      "yieldApy": "Yield APY"
+    },
+    "errors": {
+      "savePicture": "We no fit save your profile picture.",
+      "uploadImage": "We no fit upload the image.",
+      "chooseImage": "Abeg choose one image file.",
+      "updateName": "We no fit update the name."
+    },
+    "signOutError": {
+      "title": "We no fit sign you out",
+      "description": "Abeg try again."
+    }
+  },
+  "information": {
+    "title": "Profile information",
+    "description": "Update how you dey show for MoolaHub.",
+    "picture": {
+      "title": "Profile picture",
+      "uploading": "We dey upload…",
+      "hint": "PNG or JPG, square one dey best."
+    },
+    "fields": {
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your name",
+      "username": "Username",
+      "usernameHint": "optional · na only you fit get am",
+      "usernamePlaceholder": "username",
+      "dateOfBirth": "Date wey you born",
+      "optional": "optional",
+      "nationality": "Nationality",
+      "nationalityPlaceholder": "like Kenyan"
+    },
+    "errors": {
+      "nameEmpty": "Name no fit empty.",
+      "update": "We no fit update the profile.",
+      "savePicture": "We no fit save your profile picture.",
+      "uploadImage": "We no fit upload the image.",
+      "chooseImage": "Abeg choose one image file."
+    },
+    "saving": "We dey save…",
+    "saveChanges": "Save changes"
+  },
+  "security": {
+    "eyebrow": "Security",
+    "title": "Sign-in & security",
+    "description": "Add extra protection for your account."
+  },
+  "changePassword": {
+    "title": "Password",
+    "descriptionChange": "Change the password wey you dey use sign in",
+    "descriptionSet": "Set password to sign in with your email",
+    "change": "Change",
+    "setPassword": "Set password",
+    "updated": "Password don update.",
+    "needVerifiedEmail": "You need verified email before you fit set password.",
+    "currentPassword": "Current password",
+    "twoFactorCode": "Two-factor authentication code",
+    "codePlaceholder": "6-digit code",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "confirmNewPassword": "Confirm new password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "saving": "We dey save…",
+    "savePassword": "Save password",
+    "sendCodeIntro": "We go send verification code to <strong>{{email}}</strong> to confirm say na you before you set password.",
+    "sending": "We dey send…",
+    "sendCode": "Send code",
+    "checkEmail": "Check your email for the 6-digit code.",
+    "verificationCode": "Verification code",
+    "verificationCodePlaceholder": "123456",
+    "errors": {
+      "minLength": "Password must be at least 8 characters.",
+      "mismatch": "The passwords no match.",
+      "enterTotp": "Enter your two-factor authentication code to continue.",
+      "update": "We no fit update your password.",
+      "sendCode": "We no fit send the code. Abeg try again.",
+      "invalidCode": "That code no correct or e don expire."
+    }
+  },
+  "manageAccount": {
+    "deactivate": {
+      "label": "Deactivate account",
+      "detail": "Off am small time. Sign in again anytime to bring am back.",
+      "dialogTitle": "You wan deactivate your account?",
+      "dialogDescription": "We go off your account small time and sign you out. Your data, balance, and group savings go still dey safe. Sign in again anytime to on am back.",
+      "action": "Deactivate",
+      "pending": "We dey deactivate…",
+      "error": "We no fit deactivate the account."
+    },
+    "delete": {
+      "label": "Delete account",
+      "detail": "Comot your account and data for good",
+      "dialogTitle": "You wan delete your account?",
+      "dialogDescription": "This one go comot your profile for good and stop your access. You fit only delete when your balance na zero and you no get any personal or group savings wey dey active. Type <strong>DELETE</strong> to confirm.",
+      "action": "Delete forever",
+      "pending": "We dey delete…",
+      "error": "We no fit delete the account."
+    }
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "description": "Sign in with Face ID, Touch ID, or security key",
+    "adding": "We dey add…",
+    "add": "Add passkey",
+    "unsupported": "This browser no support passkeys.",
+    "loading": "We dey load passkeys…",
+    "empty": "No passkey dey yet. Add one make sign-in fast and safe.",
+    "defaultName": "Passkey",
+    "added": "Added {{date}}",
+    "lastUsed": "Last used {{date}}",
+    "remove": "Remove passkey",
+    "errors": {
+      "cancelled": "You cancel the setup.",
+      "add": "We no fit add that passkey. Abeg try again.",
+      "remove": "We no fit remove that passkey. Abeg try again."
+    }
+  },
+  "twoFactor": {
+    "backupCodes": {
+      "title": "Save your backup codes",
+      "copyAll": "Copy all",
+      "description": "Each code dey work only once. Keep dem for safe place. Dem go help you sign in if you lose your authenticator."
+    },
+    "title": "Authenticator app",
+    "on": "On",
+    "off": "Off",
+    "description": "Make e need 6-digit code for sign-in for extra security",
+    "starting": "We dey start…",
+    "setUp": "Set up",
+    "setup": {
+      "instructions": "Scan this QR code with Google Authenticator, 1Password, or any TOTP app, then enter the 6-digit code wey e show.",
+      "qrAlt": "2FA QR code",
+      "codePlaceholder": "123456",
+      "verifying": "We dey verify…",
+      "enable": "Enable 2FA"
+    },
+    "codesRemaining": "Backup codes wey remain: {{count}}",
+    "regenerate": "Regenerate backup codes",
+    "turnOff": "Turn off",
+    "regenerateForm": {
+      "instructions": "Enter current code or backup code to make fresh set. Your old backup codes go stop to work.",
+      "codePlaceholder": "Code",
+      "generating": "We dey generate…",
+      "generate": "Generate new codes"
+    },
+    "disableForm": {
+      "instructions": "Enter current code or backup code to turn off 2FA.",
+      "codePlaceholder": "Code",
+      "turningOff": "We dey turn off…",
+      "confirmTurnOff": "Confirm turn off"
+    },
+    "errors": {
+      "startSetup": "We no fit start the setup.",
+      "codeFailed": "That code no work. Try again."
+    }
+  },
+  "stepUp": {
+    "title": "Confirm say na you",
+    "descBoth": "Enter your password and your two-factor authentication code to continue.",
+    "descPassword": "Enter your password to continue.",
+    "descTotp": "Enter your two-factor authentication code to continue.",
+    "descEmail": "We go email you one-time code to confirm this change.",
+    "sending": "We dey send…",
+    "sendCode": "Send code",
+    "codePlaceholder": "6-digit code",
+    "passwordPlaceholder": "Current password",
+    "errors": {
+      "sendCode": "We no fit send the code. Abeg try again.",
+      "enterEmailCode": "Abeg enter the code wey we email you.",
+      "enterPassword": "Abeg enter your password to continue.",
+      "enterTotp": "Abeg enter your two-factor authentication code to continue."
+    }
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "imageUpload": {
+    "changePicture": "Change picture",
+    "uploadPicture": "Upload picture",
+    "defaultHint": "Add photo make the dream dey alive.",
+    "remove": "Remove",
+    "error": "We no fit upload the image.",
+    "chooseImage": "Abeg choose one image file."
+  },
+  "segmented": {
+    "optionsLabel": "Options"
+  }
+}

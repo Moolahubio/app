@@ -1,0 +1,56 @@
+{
+  "title": "Notifications",
+  "page": {
+    "eyebrow": "Notifications",
+    "title": "Tout ce qui s'est passé",
+    "description": "Invitations, contributions, versements et tout ce qui se passe sur votre compte."
+  },
+  "loading": "Chargement des notifications…",
+  "empty": "Vous êtes à jour.",
+  "bell": {
+    "viewAll": "Tout voir"
+  },
+  "settings": {
+    "title": "Paramètres de notification",
+    "description": "Choisissez la fréquence des messages que vous souhaitez recevoir de MoolaHub.",
+    "recommended": "Recommandé",
+    "saveError": "Impossible d'enregistrer la préférence."
+  },
+  "tiers": {
+    "everything": {
+      "label": "Tout",
+      "description": "Toutes les notifications : activité des cercles, étapes des objectifs, dépôts, rappels et conseils."
+    },
+    "essential": {
+      "label": "Essentiel",
+      "description": "Uniquement les mises à jour importantes : versements, échéances de contributions et activité du compte."
+    },
+    "minimal": {
+      "label": "Minimal",
+      "description": "Uniquement les notifications les plus essentielles concernant le compte et l'argent."
+    },
+    "custom": {
+      "label": "Personnalisé",
+      "description": "Choisissez précisément les catégories qui vous intéressent."
+    }
+  },
+  "categories": {
+    "money": {
+      "label": "Argent et transactions",
+      "description": "Dépôts, retraits, versements et rappels de contributions."
+    },
+    "social": {
+      "label": "Épargne de groupe et social",
+      "description": "Invitations, activité des membres et mises à jour des cercles."
+    },
+    "engagement": {
+      "label": "Conseils et engagement",
+      "description": "Séries, rappels d'apprentissage et actualités du produit."
+    }
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "description": "La page que vous recherchez n'existe pas ou a peut-être été déplacée.",
+    "backHome": "Retour à l'accueil"
+  }
+}

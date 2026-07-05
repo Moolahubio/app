@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { AlertCircle, MailCheck, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +22,7 @@ export function VerifyEmailStep({
   onTwoFactorRequired: (challengeId: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation("auth");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const verifyEmail = useVerifyEmail();
@@ -39,13 +41,13 @@ export function VerifyEmailStep({
       });
       if (result.twoFactorRequired) {
         if (result.challengeId) onTwoFactorRequired(result.challengeId);
-        else setError("We couldn't start verification. Please try again.");
+        else setError(t("verifyStartError"));
         return;
       }
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "That code is invalid or has expired.");
+      setError(apiErrorMessage(err) ?? t("verify.codeError"));
     }
   };
 
@@ -56,7 +58,7 @@ export function VerifyEmailStep({
       await resendCode.mutateAsync({ data: { email } });
       setResent(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not resend the code.");
+      setError(apiErrorMessage(err) ?? t("resend.error"));
     }
   };
 
@@ -67,9 +69,14 @@ export function VerifyEmailStep({
           <MailCheck className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="font-display text-lg font-bold text-foreground">Verify your email</h2>
+          <h2 className="font-display text-lg font-bold text-foreground">{t("verify.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            We sent a 6-digit code to <span className="font-medium text-foreground">{email}</span>.
+            <Trans
+              t={t}
+              i18nKey="verify.sentTo"
+              values={{ email }}
+              components={[<span className="font-medium text-foreground" />]}
+            />
           </p>
         </div>
       </div>
@@ -78,7 +85,7 @@ export function VerifyEmailStep({
         inputMode="numeric"
         autoComplete="one-time-code"
         autoFocus
-        placeholder="123456"
+        placeholder={t("fields.codePlaceholder")}
         value={code}
         onChange={(e) => setCode(e.target.value)}
         className="w-full rounded-xl border border-border bg-background px-3.5 py-3 text-center font-mono text-lg tracking-[0.3em] text-foreground outline-none focus:border-jade-500/60 focus-ring"
@@ -90,7 +97,7 @@ export function VerifyEmailStep({
         </p>
       )}
       {resent && !error && (
-        <p className="text-sm text-jade-600 dark:text-jade-400">A new code is on its way.</p>
+        <p className="text-sm text-jade-600 dark:text-jade-400">{t("resend.sent")}</p>
       )}
 
       <Button
@@ -99,7 +106,7 @@ export function VerifyEmailStep({
         className="w-full"
         disabled={verifyEmail.isPending || code.trim().length < 6}
       >
-        {verifyEmail.isPending ? "Verifying…" : "Verify & continue"}
+        {verifyEmail.isPending ? t("verify.submitting") : t("verify.submit")}
       </Button>
 
       <div className="flex items-center justify-between text-sm">
@@ -108,7 +115,7 @@ export function VerifyEmailStep({
           onClick={onCancel}
           className="flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t("common:actions.back")}
         </button>
         <button
           type="button"
@@ -116,7 +123,7 @@ export function VerifyEmailStep({
           disabled={resendCode.isPending}
           className="font-medium text-jade-600 transition-colors hover:text-jade-700 disabled:opacity-60 dark:text-jade-400"
         >
-          {resendCode.isPending ? "Sending…" : "Resend code"}
+          {resendCode.isPending ? t("resend.sending") : t("resend.action")}
         </button>
       </div>
     </form>

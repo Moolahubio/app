@@ -6,6 +6,7 @@ import {
   useCreateWallet,
 } from "@privy-io/react-auth";
 import { Wallet, AlertCircle, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, Button } from "@/components/ui";
 import {
   useLinkPrivy,
@@ -22,6 +23,7 @@ import { useStepUpGate } from "@/components/app/StepUpDialog";
 const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
 function SetupButton() {
+  const { t } = useTranslation("wallet");
   const { getAccessToken, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const { createWallet } = useCreateWallet();
@@ -70,7 +72,7 @@ function SetupButton() {
         queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() }),
       ]);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not set up your wallet. Please try again.");
+      setError(apiErrorMessage(err) ?? t("setup.error"));
     } finally {
       setBusy(false);
     }
@@ -109,15 +111,13 @@ function SetupButton() {
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
         <Wallet className="h-7 w-7" />
       </span>
-      <h2 className="mt-4 font-display text-xl font-bold text-foreground">Set up your wallet</h2>
+      <h2 className="mt-4 font-display text-xl font-bold text-foreground">{t("setup.title")}</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-        Continue with Privy to create your {NETWORK} wallet. Privy lets you sign up with an email
-        or connect an existing web3 wallet. Either way, you'll be able to deposit, save, and
-        withdraw USDC.
+        {t("setup.description", { network: NETWORK })}
       </p>
 
       <Button className="mt-6" onClick={handleClick} disabled={pending}>
-        {pending ? "Setting up…" : "Continue with Privy"}
+        {pending ? t("setup.settingUp") : t("setup.continueWithPrivy")}
       </Button>
 
       {error && (
@@ -128,7 +128,7 @@ function SetupButton() {
 
       <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-jade-600" />
-        Your wallet settles funds on Monad, and every movement is recorded on the ledger. Sensitive actions like withdrawals require a fresh confirmation.
+        {t("setup.securityNote")}
       </p>
 
       {stepUpDialog}
@@ -137,15 +137,16 @@ function SetupButton() {
 }
 
 export function WalletSetupCard() {
+  const { t } = useTranslation("wallet");
   if (!isWeb3Enabled) {
     return (
       <Card className="p-8 text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-foreground">
           <Wallet className="h-7 w-7" />
         </span>
-        <h2 className="mt-4 font-display text-xl font-bold text-foreground">Wallet setup unavailable</h2>
+        <h2 className="mt-4 font-display text-xl font-bold text-foreground">{t("setup.unavailableTitle")}</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          Wallet provisioning isn't configured on this deployment yet. Please check back later.
+          {t("setup.unavailableDescription")}
         </p>
       </Card>
     );

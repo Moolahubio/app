@@ -1,0 +1,163 @@
+{
+  "list": {
+    "loading": "Chargement de votre épargne collective…",
+    "title": "Votre épargne collective",
+    "description": "Une épargne tournante avec des personnes de confiance. Chaque tour est détenu par un contrat on-chain, pas par une personne.",
+    "emptyHint": "Invitez des amis ou de la famille et définissez votre contribution"
+  },
+  "info": {
+    "susu": "<b>Comment fonctionne une Susu :</b> chacun verse un montant fixe à chaque tour. Dans un cercle à <em>rotation</em>, un membre reçoit toute la cagnotte à chaque tour jusqu'à ce que chacun ait eu son tour. Dans un cercle à <em>accumulation</em>, tout le monde épargne dans une cagnotte commune et récupère sa propre épargne à la fin. Tout est vérifiable sur Monad."
+  },
+  "frequency": {
+    "weekly": "Hebdomadaire",
+    "biweekly": "Toutes les deux semaines",
+    "monthly": "Mensuel"
+  },
+  "status": {
+    "active": "Actif",
+    "forming": "En formation",
+    "completed": "Terminé"
+  },
+  "type": {
+    "rotation": "Rotation",
+    "accumulation": "Accumulation"
+  },
+  "create": {
+    "startCircle": "Créer un cercle",
+    "title": "Nouveau cercle",
+    "submit": "Créer le cercle",
+    "submitting": "Création…",
+    "name": {
+      "label": "Nom",
+      "placeholder": "ex. Épargne familiale"
+    },
+    "type": {
+      "label": "Type de cercle",
+      "rotation": {
+        "title": "Rotation",
+        "description": "À tour de rôle. Chacun paie à chaque tour, et un membre reçoit toute la cagnotte jusqu'à ce que tous aient eu leur tour."
+      },
+      "accumulation": {
+        "title": "Accumulation",
+        "description": "Épargnez ensemble. Chacun verse dans une cagnotte commune et récupère sa propre épargne à la fin."
+      }
+    },
+    "targetPayout": {
+      "label": "Versement cible par personne (USDC)",
+      "hint": "Ce que chaque membre reçoit lorsque c'est son tour."
+    },
+    "groupSize": {
+      "label": "Nombre de personnes (vous compris)"
+    },
+    "contribution": {
+      "label": "Contribution par tour (USDC)"
+    },
+    "numRounds": {
+      "label": "Nombre de tours"
+    },
+    "frequency": {
+      "label": "Fréquence"
+    },
+    "emails": {
+      "label": "E-mails des membres",
+      "hintRotation": "(invitez jusqu'à {{count}}, séparés par des virgules)",
+      "hintAccumulation": "(jusqu'à 19, séparés par des virgules)",
+      "placeholder": "friend@example.com, cousin@example.com",
+      "tooManyRotation": "Trop d'invitations. Un cercle de {{size}} a de la place pour {{count}} en plus de vous.",
+      "tooManyAccumulation": "Trop de membres. Un cercle peut compter au maximum 20 personnes (vous + 19 invités)."
+    },
+    "summary": {
+      "youPay": "Vous payez par tour",
+      "youReceive": "Vous recevez",
+      "youReceiveEnd": "Vous recevez à la fin",
+      "rotationDetail": "Chacun des {{count}} membres paie {{base}} de base + {{fee}} de frais (2 %). Quand c'est votre tour, vous recevez {{payout}}. Le cercle démarre automatiquement une fois que tout le monde a rejoint.",
+      "accumulationDetail": "Votre propre épargne restituée après {{count}} tours."
+    },
+    "image": {
+      "label": "Photo du cercle (facultatif)",
+      "hint": "En tant qu'administrateur du cercle, ajoutez une photo pour rassembler votre groupe autour de l'objectif."
+    }
+  },
+  "invites": {
+    "title": "Invitations ({{count}})",
+    "invitedBy": "{{name}} vous a invité",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  },
+  "card": {
+    "members": "{{count}} membres",
+    "perRound": "Par tour",
+    "youReceive": "Vous recevez",
+    "roundOf": "Tour {{current}} sur {{total}}",
+    "joinedProgress": "{{joined}} sur {{target}} ont rejoint · démarre automatiquement une fois complet",
+    "forming": "En formation. En attente de démarrage.",
+    "viewCircle": "Voir le cercle"
+  },
+  "detail": {
+    "loading": "Chargement du cercle…",
+    "notFound": "Nous n'avons pas trouvé ce cercle.",
+    "onChain": "On-chain",
+    "formingSuffix": "en formation",
+    "submitting": "Envoi…",
+    "contribute": "Contribuer {{amount}}",
+    "contributedThisRound": "Contribué ce tour-ci",
+    "notStarted": "Ce cercle n'a pas encore démarré",
+    "stats": {
+      "rounds": "Tours",
+      "yourPosition": "Votre position",
+      "started": "Démarré"
+    },
+    "build": {
+      "title": "Constituez votre cercle",
+      "descAccumulation": "Invitez des personnes par e-mail. Tout le monde épargne dans une cagnotte commune pendant {{count}} tours, puis récupère son épargne. Démarrez le cercle une fois que tout le monde est là.",
+      "descTargeted": "Invitez des personnes par e-mail. {{joined}} sur {{target}} ont rejoint. Le cercle démarre automatiquement dès que la dernière personne rejoint.",
+      "descRotation": "Invitez des personnes par e-mail. Le nombre de tours égale le nombre de membres, donc chacun reçoit exactement un versement. Démarrez le cercle une fois que tout le monde est là.",
+      "sent": "Envoyé",
+      "start": "Démarrer le cercle",
+      "starting": "Démarrage…",
+      "needMore": "Invitez au moins un membre de plus pour démarrer le cercle."
+    },
+    "delete": {
+      "title": "Supprimer le cercle",
+      "description": "Personne d'autre n'a encore rejoint, vous pouvez donc supprimer ce cercle. Une fois qu'un autre membre rejoint, il ne peut plus être supprimé. Cette action supprime définitivement le cercle et toute invitation en attente.",
+      "confirm": "Confirmer la suppression",
+      "deleting": "Suppression…"
+    },
+    "schedule": {
+      "membersTitle": "Membres",
+      "payoutTitle": "Calendrier des versements",
+      "descAccumulation": "Tout le monde épargne dans une cagnotte commune. Après {{count}} tours, chaque membre récupère sa propre épargne, verrouillée on-chain.",
+      "descRotation": "La rotation est verrouillée on-chain, donc chacun sait qui reçoit la cagnotte, et quand.",
+      "you": "(vous)",
+      "savingsReturned": "Épargne restituée",
+      "saving": "En épargne",
+      "receivedPot": "Cagnotte reçue",
+      "receivingNow": "Reçoit maintenant",
+      "current": "En cours"
+    },
+    "progress": {
+      "title": "Progression des tours",
+      "roundsOf": "{{current}} sur {{total}} tours"
+    },
+    "escrow": {
+      "title": "Séquestre on-chain",
+      "description": "Les contributions sont réglées dans ce séquestre Susu sur Monad. Des frais de protocole de {{fee}} % sont prélevés sur chaque versement."
+    },
+    "history": {
+      "title": "Vos contributions",
+      "round": "Tour {{round}}"
+    },
+    "toast": {
+      "streakTitle": "Série maintenue 🔥",
+      "streakDescription": "Bravo, cette contribution compte pour votre série d'épargne."
+    }
+  },
+  "privy": {
+    "loadingWallet": "Chargement de votre portefeuille…",
+    "selfCustody": "Votre portefeuille est auto-conservé. Connectez-le pour signer vous-même la contribution.",
+    "connect": "Connecter le portefeuille pour contribuer",
+    "notAvailable": "Les contributions on-chain ne sont pas disponibles sur ce déploiement.",
+    "failed": "La contribution a échoué. Veuillez réessayer.",
+    "submitting": "Envoi…"
+  }
+}

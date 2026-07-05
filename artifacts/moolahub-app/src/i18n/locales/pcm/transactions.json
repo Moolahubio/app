@@ -1,0 +1,28 @@
+{
+  "loading": "Dey load transactions…",
+  "header": {
+    "title": "Your money, everything dey for record",
+    "description": "Every deposit, contribution, and payout. Each one dey linked to im proof for Monad."
+  },
+  "reminders": {
+    "title": "Reminders wey dey come",
+    "tag": "reminder"
+  },
+  "history": {
+    "title": "Transaction history",
+    "empty": "No transaction dey yet."
+  },
+  "onchain": {
+    "settling": "dey settle for chain…",
+    "offchain": "off-chain"
+  },
+  "types": {
+    "deposit": "Deposit",
+    "payout": "Payout",
+    "yield": "Yield",
+    "contribution": "Contribution",
+    "goal_allocate": "Allocation",
+    "goal_release": "Release",
+    "withdrawal": "Withdrawal"
+  }
+}

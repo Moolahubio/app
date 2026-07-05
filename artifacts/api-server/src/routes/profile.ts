@@ -22,6 +22,7 @@ function profilePayload(u: typeof usersTable.$inferSelect, walletAddress: string
     avatarUrl: u.avatarUrl ?? null,
     walletAddress,
     createdAt: u.createdAt.toISOString(),
+    language: u.language,
   };
 }
 
@@ -79,6 +80,7 @@ router.patch("/profile", requireJsonAndAllowedOrigin, requireAuth, async (req, r
   }
   if (parsed.data.dateOfBirth !== undefined) updates.dateOfBirth = parsed.data.dateOfBirth || null;
   if (parsed.data.nationality !== undefined) updates.nationality = parsed.data.nationality || null;
+  if (parsed.data.language != null) updates.language = parsed.data.language;
 
   if (parsed.data.username !== undefined) {
     const raw = parsed.data.username;

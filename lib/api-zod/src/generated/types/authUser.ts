@@ -22,4 +22,6 @@ export interface AuthUser {
   /** Whether a Privy identity is linked to this account. */
   privyLinked?: boolean;
   emailVerified?: boolean;
+  /** Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh"). */
+  language?: string;
 }

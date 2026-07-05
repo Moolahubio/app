@@ -1,0 +1,56 @@
+{
+  "title": "Sanarwoyi",
+  "page": {
+    "eyebrow": "Sanarwoyi",
+    "title": "Duk abin da ya faru",
+    "description": "Gayyace-gayyace, gudummawa, biyan kuɗi, da duk abin da ke faruwa a asusunka."
+  },
+  "loading": "Ana loda sanarwoyi…",
+  "empty": "Ka riga ka ga kome.",
+  "bell": {
+    "viewAll": "Duba duka"
+  },
+  "settings": {
+    "title": "Saitunan sanarwa",
+    "description": "Zaɓi yawan saƙonnin da kake son karɓa daga MoolaHub.",
+    "recommended": "An ba da shawara",
+    "saveError": "An kasa ajiye zaɓin."
+  },
+  "tiers": {
+    "everything": {
+      "label": "Kome",
+      "description": "Dukan sanarwoyi: ayyukan da'ira, matakan buri, ajiyar kuɗi, tunatarwa, da shawarwari."
+    },
+    "essential": {
+      "label": "Mahimmanci",
+      "description": "Sabbin bayanai masu muhimmanci kaɗai, kamar biyan kuɗi, ranakun ƙarshe na gudummawa, da ayyukan asusu."
+    },
+    "minimal": {
+      "label": "Kaɗan",
+      "description": "Sanarwoyi mafi muhimmanci na asusu da kuɗi kaɗai."
+    },
+    "custom": {
+      "label": "Naka",
+      "description": "Zaɓi ainihin rukunonin da kake son samun sanarwa akai."
+    }
+  },
+  "categories": {
+    "money": {
+      "label": "Kuɗi da ma'amaloli",
+      "description": "Ajiya, cirewa, biyan kuɗi, da tunatarwar gudummawa."
+    },
+    "social": {
+      "label": "Tanadin ƙungiya da zamantakewa",
+      "description": "Gayyace-gayyace, ayyukan mambobi, da sabbin bayanan da'ira."
+    },
+    "engagement": {
+      "label": "Shawarwari da haɗin kai",
+      "description": "Jerin ci gaba, tunatarwar koyo, da labaran samfur."
+    }
+  },
+  "notFound": {
+    "title": "Ba a sami shafin ba",
+    "description": "Shafin da kake nema babu shi ko watakila an matsar da shi.",
+    "backHome": "Koma Gida"
+  }
+}

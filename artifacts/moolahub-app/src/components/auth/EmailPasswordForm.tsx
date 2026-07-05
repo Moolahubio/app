@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 import { useLogin, getGetMeQueryKey } from "@workspace/api-client-react";
 import { apiErrorMessage } from "@/lib/utils";
@@ -16,6 +17,7 @@ export function EmailPasswordForm({
   onVerifyRequired: (email: string, rememberMe: boolean) => void;
   onForgotPassword: (email: string) => void;
 }) {
+  const { t } = useTranslation("auth");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const login = useLogin();
@@ -39,33 +41,33 @@ export function EmailPasswordForm({
       }
       if (result.twoFactorRequired) {
         if (result.challengeId) onTwoFactorRequired(result.challengeId);
-        else setError("We couldn't start verification. Please try again.");
+        else setError(t("verifyStartError"));
         return;
       }
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Invalid email or password.");
+      setError(apiErrorMessage(err) ?? t("signIn.error"));
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Email</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.email")}</span>
         <input
           type="email"
           autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder={t("fields.emailPlaceholder")}
           className={`mt-1.5 ${authInputClass}`}
         />
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Password</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.password")}</span>
         <div className="relative mt-1.5">
           <input
             type={showPassword ? "text" : "password"}
@@ -73,14 +75,14 @@ export function EmailPasswordForm({
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Your password"
-            className={`${authInputClass} pr-10`}
+            placeholder={t("fields.passwordPlaceholder")}
+            className={`${authInputClass} pe-10`}
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
+            aria-label={showPassword ? t("password.hide") : t("password.show")}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -95,14 +97,14 @@ export function EmailPasswordForm({
             onChange={(e) => setRememberMe(e.target.checked)}
             className="h-4 w-4 rounded border-border"
           />
-          Keep me logged in for 30 days
+          {t("rememberMe")}
         </label>
         <button
           type="button"
           onClick={() => onForgotPassword(email.trim())}
           className="text-sm font-medium text-jade-600 transition-colors hover:text-jade-700 dark:text-jade-400"
         >
-          Forgot password?
+          {t("signIn.forgot")}
         </button>
       </div>
 
@@ -118,7 +120,7 @@ export function EmailPasswordForm({
         className="w-full"
         disabled={login.isPending || !email.trim() || !password}
       >
-        {login.isPending ? "Signing in…" : "Sign in"}
+        {login.isPending ? t("signIn.submitting") : t("signIn.action")}
       </Button>
     </form>
   );

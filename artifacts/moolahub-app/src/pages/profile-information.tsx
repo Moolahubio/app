@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, AlertCircle, Check } from "lucide-react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { Card, Avatar, Button } from "@/components/ui";
 import { PageHeader, BackLink } from "@/components/app/bits";
 import {
@@ -25,7 +26,7 @@ function Field({
   return (
     <label className="block">
       <span className="text-sm font-medium text-foreground">{label}</span>
-      {hint && <span className="ml-2 text-xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="ms-2 text-xs text-muted-foreground">{hint}</span>}
       <div className="mt-1.5">{children}</div>
     </label>
   );
@@ -35,6 +36,7 @@ const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-jade-500/60 focus-ring";
 
 export default function ProfileInformationPage() {
+  const { t } = useTranslation("account");
   const { data: profile, isLoading } = useGetProfile();
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
@@ -69,10 +71,10 @@ export default function ProfileInformationPage() {
         await updateProfile.mutateAsync({ data: { avatarUrl: res.objectPath } });
         await invalidate();
       } catch (err) {
-        setError(apiErrorMessage(err) ?? "Could not save profile picture.");
+        setError(apiErrorMessage(err) ?? t("information.errors.savePicture"));
       }
     },
-    onError: () => setError("Could not upload image."),
+    onError: () => setError(t("information.errors.uploadImage")),
   });
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +82,7 @@ export default function ProfileInformationPage() {
     e.target.value = "";
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file.");
+      setError(t("information.errors.chooseImage"));
       return;
     }
     setError(null);
@@ -93,7 +95,7 @@ export default function ProfileInformationPage() {
     setSaved(false);
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("Name cannot be empty.");
+      setError(t("information.errors.nameEmpty"));
       return;
     }
     try {
@@ -108,21 +110,21 @@ export default function ProfileInformationPage() {
       await invalidate();
       setSaved(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not update profile.");
+      setError(apiErrorMessage(err) ?? t("information.errors.update"));
     }
   };
 
   if (isLoading)
-    return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t("common:actions.loading")}</div>;
   if (!profile) return null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <BackLink href="/profile" label="Account" />
+      <BackLink href="/profile" label={t("common:nav.account")} />
       <PageHeader
-        eyebrow="Profile"
-        title="Profile information"
-        description="Update how you appear across MoolaHub."
+        eyebrow={t("common:nav.profile")}
+        title={t("information.title")}
+        description={t("information.description")}
       />
 
       <Card className="p-6">
@@ -138,8 +140,8 @@ export default function ProfileInformationPage() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-accent focus-ring disabled:opacity-60"
-              aria-label="Change profile picture"
+              className="absolute -bottom-1 -end-1 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-accent focus-ring disabled:opacity-60"
+              aria-label={t("avatar.change")}
             >
               <Camera className="h-3.5 w-3.5" />
             </button>
@@ -152,9 +154,9 @@ export default function ProfileInformationPage() {
             />
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Profile picture</p>
+            <p className="text-sm font-semibold text-foreground">{t("information.picture.title")}</p>
             <p className="text-xs text-muted-foreground">
-              {isUploading ? "Uploading…" : "PNG or JPG, square works best."}
+              {isUploading ? t("information.picture.uploading") : t("information.picture.hint")}
             </p>
           </div>
         </div>
@@ -162,24 +164,24 @@ export default function ProfileInformationPage() {
 
       <Card className="p-6">
         <form onSubmit={handleSave} className="space-y-5">
-          <Field label="Full name">
+          <Field label={t("information.fields.fullName")}>
             <input
               className={inputClass}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t("information.fields.fullNamePlaceholder")}
             />
           </Field>
-          <Field label="Username" hint="optional · unique">
+          <Field label={t("information.fields.username")} hint={t("information.fields.usernameHint")}>
             <input
               className={inputClass}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="username"
+              placeholder={t("information.fields.usernamePlaceholder")}
               autoCapitalize="none"
             />
           </Field>
-          <Field label="Date of birth" hint="optional">
+          <Field label={t("information.fields.dateOfBirth")} hint={t("information.fields.optional")}>
             <input
               type="date"
               className={inputClass}
@@ -187,12 +189,12 @@ export default function ProfileInformationPage() {
               onChange={(e) => setDateOfBirth(e.target.value)}
             />
           </Field>
-          <Field label="Nationality" hint="optional">
+          <Field label={t("information.fields.nationality")} hint={t("information.fields.optional")}>
             <input
               className={inputClass}
               value={nationality}
               onChange={(e) => setNationality(e.target.value)}
-              placeholder="e.g. Kenyan"
+              placeholder={t("information.fields.nationalityPlaceholder")}
             />
           </Field>
 
@@ -203,20 +205,20 @@ export default function ProfileInformationPage() {
           )}
           {saved && (
             <p className="flex items-center gap-1.5 text-sm text-jade-600 dark:text-jade-400">
-              <Check className="h-4 w-4 shrink-0" /> Saved.
+              <Check className="h-4 w-4 shrink-0" /> {t("common:actions.saved")}
             </p>
           )}
 
           <div className="flex gap-3">
             <Button type="submit" disabled={updateProfile.isPending}>
-              {updateProfile.isPending ? "Saving…" : "Save changes"}
+              {updateProfile.isPending ? t("information.saving") : t("information.saveChanges")}
             </Button>
             <Button
               type="button"
               variant="ghost"
               onClick={() => setLocation("/profile")}
             >
-              Cancel
+              {t("common:actions.cancel")}
             </Button>
           </div>
         </form>

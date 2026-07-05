@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui";
 import {
@@ -33,6 +34,7 @@ const inputClass =
  * cancels.
  */
 export function useStepUpGate() {
+  const { t } = useTranslation("account");
   const { data: me } = useGetMe();
   const hasPassword = me?.hasPassword ?? false;
   const { data: twoFactor } = useGetTwoFactorStatus({
@@ -80,7 +82,7 @@ export function useStepUpGate() {
       await requestCode.mutateAsync();
       setCodeSent(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not send the code. Please try again.");
+      setError(apiErrorMessage(err) ?? t("stepUp.errors.sendCode"));
     }
   };
 
@@ -88,7 +90,7 @@ export function useStepUpGate() {
     if (needsEmail) {
       const trimmed = emailCode.trim();
       if (!trimmed) {
-        setError("Please enter the code we emailed you.");
+        setError(t("stepUp.errors.enterEmailCode"));
         return;
       }
       finish({ reauthCode: trimmed });
@@ -96,11 +98,11 @@ export function useStepUpGate() {
     }
 
     if (needsPassword && !password) {
-      setError("Please enter your password to continue.");
+      setError(t("stepUp.errors.enterPassword"));
       return;
     }
     if (needsTotp && !totpCode.trim()) {
-      setError("Please enter your two-factor authentication code to continue.");
+      setError(t("stepUp.errors.enterTotp"));
       return;
     }
 
@@ -114,20 +116,19 @@ export function useStepUpGate() {
     <Dialog open={open} onOpenChange={(next) => !next && finish(null)}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Confirm it's you</DialogTitle>
+          <DialogTitle>{t("stepUp.title")}</DialogTitle>
           <DialogDescription>
-            {needsPassword && needsTotp &&
-              "Enter your password and your two-factor authentication code to continue."}
-            {needsPassword && !needsTotp && "Enter your password to continue."}
-            {!needsPassword && needsTotp && "Enter your two-factor authentication code to continue."}
-            {needsEmail && "We'll email you a one-time code to confirm this change."}
+            {needsPassword && needsTotp && t("stepUp.descBoth")}
+            {needsPassword && !needsTotp && t("stepUp.descPassword")}
+            {!needsPassword && needsTotp && t("stepUp.descTotp")}
+            {needsEmail && t("stepUp.descEmail")}
           </DialogDescription>
         </DialogHeader>
 
         {needsEmail ? (
           !codeSent ? (
             <Button onClick={handleSendCode} disabled={requestCode.isPending}>
-              {requestCode.isPending ? "Sending…" : "Send code"}
+              {requestCode.isPending ? t("stepUp.sending") : t("stepUp.sendCode")}
             </Button>
           ) : (
             <input
@@ -137,7 +138,7 @@ export function useStepUpGate() {
               autoFocus
               value={emailCode}
               onChange={(e) => setEmailCode(e.target.value)}
-              placeholder="6-digit code"
+              placeholder={t("stepUp.codePlaceholder")}
               className={inputClass}
             />
           )
@@ -150,7 +151,7 @@ export function useStepUpGate() {
                 autoFocus
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Current password"
+                placeholder={t("stepUp.passwordPlaceholder")}
                 className={inputClass}
               />
             )}
@@ -162,7 +163,7 @@ export function useStepUpGate() {
                 autoFocus={!needsPassword}
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
-                placeholder="6-digit code"
+                placeholder={t("stepUp.codePlaceholder")}
                 className={inputClass}
               />
             )}
@@ -177,10 +178,10 @@ export function useStepUpGate() {
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => finish(null)}>
-            Cancel
+            {t("common:actions.cancel")}
           </Button>
           <Button onClick={handleConfirm} disabled={needsEmail && !codeSent}>
-            Confirm
+            {t("common:actions.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

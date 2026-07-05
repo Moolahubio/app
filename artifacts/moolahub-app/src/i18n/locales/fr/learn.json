@@ -1,0 +1,34 @@
+{
+  "loading": "Chargement des leçons…",
+  "empty": "Aucune leçon disponible.",
+  "header": {
+    "title": "Autonomie financière",
+    "description": "Des leçons courtes et pratiques pour gagner en confiance avec votre argent."
+  },
+  "progress": {
+    "count": "{{completed}} sur {{total}} leçons terminées",
+    "encourage": "Gardez le rythme."
+  },
+  "featured": {
+    "revisit": "Revoir",
+    "startHere": "Commencer ici",
+    "reviewLesson": "Revoir la leçon",
+    "startLesson": "Commencer la leçon"
+  },
+  "card": {
+    "done": "Terminé",
+    "minutes": "{{count}} min"
+  },
+  "detail": {
+    "loading": "Chargement de la leçon…",
+    "notFound": "Nous n'avons pas trouvé cette leçon.",
+    "allLessons": "Toutes les leçons",
+    "minutesRead": "{{count}} min de lecture",
+    "completed": "Terminée",
+    "keyTakeaways": "Points clés",
+    "lessonCompleted": "Leçon terminée",
+    "markComplete": "Marquer comme terminé",
+    "saving": "Enregistrement…",
+    "nextLesson": "Leçon suivante"
+  }
+}

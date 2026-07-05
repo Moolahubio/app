@@ -1,0 +1,163 @@
+{
+  "list": {
+    "loading": "Inapakia akiba yenu ya kikundi…",
+    "title": "Akiba yenu ya kikundi",
+    "description": "Akiba ya mzunguko na watu unaowaamini. Kila raundi inashikiliwa na mkataba wa on-chain, si mtu.",
+    "emptyHint": "Alika marafiki au familia na uweke mchango wako"
+  },
+  "info": {
+    "susu": "<b>Jinsi Susu inavyofanya kazi:</b> kila mtu huchangia kiasi kisichobadilika kila raundi. Katika duara la <em>mzunguko</em>, mwanachama mmoja hupokea mfuko wote kila raundi hadi kila mtu apate zamu yake. Katika duara la <em>mkusanyiko</em>, kila mtu huweka akiba katika mfuko mmoja wa pamoja na kupata akiba yake mwenyewe mwishoni. Kila kitu kinaweza kuthibitishwa kwenye Monad."
+  },
+  "frequency": {
+    "weekly": "Kila wiki",
+    "biweekly": "Kila wiki mbili",
+    "monthly": "Kila mwezi"
+  },
+  "status": {
+    "active": "Inaendelea",
+    "forming": "Inaundwa",
+    "completed": "Imekamilika"
+  },
+  "type": {
+    "rotation": "Mzunguko",
+    "accumulation": "Mkusanyiko"
+  },
+  "create": {
+    "startCircle": "Anzisha duara",
+    "title": "Duara jipya",
+    "submit": "Unda duara",
+    "submitting": "Inaunda…",
+    "name": {
+      "label": "Jina",
+      "placeholder": "mf. Akiba ya familia"
+    },
+    "type": {
+      "label": "Aina ya duara",
+      "rotation": {
+        "title": "Mzunguko",
+        "description": "Kwa zamu. Kila mtu hulipa kila raundi, na mwanachama mmoja hupokea mfuko wote hadi wote wapate zamu zao."
+      },
+      "accumulation": {
+        "title": "Mkusanyiko",
+        "description": "Wekeni akiba pamoja. Kila mtu huchangia katika mfuko mmoja wa pamoja na kupata akiba yake mwenyewe mwishoni."
+      }
+    },
+    "targetPayout": {
+      "label": "Malipo lengwa kwa kila mtu (USDC)",
+      "hint": "Kile kila mwanachama anachopokea inapofika zamu yake."
+    },
+    "groupSize": {
+      "label": "Idadi ya watu (ukiwemo wewe)"
+    },
+    "contribution": {
+      "label": "Mchango kwa kila raundi (USDC)"
+    },
+    "numRounds": {
+      "label": "Idadi ya raundi"
+    },
+    "frequency": {
+      "label": "Marudio"
+    },
+    "emails": {
+      "label": "Barua pepe za wanachama",
+      "hintRotation": "(alika hadi {{count}}, tenganisha kwa koma)",
+      "hintAccumulation": "(hadi 19, tenganisha kwa koma)",
+      "placeholder": "friend@example.com, cousin@example.com",
+      "tooManyRotation": "Mialiko mingi mno. Duara la {{size}} lina nafasi ya {{count}} zaidi yako.",
+      "tooManyAccumulation": "Wanachama wengi mno. Duara linaweza kuwa na watu 20 pekee (wewe + walioalikwa 19)."
+    },
+    "summary": {
+      "youPay": "Unalipa kwa raundi",
+      "youReceive": "Unapokea",
+      "youReceiveEnd": "Unapokea mwishoni",
+      "rotationDetail": "Kila mmoja wa wanachama {{count}} hulipa {{base}} msingi + {{fee}} ada (2%). Inapofika zamu yako unapokea {{payout}}. Duara huanza kiotomatiki mara tu kila mtu anapojiunga.",
+      "accumulationDetail": "Akiba yako mwenyewe inarudi baada ya raundi {{count}}."
+    },
+    "image": {
+      "label": "Picha ya duara (si lazima)",
+      "hint": "Kama msimamizi wa duara, ongeza picha ili kuunganisha kikundi chako kuelekea lengo."
+    }
+  },
+  "invites": {
+    "title": "Mialiko ({{count}})",
+    "invitedBy": "{{name}} amekualika",
+    "accept": "Kubali",
+    "decline": "Kataa"
+  },
+  "card": {
+    "members": "wanachama {{count}}",
+    "perRound": "Kwa raundi",
+    "youReceive": "Unapokea",
+    "roundOf": "Raundi {{current}} kati ya {{total}}",
+    "joinedProgress": "{{joined}} kati ya {{target}} wamejiunga · huanza kiotomatiki ikijaa",
+    "forming": "Inaundwa. Inasubiri kuanza.",
+    "viewCircle": "Angalia duara"
+  },
+  "detail": {
+    "loading": "Inapakia duara…",
+    "notFound": "Hatukuweza kupata duara hilo.",
+    "onChain": "On-chain",
+    "formingSuffix": "inaundwa",
+    "submitting": "Inatuma…",
+    "contribute": "Changia {{amount}}",
+    "contributedThisRound": "Umechangia raundi hii",
+    "notStarted": "Duara hili bado halijaanza",
+    "stats": {
+      "rounds": "Raundi",
+      "yourPosition": "Nafasi yako",
+      "started": "Lilianza"
+    },
+    "build": {
+      "title": "Jenga duara lako",
+      "descAccumulation": "Alika watu kwa barua pepe. Kila mtu huweka akiba katika mfuko mmoja wa pamoja kwa raundi {{count}}, kisha hupata akiba yake. Anza duara mara tu kila mtu anapojiunga.",
+      "descTargeted": "Alika watu kwa barua pepe. {{joined}} kati ya {{target}} wamejiunga. Duara huanza kiotomatiki mara tu mtu wa mwisho anapojiunga.",
+      "descRotation": "Alika watu kwa barua pepe. Raundi ni sawa na idadi ya wanachama, hivyo kila mtu hupata malipo mmoja tu. Anza duara mara tu kila mtu anapojiunga.",
+      "sent": "Imetumwa",
+      "start": "Anza duara",
+      "starting": "Inaanza…",
+      "needMore": "Alika angalau mwanachama mmoja zaidi ili kuanza duara."
+    },
+    "delete": {
+      "title": "Futa duara",
+      "description": "Hakuna mwingine aliyejiunga bado, kwa hivyo unaweza kufuta duara hili. Mara tu mwanachama mwingine anapojiunga, haliwezi kufutwa. Hii huondoa duara na mialiko yoyote inayosubiri kabisa.",
+      "confirm": "Thibitisha kufuta",
+      "deleting": "Inafuta…"
+    },
+    "schedule": {
+      "membersTitle": "Wanachama",
+      "payoutTitle": "Ratiba ya malipo",
+      "descAccumulation": "Kila mtu huweka akiba katika mfuko mmoja wa pamoja. Baada ya raundi {{count}}, kila mwanachama hupata akiba yake mwenyewe, iliyofungwa on-chain.",
+      "descRotation": "Mzunguko umefungwa on-chain, hivyo kila mtu anajua nani anapokea mfuko, na lini.",
+      "you": "(wewe)",
+      "savingsReturned": "Akiba imerejeshwa",
+      "saving": "Inaweka akiba",
+      "receivedPot": "Amepokea mfuko",
+      "receivingNow": "Anapokea sasa",
+      "current": "Ya sasa"
+    },
+    "progress": {
+      "title": "Maendeleo ya raundi",
+      "roundsOf": "{{current}} kati ya raundi {{total}}"
+    },
+    "escrow": {
+      "title": "Escrow ya on-chain",
+      "description": "Michango hukaa katika escrow hii ya Susu kwenye Monad. Ada ya protokali ya {{fee}}% hutozwa kutoka kila malipo."
+    },
+    "history": {
+      "title": "Michango yako",
+      "round": "Raundi {{round}}"
+    },
+    "toast": {
+      "streakTitle": "Mfululizo umedumishwa 🔥",
+      "streakDescription": "Vizuri, mchango huu unahesabika katika mfululizo wako wa kuweka akiba."
+    }
+  },
+  "privy": {
+    "loadingWallet": "Inapakia pochi yako…",
+    "selfCustody": "Pochi yako inajitunza yenyewe. Iunganishe ili usaini mchango mwenyewe.",
+    "connect": "Unganisha pochi ili kuchangia",
+    "notAvailable": "Michango ya on-chain haipatikani kwenye usambazaji huu.",
+    "failed": "Mchango umeshindikana. Tafadhali jaribu tena.",
+    "submitting": "Inatuma…"
+  }
+}

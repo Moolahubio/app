@@ -1,0 +1,163 @@
+{
+  "list": {
+    "loading": "Loading your group savings…",
+    "title": "Your group savings",
+    "description": "Rotating savings with people you trust. Every round is held by an on-chain contract, not a person.",
+    "emptyHint": "Invite friends or family and set your contribution"
+  },
+  "info": {
+    "susu": "<b>How a Susu works:</b> everyone contributes a fixed amount each round. In a <em>rotation</em> circle, one member receives the full pot each round until everyone has had a turn. In an <em>accumulation</em> circle, everyone saves into a shared pot and gets their own savings back at the end. Everything is verifiable on Monad."
+  },
+  "frequency": {
+    "weekly": "Weekly",
+    "biweekly": "Bi-weekly",
+    "monthly": "Monthly"
+  },
+  "status": {
+    "active": "Active",
+    "forming": "Forming",
+    "completed": "Completed"
+  },
+  "type": {
+    "rotation": "Rotation",
+    "accumulation": "Accumulation"
+  },
+  "create": {
+    "startCircle": "Start a circle",
+    "title": "New circle",
+    "submit": "Create circle",
+    "submitting": "Creating…",
+    "name": {
+      "label": "Name",
+      "placeholder": "e.g. Family savings"
+    },
+    "type": {
+      "label": "Circle type",
+      "rotation": {
+        "title": "Rotation",
+        "description": "Take turns. Everyone pays each round, and one member receives the full pot until all have had a turn."
+      },
+      "accumulation": {
+        "title": "Accumulation",
+        "description": "Save together. Everyone pays into one shared pot and gets their own savings back at the end."
+      }
+    },
+    "targetPayout": {
+      "label": "Target payout per person (USDC)",
+      "hint": "What each member receives when it's their turn."
+    },
+    "groupSize": {
+      "label": "Number of people (including you)"
+    },
+    "contribution": {
+      "label": "Contribution per round (USDC)"
+    },
+    "numRounds": {
+      "label": "Number of rounds"
+    },
+    "frequency": {
+      "label": "Frequency"
+    },
+    "emails": {
+      "label": "Member emails",
+      "hintRotation": "(invite up to {{count}}, comma-separated)",
+      "hintAccumulation": "(up to 19, comma-separated)",
+      "placeholder": "friend@example.com, cousin@example.com",
+      "tooManyRotation": "Too many invites. A circle of {{size}} has room for {{count}} besides you.",
+      "tooManyAccumulation": "Too many members. A circle can have at most 20 people (you + 19 invitees)."
+    },
+    "summary": {
+      "youPay": "You pay per round",
+      "youReceive": "You receive",
+      "youReceiveEnd": "You receive at end",
+      "rotationDetail": "Each of the {{count}} members pays {{base}} base + {{fee}} fee (2%). When it's your turn you receive {{payout}}. The circle starts automatically once everyone joins.",
+      "accumulationDetail": "Your own savings back after {{count}} rounds."
+    },
+    "image": {
+      "label": "Circle picture (optional)",
+      "hint": "As the circle admin, add a photo to rally your group around the goal."
+    }
+  },
+  "invites": {
+    "title": "Invitations ({{count}})",
+    "invitedBy": "{{name}} invited you",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "card": {
+    "members": "{{count}} members",
+    "perRound": "Per round",
+    "youReceive": "You receive",
+    "roundOf": "Round {{current}} of {{total}}",
+    "joinedProgress": "{{joined}} of {{target}} joined · starts automatically when full",
+    "forming": "Forming. Waiting to start.",
+    "viewCircle": "View circle"
+  },
+  "detail": {
+    "loading": "Loading circle…",
+    "notFound": "We couldn't find that circle.",
+    "onChain": "On-chain",
+    "formingSuffix": "forming",
+    "submitting": "Submitting…",
+    "contribute": "Contribute {{amount}}",
+    "contributedThisRound": "Contributed this round",
+    "notStarted": "This circle hasn't started yet",
+    "stats": {
+      "rounds": "Rounds",
+      "yourPosition": "Your position",
+      "started": "Started"
+    },
+    "build": {
+      "title": "Build your circle",
+      "descAccumulation": "Invite people by email. Everyone saves into one shared pot for {{count}} rounds, then gets their savings back. Start the circle once everyone's in.",
+      "descTargeted": "Invite people by email. {{joined}} of {{target}} have joined. The circle starts automatically the moment the last person joins.",
+      "descRotation": "Invite people by email. Rounds equal members, so everyone gets exactly one payout. Start the circle once everyone's in.",
+      "sent": "Sent",
+      "start": "Start circle",
+      "starting": "Starting…",
+      "needMore": "Invite at least one more member to start the circle."
+    },
+    "delete": {
+      "title": "Delete circle",
+      "description": "No one else has joined yet, so you can delete this circle. Once another member joins, it can't be deleted. This permanently removes the circle and any pending invites.",
+      "confirm": "Confirm delete",
+      "deleting": "Deleting…"
+    },
+    "schedule": {
+      "membersTitle": "Members",
+      "payoutTitle": "Payout schedule",
+      "descAccumulation": "Everyone saves into one shared pot. After {{count}} rounds, each member gets their own savings back, locked on-chain.",
+      "descRotation": "The rotation is locked on-chain, so everyone knows who receives the pot, and when.",
+      "you": "(you)",
+      "savingsReturned": "Savings returned",
+      "saving": "Saving",
+      "receivedPot": "Received pot",
+      "receivingNow": "Receiving now",
+      "current": "Current"
+    },
+    "progress": {
+      "title": "Round progress",
+      "roundsOf": "{{current}} of {{total}} rounds"
+    },
+    "escrow": {
+      "title": "On-chain escrow",
+      "description": "Contributions settle into this Susu escrow on Monad. A {{fee}}% protocol fee is taken from each payout."
+    },
+    "history": {
+      "title": "Your contributions",
+      "round": "Round {{round}}"
+    },
+    "toast": {
+      "streakTitle": "Streak kept alive 🔥",
+      "streakDescription": "Nice, that contribution counts toward your savings streak."
+    }
+  },
+  "privy": {
+    "loadingWallet": "Loading your wallet…",
+    "selfCustody": "Your wallet is self-custodial. Connect it to sign the contribution yourself.",
+    "connect": "Connect wallet to contribute",
+    "notAvailable": "On-chain contributions aren't available on this deployment.",
+    "failed": "Contribution failed. Please try again.",
+    "submitting": "Submitting…"
+  }
+}

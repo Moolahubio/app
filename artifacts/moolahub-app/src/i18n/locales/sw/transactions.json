@@ -1,0 +1,28 @@
+{
+  "loading": "Inapakia miamala…",
+  "header": {
+    "title": "Pesa zako, zimehifadhiwa kikamilifu",
+    "description": "Kila amana, mchango na malipo. Kila moja imeunganishwa na uthibitisho wake kwenye Monad."
+  },
+  "reminders": {
+    "title": "Vikumbusho vinavyokuja",
+    "tag": "kikumbusho"
+  },
+  "history": {
+    "title": "Historia ya miamala",
+    "empty": "Bado hakuna miamala."
+  },
+  "onchain": {
+    "settling": "inakamilishwa kwenye mnyororo…",
+    "offchain": "nje ya mnyororo"
+  },
+  "types": {
+    "deposit": "Amana",
+    "payout": "Malipo",
+    "yield": "Faida",
+    "contribution": "Mchango",
+    "goal_allocate": "Ugawaji",
+    "goal_release": "Kutolewa",
+    "withdrawal": "Utoaji"
+  }
+}

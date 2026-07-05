@@ -1,0 +1,69 @@
+{
+  "hero": {
+    "eyebrow": "欢迎回来",
+    "greeting": "很高兴见到你",
+    "greetingNamed": "很高兴见到你，{{name}}",
+    "totalBalance": "总余额",
+    "available": "可用",
+    "inSavings": "储蓄中",
+    "apy": "+{{apy}}% 年化收益",
+    "addMoney": "充值",
+    "withdraw": "提现",
+    "growthLabel": "增长 · 6 个月",
+    "earned": "已赚取 {{amount}}"
+  },
+  "reminders": {
+    "title": "接下来",
+    "allCaughtUp": "你已全部完成。"
+  },
+  "streak": {
+    "none": "还没有连续记录",
+    "count": {
+      "daily": "{{count}} 天",
+      "weekly": "{{count}} 周",
+      "biweekly": "{{count}} 个双周",
+      "monthly": "{{count}} 个月"
+    },
+    "saved": {
+      "daily": "今天已储蓄，做得好",
+      "weekly": "本周已储蓄，做得好",
+      "biweekly": "本双周已储蓄，做得好",
+      "monthly": "本月已储蓄，做得好"
+    },
+    "keepAlive": {
+      "daily": "一次存款即可延续你的每日连续记录",
+      "weekly": "一次存款即可延续你的每周连续记录",
+      "biweekly": "一次存款即可延续你的双周连续记录",
+      "monthly": "一次存款即可延续你的每月连续记录"
+    },
+    "firstFlame": "存一笔款，点燃你的第一团火焰"
+  },
+  "savings": {
+    "title": "个人储蓄",
+    "empty": "这里还什么都没有。创建你的第一个目标。"
+  },
+  "circle": {
+    "title": "活跃互助会",
+    "round": "第 {{current}} 轮，共 {{total}} 轮 · {{frequency}}",
+    "pot": "奖金池",
+    "members": "{{count}} 名成员",
+    "empty": "暂无活跃互助会。"
+  },
+  "frequency": {
+    "daily": "每日",
+    "weekly": "每周",
+    "biweekly": "每双周",
+    "monthly": "每月"
+  },
+  "learn": {
+    "title": "继续学习",
+    "lessonTitle": "通俗易懂的区块链",
+    "lessonMeta": "5 分钟 · 初级",
+    "startLesson": "开始课程"
+  },
+  "transactions": {
+    "title": "最近交易",
+    "viewAll": "查看全部",
+    "empty": "暂无交易。"
+  }
+}

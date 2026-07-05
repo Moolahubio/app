@@ -163,6 +163,8 @@ export interface AuthUser {
   /** Whether a Privy identity is linked to this account. */
   privyLinked?: boolean;
   emailVerified?: boolean;
+  /** Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh"). */
+  language?: string;
 }
 
 /**
@@ -770,7 +772,22 @@ export interface UserProfile {
   hasPassword?: boolean;
   privyLinked?: boolean;
   createdAt: string;
+  /** Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh"). */
+  language?: string;
 }
+
+export type ProfileUpdateLanguage = typeof ProfileUpdateLanguage[keyof typeof ProfileUpdateLanguage];
+
+
+export const ProfileUpdateLanguage = {
+  en: 'en',
+  ar: 'ar',
+  fr: 'fr',
+  sw: 'sw',
+  pcm: 'pcm',
+  ha: 'ha',
+  zh: 'zh',
+} as const;
 
 export interface ProfileUpdate {
   name?: string;
@@ -782,6 +799,7 @@ export interface ProfileUpdate {
   nationality?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
+  language?: ProfileUpdateLanguage;
 }
 
 export interface UploadUrlRequest {

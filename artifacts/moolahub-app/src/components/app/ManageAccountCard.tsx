@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { PauseCircle, Trash2, AlertCircle } from "lucide-react";
 import { Card, Button } from "@/components/ui";
@@ -20,6 +21,7 @@ import { apiErrorMessage } from "@/lib/utils";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 export function ManageAccountCard() {
+  const { t } = useTranslation("account");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const deactivate = useDeactivateAccount();
@@ -48,7 +50,7 @@ export function ManageAccountCard() {
       setShowDeactivate(false);
       finishSignedOut();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not deactivate account.");
+      setError(apiErrorMessage(err) ?? t("manageAccount.deactivate.error"));
     }
   };
 
@@ -61,7 +63,7 @@ export function ManageAccountCard() {
       setShowDelete(false);
       finishSignedOut();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not delete account.");
+      setError(apiErrorMessage(err) ?? t("manageAccount.delete.error"));
     }
   };
 
@@ -74,16 +76,16 @@ export function ManageAccountCard() {
             setError(null);
             setShowDeactivate(true);
           }}
-          className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-accent"
+          className="flex w-full items-center justify-between px-4 py-3.5 text-start transition-colors hover:bg-accent"
         >
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-foreground">
               <PauseCircle className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-foreground">Deactivate account</p>
+              <p className="text-sm font-semibold text-foreground">{t("manageAccount.deactivate.label")}</p>
               <p className="text-xs text-muted-foreground">
-                Temporarily disable. Sign back in anytime to restore.
+                {t("manageAccount.deactivate.detail")}
               </p>
             </div>
           </div>
@@ -104,10 +106,10 @@ export function ManageAccountCard() {
             </span>
             <div>
               <p className="text-sm font-semibold text-red-600 dark:text-red-400">
-                Delete account
+                {t("manageAccount.delete.label")}
               </p>
               <p className="text-xs text-muted-foreground">
-                Permanently remove your account and data
+                {t("manageAccount.delete.detail")}
               </p>
             </div>
           </div>
@@ -118,11 +120,9 @@ export function ManageAccountCard() {
       <Dialog open={showDeactivate} onOpenChange={setShowDeactivate}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Deactivate your account?</DialogTitle>
+            <DialogTitle>{t("manageAccount.deactivate.dialogTitle")}</DialogTitle>
             <DialogDescription>
-              Your account will be temporarily disabled and you'll be signed out. Your
-              data, balances, and group savings stay safe. Sign back in any time to
-              reactivate.
+              {t("manageAccount.deactivate.dialogDescription")}
             </DialogDescription>
           </DialogHeader>
           {error && (
@@ -132,10 +132,10 @@ export function ManageAccountCard() {
           )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowDeactivate(false)}>
-              Cancel
+              {t("common:actions.cancel")}
             </Button>
             <Button onClick={handleDeactivate} disabled={deactivate.isPending}>
-              {deactivate.isPending ? "Deactivating…" : "Deactivate"}
+              {deactivate.isPending ? t("manageAccount.deactivate.pending") : t("manageAccount.deactivate.action")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -145,12 +145,13 @@ export function ManageAccountCard() {
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogTitle>{t("manageAccount.delete.dialogTitle")}</DialogTitle>
             <DialogDescription>
-              This permanently removes your profile and revokes access. You can only
-              delete when your balance is zero and you have no active personal or group savings.
-              Type <span className="font-semibold text-foreground">DELETE</span> to
-              confirm.
+              <Trans
+                t={t}
+                i18nKey="manageAccount.delete.dialogDescription"
+                components={{ strong: <span className="font-semibold text-foreground" /> }}
+              />
             </DialogDescription>
           </DialogHeader>
           <input
@@ -166,7 +167,7 @@ export function ManageAccountCard() {
           )}
           <DialogFooter>
             <Button variant="ghost" onClick={() => setShowDelete(false)}>
-              Cancel
+              {t("common:actions.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -174,7 +175,7 @@ export function ManageAccountCard() {
               disabled={deleteAccount.isPending || confirmText.trim() !== "DELETE"}
               className="bg-red-600 hover:bg-red-500"
             >
-              {deleteAccount.isPending ? "Deleting…" : "Delete forever"}
+              {deleteAccount.isPending ? t("manageAccount.delete.pending") : t("manageAccount.delete.action")}
             </Button>
           </DialogFooter>
         </DialogContent>

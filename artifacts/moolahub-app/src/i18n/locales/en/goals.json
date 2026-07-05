@@ -1,0 +1,161 @@
+{
+  "list": {
+    "loading": "Loading your personal savings…",
+    "title": "Your personal savings",
+    "description": "Set a target and a date, and we'll track your progress. Each goal is a pot within your one wallet, not a separate account.",
+    "newGoal": "New goal",
+    "createGoal": "Create a goal"
+  },
+  "cadence": {
+    "option": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "adverb": {
+      "daily": "daily",
+      "weekly": "weekly",
+      "monthly": "monthly"
+    },
+    "short": {
+      "daily": "day",
+      "weekly": "wk",
+      "monthly": "mo"
+    }
+  },
+  "create": {
+    "title": "Create a goal",
+    "name": {
+      "label": "Goal name",
+      "placeholder": "e.g. Emergency fund"
+    },
+    "target": {
+      "label": "Target amount (USDC)"
+    },
+    "deadline": {
+      "label": "Target date"
+    },
+    "frequency": {
+      "label": "Contribution frequency",
+      "hint": "Contributions start small to build the habit and grow gradually until you hit your target."
+    },
+    "plan": {
+      "eyebrow": "Your savings plan",
+      "daily": "Start at <0></0> today and build up to <1></1> over {{count}} days.",
+      "weekly": "Start at <0></0> this week and build up to <1></1> over {{count}} weeks.",
+      "monthly": "Start at <0></0> this month and build up to <1></1> over {{count}} months."
+    },
+    "image": {
+      "label": "Picture (optional)",
+      "hint": "Add a photo of what you're saving for to keep the dream alive."
+    },
+    "submit": "Create Goal",
+    "submitting": "Creating…"
+  },
+  "summary": {
+    "allocated": "Allocated to savings",
+    "combinedTarget": "Combined target",
+    "overallProgress": "Overall progress"
+  },
+  "card": {
+    "next": "next <0></0>/{{unit}}",
+    "by": "by {{date}}",
+    "of": "of <0></0>",
+    "pctThere": "{{pct}}% there",
+    "manage": "Manage goal"
+  },
+  "info": {
+    "unallocated": "You currently have <0></0> unallocated. Assign it to a goal to keep your saving on track."
+  },
+  "detail": {
+    "loading": "Loading goal…",
+    "notFound": "We couldn't find that goal.",
+    "savedLabel": "saved",
+    "savedOfTarget": "<0></0> of <1></1>",
+    "onChain": "On-chain"
+  },
+  "deposit": {
+    "title": "Add money",
+    "description": "Move funds from your available balance into this allocation.",
+    "descriptionOnchain": "Move funds from your available balance into this goal's on-chain vault. Deposits are free.",
+    "addFunds": "Add funds",
+    "success": "Funds added to goal"
+  },
+  "withdraw": {
+    "title": "Withdraw",
+    "feeNote": "A {{fee}}% withdrawal fee is taken on-chain. You receive the amount net of the fee.",
+    "submit": "Withdraw to available",
+    "released": "{{amount}} released to available",
+    "releasedWithFee": "{{amount}} released (after a {{fee}} fee)"
+  },
+  "stats": {
+    "remaining": "Remaining",
+    "targetDate": "Target date"
+  },
+  "plan": {
+    "title": "Contribution plan",
+    "subtitle": "{{cadence}} · grows gradually",
+    "step": "Step {{current}}/{{total}}",
+    "complete": "Complete",
+    "nextContribution": "Next contribution",
+    "thisCadence": {
+      "daily": "today",
+      "weekly": "this week",
+      "monthly": "this month"
+    },
+    "allDone": "You've completed every step of your plan. 🎉",
+    "keepGoing": {
+      "daily": "Keep going daily. About <0>{{count}} days</0> of contributions left to reach your target.",
+      "weekly": "Keep going weekly. About <0>{{count}} weeks</0> of contributions left to reach your target.",
+      "monthly": "Keep going monthly. About <0>{{count}} months</0> of contributions left to reach your target."
+    }
+  },
+  "vault": {
+    "title": "On-chain vault",
+    "description": "Funds you allocate are deposited into this vault on Monad. A {{fee}}% protocol fee is taken on each withdrawal."
+  },
+  "activity": {
+    "title": "Activity",
+    "types": {
+      "goal_allocate": "Goal allocate",
+      "goal_release": "Goal release"
+    },
+    "status": {
+      "none": "None",
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "failed": "Failed"
+    }
+  },
+  "delete": {
+    "title": "Delete goal",
+    "descEmpty": "This permanently closes the goal.",
+    "descWithBalance": "This returns the full {{amount}} balance to your available funds and closes the goal.",
+    "descWithFee": "This withdraws the full {{amount}} balance back to your available funds (minus the {{fee}}% withdrawal fee) and closes the goal.",
+    "confirm": "Confirm delete",
+    "deleting": "Deleting…"
+  },
+  "toast": {
+    "streakTitle": "Streak kept alive 🔥",
+    "streakDescription": "Nice, that deposit counts toward your savings streak."
+  },
+  "privy": {
+    "loadingWallet": "Loading your wallet…",
+    "connect": {
+      "deposit": {
+        "prompt": "Your wallet is self-custodial. Connect it to sign the deposit yourself.",
+        "button": "Connect wallet to deposit"
+      },
+      "withdrawal": {
+        "prompt": "Your wallet is self-custodial. Connect it to sign the withdrawal yourself.",
+        "button": "Connect wallet to withdraw"
+      }
+    },
+    "errors": {
+      "unavailable": "On-chain goal savings isn't available on this deployment.",
+      "invalidAmount": "Enter a valid amount.",
+      "depositFailed": "Deposit failed. Please try again.",
+      "withdrawalFailed": "Withdrawal failed. Please try again."
+    }
+  }
+}

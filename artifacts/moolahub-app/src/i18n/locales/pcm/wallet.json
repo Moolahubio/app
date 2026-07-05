@@ -1,0 +1,72 @@
+{
+  "eyebrow": "Wallet",
+  "states": {
+    "loadingWallet": "Dey load your wallet…"
+  },
+  "setup": {
+    "title": "Set up your wallet",
+    "description": "Continue with Privy make you create your {{network}} wallet. Privy dey let you sign up with email or connect web3 wallet wey you get already. Any way wey e be, you go fit deposit, save, and withdraw USDC.",
+    "settingUp": "Dey set up…",
+    "continueWithPrivy": "Continue with Privy",
+    "error": "We no fit set up your wallet. Abeg try again.",
+    "securityNote": "Your wallet dey settle money for Monad, and every movement dey record for the ledger. Sensitive things like withdrawal need fresh confirmation.",
+    "unavailableTitle": "Wallet setup no dey available",
+    "unavailableDescription": "Wallet provisioning never dey set up for this deployment yet. Abeg check back later."
+  },
+  "intro": {
+    "getReadyTitle": "Ready your wallet",
+    "getReadyDescription": "MoolaHub dey run on USDC over Monad. Set up your wallet make you fit deposit, save, and withdraw.",
+    "manageTitle": "Deposit & withdraw USDC",
+    "manageDescription": "MoolaHub dey run on USDC over Monad. Add USDC to your wallet, or send am go any Monad wallet address."
+  },
+  "balance": {
+    "available": "Money wey dey available",
+    "allocatedToSavings": "wey dem keep for savings"
+  },
+  "receive": {
+    "title": "Receive",
+    "subtitle": "Add USDC",
+    "depositAddressLabel": "Your USDC deposit address",
+    "sendOnly": "Send only <0>USDC on {{network}}</0> go this address.",
+    "instructions": "Send USDC go your address for up from any Monad wallet.",
+    "instructionsSync": "Send USDC go your address for up from any Monad wallet, then check for am:",
+    "checkForDeposits": "Check for deposits",
+    "checking": "Dey check…",
+    "creditedDeposits": "Dem credit {{count}} deposits wey be {{amount}} altogether",
+    "noNewDeposits": "No new deposit dey",
+    "faucet": {
+      "title": "Testnet faucet",
+      "description": "Collect test USDC make you try things before you use real money.",
+      "submit": "Receive test USDC",
+      "success": "You don receive test USDC"
+    }
+  },
+  "withdraw": {
+    "title": "Withdraw",
+    "subtitle": "Send USDC go any Monad address",
+    "unavailable": "On-chain withdrawal no dey available for this deployment right now.",
+    "success": "Withdrawal don work"
+  },
+  "footer": {
+    "settle": "Money dey settle go your own Monad wallet address, and every movement dey record for the ledger with on-chain reference.",
+    "selfCustody": "Your wallet na self-custody. You dey approve every withdrawal by signing am yourself.",
+    "stepUp": "Withdrawal and goal payout need fresh confirmation (password, 2FA, or code wey dem email) before anything go move.",
+    "builtOnMonad": "Built on Monad"
+  },
+  "banner": {
+    "title": "Connect your wallet for this session",
+    "description": "Connect once now and you go fit deposit, save, and withdraw without connecting again until you sign out.",
+    "connect": "Connect wallet"
+  },
+  "privyWithdraw": {
+    "connectPrompt": "Your wallet na self-custody. Connect am make you sign the withdrawal yourself.",
+    "connectButton": "Connect wallet to withdraw",
+    "success": "Withdrawal don comot",
+    "errors": {
+      "unavailable": "On-chain withdrawal no dey available for this deployment.",
+      "invalidAddress": "Enter correct Monad address (e dey start with 0x).",
+      "invalidAmount": "Enter correct amount.",
+      "failed": "Withdrawal fail. Abeg try again."
+    }
+  }
+}

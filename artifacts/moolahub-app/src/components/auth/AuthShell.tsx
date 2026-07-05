@@ -1,9 +1,11 @@
 import { Link } from "wouter";
 import { ShieldCheck, Lock, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/brand/Logo";
 import { AscendingChart } from "@/components/marketing/AscendingChart";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation("auth");
   return (
     <main className="grid min-h-[100dvh] lg:grid-cols-2">
       {/* ---------------------------------------------------- brand panel */}
@@ -18,16 +20,15 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-jade-300">
-            Built on Monad
+            {t("shell.eyebrow")}
           </p>
           <h1 className="mt-4 font-display text-5xl font-bold leading-[1.05] tracking-tight">
-            Save. Earn.
+            {t("shell.headingLine1")}
             <br />
-            <span className="text-jade-400">Belong.</span>
+            <span className="text-jade-400">{t("shell.headingLine2")}</span>
           </h1>
           <p className="mt-5 max-w-sm text-lg text-white/60">
-            Personal savings and susu circles in one place. Earn yield as you go,
-            and save alongside people you trust.
+            {t("shell.description")}
           </p>
           <div className="glass-dark mt-8 max-w-md rounded-2xl p-5">
             <AscendingChart className="max-h-32" />
@@ -36,13 +37,13 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/65">
           <span className="inline-flex items-center gap-2">
-            <Lock className="h-4 w-4 text-jade-400" /> Withdrawals need a second confirmation
+            <Lock className="h-4 w-4 text-jade-400" /> {t("shell.features.withdrawals")}
           </span>
           <span className="inline-flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-jade-400" /> Every transaction has an on-chain receipt
+            <ShieldCheck className="h-4 w-4 text-jade-400" /> {t("shell.features.receipt")}
           </span>
           <span className="inline-flex items-center gap-2">
-            <Users className="h-4 w-4 text-jade-400" /> Save in circles with people you trust
+            <Users className="h-4 w-4 text-jade-400" /> {t("shell.features.circles")}
           </span>
         </div>
       </section>

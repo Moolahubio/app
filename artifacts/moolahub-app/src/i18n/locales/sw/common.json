@@ -1,0 +1,67 @@
+{
+  "app": {
+    "tagline": "Weka akiba. Pata faida. Kuwa sehemu."
+  },
+  "nav": {
+    "home": "Nyumbani",
+    "personalSavings": "Akiba Binafsi",
+    "personalSavingsShort": "Akiba",
+    "groupSavings": "Akiba ya Kikundi",
+    "groupSavingsShort": "Vikundi",
+    "learn": "Jifunze",
+    "transactions": "Miamala",
+    "account": "Akaunti",
+    "profile": "Wasifu",
+    "viewProfile": "Angalia wasifu"
+  },
+  "actions": {
+    "save": "Hifadhi",
+    "saved": "Imehifadhiwa.",
+    "cancel": "Ghairi",
+    "edit": "Hariri",
+    "delete": "Futa",
+    "confirm": "Thibitisha",
+    "back": "Rudi",
+    "close": "Funga",
+    "retry": "Jaribu tena",
+    "continue": "Endelea",
+    "loading": "Inapakia…",
+    "signOut": "Toka",
+    "signingOut": "Inatoka…"
+  },
+  "labels": {
+    "balance": "Salio",
+    "nextDue": "Inayofuata"
+  },
+  "time": {
+    "justNow": "sasa hivi",
+    "minutesAgo": "dakika {{count}} zilizopita",
+    "hoursAgo": "saa {{count}} zilizopita",
+    "daysAgo": "siku {{count}} zilizopita"
+  },
+  "language": {
+    "eyebrow": "Mipangilio",
+    "title": "Lugha",
+    "description": "Chagua lugha ya programu nzima. Nambari, tarehe na salio pia zitabadilika.",
+    "detail": "Chagua lugha yako",
+    "error": "Imeshindwa kubadilisha lugha.",
+    "names": {
+      "en": "Kiingereza",
+      "ar": "Kiarabu",
+      "fr": "Kifaransa",
+      "sw": "Kiswahili",
+      "pcm": "Pidgin ya Nigeria",
+      "ha": "Kihausa",
+      "zh": "Kimandarini"
+    }
+  },
+  "forms": {
+    "copy": "Nakili",
+    "copied": "Imenakiliwa",
+    "working": "Inashughulikia…",
+    "withdrawUsdc": "Toa USDC",
+    "sending": "Inatuma…",
+    "recipientPlaceholder": "Anwani ya Monad ya mpokeaji (0x…)",
+    "invite": "Alika"
+  }
+}

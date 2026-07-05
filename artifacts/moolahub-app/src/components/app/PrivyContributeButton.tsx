@@ -8,6 +8,7 @@ import { ERC20_ABI, CIRCLE_ABI } from "@/lib/onchain/abis";
 import { centsToUnits } from "@/lib/onchain/ids";
 import { useEnsureWalletGas, useConfirmContribution } from "@workspace/api-client-react";
 import { apiErrorMessage } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 /**
  * On-chain contribution for a NON-CUSTODIAL (Privy embedded EOA) member. The
@@ -41,6 +42,7 @@ export function PrivyContributeButton({
   label: string;
   onSuccess: () => void;
 }) {
+  const { t } = useTranslation("circles");
   const { ready, authenticated } = usePrivy();
   const { login } = useLogin();
   const { wallets } = useWallets();
@@ -56,16 +58,16 @@ export function PrivyContributeButton({
   const destination = isAccumulation ? platform : escrow;
 
   if (!ready) {
-    return <p className="text-sm text-white/70">Loading your wallet…</p>;
+    return <p className="text-sm text-white/70">{t("privy.loadingWallet")}</p>;
   }
   if (!authenticated || !embedded) {
     return (
       <div className="space-y-2">
         <p className="text-sm text-white/70">
-          Your wallet is self-custodial. Connect it to sign the contribution yourself.
+          {t("privy.selfCustody")}
         </p>
         <Button variant="secondary" size="sm" onClick={() => login()}>
-          Connect wallet to contribute
+          {t("privy.connect")}
         </Button>
       </div>
     );
@@ -74,7 +76,7 @@ export function PrivyContributeButton({
   const handleClick = async () => {
     setError(null);
     if (!usdcAddress || !destination) {
-      setError("On-chain contributions aren't available on this deployment.");
+      setError(t("privy.notAvailable"));
       return;
     }
     setPending(true);
@@ -156,7 +158,7 @@ export function PrivyContributeButton({
     } catch (e) {
       setError(
         apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : "Contribution failed. Please try again."),
+          (e instanceof Error ? e.message : t("privy.failed")),
       );
     } finally {
       setPending(false);
@@ -166,7 +168,7 @@ export function PrivyContributeButton({
   return (
     <div className="inline-flex flex-col gap-2">
       <Button type="button" onClick={handleClick} size="sm" disabled={pending}>
-        {pending ? "Submitting…" : label}
+        {pending ? t("privy.submitting") : label}
       </Button>
       {error && (
         <span className="flex items-center gap-1.5 text-sm text-rose-300">

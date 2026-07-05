@@ -1,0 +1,56 @@
+{
+  "title": "Notifications",
+  "page": {
+    "eyebrow": "Notifications",
+    "title": "Everything wey don happen",
+    "description": "Invites, contributions, payouts, and everything wey dey happen for your account."
+  },
+  "loading": "Dey load notifications…",
+  "empty": "You don see everything.",
+  "bell": {
+    "viewAll": "See all"
+  },
+  "settings": {
+    "title": "Notification settings",
+    "description": "Choose how much you wan hear from MoolaHub.",
+    "recommended": "Recommended",
+    "saveError": "We no fit save your choice."
+  },
+  "tiers": {
+    "everything": {
+      "label": "Everything",
+      "description": "All notifications: circle activity, goal milestones, deposits, reminders, and tips."
+    },
+    "essential": {
+      "label": "Essential",
+      "description": "Only important updates, like payouts, contribution due dates, and account activity."
+    },
+    "minimal": {
+      "label": "Small small",
+      "description": "Only the most important account and money notifications."
+    },
+    "custom": {
+      "label": "Custom",
+      "description": "Choose the exact categories wey you wan hear about."
+    }
+  },
+  "categories": {
+    "money": {
+      "label": "Money & transactions",
+      "description": "Deposits, withdrawals, payouts, and contribution reminders."
+    },
+    "social": {
+      "label": "Group savings & social",
+      "description": "Invites, member activity, and circle updates."
+    },
+    "engagement": {
+      "label": "Tips & engagement",
+      "description": "Streaks, learning reminders, and product news."
+    }
+  },
+  "notFound": {
+    "title": "We no find dis page",
+    "description": "The page wey you dey find no dey or e fit don move.",
+    "backHome": "Go back Home"
+  }
+}

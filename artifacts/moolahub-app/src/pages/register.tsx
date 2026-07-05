@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { VerifyEmailStep } from "@/components/auth/VerifyEmailStep";
@@ -13,6 +14,7 @@ type Step =
   | { kind: "twofactor"; challengeId: string };
 
 export default function Register() {
+  const { t } = useTranslation("auth");
   const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<Step>({ kind: "signup" });
@@ -47,14 +49,14 @@ export default function Register() {
             href="/login"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to sign in
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t("backToSignIn")}
           </Link>
           <div>
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-              Create your account
+              {t("register.title")}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Save smarter, together. It only takes a minute.
+              {t("register.subtitle")}
             </p>
           </div>
 
@@ -63,9 +65,9 @@ export default function Register() {
           />
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("register.haveAccount")}{" "}
             <Link href="/login" className="font-semibold text-jade-600 hover:text-jade-700 dark:text-jade-400">
-              Sign in
+              {t("signIn.action")}
             </Link>
           </p>
         </div>

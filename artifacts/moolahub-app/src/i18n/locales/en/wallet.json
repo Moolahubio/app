@@ -1,0 +1,72 @@
+{
+  "eyebrow": "Wallet",
+  "states": {
+    "loadingWallet": "Loading your wallet…"
+  },
+  "setup": {
+    "title": "Set up your wallet",
+    "description": "Continue with Privy to create your {{network}} wallet. Privy lets you sign up with an email or connect an existing web3 wallet. Either way, you'll be able to deposit, save, and withdraw USDC.",
+    "settingUp": "Setting up…",
+    "continueWithPrivy": "Continue with Privy",
+    "error": "Could not set up your wallet. Please try again.",
+    "securityNote": "Your wallet settles funds on Monad, and every movement is recorded on the ledger. Sensitive actions like withdrawals require a fresh confirmation.",
+    "unavailableTitle": "Wallet setup unavailable",
+    "unavailableDescription": "Wallet provisioning isn't configured on this deployment yet. Please check back later."
+  },
+  "intro": {
+    "getReadyTitle": "Get your wallet ready",
+    "getReadyDescription": "MoolaHub runs on USDC over Monad. Set up your wallet to deposit, save, and withdraw.",
+    "manageTitle": "Deposit & withdraw USDC",
+    "manageDescription": "MoolaHub runs on USDC over Monad. Add USDC to your wallet, or send it to any Monad wallet address."
+  },
+  "balance": {
+    "available": "Available balance",
+    "allocatedToSavings": "allocated to savings"
+  },
+  "receive": {
+    "title": "Receive",
+    "subtitle": "Add USDC",
+    "depositAddressLabel": "Your USDC deposit address",
+    "sendOnly": "Send only <0>USDC on {{network}}</0> to this address.",
+    "instructions": "Send USDC to your address above from any Monad wallet.",
+    "instructionsSync": "Send USDC to your address above from any Monad wallet, then check for it:",
+    "checkForDeposits": "Check for deposits",
+    "checking": "Checking…",
+    "creditedDeposits": "Credited {{count}} deposits totaling {{amount}}",
+    "noNewDeposits": "No new deposits found",
+    "faucet": {
+      "title": "Testnet faucet",
+      "description": "Grab test USDC to try things out before real funds.",
+      "submit": "Receive test USDC",
+      "success": "Test USDC received"
+    }
+  },
+  "withdraw": {
+    "title": "Withdraw",
+    "subtitle": "Send USDC to any Monad address",
+    "unavailable": "On-chain withdrawals aren't available on this deployment right now.",
+    "success": "Withdrawal successful"
+  },
+  "footer": {
+    "settle": "Funds settle to your own Monad wallet address, and every movement is recorded on the ledger with an on-chain reference.",
+    "selfCustody": "Your wallet is self-custodial. You approve each withdrawal by signing it yourself.",
+    "stepUp": "Withdrawals and goal payouts require a fresh confirmation (password, 2FA, or emailed code) before anything moves.",
+    "builtOnMonad": "Built on Monad"
+  },
+  "banner": {
+    "title": "Connect your wallet for this session",
+    "description": "Connect once now and you can deposit, save, and withdraw without connecting again until you sign out.",
+    "connect": "Connect wallet"
+  },
+  "privyWithdraw": {
+    "connectPrompt": "Your wallet is self-custodial. Connect it to sign the withdrawal yourself.",
+    "connectButton": "Connect wallet to withdraw",
+    "success": "Withdrawal sent",
+    "errors": {
+      "unavailable": "On-chain withdrawals aren't available on this deployment.",
+      "invalidAddress": "Enter a valid Monad address (starts with 0x).",
+      "invalidAmount": "Enter a valid amount.",
+      "failed": "Withdrawal failed. Please try again."
+    }
+  }
+}

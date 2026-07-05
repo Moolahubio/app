@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { AlertCircle, KeyRound, ArrowLeft, Eye, EyeOff, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useForgotPassword, useResetPassword } from "@workspace/api-client-react";
@@ -16,6 +17,7 @@ export function ForgotPasswordStep({
   onDone: (email: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation("auth");
   const forgot = useForgotPassword();
   const reset = useResetPassword();
 
@@ -35,7 +37,7 @@ export function ForgotPasswordStep({
       await forgot.mutateAsync({ data: { email: email.trim() } });
       setPhase("reset");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Something went wrong. Please try again.");
+      setError(apiErrorMessage(err) ?? t("forgot.genericError"));
     }
   };
 
@@ -46,7 +48,7 @@ export function ForgotPasswordStep({
       await forgot.mutateAsync({ data: { email: email.trim() } });
       setResent(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not resend the code.");
+      setError(apiErrorMessage(err) ?? t("resend.error"));
     }
   };
 
@@ -59,7 +61,7 @@ export function ForgotPasswordStep({
       });
       onDone(email.trim());
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "That code is invalid or has expired.");
+      setError(apiErrorMessage(err) ?? t("forgot.codeError"));
     }
   };
 
@@ -71,15 +73,15 @@ export function ForgotPasswordStep({
             <KeyRound className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="font-display text-lg font-bold text-foreground">Forgot your password?</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("forgot.title")}</h2>
             <p className="text-sm text-muted-foreground">
-              Enter your email and we'll send you a reset code.
+              {t("forgot.subtitle")}
             </p>
           </div>
         </div>
 
         <label className="block">
-          <span className="text-sm font-medium text-foreground">Email</span>
+          <span className="text-sm font-medium text-foreground">{t("fields.email")}</span>
           <input
             type="email"
             autoComplete="email"
@@ -87,7 +89,7 @@ export function ForgotPasswordStep({
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder={t("fields.emailPlaceholder")}
             className={`mt-1.5 ${authInputClass}`}
           />
         </label>
@@ -99,7 +101,7 @@ export function ForgotPasswordStep({
         )}
 
         <Button type="submit" size="lg" className="w-full" disabled={forgot.isPending || !email.trim()}>
-          {forgot.isPending ? "Sending…" : "Send reset code"}
+          {forgot.isPending ? t("forgot.submitting") : t("forgot.submit")}
         </Button>
 
         <button
@@ -107,7 +109,7 @@ export function ForgotPasswordStep({
           onClick={onCancel}
           className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to sign in
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t("backToSignIn")}
         </button>
       </form>
     );
@@ -120,22 +122,25 @@ export function ForgotPasswordStep({
           <MailCheck className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="font-display text-lg font-bold text-foreground">Reset your password</h2>
+          <h2 className="font-display text-lg font-bold text-foreground">{t("forgot.resetTitle")}</h2>
           <p className="text-sm text-muted-foreground">
-            A 6-digit code is on its way to{" "}
-            <span className="font-medium text-foreground">{email}</span>. Enter it with a new
-            password.
+            <Trans
+              t={t}
+              i18nKey="forgot.resetSentTo"
+              values={{ email }}
+              components={[<span className="font-medium text-foreground" />]}
+            />
           </p>
         </div>
       </div>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Reset code</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.resetCode")}</span>
         <input
           inputMode="numeric"
           autoComplete="one-time-code"
           autoFocus
-          placeholder="123456"
+          placeholder={t("fields.codePlaceholder")}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           className="mt-1.5 w-full rounded-xl border border-border bg-background px-3.5 py-3 text-center font-mono text-lg tracking-[0.3em] text-foreground outline-none focus:border-jade-500/60 focus-ring"
@@ -143,7 +148,7 @@ export function ForgotPasswordStep({
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">New password</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.newPassword")}</span>
         <div className="relative mt-1.5">
           <input
             type={showPassword ? "text" : "password"}
@@ -152,14 +157,14 @@ export function ForgotPasswordStep({
             minLength={8}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            className={`${authInputClass} pr-10`}
+            placeholder={t("fields.passwordMinPlaceholder")}
+            className={`${authInputClass} pe-10`}
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
+            aria-label={showPassword ? t("password.hide") : t("password.show")}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -172,7 +177,7 @@ export function ForgotPasswordStep({
         </p>
       )}
       {resent && !error && (
-        <p className="text-sm text-jade-600 dark:text-jade-400">A new code is on its way.</p>
+        <p className="text-sm text-jade-600 dark:text-jade-400">{t("resend.sent")}</p>
       )}
 
       <Button
@@ -181,7 +186,7 @@ export function ForgotPasswordStep({
         className="w-full"
         disabled={reset.isPending || code.trim().length < 6 || newPassword.length < 8}
       >
-        {reset.isPending ? "Resetting…" : "Reset password"}
+        {reset.isPending ? t("forgot.resetSubmitting") : t("forgot.resetSubmit")}
       </Button>
 
       <div className="flex items-center justify-between text-sm">
@@ -190,7 +195,7 @@ export function ForgotPasswordStep({
           onClick={onCancel}
           className="flex items-center gap-1.5 font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Back
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t("common:actions.back")}
         </button>
         <button
           type="button"
@@ -198,7 +203,7 @@ export function ForgotPasswordStep({
           disabled={forgot.isPending}
           className="font-medium text-jade-600 transition-colors hover:text-jade-700 disabled:opacity-60 dark:text-jade-400"
         >
-          {forgot.isPending ? "Sending…" : "Resend code"}
+          {forgot.isPending ? t("resend.sending") : t("resend.action")}
         </button>
       </div>
     </form>

@@ -1,0 +1,72 @@
+{
+  "eyebrow": "钱包",
+  "states": {
+    "loadingWallet": "正在加载您的钱包…"
+  },
+  "setup": {
+    "title": "设置您的钱包",
+    "description": "继续使用 Privy 创建您的 {{network}} 钱包。Privy 允许您使用电子邮件注册或连接现有的 web3 钱包。无论哪种方式，您都可以存入、储蓄和提取 USDC。",
+    "settingUp": "正在设置…",
+    "continueWithPrivy": "继续使用 Privy",
+    "error": "无法设置您的钱包。请重试。",
+    "securityNote": "您的钱包在 Monad 上结算资金，每笔操作都会记录到账本中。提取等敏感操作需要重新确认。",
+    "unavailableTitle": "钱包设置不可用",
+    "unavailableDescription": "此部署尚未配置钱包创建功能。请稍后再试。"
+  },
+  "intro": {
+    "getReadyTitle": "准备好您的钱包",
+    "getReadyDescription": "MoolaHub 通过 Monad 使用 USDC 运行。设置您的钱包即可存入、储蓄和提取。",
+    "manageTitle": "存入与提取 USDC",
+    "manageDescription": "MoolaHub 通过 Monad 使用 USDC 运行。将 USDC 添加到您的钱包，或将其发送到任何 Monad 钱包地址。"
+  },
+  "balance": {
+    "available": "可用余额",
+    "allocatedToSavings": "已分配至储蓄"
+  },
+  "receive": {
+    "title": "接收",
+    "subtitle": "添加 USDC",
+    "depositAddressLabel": "您的 USDC 存款地址",
+    "sendOnly": "请仅将 <0>{{network}} 上的 USDC</0> 发送到此地址。",
+    "instructions": "从任何 Monad 钱包将 USDC 发送到上方的地址。",
+    "instructionsSync": "从任何 Monad 钱包将 USDC 发送到上方的地址，然后进行查询：",
+    "checkForDeposits": "查询存款",
+    "checking": "正在查询…",
+    "creditedDeposits": "已入账 {{count}} 笔存款，共计 {{amount}}",
+    "noNewDeposits": "未发现新的存款",
+    "faucet": {
+      "title": "测试网水龙头",
+      "description": "领取测试 USDC，先试用一下再使用真实资金。",
+      "submit": "领取测试 USDC",
+      "success": "已收到测试 USDC"
+    }
+  },
+  "withdraw": {
+    "title": "提取",
+    "subtitle": "将 USDC 发送到任何 Monad 地址",
+    "unavailable": "此部署目前不支持链上提取。",
+    "success": "提取成功"
+  },
+  "footer": {
+    "settle": "资金结算到您自己的 Monad 钱包地址，每笔操作都会连同链上凭证记录到账本中。",
+    "selfCustody": "您的钱包由自己保管。您通过亲自签名来批准每一笔提取。",
+    "stepUp": "提取和目标付款在任何资金变动前都需要重新确认（密码、双重验证或邮件验证码）。",
+    "builtOnMonad": "基于 Monad 构建"
+  },
+  "banner": {
+    "title": "为本次会话连接您的钱包",
+    "description": "现在连接一次，您就可以存入、储蓄和提取，直到退出登录前无需再次连接。",
+    "connect": "连接钱包"
+  },
+  "privyWithdraw": {
+    "connectPrompt": "您的钱包由自己保管。连接钱包以亲自签署提取。",
+    "connectButton": "连接钱包以提取",
+    "success": "提取已发送",
+    "errors": {
+      "unavailable": "此部署不支持链上提取。",
+      "invalidAddress": "请输入有效的 Monad 地址（以 0x 开头）。",
+      "invalidAmount": "请输入有效的金额。",
+      "failed": "提取失败。请重试。"
+    }
+  }
+}

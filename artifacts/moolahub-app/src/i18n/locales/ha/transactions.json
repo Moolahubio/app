@@ -1,0 +1,28 @@
+{
+  "loading": "Ana loda ma'amaloli…",
+  "header": {
+    "title": "Kuɗinka, an rubuta komai",
+    "description": "Kowane ajiya, gudummawa, da biya. Kowanne yana da hujjarsa a kan Monad."
+  },
+  "reminders": {
+    "title": "Tunatarwa masu zuwa",
+    "tag": "tunatarwa"
+  },
+  "history": {
+    "title": "Tarihin ma'amaloli",
+    "empty": "Babu ma'amala tukuna."
+  },
+  "onchain": {
+    "settling": "ana daidaitawa a kan sarkar…",
+    "offchain": "wajen sarkar"
+  },
+  "types": {
+    "deposit": "Ajiya",
+    "payout": "Biya",
+    "yield": "Riba",
+    "contribution": "Gudummawa",
+    "goal_allocate": "Rabo",
+    "goal_release": "Sakewa",
+    "withdrawal": "Cirewa"
+  }
+}

@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Bell, UserPlus, Users, ArrowDownLeft, ArrowUpRight, Target, PartyPopper, Sparkles } from "lucide-react";
 import { timeAgo, cn } from "@/lib/utils";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 
 const ICONS: Record<string, { icon: typeof Bell; tone: string }> = {
   invite: { icon: UserPlus, tone: "bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300" },
@@ -20,28 +21,29 @@ const ICONS: Record<string, { icon: typeof Bell; tone: string }> = {
 };
 
 export default function NotificationsPage() {
+  const { t } = useTranslation("notifications");
   const { data, isLoading } = useListNotifications();
   const queryClient = useQueryClient();
   const markOneMutation = useMarkNotificationRead();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading notifications…</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>;
 
   const notifications = data?.notifications ?? [];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <BackLink href="/" label="Home" />
+      <BackLink href="/" label={t("common:nav.home")} />
       <PageHeader
-        eyebrow="Notifications"
-        title="Everything that's happened"
-        description="Invitations, contributions, payouts, and everything happening in your account."
+        eyebrow={t("page.eyebrow")}
+        title={t("page.title")}
+        description={t("page.description")}
       />
 
       <Card className="overflow-hidden p-0">
         {notifications.length === 0 ? (
           <div className="px-4 py-10 text-center">
             <Bell className="mx-auto h-6 w-6 text-muted-foreground" />
-            <p className="mt-2 text-sm text-muted-foreground">You're all caught up.</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("empty")}</p>
           </div>
         ) : (
           <ul className="divide-y divide-border">

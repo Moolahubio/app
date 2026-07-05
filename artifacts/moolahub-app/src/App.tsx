@@ -6,6 +6,8 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { Web3Provider } from "@/components/app/Web3Provider";
 import { WalletSessionSync } from "@/components/app/WalletSession";
+import { LanguageProvider } from "@/hooks/use-language";
+import { LanguageSessionSync } from "@/components/app/LanguageSessionSync";
 import { AppLayout } from "@/components/app-layout";
 import NotFound from "@/pages/not-found";
 
@@ -27,6 +29,7 @@ import ProfileInformation from "@/pages/profile-information";
 import ProfileSecurity from "@/pages/profile-security";
 import ProfileNotifications from "@/pages/profile-notifications";
 import ProfileStreak from "@/pages/profile-streak";
+import ProfileLanguage from "@/pages/profile-language";
 import Streaks from "@/pages/streaks";
 
 const queryClient = new QueryClient();
@@ -93,6 +96,9 @@ function Router() {
       <Route path="/profile/streak">
         <ProtectedRoute component={ProfileStreak} />
       </Route>
+      <Route path="/profile/language">
+        <ProtectedRoute component={ProfileLanguage} />
+      </Route>
       <Route path="/profile">
         <ProtectedRoute component={Profile} />
       </Route>
@@ -110,19 +116,22 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <Web3Provider>
-          <TooltipProvider>
-            <AuthProvider>
-              <WalletSessionSync />
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
-              </WouterRouter>
-            </AuthProvider>
-            <Toaster />
-          </TooltipProvider>
-        </Web3Provider>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <Web3Provider>
+            <TooltipProvider>
+              <AuthProvider>
+                <WalletSessionSync />
+                <LanguageSessionSync />
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                  <Router />
+                </WouterRouter>
+              </AuthProvider>
+              <Toaster />
+            </TooltipProvider>
+          </Web3Provider>
+        </ThemeProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

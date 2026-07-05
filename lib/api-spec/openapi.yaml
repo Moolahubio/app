@@ -1803,6 +1803,9 @@ components:
           description: Whether a Privy identity is linked to this account.
         emailVerified:
           type: boolean
+        language:
+          type: string
+          description: Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh").
 
     LoginResult:
       type: object
@@ -2756,6 +2759,9 @@ components:
           type: boolean
         createdAt:
           type: string
+        language:
+          type: string
+          description: Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh").
 
     ProfileUpdate:
       type: object
@@ -2770,6 +2776,9 @@ components:
           type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
+        language:
+          type: string
+          enum: [en, ar, fr, sw, pcm, ha, zh]
 
     # ---- Storage ----
     UploadUrlRequest:

@@ -1,0 +1,34 @@
+{
+  "loading": "Loading lessons…",
+  "empty": "No lessons available.",
+  "header": {
+    "title": "Financial empowerment",
+    "description": "Short, practical lessons to build confidence with your money."
+  },
+  "progress": {
+    "count": "{{completed}} of {{total}} lessons complete",
+    "encourage": "Keep your streak going."
+  },
+  "featured": {
+    "revisit": "Revisit",
+    "startHere": "Start here",
+    "reviewLesson": "Review lesson",
+    "startLesson": "Start lesson"
+  },
+  "card": {
+    "done": "Done",
+    "minutes": "{{count}} min"
+  },
+  "detail": {
+    "loading": "Loading lesson…",
+    "notFound": "We couldn't find that lesson.",
+    "allLessons": "All lessons",
+    "minutesRead": "{{count}} min read",
+    "completed": "Completed",
+    "keyTakeaways": "Key takeaways",
+    "lessonCompleted": "Lesson completed",
+    "markComplete": "Mark complete",
+    "saving": "Saving…",
+    "nextLesson": "Next lesson"
+  }
+}

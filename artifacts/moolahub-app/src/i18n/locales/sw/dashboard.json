@@ -1,0 +1,69 @@
+{
+  "hero": {
+    "eyebrow": "Karibu tena",
+    "greeting": "Vyema kukuona",
+    "greetingNamed": "Vyema kukuona, {{name}}",
+    "totalBalance": "Salio jumla",
+    "available": "Inayopatikana",
+    "inSavings": "Katika akiba",
+    "apy": "+{{apy}}% APY",
+    "addMoney": "Ongeza pesa",
+    "withdraw": "Toa",
+    "growthLabel": "Ukuaji · miezi 6",
+    "earned": "{{amount}} imepatikana"
+  },
+  "reminders": {
+    "title": "Linalofuata",
+    "allCaughtUp": "Umekamilisha yote."
+  },
+  "streak": {
+    "none": "Bado hakuna mfululizo",
+    "count": {
+      "daily": "siku {{count}}",
+      "weekly": "wiki {{count}}",
+      "biweekly": "vipindi {{count}} vya wiki mbili",
+      "monthly": "miezi {{count}}"
+    },
+    "saved": {
+      "daily": "Umeweka akiba leo, hongera",
+      "weekly": "Umeweka akiba wiki hii, hongera",
+      "biweekly": "Umeweka akiba kipindi hiki, hongera",
+      "monthly": "Umeweka akiba mwezi huu, hongera"
+    },
+    "keepAlive": {
+      "daily": "Amana moja huendeleza mfululizo wako wa kila siku",
+      "weekly": "Amana moja huendeleza mfululizo wako wa kila wiki",
+      "biweekly": "Amana moja huendeleza mfululizo wako wa kila wiki mbili",
+      "monthly": "Amana moja huendeleza mfululizo wako wa kila mwezi"
+    },
+    "firstFlame": "Weka amana ili kuwasha mwali wako wa kwanza"
+  },
+  "savings": {
+    "title": "Akiba binafsi",
+    "empty": "Bado hakuna kitu hapa. Unda lengo lako la kwanza."
+  },
+  "circle": {
+    "title": "Duara linalotumika",
+    "round": "Raundi {{current}} kati ya {{total}} · {{frequency}}",
+    "pot": "Mfuko",
+    "members": "wanachama {{count}}",
+    "empty": "Bado hakuna maduara yanayotumika."
+  },
+  "frequency": {
+    "daily": "kila siku",
+    "weekly": "kila wiki",
+    "biweekly": "kila wiki mbili",
+    "monthly": "kila mwezi"
+  },
+  "learn": {
+    "title": "Endelea kujifunza",
+    "lessonTitle": "Blockchain, imefafanuliwa kwa urahisi",
+    "lessonMeta": "dakika 5 · Anayeanza",
+    "startLesson": "Anza somo"
+  },
+  "transactions": {
+    "title": "Miamala ya hivi karibuni",
+    "viewAll": "Ona yote",
+    "empty": "Bado hakuna miamala."
+  }
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AlertCircle, Fingerprint } from "lucide-react";
 import { startAuthentication, browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 import {
   useLoginPasskeyOptions,
@@ -17,6 +18,7 @@ export function PasskeySignIn({
 }: {
   onTwoFactorRequired: (challengeId: string) => void;
 }) {
+  const { t } = useTranslation("auth");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function PasskeySignIn({
         if (result.challengeId) {
           onTwoFactorRequired(result.challengeId);
         } else {
-          setPasskeyError("We couldn't start two-factor verification. Please try again.");
+          setPasskeyError(t("passkey.twoFactorError"));
         }
         return;
       }
@@ -47,9 +49,9 @@ export function PasskeySignIn({
       setLocation("/");
     } catch (err) {
       if (err instanceof Error && err.name === "NotAllowedError") {
-        setPasskeyError("Sign-in cancelled.");
+        setPasskeyError(t("passkey.cancelled"));
       } else {
-        setPasskeyError(apiErrorMessage(err) ?? "We couldn't sign you in. Please try again.");
+        setPasskeyError(apiErrorMessage(err) ?? t("passkey.error"));
       }
     }
   };
@@ -67,7 +69,7 @@ export function PasskeySignIn({
         onClick={handlePasskeyLogin}
       >
         <Fingerprint className="h-4 w-4" />
-        {passkeyPending ? "Verifying…" : "Sign in with passkey"}
+        {passkeyPending ? t("passkey.verifying") : t("passkey.button")}
       </Button>
 
       {passkeyError && (

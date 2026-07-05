@@ -1,0 +1,72 @@
+{
+  "eyebrow": "Pochi",
+  "states": {
+    "loadingWallet": "Inapakia pochi yako…"
+  },
+  "setup": {
+    "title": "Sanidi pochi yako",
+    "description": "Endelea na Privy ili kuunda pochi yako ya {{network}}. Privy hukuruhusu kujisajili kwa barua pepe au kuunganisha pochi ya web3 iliyopo. Vyovyote vile, utaweza kuweka, kuweka akiba na kutoa USDC.",
+    "settingUp": "Inasanidi…",
+    "continueWithPrivy": "Endelea na Privy",
+    "error": "Imeshindwa kusanidi pochi yako. Tafadhali jaribu tena.",
+    "securityNote": "Pochi yako hulipa fedha kwenye Monad, na kila mwendo hurekodiwa kwenye leja. Vitendo nyeti kama utoaji vinahitaji uthibitisho mpya.",
+    "unavailableTitle": "Usanidi wa pochi haupatikani",
+    "unavailableDescription": "Utoaji wa pochi bado haujasanidiwa kwenye usambazaji huu. Tafadhali angalia tena baadaye."
+  },
+  "intro": {
+    "getReadyTitle": "Andaa pochi yako",
+    "getReadyDescription": "MoolaHub hutumia USDC kupitia Monad. Sanidi pochi yako ili kuweka, kuweka akiba na kutoa.",
+    "manageTitle": "Weka na toa USDC",
+    "manageDescription": "MoolaHub hutumia USDC kupitia Monad. Ongeza USDC kwenye pochi yako, au itume kwa anwani yoyote ya pochi ya Monad."
+  },
+  "balance": {
+    "available": "Salio linalopatikana",
+    "allocatedToSavings": "yametengwa kwa akiba"
+  },
+  "receive": {
+    "title": "Pokea",
+    "subtitle": "Ongeza USDC",
+    "depositAddressLabel": "Anwani yako ya kuweka USDC",
+    "sendOnly": "Tuma <0>USDC kwenye {{network}}</0> pekee kwa anwani hii.",
+    "instructions": "Tuma USDC kwenye anwani yako hapo juu kutoka pochi yoyote ya Monad.",
+    "instructionsSync": "Tuma USDC kwenye anwani yako hapo juu kutoka pochi yoyote ya Monad, kisha uangalie:",
+    "checkForDeposits": "Angalia amana",
+    "checking": "Inaangalia…",
+    "creditedDeposits": "Zimewekwa amana {{count}} zenye jumla ya {{amount}}",
+    "noNewDeposits": "Hakuna amana mpya zilizopatikana",
+    "faucet": {
+      "title": "Bomba la testnet",
+      "description": "Pata USDC ya majaribio ili kujaribu mambo kabla ya kutumia fedha halisi.",
+      "submit": "Pokea USDC ya majaribio",
+      "success": "USDC ya majaribio imepokelewa"
+    }
+  },
+  "withdraw": {
+    "title": "Toa",
+    "subtitle": "Tuma USDC kwa anwani yoyote ya Monad",
+    "unavailable": "Utoaji wa kwenye mnyororo haupatikani kwenye usambazaji huu kwa sasa.",
+    "success": "Utoaji umefaulu"
+  },
+  "footer": {
+    "settle": "Fedha hulipwa kwenye anwani yako mwenyewe ya pochi ya Monad, na kila mwendo hurekodiwa kwenye leja na marejeleo ya kwenye mnyororo.",
+    "selfCustody": "Pochi yako inajitunza yenyewe. Wewe huidhinisha kila utoaji kwa kuutia sahihi mwenyewe.",
+    "stepUp": "Utoaji na malipo ya malengo yanahitaji uthibitisho mpya (nenosiri, 2FA, au msimbo wa barua pepe) kabla ya kitu chochote kuhamishwa.",
+    "builtOnMonad": "Imejengwa kwenye Monad"
+  },
+  "banner": {
+    "title": "Unganisha pochi yako kwa kipindi hiki",
+    "description": "Unganisha mara moja sasa na utaweza kuweka, kuweka akiba na kutoa bila kuunganisha tena hadi utoke.",
+    "connect": "Unganisha pochi"
+  },
+  "privyWithdraw": {
+    "connectPrompt": "Pochi yako inajitunza yenyewe. Iunganishe ili kutia sahihi utoaji mwenyewe.",
+    "connectButton": "Unganisha pochi ili kutoa",
+    "success": "Utoaji umetumwa",
+    "errors": {
+      "unavailable": "Utoaji wa kwenye mnyororo haupatikani kwenye usambazaji huu.",
+      "invalidAddress": "Weka anwani sahihi ya Monad (inaanza na 0x).",
+      "invalidAmount": "Weka kiasi sahihi.",
+      "failed": "Utoaji umeshindwa. Tafadhali jaribu tena."
+    }
+  }
+}

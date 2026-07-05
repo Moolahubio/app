@@ -1,0 +1,237 @@
+{
+  "avatar": {
+    "change": "Changer la photo de profil"
+  },
+  "sections": {
+    "settings": "Paramètres",
+    "manageAccount": "Gérer le compte"
+  },
+  "menu": {
+    "profileInformation": {
+      "label": "Informations du profil",
+      "detail": "Nom, nom d'utilisateur, date de naissance"
+    },
+    "wallets": {
+      "label": "Portefeuilles",
+      "detail": "Solde et adresse sur Monad"
+    },
+    "security": {
+      "label": "Sécurité",
+      "detail": "Clés d'accès et double authentification"
+    },
+    "streak": {
+      "label": "Fréquence de série",
+      "detail": "Quotidienne, hebdomadaire ou mensuelle"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "detail": "Choisissez ce qui vous parvient"
+    },
+    "transactions": {
+      "label": "Transactions et rendement",
+      "detail": "Registre et gains"
+    }
+  },
+  "profile": {
+    "loading": "Chargement de votre profil…",
+    "uploadingPicture": "Téléversement de la photo…",
+    "saveName": "Enregistrer le nom",
+    "editName": "Modifier le nom",
+    "wallet": {
+      "label": "Portefeuille Monad · non dépositaire",
+      "notProvisioned": "Non provisionné"
+    },
+    "stats": {
+      "yieldEarned": "Rendement gagné",
+      "yieldApy": "APY du rendement"
+    },
+    "errors": {
+      "savePicture": "Impossible d'enregistrer la photo de profil.",
+      "uploadImage": "Impossible de téléverser l'image.",
+      "chooseImage": "Veuillez choisir un fichier image.",
+      "updateName": "Impossible de mettre à jour le nom."
+    },
+    "signOutError": {
+      "title": "Impossible de se déconnecter",
+      "description": "Veuillez réessayer."
+    }
+  },
+  "information": {
+    "title": "Informations du profil",
+    "description": "Modifiez la façon dont vous apparaissez sur MoolaHub.",
+    "picture": {
+      "title": "Photo de profil",
+      "uploading": "Téléversement…",
+      "hint": "PNG ou JPG, le carré est idéal."
+    },
+    "fields": {
+      "fullName": "Nom complet",
+      "fullNamePlaceholder": "Votre nom",
+      "username": "Nom d'utilisateur",
+      "usernameHint": "facultatif · unique",
+      "usernamePlaceholder": "nom d'utilisateur",
+      "dateOfBirth": "Date de naissance",
+      "optional": "facultatif",
+      "nationality": "Nationalité",
+      "nationalityPlaceholder": "ex. Kényane"
+    },
+    "errors": {
+      "nameEmpty": "Le nom ne peut pas être vide.",
+      "update": "Impossible de mettre à jour le profil.",
+      "savePicture": "Impossible d'enregistrer la photo de profil.",
+      "uploadImage": "Impossible de téléverser l'image.",
+      "chooseImage": "Veuillez choisir un fichier image."
+    },
+    "saving": "Enregistrement…",
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "security": {
+    "eyebrow": "Sécurité",
+    "title": "Connexion et sécurité",
+    "description": "Ajoutez des niveaux de protection supplémentaires à votre compte."
+  },
+  "changePassword": {
+    "title": "Mot de passe",
+    "descriptionChange": "Modifiez le mot de passe utilisé pour vous connecter",
+    "descriptionSet": "Définissez un mot de passe pour vous connecter avec votre e-mail",
+    "change": "Modifier",
+    "setPassword": "Définir le mot de passe",
+    "updated": "Mot de passe mis à jour.",
+    "needVerifiedEmail": "Un e-mail vérifié est requis pour définir un mot de passe.",
+    "currentPassword": "Mot de passe actuel",
+    "twoFactorCode": "Code d'authentification à deux facteurs",
+    "codePlaceholder": "Code à 6 chiffres",
+    "newPassword": "Nouveau mot de passe",
+    "newPasswordPlaceholder": "Au moins 8 caractères",
+    "confirmNewPassword": "Confirmer le nouveau mot de passe",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "saving": "Enregistrement…",
+    "savePassword": "Enregistrer le mot de passe",
+    "sendCodeIntro": "Nous enverrons un code de vérification à <strong>{{email}}</strong> pour confirmer votre identité avant de définir un mot de passe.",
+    "sending": "Envoi…",
+    "sendCode": "Envoyer le code",
+    "checkEmail": "Consultez votre e-mail pour un code à 6 chiffres.",
+    "verificationCode": "Code de vérification",
+    "verificationCodePlaceholder": "123456",
+    "errors": {
+      "minLength": "Le mot de passe doit comporter au moins 8 caractères.",
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "enterTotp": "Saisissez votre code d'authentification à deux facteurs pour continuer.",
+      "update": "Impossible de mettre à jour votre mot de passe.",
+      "sendCode": "Impossible d'envoyer le code. Veuillez réessayer.",
+      "invalidCode": "Ce code est invalide ou a expiré."
+    }
+  },
+  "manageAccount": {
+    "deactivate": {
+      "label": "Désactiver le compte",
+      "detail": "Désactivation temporaire. Reconnectez-vous à tout moment pour le restaurer.",
+      "dialogTitle": "Désactiver votre compte ?",
+      "dialogDescription": "Votre compte sera temporairement désactivé et vous serez déconnecté. Vos données, soldes et épargnes de groupe restent en sécurité. Reconnectez-vous à tout moment pour réactiver.",
+      "action": "Désactiver",
+      "pending": "Désactivation…",
+      "error": "Impossible de désactiver le compte."
+    },
+    "delete": {
+      "label": "Supprimer le compte",
+      "detail": "Supprimez définitivement votre compte et vos données",
+      "dialogTitle": "Supprimer votre compte ?",
+      "dialogDescription": "Cette action supprime définitivement votre profil et révoque l'accès. Vous ne pouvez supprimer que lorsque votre solde est nul et que vous n'avez aucune épargne personnelle ou de groupe active. Tapez <strong>DELETE</strong> pour confirmer.",
+      "action": "Supprimer définitivement",
+      "pending": "Suppression…",
+      "error": "Impossible de supprimer le compte."
+    }
+  },
+  "passkeys": {
+    "title": "Clés d'accès",
+    "description": "Connectez-vous avec Face ID, Touch ID ou une clé de sécurité",
+    "adding": "Ajout…",
+    "add": "Ajouter une clé d'accès",
+    "unsupported": "Ce navigateur ne prend pas en charge les clés d'accès.",
+    "loading": "Chargement des clés d'accès…",
+    "empty": "Aucune clé d'accès pour l'instant. Ajoutez-en une pour une connexion plus rapide et plus sûre.",
+    "defaultName": "Clé d'accès",
+    "added": "Ajoutée le {{date}}",
+    "lastUsed": "Dernière utilisation le {{date}}",
+    "remove": "Supprimer la clé d'accès",
+    "errors": {
+      "cancelled": "Configuration annulée.",
+      "add": "Impossible d'ajouter cette clé d'accès. Veuillez réessayer.",
+      "remove": "Impossible de supprimer cette clé d'accès. Veuillez réessayer."
+    }
+  },
+  "twoFactor": {
+    "backupCodes": {
+      "title": "Enregistrez vos codes de secours",
+      "copyAll": "Tout copier",
+      "description": "Chaque code ne fonctionne qu'une fois. Conservez-les en lieu sûr. Ils vous permettent de vous connecter si vous perdez votre authentificateur."
+    },
+    "title": "Application d'authentification",
+    "on": "Activé",
+    "off": "Désactivé",
+    "description": "Exigez un code à 6 chiffres à la connexion pour plus de sécurité",
+    "starting": "Démarrage…",
+    "setUp": "Configurer",
+    "setup": {
+      "instructions": "Scannez ce code QR avec Google Authenticator, 1Password ou toute application TOTP, puis saisissez le code à 6 chiffres qu'elle affiche.",
+      "qrAlt": "Code QR 2FA",
+      "codePlaceholder": "123456",
+      "verifying": "Vérification…",
+      "enable": "Activer la 2FA"
+    },
+    "codesRemaining": "Codes de secours restants : {{count}}",
+    "regenerate": "Régénérer les codes de secours",
+    "turnOff": "Désactiver",
+    "regenerateForm": {
+      "instructions": "Saisissez un code actuel ou un code de secours pour générer un nouvel ensemble. Vos anciens codes de secours cesseront de fonctionner.",
+      "codePlaceholder": "Code",
+      "generating": "Génération…",
+      "generate": "Générer de nouveaux codes"
+    },
+    "disableForm": {
+      "instructions": "Saisissez un code actuel ou un code de secours pour désactiver la 2FA.",
+      "codePlaceholder": "Code",
+      "turningOff": "Désactivation…",
+      "confirmTurnOff": "Confirmer la désactivation"
+    },
+    "errors": {
+      "startSetup": "Impossible de démarrer la configuration.",
+      "codeFailed": "Ce code n'a pas fonctionné. Réessayez."
+    }
+  },
+  "stepUp": {
+    "title": "Confirmez votre identité",
+    "descBoth": "Saisissez votre mot de passe et votre code d'authentification à deux facteurs pour continuer.",
+    "descPassword": "Saisissez votre mot de passe pour continuer.",
+    "descTotp": "Saisissez votre code d'authentification à deux facteurs pour continuer.",
+    "descEmail": "Nous vous enverrons un code à usage unique par e-mail pour confirmer cette modification.",
+    "sending": "Envoi…",
+    "sendCode": "Envoyer le code",
+    "codePlaceholder": "Code à 6 chiffres",
+    "passwordPlaceholder": "Mot de passe actuel",
+    "errors": {
+      "sendCode": "Impossible d'envoyer le code. Veuillez réessayer.",
+      "enterEmailCode": "Veuillez saisir le code que nous vous avons envoyé par e-mail.",
+      "enterPassword": "Veuillez saisir votre mot de passe pour continuer.",
+      "enterTotp": "Veuillez saisir votre code d'authentification à deux facteurs pour continuer."
+    }
+  },
+  "theme": {
+    "label": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "imageUpload": {
+    "changePicture": "Changer la photo",
+    "uploadPicture": "Téléverser une photo",
+    "defaultHint": "Ajoutez une photo pour garder le rêve vivant.",
+    "remove": "Supprimer",
+    "error": "Impossible de téléverser l'image.",
+    "chooseImage": "Veuillez choisir un fichier image."
+  },
+  "segmented": {
+    "optionsLabel": "Options"
+  }
+}

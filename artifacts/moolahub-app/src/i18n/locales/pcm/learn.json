@@ -1,0 +1,34 @@
+{
+  "loading": "Dey load lessons…",
+  "empty": "No lesson dey available.",
+  "header": {
+    "title": "Money empowerment",
+    "description": "Short, practical lessons wey go make you sabi handle your money well."
+  },
+  "progress": {
+    "count": "You don complete {{completed}} out of {{total}} lessons",
+    "encourage": "Make you no break your streak."
+  },
+  "featured": {
+    "revisit": "Check am again",
+    "startHere": "Start from here",
+    "reviewLesson": "Review the lesson",
+    "startLesson": "Start the lesson"
+  },
+  "card": {
+    "done": "Done",
+    "minutes": "{{count}} min"
+  },
+  "detail": {
+    "loading": "Dey load lesson…",
+    "notFound": "We no fit find that lesson.",
+    "allLessons": "All the lessons",
+    "minutesRead": "{{count}} min to read",
+    "completed": "Done complete",
+    "keyTakeaways": "Main points",
+    "lessonCompleted": "Lesson don complete",
+    "markComplete": "Mark am as complete",
+    "saving": "Dey save…",
+    "nextLesson": "Next lesson"
+  }
+}

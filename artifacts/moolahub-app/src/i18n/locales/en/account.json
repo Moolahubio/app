@@ -1,0 +1,237 @@
+{
+  "avatar": {
+    "change": "Change profile picture"
+  },
+  "sections": {
+    "settings": "Settings",
+    "manageAccount": "Manage account"
+  },
+  "menu": {
+    "profileInformation": {
+      "label": "Profile information",
+      "detail": "Name, username, date of birth"
+    },
+    "wallets": {
+      "label": "Wallets",
+      "detail": "Balance & address on Monad"
+    },
+    "security": {
+      "label": "Security",
+      "detail": "Passkeys & two-factor"
+    },
+    "streak": {
+      "label": "Streak frequency",
+      "detail": "Daily, weekly, or monthly"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "detail": "Choose what reaches you"
+    },
+    "transactions": {
+      "label": "Transactions & yield",
+      "detail": "Ledger and earnings"
+    }
+  },
+  "profile": {
+    "loading": "Loading your profile…",
+    "uploadingPicture": "Uploading picture…",
+    "saveName": "Save name",
+    "editName": "Edit name",
+    "wallet": {
+      "label": "Monad wallet · non-custodial",
+      "notProvisioned": "Not provisioned"
+    },
+    "stats": {
+      "yieldEarned": "Yield earned",
+      "yieldApy": "Yield APY"
+    },
+    "errors": {
+      "savePicture": "Could not save profile picture.",
+      "uploadImage": "Could not upload image.",
+      "chooseImage": "Please choose an image file.",
+      "updateName": "Could not update name."
+    },
+    "signOutError": {
+      "title": "Could not sign out",
+      "description": "Please try again."
+    }
+  },
+  "information": {
+    "title": "Profile information",
+    "description": "Update how you appear across MoolaHub.",
+    "picture": {
+      "title": "Profile picture",
+      "uploading": "Uploading…",
+      "hint": "PNG or JPG, square works best."
+    },
+    "fields": {
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your name",
+      "username": "Username",
+      "usernameHint": "optional · unique",
+      "usernamePlaceholder": "username",
+      "dateOfBirth": "Date of birth",
+      "optional": "optional",
+      "nationality": "Nationality",
+      "nationalityPlaceholder": "e.g. Kenyan"
+    },
+    "errors": {
+      "nameEmpty": "Name cannot be empty.",
+      "update": "Could not update profile.",
+      "savePicture": "Could not save profile picture.",
+      "uploadImage": "Could not upload image.",
+      "chooseImage": "Please choose an image file."
+    },
+    "saving": "Saving…",
+    "saveChanges": "Save changes"
+  },
+  "security": {
+    "eyebrow": "Security",
+    "title": "Sign-in & security",
+    "description": "Add extra layers of protection to your account."
+  },
+  "changePassword": {
+    "title": "Password",
+    "descriptionChange": "Change the password you use to sign in",
+    "descriptionSet": "Set a password to sign in with your email",
+    "change": "Change",
+    "setPassword": "Set password",
+    "updated": "Password updated.",
+    "needVerifiedEmail": "A verified email is required to set a password.",
+    "currentPassword": "Current password",
+    "twoFactorCode": "Two-factor authentication code",
+    "codePlaceholder": "6-digit code",
+    "newPassword": "New password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "confirmNewPassword": "Confirm new password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "saving": "Saving…",
+    "savePassword": "Save password",
+    "sendCodeIntro": "We'll send a verification code to <strong>{{email}}</strong> to confirm it's you before setting a password.",
+    "sending": "Sending…",
+    "sendCode": "Send code",
+    "checkEmail": "Check your email for a 6-digit code.",
+    "verificationCode": "Verification code",
+    "verificationCodePlaceholder": "123456",
+    "errors": {
+      "minLength": "Password must be at least 8 characters.",
+      "mismatch": "Passwords don't match.",
+      "enterTotp": "Enter your two-factor authentication code to continue.",
+      "update": "Could not update your password.",
+      "sendCode": "Could not send the code. Please try again.",
+      "invalidCode": "That code is invalid or has expired."
+    }
+  },
+  "manageAccount": {
+    "deactivate": {
+      "label": "Deactivate account",
+      "detail": "Temporarily disable. Sign back in anytime to restore.",
+      "dialogTitle": "Deactivate your account?",
+      "dialogDescription": "Your account will be temporarily disabled and you'll be signed out. Your data, balances, and group savings stay safe. Sign back in any time to reactivate.",
+      "action": "Deactivate",
+      "pending": "Deactivating…",
+      "error": "Could not deactivate account."
+    },
+    "delete": {
+      "label": "Delete account",
+      "detail": "Permanently remove your account and data",
+      "dialogTitle": "Delete your account?",
+      "dialogDescription": "This permanently removes your profile and revokes access. You can only delete when your balance is zero and you have no active personal or group savings. Type <strong>DELETE</strong> to confirm.",
+      "action": "Delete forever",
+      "pending": "Deleting…",
+      "error": "Could not delete account."
+    }
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "description": "Sign in with Face ID, Touch ID, or a security key",
+    "adding": "Adding…",
+    "add": "Add passkey",
+    "unsupported": "This browser does not support passkeys.",
+    "loading": "Loading passkeys…",
+    "empty": "No passkeys yet. Add one for faster, safer sign-in.",
+    "defaultName": "Passkey",
+    "added": "Added {{date}}",
+    "lastUsed": "Last used {{date}}",
+    "remove": "Remove passkey",
+    "errors": {
+      "cancelled": "Setup cancelled.",
+      "add": "We couldn't add that passkey. Please try again.",
+      "remove": "We couldn't remove that passkey. Please try again."
+    }
+  },
+  "twoFactor": {
+    "backupCodes": {
+      "title": "Save your backup codes",
+      "copyAll": "Copy all",
+      "description": "Each code works once. Store them somewhere safe. They let you sign in if you lose your authenticator."
+    },
+    "title": "Authenticator app",
+    "on": "On",
+    "off": "Off",
+    "description": "Require a 6-digit code at sign-in for extra security",
+    "starting": "Starting…",
+    "setUp": "Set up",
+    "setup": {
+      "instructions": "Scan this QR code with Google Authenticator, 1Password, or any TOTP app, then enter the 6-digit code it shows.",
+      "qrAlt": "2FA QR code",
+      "codePlaceholder": "123456",
+      "verifying": "Verifying…",
+      "enable": "Enable 2FA"
+    },
+    "codesRemaining": "Backup codes remaining: {{count}}",
+    "regenerate": "Regenerate backup codes",
+    "turnOff": "Turn off",
+    "regenerateForm": {
+      "instructions": "Enter a current code or a backup code to generate a fresh set. Your old backup codes will stop working.",
+      "codePlaceholder": "Code",
+      "generating": "Generating…",
+      "generate": "Generate new codes"
+    },
+    "disableForm": {
+      "instructions": "Enter a current code or a backup code to turn off 2FA.",
+      "codePlaceholder": "Code",
+      "turningOff": "Turning off…",
+      "confirmTurnOff": "Confirm turn off"
+    },
+    "errors": {
+      "startSetup": "Could not start setup.",
+      "codeFailed": "That code didn't work. Try again."
+    }
+  },
+  "stepUp": {
+    "title": "Confirm it's you",
+    "descBoth": "Enter your password and your two-factor authentication code to continue.",
+    "descPassword": "Enter your password to continue.",
+    "descTotp": "Enter your two-factor authentication code to continue.",
+    "descEmail": "We'll email you a one-time code to confirm this change.",
+    "sending": "Sending…",
+    "sendCode": "Send code",
+    "codePlaceholder": "6-digit code",
+    "passwordPlaceholder": "Current password",
+    "errors": {
+      "sendCode": "Could not send the code. Please try again.",
+      "enterEmailCode": "Please enter the code we emailed you.",
+      "enterPassword": "Please enter your password to continue.",
+      "enterTotp": "Please enter your two-factor authentication code to continue."
+    }
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "imageUpload": {
+    "changePicture": "Change picture",
+    "uploadPicture": "Upload a picture",
+    "defaultHint": "Add a photo to keep the dream alive.",
+    "remove": "Remove",
+    "error": "Could not upload image.",
+    "chooseImage": "Please choose an image file."
+  },
+  "segmented": {
+    "optionsLabel": "Options"
+  }
+}

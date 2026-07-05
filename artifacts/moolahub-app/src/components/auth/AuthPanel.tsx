@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { EmailPasswordForm } from "./EmailPasswordForm";
 import { PasskeySignIn } from "./AuthForm";
 import { TwoFactorStep } from "./TwoFactorStep";
@@ -13,6 +14,7 @@ type Step =
   | { kind: "forgot"; email: string };
 
 export function AuthPanel() {
+  const { t } = useTranslation("auth");
   const [step, setStep] = useState<Step>({ kind: "login" });
   const [resetDone, setResetDone] = useState(false);
 
@@ -53,16 +55,16 @@ export function AuthPanel() {
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-          Welcome back
+          {t("login.title")}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Sign in to keep your savings on track.
+          {t("login.subtitle")}
         </p>
       </div>
 
       {resetDone && (
         <p className="rounded-xl bg-jade-50 px-3.5 py-2.5 text-sm text-jade-700 dark:bg-jade-500/15 dark:text-jade-300">
-          Your password has been reset. Sign in with your new password.
+          {t("login.resetDone")}
         </p>
       )}
 
@@ -78,7 +80,7 @@ export function AuthPanel() {
       <div className="flex items-center gap-4">
         <span className="h-px flex-1 bg-border" />
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          or
+          {t("login.or")}
         </span>
         <span className="h-px flex-1 bg-border" />
       </div>
@@ -86,9 +88,9 @@ export function AuthPanel() {
       <PasskeySignIn onTwoFactorRequired={(challengeId) => setStep({ kind: "twofactor", challengeId })} />
 
       <p className="text-center text-sm text-muted-foreground">
-        New to MoolaHub?{" "}
+        {t("login.newHere")}{" "}
         <Link href="/register" className="font-semibold text-jade-600 hover:text-jade-700 dark:text-jade-400">
-          Create an account
+          {t("login.createAccount")}
         </Link>
       </p>
     </div>

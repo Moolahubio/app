@@ -1,0 +1,28 @@
+{
+  "loading": "正在加载交易…",
+  "header": {
+    "title": "你的资金，笔笔有记录",
+    "description": "每一笔存款、缴款和付款。每一笔都在 Monad 上关联其凭证。"
+  },
+  "reminders": {
+    "title": "即将到来的提醒",
+    "tag": "提醒"
+  },
+  "history": {
+    "title": "交易记录",
+    "empty": "暂无交易。"
+  },
+  "onchain": {
+    "settling": "正在链上结算…",
+    "offchain": "链下"
+  },
+  "types": {
+    "deposit": "存款",
+    "payout": "付款",
+    "yield": "收益",
+    "contribution": "缴款",
+    "goal_allocate": "分配",
+    "goal_release": "释放",
+    "withdrawal": "提款"
+  }
+}

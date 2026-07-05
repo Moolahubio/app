@@ -1,0 +1,237 @@
+{
+  "avatar": {
+    "change": "Badilisha picha ya wasifu"
+  },
+  "sections": {
+    "settings": "Mipangilio",
+    "manageAccount": "Dhibiti akaunti"
+  },
+  "menu": {
+    "profileInformation": {
+      "label": "Taarifa za wasifu",
+      "detail": "Jina, jina la mtumiaji, tarehe ya kuzaliwa"
+    },
+    "wallets": {
+      "label": "Pochi",
+      "detail": "Salio na anwani kwenye Monad"
+    },
+    "security": {
+      "label": "Usalama",
+      "detail": "Funguo za kuingia na uthibitishaji wa hatua mbili"
+    },
+    "streak": {
+      "label": "Marudio ya mfululizo",
+      "detail": "Kila siku, kila wiki au kila mwezi"
+    },
+    "notifications": {
+      "label": "Arifa",
+      "detail": "Chagua kinachokufikia"
+    },
+    "transactions": {
+      "label": "Miamala na faida",
+      "detail": "Leja na mapato"
+    }
+  },
+  "profile": {
+    "loading": "Inapakia wasifu wako…",
+    "uploadingPicture": "Inapakia picha…",
+    "saveName": "Hifadhi jina",
+    "editName": "Hariri jina",
+    "wallet": {
+      "label": "Pochi ya Monad · isiyoshikiliwa",
+      "notProvisioned": "Haijaandaliwa"
+    },
+    "stats": {
+      "yieldEarned": "Faida iliyopatikana",
+      "yieldApy": "APY ya faida"
+    },
+    "errors": {
+      "savePicture": "Imeshindwa kuhifadhi picha ya wasifu.",
+      "uploadImage": "Imeshindwa kupakia picha.",
+      "chooseImage": "Tafadhali chagua faili la picha.",
+      "updateName": "Imeshindwa kusasisha jina."
+    },
+    "signOutError": {
+      "title": "Imeshindwa kutoka",
+      "description": "Tafadhali jaribu tena."
+    }
+  },
+  "information": {
+    "title": "Taarifa za wasifu",
+    "description": "Sasisha jinsi unavyoonekana kote MoolaHub.",
+    "picture": {
+      "title": "Picha ya wasifu",
+      "uploading": "Inapakia…",
+      "hint": "PNG au JPG, ya mraba inafaa zaidi."
+    },
+    "fields": {
+      "fullName": "Jina kamili",
+      "fullNamePlaceholder": "Jina lako",
+      "username": "Jina la mtumiaji",
+      "usernameHint": "hiari · la kipekee",
+      "usernamePlaceholder": "jina la mtumiaji",
+      "dateOfBirth": "Tarehe ya kuzaliwa",
+      "optional": "hiari",
+      "nationality": "Utaifa",
+      "nationalityPlaceholder": "mf. Mkenya"
+    },
+    "errors": {
+      "nameEmpty": "Jina haliwezi kuwa tupu.",
+      "update": "Imeshindwa kusasisha wasifu.",
+      "savePicture": "Imeshindwa kuhifadhi picha ya wasifu.",
+      "uploadImage": "Imeshindwa kupakia picha.",
+      "chooseImage": "Tafadhali chagua faili la picha."
+    },
+    "saving": "Inahifadhi…",
+    "saveChanges": "Hifadhi mabadiliko"
+  },
+  "security": {
+    "eyebrow": "Usalama",
+    "title": "Kuingia na usalama",
+    "description": "Ongeza tabaka za ziada za ulinzi kwenye akaunti yako."
+  },
+  "changePassword": {
+    "title": "Nywila",
+    "descriptionChange": "Badilisha nywila unayotumia kuingia",
+    "descriptionSet": "Weka nywila ili kuingia kwa barua pepe yako",
+    "change": "Badilisha",
+    "setPassword": "Weka nywila",
+    "updated": "Nywila imesasishwa.",
+    "needVerifiedEmail": "Barua pepe iliyothibitishwa inahitajika ili kuweka nywila.",
+    "currentPassword": "Nywila ya sasa",
+    "twoFactorCode": "Msimbo wa uthibitishaji wa hatua mbili",
+    "codePlaceholder": "Msimbo wa tarakimu 6",
+    "newPassword": "Nywila mpya",
+    "newPasswordPlaceholder": "Angalau herufi 8",
+    "confirmNewPassword": "Thibitisha nywila mpya",
+    "showPassword": "Onyesha nywila",
+    "hidePassword": "Ficha nywila",
+    "saving": "Inahifadhi…",
+    "savePassword": "Hifadhi nywila",
+    "sendCodeIntro": "Tutatuma msimbo wa uthibitishaji kwa <strong>{{email}}</strong> ili kuthibitisha ni wewe kabla ya kuweka nywila.",
+    "sending": "Inatuma…",
+    "sendCode": "Tuma msimbo",
+    "checkEmail": "Angalia barua pepe yako kwa msimbo wa tarakimu 6.",
+    "verificationCode": "Msimbo wa uthibitishaji",
+    "verificationCodePlaceholder": "123456",
+    "errors": {
+      "minLength": "Nywila lazima iwe na angalau herufi 8.",
+      "mismatch": "Nywila hazilingani.",
+      "enterTotp": "Weka msimbo wako wa uthibitishaji wa hatua mbili ili kuendelea.",
+      "update": "Imeshindwa kusasisha nywila yako.",
+      "sendCode": "Imeshindwa kutuma msimbo. Tafadhali jaribu tena.",
+      "invalidCode": "Msimbo huo si sahihi au umeisha muda wake."
+    }
+  },
+  "manageAccount": {
+    "deactivate": {
+      "label": "Zima akaunti",
+      "detail": "Zima kwa muda. Ingia tena wakati wowote kurejesha.",
+      "dialogTitle": "Zima akaunti yako?",
+      "dialogDescription": "Akaunti yako itazimwa kwa muda na utatolewa. Data, salio na akiba za kikundi zitabaki salama. Ingia tena wakati wowote kuwasha upya.",
+      "action": "Zima",
+      "pending": "Inazima…",
+      "error": "Imeshindwa kuzima akaunti."
+    },
+    "delete": {
+      "label": "Futa akaunti",
+      "detail": "Ondoa akaunti na data yako kabisa",
+      "dialogTitle": "Futa akaunti yako?",
+      "dialogDescription": "Hii huondoa wasifu wako kabisa na kubatilisha ufikiaji. Unaweza kufuta tu wakati salio lako ni sifuri na huna akiba za kibinafsi au za kikundi zinazoendelea. Andika <strong>DELETE</strong> kuthibitisha.",
+      "action": "Futa milele",
+      "pending": "Inafuta…",
+      "error": "Imeshindwa kufuta akaunti."
+    }
+  },
+  "passkeys": {
+    "title": "Funguo za kuingia",
+    "description": "Ingia kwa Face ID, Touch ID au ufunguo wa usalama",
+    "adding": "Inaongeza…",
+    "add": "Ongeza ufunguo wa kuingia",
+    "unsupported": "Kivinjari hiki hakiungi mkono funguo za kuingia.",
+    "loading": "Inapakia funguo za kuingia…",
+    "empty": "Bado hakuna funguo za kuingia. Ongeza mmoja kwa kuingia haraka na salama zaidi.",
+    "defaultName": "Ufunguo wa kuingia",
+    "added": "Iliongezwa {{date}}",
+    "lastUsed": "Ilitumika mwisho {{date}}",
+    "remove": "Ondoa ufunguo wa kuingia",
+    "errors": {
+      "cancelled": "Usanidi umeghairiwa.",
+      "add": "Hatukuweza kuongeza ufunguo huo. Tafadhali jaribu tena.",
+      "remove": "Hatukuweza kuondoa ufunguo huo. Tafadhali jaribu tena."
+    }
+  },
+  "twoFactor": {
+    "backupCodes": {
+      "title": "Hifadhi misimbo yako ya akiba",
+      "copyAll": "Nakili yote",
+      "description": "Kila msimbo hufanya kazi mara moja. Hifadhi mahali salama. Hukuwezesha kuingia ukipoteza kifaa chako cha uthibitishaji."
+    },
+    "title": "Programu ya uthibitishaji",
+    "on": "Imewashwa",
+    "off": "Imezimwa",
+    "description": "Hitaji msimbo wa tarakimu 6 wakati wa kuingia kwa usalama zaidi",
+    "starting": "Inaanza…",
+    "setUp": "Sanidi",
+    "setup": {
+      "instructions": "Skani msimbo huu wa QR kwa Google Authenticator, 1Password au programu yoyote ya TOTP, kisha weka msimbo wa tarakimu 6 unaoonyeshwa.",
+      "qrAlt": "Msimbo wa QR wa uthibitishaji wa hatua mbili",
+      "codePlaceholder": "123456",
+      "verifying": "Inathibitisha…",
+      "enable": "Washa uthibitishaji wa hatua mbili"
+    },
+    "codesRemaining": "Misimbo ya akiba iliyobaki: {{count}}",
+    "regenerate": "Zalisha upya misimbo ya akiba",
+    "turnOff": "Zima",
+    "regenerateForm": {
+      "instructions": "Weka msimbo wa sasa au msimbo wa akiba kuzalisha seti mpya. Misimbo yako ya zamani ya akiba itaacha kufanya kazi.",
+      "codePlaceholder": "Msimbo",
+      "generating": "Inazalisha…",
+      "generate": "Zalisha misimbo mipya"
+    },
+    "disableForm": {
+      "instructions": "Weka msimbo wa sasa au msimbo wa akiba kuzima uthibitishaji wa hatua mbili.",
+      "codePlaceholder": "Msimbo",
+      "turningOff": "Inazima…",
+      "confirmTurnOff": "Thibitisha kuzima"
+    },
+    "errors": {
+      "startSetup": "Imeshindwa kuanza usanidi.",
+      "codeFailed": "Msimbo huo haukufanya kazi. Jaribu tena."
+    }
+  },
+  "stepUp": {
+    "title": "Thibitisha ni wewe",
+    "descBoth": "Weka nywila yako na msimbo wako wa uthibitishaji wa hatua mbili ili kuendelea.",
+    "descPassword": "Weka nywila yako ili kuendelea.",
+    "descTotp": "Weka msimbo wako wa uthibitishaji wa hatua mbili ili kuendelea.",
+    "descEmail": "Tutakutumia msimbo wa mara moja kwa barua pepe kuthibitisha mabadiliko haya.",
+    "sending": "Inatuma…",
+    "sendCode": "Tuma msimbo",
+    "codePlaceholder": "Msimbo wa tarakimu 6",
+    "passwordPlaceholder": "Nywila ya sasa",
+    "errors": {
+      "sendCode": "Imeshindwa kutuma msimbo. Tafadhali jaribu tena.",
+      "enterEmailCode": "Tafadhali weka msimbo tuliokutumia kwa barua pepe.",
+      "enterPassword": "Tafadhali weka nywila yako ili kuendelea.",
+      "enterTotp": "Tafadhali weka msimbo wako wa uthibitishaji wa hatua mbili ili kuendelea."
+    }
+  },
+  "theme": {
+    "label": "Mandhari",
+    "light": "Nyepesi",
+    "dark": "Nyeusi",
+    "system": "Mfumo"
+  },
+  "imageUpload": {
+    "changePicture": "Badilisha picha",
+    "uploadPicture": "Pakia picha",
+    "defaultHint": "Ongeza picha kuweka ndoto hai.",
+    "remove": "Ondoa",
+    "error": "Imeshindwa kupakia picha.",
+    "chooseImage": "Tafadhali chagua faili la picha."
+  },
+  "segmented": {
+    "optionsLabel": "Chaguo"
+  }
+}

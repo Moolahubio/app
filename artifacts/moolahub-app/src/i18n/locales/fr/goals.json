@@ -1,0 +1,161 @@
+{
+  "list": {
+    "loading": "Chargement de votre épargne personnelle…",
+    "title": "Votre épargne personnelle",
+    "description": "Fixez un objectif et une date, et nous suivrons votre progression. Chaque objectif est une cagnotte au sein de votre portefeuille unique, pas un compte distinct.",
+    "newGoal": "Nouvel objectif",
+    "createGoal": "Créer un objectif"
+  },
+  "cadence": {
+    "option": {
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel"
+    },
+    "adverb": {
+      "daily": "chaque jour",
+      "weekly": "chaque semaine",
+      "monthly": "chaque mois"
+    },
+    "short": {
+      "daily": "j",
+      "weekly": "sem",
+      "monthly": "mois"
+    }
+  },
+  "create": {
+    "title": "Créer un objectif",
+    "name": {
+      "label": "Nom de l'objectif",
+      "placeholder": "ex. Fonds d'urgence"
+    },
+    "target": {
+      "label": "Montant cible (USDC)"
+    },
+    "deadline": {
+      "label": "Date cible"
+    },
+    "frequency": {
+      "label": "Fréquence des versements",
+      "hint": "Les versements commencent petit pour créer l'habitude et augmentent progressivement jusqu'à atteindre votre objectif."
+    },
+    "plan": {
+      "eyebrow": "Votre plan d'épargne",
+      "daily": "Commencez à <0></0> aujourd'hui et montez jusqu'à <1></1> sur {{count}} jours.",
+      "weekly": "Commencez à <0></0> cette semaine et montez jusqu'à <1></1> sur {{count}} semaines.",
+      "monthly": "Commencez à <0></0> ce mois-ci et montez jusqu'à <1></1> sur {{count}} mois."
+    },
+    "image": {
+      "label": "Photo (facultatif)",
+      "hint": "Ajoutez une photo de ce pour quoi vous épargnez afin de garder le rêve vivant."
+    },
+    "submit": "Créer l'objectif",
+    "submitting": "Création…"
+  },
+  "summary": {
+    "allocated": "Alloué à l'épargne",
+    "combinedTarget": "Objectif combiné",
+    "overallProgress": "Progression globale"
+  },
+  "card": {
+    "next": "prochain <0></0>/{{unit}}",
+    "by": "avant le {{date}}",
+    "of": "sur <0></0>",
+    "pctThere": "{{pct}} % atteint",
+    "manage": "Gérer l'objectif"
+  },
+  "info": {
+    "unallocated": "Vous avez actuellement <0></0> non alloué. Affectez-le à un objectif pour rester sur la bonne voie."
+  },
+  "detail": {
+    "loading": "Chargement de l'objectif…",
+    "notFound": "Nous n'avons pas trouvé cet objectif.",
+    "savedLabel": "épargné",
+    "savedOfTarget": "<0></0> sur <1></1>",
+    "onChain": "On-chain"
+  },
+  "deposit": {
+    "title": "Ajouter de l'argent",
+    "description": "Transférez des fonds de votre solde disponible vers cette allocation.",
+    "descriptionOnchain": "Transférez des fonds de votre solde disponible vers le coffre on-chain de cet objectif. Les dépôts sont gratuits.",
+    "addFunds": "Ajouter des fonds",
+    "success": "Fonds ajoutés à l'objectif"
+  },
+  "withdraw": {
+    "title": "Retirer",
+    "feeNote": "Des frais de retrait de {{fee}} % sont prélevés on-chain. Vous recevez le montant net de ces frais.",
+    "submit": "Retirer vers le disponible",
+    "released": "{{amount}} versé vers le disponible",
+    "releasedWithFee": "{{amount}} versé (après des frais de {{fee}})"
+  },
+  "stats": {
+    "remaining": "Restant",
+    "targetDate": "Date cible"
+  },
+  "plan": {
+    "title": "Plan de versement",
+    "subtitle": "{{cadence}} · augmente progressivement",
+    "step": "Étape {{current}}/{{total}}",
+    "complete": "Terminé",
+    "nextContribution": "Prochain versement",
+    "thisCadence": {
+      "daily": "aujourd'hui",
+      "weekly": "cette semaine",
+      "monthly": "ce mois-ci"
+    },
+    "allDone": "Vous avez terminé toutes les étapes de votre plan. 🎉",
+    "keepGoing": {
+      "daily": "Continuez chaque jour. Il reste environ <0>{{count}} jours</0> de versements pour atteindre votre objectif.",
+      "weekly": "Continuez chaque semaine. Il reste environ <0>{{count}} semaines</0> de versements pour atteindre votre objectif.",
+      "monthly": "Continuez chaque mois. Il reste environ <0>{{count}} mois</0> de versements pour atteindre votre objectif."
+    }
+  },
+  "vault": {
+    "title": "Coffre on-chain",
+    "description": "Les fonds que vous allouez sont déposés dans ce coffre sur Monad. Des frais de protocole de {{fee}} % sont prélevés à chaque retrait."
+  },
+  "activity": {
+    "title": "Activité",
+    "types": {
+      "goal_allocate": "Allocation à l'objectif",
+      "goal_release": "Retrait de l'objectif"
+    },
+    "status": {
+      "none": "Aucun",
+      "pending": "En attente",
+      "confirmed": "Confirmé",
+      "failed": "Échoué"
+    }
+  },
+  "delete": {
+    "title": "Supprimer l'objectif",
+    "descEmpty": "Cela ferme définitivement l'objectif.",
+    "descWithBalance": "Cela renvoie l'intégralité du solde de {{amount}} vers vos fonds disponibles et ferme l'objectif.",
+    "descWithFee": "Cela retire l'intégralité du solde de {{amount}} vers vos fonds disponibles (moins les frais de retrait de {{fee}} %) et ferme l'objectif.",
+    "confirm": "Confirmer la suppression",
+    "deleting": "Suppression…"
+  },
+  "toast": {
+    "streakTitle": "Série maintenue 🔥",
+    "streakDescription": "Bravo, ce dépôt compte pour votre série d'épargne."
+  },
+  "privy": {
+    "loadingWallet": "Chargement de votre portefeuille…",
+    "connect": {
+      "deposit": {
+        "prompt": "Votre portefeuille est à autoconservation. Connectez-le pour signer le dépôt vous-même.",
+        "button": "Connecter le portefeuille pour déposer"
+      },
+      "withdrawal": {
+        "prompt": "Votre portefeuille est à autoconservation. Connectez-le pour signer le retrait vous-même.",
+        "button": "Connecter le portefeuille pour retirer"
+      }
+    },
+    "errors": {
+      "unavailable": "L'épargne d'objectif on-chain n'est pas disponible sur ce déploiement.",
+      "invalidAmount": "Saisissez un montant valide.",
+      "depositFailed": "Le dépôt a échoué. Veuillez réessayer.",
+      "withdrawalFailed": "Le retrait a échoué. Veuillez réessayer."
+    }
+  }
+}

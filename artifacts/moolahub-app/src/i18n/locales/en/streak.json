@@ -1,0 +1,145 @@
+{
+  "eyebrow": "Streaks",
+  "title": "Savings streak",
+  "loading": "Loading your streak…",
+  "period": {
+    "day": "day",
+    "week": "week",
+    "month": "month",
+    "twoWeek": "2-week"
+  },
+  "unit": {
+    "day_one": "day",
+    "day_other": "days",
+    "week_one": "week",
+    "week_other": "weeks",
+    "month_one": "month",
+    "month_other": "months",
+    "twoWeek_one": "2-week",
+    "twoWeek_other": "2-weeks"
+  },
+  "status": {
+    "frozen": "Frozen",
+    "paused": "On vacation",
+    "broken": "No streak yet",
+    "onFire": "On fire",
+    "active": "Active"
+  },
+  "indicator": {
+    "aria": "Savings streak: {{count}} periods"
+  },
+  "atRisk": {
+    "message": "A single deposit before <strong>{{date}}</strong> keeps your streak alive. No rush, any goal or circle deposit counts."
+  },
+  "hero": {
+    "captionActive": "{{count}}-{{period}} streak · keep it going",
+    "captionEmpty": "Make a deposit this {{period}} to light your flame"
+  },
+  "stats": {
+    "current": "Current {{unit}}",
+    "lifetimeBest": "Lifetime best",
+    "periodsSaved": "Periods saved"
+  },
+  "share": {
+    "title": "Share your streak",
+    "description": "Your card shows your streak count only. Dollar amounts stay private unless you turn them on.",
+    "includeAmount": "Include amount saved",
+    "download": "Download",
+    "share": "Share",
+    "shareTitle": "My MoolaHub streak",
+    "card": {
+      "amountSaved": "{{amount}} saved"
+    }
+  },
+  "frequencyName": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "biweekly": "Biweekly"
+  },
+  "card": {
+    "streakTitle": "{{frequency}} streak",
+    "oneDepositPer": "One deposit per {{period}} keeps your flame lit.",
+    "change": "Change",
+    "goalDepositsCount": "Goal deposits count",
+    "circleContributionsCount": "Circle contributions count",
+    "changeOncePerYear": "Frequency can change once a year.",
+    "changeOncePerYearNext": "Frequency can change once a year. Next change unlocks in {{year}}."
+  },
+  "badges": {
+    "title": "Badge collection",
+    "saverTitle": "{{tier}} saver",
+    "noBadgeYet": "No badge yet",
+    "quartersKept_one": "{{count}} quarter kept",
+    "quartersKept_other": "{{count}} quarters kept",
+    "next": "Next: {{tier}}",
+    "progressNone": "Keep your streak alive for three months to earn your next badge.",
+    "progressToday": "Your next badge lands today, keep it going.",
+    "progressDays_one": "{{count}} day to your next badge.",
+    "progressDays_other": "{{count}} days to your next badge.",
+    "empty": "Keep a streak alive for three months to earn your first badge. There are four to collect each year, one for every season.",
+    "quarterShort": "Q{{n}}"
+  },
+  "tier": {
+    "bronze": "Bronze",
+    "silver": "Silver",
+    "gold": "Gold"
+  },
+  "season": {
+    "winter": "Winter",
+    "spring": "Spring",
+    "summer": "Summer",
+    "autumn": "Autumn"
+  },
+  "freezes": {
+    "title": "Streak freezes",
+    "description": "A freeze automatically protects your streak if you miss a single period. You earn one every three months (up to four a year), and at most one can be used per quarter.",
+    "available": "{{count}} available"
+  },
+  "reminders": {
+    "title": "Gentle reminders",
+    "description": "A single nudge before a {{period}} closes, only if you want it. Off by default."
+  },
+  "vacation": {
+    "title": "Vacation mode",
+    "description": "Life happens. Pause your streak once a year (up to 30 days) without losing your progress.",
+    "onVacation": "On vacation",
+    "onVacationUntil": "On vacation until {{date}}",
+    "ending": "Ending…",
+    "endEarly": "End vacation early",
+    "usedThisYear": "Vacation used this year",
+    "starting": "Starting…",
+    "startDays": "Start a {{count}}-day vacation"
+  },
+  "footer": {
+    "disclaimer": "Your streak never affects your balance or your money."
+  },
+  "milestone": {
+    "title": "New badge earned",
+    "description": "Three months of steady saving. That consistency is the whole game. Nicely done.",
+    "badgeUnlocked": "Q{{n}} badge unlocked",
+    "keepItUp": "Keep it up"
+  },
+  "profile": {
+    "title": "Streak frequency",
+    "description": "Choose how often a deposit needs to happen to keep your savings streak alive.",
+    "frequencyError": "Could not change your streak frequency.",
+    "recommended": "Recommended",
+    "lockNote": "You can change your streak frequency once per calendar year.",
+    "lockNoteNext": "You can change your streak frequency once per calendar year. Your next change unlocks in {{year}}.",
+    "options": {
+      "daily": {
+        "label": "Daily",
+        "description": "Keep the flame alive with a deposit every day. Best for an everyday saving habit."
+      },
+      "weekly": {
+        "label": "Weekly",
+        "description": "One deposit any time during the week keeps your streak going. A calm, steady pace."
+      },
+      "monthly": {
+        "label": "Monthly",
+        "description": "A single deposit each calendar month is all it takes. Gentle and low-pressure."
+      }
+    }
+  }
+}

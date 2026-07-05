@@ -90,7 +90,7 @@ function ShellNavLink({
     >
       {active && (
         <span
-          className="absolute inset-y-1.5 left-0 w-0.5 rounded-full bg-jade-500 transition-all duration-200"
+          className="absolute inset-y-1.5 start-0 w-0.5 rounded-full bg-jade-500 transition-all duration-200"
           aria-hidden
         />
       )}

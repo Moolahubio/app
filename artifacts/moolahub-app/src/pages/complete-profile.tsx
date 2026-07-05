@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, Eye, EyeOff, Check, Loader2, LogOut } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { authInputClass } from "@/components/auth/AuthShell";
@@ -20,6 +21,7 @@ import { apiErrorMessage } from "@/lib/utils";
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/;
 
 export default function CompleteProfile() {
+  const { t } = useTranslation("auth");
   const { data: user, isLoading } = useGetMe();
   const updateProfile = useUpdateProfile();
   const changePassword = useChangePassword();
@@ -82,11 +84,11 @@ export default function CompleteProfile() {
     if (needsUsername) {
       const u = username.trim().toLowerCase();
       if (!USERNAME_RE.test(u))
-        return setError("Username must be 3–30 characters: letters, numbers, or underscores.");
+        return setError(t("errors.username"));
     }
     if (needsPassword) {
-      if (password.length < 8) return setError("Password must be at least 8 characters.");
-      if (password !== confirm) return setError("Passwords don't match.");
+      if (password.length < 8) return setError(t("errors.passwordLength"));
+      if (password !== confirm) return setError(t("errors.passwordMatch"));
     }
 
     setSubmitting(true);
@@ -103,7 +105,7 @@ export default function CompleteProfile() {
       ]);
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not save your details. Please try again.");
+      setError(apiErrorMessage(err) ?? t("errors.saveDetails"));
     } finally {
       setSubmitting(false);
     }
@@ -112,13 +114,13 @@ export default function CompleteProfile() {
   const usernameStatus = !needsUsername || !debounced
     ? null
     : !usernameValid
-      ? { ok: false, text: "3–30 letters, numbers, or underscores" }
+      ? { ok: false, text: t("username.hint") }
       : availability.isFetching
-        ? { ok: null, text: "Checking…" }
+        ? { ok: null, text: t("username.checking") }
         : availability.data
           ? availability.data.available
-            ? { ok: true, text: "Available" }
-            : { ok: false, text: availability.data.reason ?? "Taken" }
+            ? { ok: true, text: t("username.available") }
+            : { ok: false, text: availability.data.reason ?? t("username.taken") }
           : null;
 
   return (
@@ -130,14 +132,14 @@ export default function CompleteProfile() {
           disabled={logout.isPending}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-ring disabled:opacity-60"
         >
-          <LogOut className="h-4 w-4" /> {logout.isPending ? "Signing out…" : "Sign out"}
+          <LogOut className="h-4 w-4" /> {logout.isPending ? t("common:actions.signingOut") : t("common:actions.signOut")}
         </button>
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
-            Finish setting up
+            {t("complete.title")}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            A couple more details secure your account so you can always sign in with your email.
+            {t("complete.subtitle")}
           </p>
         </div>
 
@@ -145,14 +147,14 @@ export default function CompleteProfile() {
           {needsUsername && (
             <label className="block">
               <span className="text-sm font-medium text-foreground">
-                Username <span className="text-xs font-normal text-muted-foreground">· public</span>
+                {t("fields.username")} <span className="text-xs font-normal text-muted-foreground">{t("fields.public")}</span>
               </span>
               <input
                 autoCapitalize="none"
                 autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="janedoe"
+                placeholder={t("fields.usernamePlaceholder")}
                 className={`mt-1.5 ${authInputClass}`}
               />
               {usernameStatus && (
@@ -176,28 +178,28 @@ export default function CompleteProfile() {
           {needsPassword && (
             <>
               <label className="block">
-                <span className="text-sm font-medium text-foreground">Password</span>
+                <span className="text-sm font-medium text-foreground">{t("fields.password")}</span>
                 <div className="relative mt-1.5">
                   <input
                     type={show ? "text" : "password"}
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    className={`${authInputClass} pr-10`}
+                    placeholder={t("fields.passwordMinPlaceholder")}
+                    className={`${authInputClass} pe-10`}
                   />
                   <button
                     type="button"
                     onClick={() => setShow((s) => !s)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
-                    aria-label={show ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
+                    aria-label={show ? t("password.hide") : t("password.show")}
                   >
                     {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </label>
               <label className="block">
-                <span className="text-sm font-medium text-foreground">Confirm password</span>
+                <span className="text-sm font-medium text-foreground">{t("fields.confirmPassword")}</span>
                 <input
                   type={show ? "text" : "password"}
                   autoComplete="new-password"
@@ -216,7 +218,7 @@ export default function CompleteProfile() {
           )}
 
           <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-            {submitting ? "Saving…" : "Finish & continue"}
+            {submitting ? t("complete.submitting") : t("complete.submit")}
           </Button>
         </form>
       </div>

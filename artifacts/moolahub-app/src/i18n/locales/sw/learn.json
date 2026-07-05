@@ -1,0 +1,34 @@
+{
+  "loading": "Inapakia masomo…",
+  "empty": "Hakuna masomo yanayopatikana.",
+  "header": {
+    "title": "Uwezeshaji wa kifedha",
+    "description": "Masomo mafupi na ya vitendo ya kukujengea ujasiri na pesa zako."
+  },
+  "progress": {
+    "count": "Masomo {{completed}} kati ya {{total}} yamekamilika",
+    "encourage": "Endelea kudumisha mfululizo wako."
+  },
+  "featured": {
+    "revisit": "Pitia tena",
+    "startHere": "Anza hapa",
+    "reviewLesson": "Pitia somo",
+    "startLesson": "Anza somo"
+  },
+  "card": {
+    "done": "Imekamilika",
+    "minutes": "Dakika {{count}}"
+  },
+  "detail": {
+    "loading": "Inapakia somo…",
+    "notFound": "Hatukuweza kupata somo hilo.",
+    "allLessons": "Masomo yote",
+    "minutesRead": "Kusoma dakika {{count}}",
+    "completed": "Limekamilika",
+    "keyTakeaways": "Mambo muhimu",
+    "lessonCompleted": "Somo limekamilika",
+    "markComplete": "Weka alama kuwa limekamilika",
+    "saving": "Inahifadhi…",
+    "nextLesson": "Somo linalofuata"
+  }
+}

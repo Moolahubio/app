@@ -1,0 +1,34 @@
+{
+  "loading": "جارٍ تحميل الدروس…",
+  "empty": "لا توجد دروس متاحة.",
+  "header": {
+    "title": "التمكين المالي",
+    "description": "دروس قصيرة وعملية لبناء ثقتك في إدارة أموالك."
+  },
+  "progress": {
+    "count": "أكملت {{completed}} من {{total}} دروس",
+    "encourage": "حافظ على استمرار تقدّمك."
+  },
+  "featured": {
+    "revisit": "مراجعة",
+    "startHere": "ابدأ من هنا",
+    "reviewLesson": "مراجعة الدرس",
+    "startLesson": "ابدأ الدرس"
+  },
+  "card": {
+    "done": "منجز",
+    "minutes": "{{count}} دقيقة"
+  },
+  "detail": {
+    "loading": "جارٍ تحميل الدرس…",
+    "notFound": "لم نتمكن من العثور على هذا الدرس.",
+    "allLessons": "كل الدروس",
+    "minutesRead": "قراءة {{count}} دقيقة",
+    "completed": "مكتمل",
+    "keyTakeaways": "أهم النقاط",
+    "lessonCompleted": "اكتمل الدرس",
+    "markComplete": "وضع علامة كمكتمل",
+    "saving": "جارٍ الحفظ…",
+    "nextLesson": "الدرس التالي"
+  }
+}

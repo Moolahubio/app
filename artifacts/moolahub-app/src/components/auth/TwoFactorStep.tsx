@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui";
@@ -13,6 +14,7 @@ export function TwoFactorStep({
   challengeId: string;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation("auth");
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const twoFactorLogin = useTwoFactorLogin();
@@ -29,7 +31,7 @@ export function TwoFactorStep({
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "That code didn't work. Try again.");
+      setError(apiErrorMessage(err) ?? t("twoFactor.error"));
     }
   };
 
@@ -41,10 +43,10 @@ export function TwoFactorStep({
         </span>
         <div>
           <h2 className="font-display text-lg font-bold text-foreground">
-            Two-factor authentication
+            {t("twoFactor.title")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Enter the 6-digit code from your authenticator app, or a backup code.
+            {t("twoFactor.subtitle")}
           </p>
         </div>
       </div>
@@ -53,7 +55,7 @@ export function TwoFactorStep({
         inputMode="numeric"
         autoComplete="one-time-code"
         autoFocus
-        placeholder="123456"
+        placeholder={t("fields.codePlaceholder")}
         value={code}
         onChange={(e) => setCode(e.target.value)}
         className="w-full rounded-xl border border-border bg-background px-3.5 py-3 text-center font-mono text-lg tracking-[0.3em] text-foreground outline-none focus:border-jade-500/60 focus-ring"
@@ -71,7 +73,7 @@ export function TwoFactorStep({
         className="w-full"
         disabled={twoFactorLogin.isPending || code.trim().length < 6}
       >
-        {twoFactorLogin.isPending ? "Verifying…" : "Verify & sign in"}
+        {twoFactorLogin.isPending ? t("twoFactor.submitting") : t("twoFactor.submit")}
       </Button>
 
       <button
@@ -79,7 +81,7 @@ export function TwoFactorStep({
         onClick={onCancel}
         className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to sign in
+        <ArrowLeft className="h-4 w-4 rtl:rotate-180" /> {t("backToSignIn")}
       </button>
     </form>
   );

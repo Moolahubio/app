@@ -91,6 +91,7 @@ function authUserFields(user: UserRow, walletAddress: string | null) {
     hasPassword: !!user.passwordHash,
     privyLinked: !!user.privyDid,
     emailVerified: !!user.emailVerifiedAt,
+    language: user.language,
   };
 }
 

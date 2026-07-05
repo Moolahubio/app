@@ -1,0 +1,69 @@
+{
+  "hero": {
+    "eyebrow": "Bon retour",
+    "greeting": "Ravi de vous revoir",
+    "greetingNamed": "Ravi de vous revoir, {{name}}",
+    "totalBalance": "Solde total",
+    "available": "Disponible",
+    "inSavings": "En épargne",
+    "apy": "+{{apy}} % APY",
+    "addMoney": "Ajouter de l'argent",
+    "withdraw": "Retirer",
+    "growthLabel": "Croissance · 6 mois",
+    "earned": "{{amount}} gagnés"
+  },
+  "reminders": {
+    "title": "À venir",
+    "allCaughtUp": "Vous êtes à jour."
+  },
+  "streak": {
+    "none": "Pas encore de série",
+    "count": {
+      "daily": "{{count}} jours",
+      "weekly": "{{count}} semaines",
+      "biweekly": "{{count}} quinzaines",
+      "monthly": "{{count}} mois"
+    },
+    "saved": {
+      "daily": "Épargné aujourd'hui, bien joué",
+      "weekly": "Épargné cette semaine, bien joué",
+      "biweekly": "Épargné cette quinzaine, bien joué",
+      "monthly": "Épargné ce mois-ci, bien joué"
+    },
+    "keepAlive": {
+      "daily": "Un dépôt suffit pour garder votre série quotidienne",
+      "weekly": "Un dépôt suffit pour garder votre série hebdomadaire",
+      "biweekly": "Un dépôt suffit pour garder votre série bimensuelle",
+      "monthly": "Un dépôt suffit pour garder votre série mensuelle"
+    },
+    "firstFlame": "Faites un dépôt pour allumer votre première flamme"
+  },
+  "savings": {
+    "title": "Épargne personnelle",
+    "empty": "Rien ici pour l'instant. Créez votre premier objectif."
+  },
+  "circle": {
+    "title": "Cercle actif",
+    "round": "Tour {{current}} sur {{total}} · {{frequency}}",
+    "pot": "Cagnotte",
+    "members": "{{count}} membres",
+    "empty": "Aucun cercle actif pour l'instant."
+  },
+  "frequency": {
+    "daily": "quotidien",
+    "weekly": "hebdomadaire",
+    "biweekly": "bimensuel",
+    "monthly": "mensuel"
+  },
+  "learn": {
+    "title": "Continuez à apprendre",
+    "lessonTitle": "La blockchain, expliquée simplement",
+    "lessonMeta": "5 min · Débutant",
+    "startLesson": "Commencer la leçon"
+  },
+  "transactions": {
+    "title": "Transactions récentes",
+    "viewAll": "Voir tout",
+    "empty": "Aucune transaction pour l'instant."
+  }
+}

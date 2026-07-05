@@ -13,19 +13,21 @@ import {
   Trash2
 } from "lucide-react";
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
-import { BackLink } from "@/components/app/bits";
+import { BackLink, Money, Addr } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
 import { PrivyContributeButton } from "@/components/app/PrivyContributeButton";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
 import { useOnchainConfig } from "@/lib/onchain/config";
 import { useGetCircle, useGetWallet, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey, getGetStreaksQueryKey } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
-import { formatMoney, truncateAddress, apiErrorMessage, cn } from "@/lib/utils";
+import { formatMoney, formatDate, apiErrorMessage, cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 export default function CircleDetailPage() {
+  const { t } = useTranslation("circles");
   const { id } = useParams();
   const [, navigate] = useLocation();
   const { data: circle, isLoading } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
@@ -39,8 +41,8 @@ export default function CircleDetailPage() {
   const deleteMutation = useDeleteCircle();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading circle…</div>;
-  if (!circle) return <div className="p-8 text-center text-muted-foreground">We couldn't find that circle.</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;
+  if (!circle) return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
 
   const isForming = circle.status === "forming";
   const isActive = circle.status === "active";
@@ -61,14 +63,14 @@ export default function CircleDetailPage() {
     queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) });
     queryClient.invalidateQueries({ queryKey: getGetStreaksQueryKey() });
     toast({
-      title: "Streak kept alive 🔥",
-      description: "Nice, that contribution counts toward your savings streak.",
+      title: t("detail.toast.streakTitle"),
+      description: t("detail.toast.streakDescription"),
     });
   };
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <BackLink href="/circles" label="Group Savings" />
+      <BackLink href="/circles" label={t("common:nav.groupSavings")} />
 
       {/* ----------------------------------------------------------- header */}
       <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">
@@ -82,23 +84,23 @@ export default function CircleDetailPage() {
             <div>
               <h1 className="font-display text-2xl font-bold">{circle.name}</h1>
               <p className="text-sm capitalize text-white/70">
-                {circle.frequency} · {circle.members.length} members
+                {t(`frequency.${circle.frequency}`, { defaultValue: circle.frequency })} · {t("card.members", { count: circle.members.length })}
                 {isForming
-                  ? " · forming"
-                  : ` · Round ${circle.currentRound} of ${circle.totalRounds}`}
+                  ? ` · ${t("detail.formingSuffix")}`
+                  : ` · ${t("card.roundOf", { current: circle.currentRound, total: circle.totalRounds })}`}
               </p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
             <Badge tone="jade" className="bg-jade-500/15 capitalize text-jade-300 ring-jade-400/20">
-              {circle.status}
+              {t(`status.${circle.status}`, { defaultValue: circle.status })}
             </Badge>
             <Badge tone="neutral" className="bg-white/10 text-white/70 ring-white/15">
-              {isAccumulation ? "Accumulation" : "Rotation"}
+              {isAccumulation ? t("type.accumulation") : t("type.rotation")}
             </Badge>
             {circle.contractAddress && (
               <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-                <Link2 className="h-3.5 w-3.5" /> On-chain
+                <Link2 className="h-3.5 w-3.5" /> {t("detail.onChain")}
               </Badge>
             )}
           </div>
@@ -106,14 +108,14 @@ export default function CircleDetailPage() {
 
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Per round", value: formatMoney(circle.contributionCents) },
-            { label: "You receive", value: formatMoney(circle.payoutCents) },
+            { label: t("card.perRound"), value: <Money cents={circle.contributionCents} /> },
+            { label: t("card.youReceive"), value: <Money cents={circle.payoutCents} /> },
             isAccumulation
-              ? { label: "Rounds", value: `${circle.totalRounds}` }
-              : { label: "Your position", value: circle.myPayoutRound ? `#${circle.myPayoutRound}` : "—" },
+              ? { label: t("detail.stats.rounds"), value: `${circle.totalRounds}` }
+              : { label: t("detail.stats.yourPosition"), value: circle.myPayoutRound ? `#${circle.myPayoutRound}` : "—" },
             {
-              label: "Started",
-              value: circle.startDate ? new Date(circle.startDate).toLocaleDateString("en-US", {
+              label: t("detail.stats.started"),
+              value: circle.startDate ? formatDate(circle.startDate, {
                 month: "short",
                 day: "numeric",
               }) : "—",
@@ -138,7 +140,7 @@ export default function CircleDetailPage() {
                 platform={onchainConfig?.platform ?? null}
                 usdcAddress={onchainConfig?.usdc ?? null}
                 contributionCents={circle.contributionCents}
-                label={`Contribute ${formatMoney(circle.contributionCents)}`}
+                label={t("detail.contribute", { amount: formatMoney(circle.contributionCents) })}
                 onSuccess={onContributeSuccess}
               />
             ) : (
@@ -148,18 +150,18 @@ export default function CircleDetailPage() {
                     onSuccess: onContributeSuccess,
                   });
                 }}
-                label={`Contribute ${formatMoney(circle.contributionCents)}`}
-                pendingLabel="Submitting…"
+                label={t("detail.contribute", { amount: formatMoney(circle.contributionCents) })}
+                pendingLabel={t("detail.submitting")}
                 size="sm"
                 pending={contributeMutation.isPending}
               />
             )
           ) : isActive ? (
             <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Contributed this round
+              <CheckCircle2 className="h-3.5 w-3.5" /> {t("detail.contributedThisRound")}
             </Badge>
           ) : (
-            <Badge tone="amber">This circle hasn't started yet</Badge>
+            <Badge tone="amber">{t("detail.notStarted")}</Badge>
           )}
         </div>
         {contributeMutation.error && (
@@ -172,14 +174,14 @@ export default function CircleDetailPage() {
         <Card className="p-6">
           <div className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-jade-600 dark:text-jade-400" />
-            <h2 className="font-display text-lg font-bold text-foreground">Build your circle</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("detail.build.title")}</h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
-              ? `Invite people by email. Everyone saves into one shared pot for ${circle.totalRounds} rounds, then gets their savings back. Start the circle once everyone's in.`
+              ? t("detail.build.descAccumulation", { count: circle.totalRounds })
               : circle.targetMembers
-                ? `Invite people by email. ${circle.members.length} of ${circle.targetMembers} have joined. The circle starts automatically the moment the last person joins.`
-                : "Invite people by email. Rounds equal members, so everyone gets exactly one payout. Start the circle once everyone's in."}
+                ? t("detail.build.descTargeted", { joined: circle.members.length, target: circle.targetMembers })
+                : t("detail.build.descRotation")}
           </p>
 
           {canInvite && (
@@ -191,7 +193,7 @@ export default function CircleDetailPage() {
                   });
                 }}
                 pending={inviteMutation.isPending}
-                ok={inviteMutation.isSuccess ? "Sent" : null}
+                ok={inviteMutation.isSuccess ? t("detail.build.sent") : null}
               />
             </div>
           )}
@@ -205,14 +207,14 @@ export default function CircleDetailPage() {
                       onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetCircleQueryKey(circle.id) })
                     });
                   }}
-                  label="Start circle"
-                  pendingLabel="Starting…"
+                  label={t("detail.build.start")}
+                  pendingLabel={t("detail.build.starting")}
                   pending={startMutation.isPending}
                 />
               ) : (
                 <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                   <Rocket className="h-4 w-4 text-muted-foreground" />
-                  Invite at least one more member to start the circle.
+                  {t("detail.build.needMore")}
                 </p>
               )}
             </div>
@@ -223,10 +225,9 @@ export default function CircleDetailPage() {
       {/* ----------------------------------------------------- delete circle */}
       {canDelete && (
         <Card className="border-rose-500/20 p-6">
-          <h2 className="font-display text-lg font-bold text-foreground">Delete circle</h2>
+          <h2 className="font-display text-lg font-bold text-foreground">{t("detail.delete.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            No one else has joined yet, so you can delete this circle. Once another member
-            joins, it can't be deleted. This permanently removes the circle and any pending invites.
+            {t("detail.delete.description")}
           </p>
           {deleteMutation.error && (
             <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
@@ -238,7 +239,7 @@ export default function CircleDetailPage() {
                 onClick={() => setConfirmDelete(true)}
                 className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-card px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
               >
-                <Trash2 className="h-4 w-4" /> Delete circle
+                <Trash2 className="h-4 w-4" /> {t("detail.delete.title")}
               </button>
             ) : (
               <>
@@ -259,7 +260,7 @@ export default function CircleDetailPage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-700 disabled:opacity-60"
                 >
                   <Trash2 className="h-4 w-4" />
-                  {deleteMutation.isPending ? "Deleting…" : "Confirm delete"}
+                  {deleteMutation.isPending ? t("detail.delete.deleting") : t("detail.delete.confirm")}
                 </button>
                 <button
                   type="button"
@@ -267,7 +268,7 @@ export default function CircleDetailPage() {
                   onClick={() => setConfirmDelete(false)}
                   className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-accent"
                 >
-                  Cancel
+                  {t("common:actions.cancel")}
                 </button>
               </>
             )}
@@ -281,13 +282,13 @@ export default function CircleDetailPage() {
           <div className="flex items-center gap-2">
             <CalendarClock className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">
-              {isAccumulation ? "Members" : "Payout schedule"}
+              {isAccumulation ? t("detail.schedule.membersTitle") : t("detail.schedule.payoutTitle")}
             </h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {isAccumulation
-              ? `Everyone saves into one shared pot. After ${circle.totalRounds} rounds, each member gets their own savings back, locked on-chain.`
-              : "The rotation is locked on-chain, so everyone knows who receives the pot, and when."}
+              ? t("detail.schedule.descAccumulation", { count: circle.totalRounds })
+              : t("detail.schedule.descRotation")}
           </p>
 
           <ol className="mt-5 space-y-2">
@@ -317,21 +318,21 @@ export default function CircleDetailPage() {
                   <Avatar name={m.name} tone={isYou ? "jade" : "ink"} className="h-8 w-8" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {m.name} {isYou && <span className="text-jade-600 dark:text-jade-400">(you)</span>}
+                      {m.name} {isYou && <span className="text-jade-600 dark:text-jade-400">{t("detail.schedule.you")}</span>}
                     </p>
                     <p className="text-xs text-muted-foreground capitalize">
                       {isAccumulation
                         ? done
-                          ? "Savings returned"
-                          : "Saving"
+                          ? t("detail.schedule.savingsReturned")
+                          : t("detail.schedule.saving")
                         : done
-                          ? "Received pot"
+                          ? t("detail.schedule.receivedPot")
                           : current
-                            ? "Receiving now"
+                            ? t("detail.schedule.receivingNow")
                             : m.state}
                     </p>
                   </div>
-                  {current && <Badge tone="jade">Current</Badge>}
+                  {current && <Badge tone="jade">{t("detail.schedule.current")}</Badge>}
                 </li>
               );
             })}
@@ -341,9 +342,9 @@ export default function CircleDetailPage() {
         {/* ------------------------------------------ contribution history */}
         <div className="space-y-6 lg:col-span-2">
           <Card className="p-6">
-            <h2 className="font-display text-lg font-bold text-foreground">Round progress</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("detail.progress.title")}</h2>
             <p className="mt-3 text-sm text-muted-foreground">
-              {circle.currentRound} of {circle.totalRounds} rounds
+              {t("detail.progress.roundsOf", { current: circle.currentRound, total: circle.totalRounds })}
             </p>
             <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
           </Card>
@@ -352,11 +353,10 @@ export default function CircleDetailPage() {
             <Card className="p-6">
               <div className="flex items-center gap-2">
                 <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
-                <h2 className="font-display text-lg font-bold text-foreground">On-chain escrow</h2>
+                <h2 className="font-display text-lg font-bold text-foreground">{t("detail.escrow.title")}</h2>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Contributions settle into this Susu escrow on Monad. A{" "}
-                {((circle.feeBps ?? 0) / 100).toFixed(0)}% protocol fee is taken from each payout.
+                {t("detail.escrow.description", { fee: ((circle.feeBps ?? 0) / 100).toFixed(0) })}
               </p>
               <a
                 href={`${circle.explorerUrl ?? "https://testnet.monadvision.com"}/address/${circle.contractAddress}`}
@@ -364,7 +364,7 @@ export default function CircleDetailPage() {
                 rel="noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700"
               >
-                {truncateAddress(circle.contractAddress)}
+                <Addr address={circle.contractAddress} />
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </Card>
@@ -372,7 +372,7 @@ export default function CircleDetailPage() {
 
           {(circle.history?.length ?? 0) > 0 && (
             <Card className="p-6">
-              <h2 className="font-display text-lg font-bold text-foreground">Your contributions</h2>
+              <h2 className="font-display text-lg font-bold text-foreground">{t("detail.history.title")}</h2>
               <ul className="mt-4 space-y-2">
                 {circle.history!.map((h) => (
                   <li
@@ -380,8 +380,8 @@ export default function CircleDetailPage() {
                     className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-foreground">Round {h.round}</p>
-                      <p className="text-xs text-muted-foreground">{formatMoney(h.amountCents)}</p>
+                      <p className="text-sm font-semibold text-foreground">{t("detail.history.round", { round: h.round })}</p>
+                      <p className="text-xs text-muted-foreground"><Money cents={h.amountCents} /></p>
                     </div>
                     {h.txHash ? (
                       <a
@@ -390,7 +390,7 @@ export default function CircleDetailPage() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 dark:text-jade-300 transition hover:text-jade-800"
                       >
-                        {truncateAddress(h.txHash)}
+                        <Addr address={h.txHash} />
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     ) : (

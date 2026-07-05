@@ -57,6 +57,7 @@ export * from './platformBalances';
 export * from './privyAuthInput';
 export * from './privyLinkInput';
 export * from './profileUpdate';
+export * from './profileUpdateLanguage';
 export * from './registerInput';
 export * from './registerPasskeyOptionsInput';
 export * from './releaseFromGoalInput';

@@ -158,7 +158,8 @@ export const GetMeResponse = zod.object({
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().optional().describe('Whether the account has an email\/password credential set.'),
   "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
-  "emailVerified": zod.boolean().optional()
+  "emailVerified": zod.boolean().optional(),
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
 })
 
 
@@ -206,7 +207,8 @@ export const TwoFactorLoginResponse = zod.object({
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().optional().describe('Whether the account has an email\/password credential set.'),
   "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
-  "emailVerified": zod.boolean().optional()
+  "emailVerified": zod.boolean().optional(),
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
 })
 
 
@@ -367,7 +369,8 @@ export const LinkPrivyResponse = zod.object({
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().optional().describe('Whether the account has an email\/password credential set.'),
   "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
-  "emailVerified": zod.boolean().optional()
+  "emailVerified": zod.boolean().optional(),
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
 })
 
 
@@ -1191,7 +1194,8 @@ export const GetProfileResponse = zod.object({
   "emailVerified": zod.boolean().optional(),
   "hasPassword": zod.boolean().optional(),
   "privyLinked": zod.boolean().optional(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
 })
 
 
@@ -1203,7 +1207,8 @@ export const UpdateProfileBody = zod.object({
   "username": zod.string().nullish(),
   "dateOfBirth": zod.string().nullish(),
   "nationality": zod.string().nullish(),
-  "avatarUrl": zod.string().nullish()
+  "avatarUrl": zod.string().nullish(),
+  "language": zod.enum(['en', 'ar', 'fr', 'sw', 'pcm', 'ha', 'zh']).optional()
 })
 
 export const UpdateProfileResponse = zod.object({
@@ -1219,7 +1224,8 @@ export const UpdateProfileResponse = zod.object({
   "emailVerified": zod.boolean().optional(),
   "hasPassword": zod.boolean().optional(),
   "privyLinked": zod.boolean().optional(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
 })
 
 

@@ -1,0 +1,67 @@
+{
+  "app": {
+    "tagline": "Ka ajiye. Ka samu riba. Ka kasance."
+  },
+  "nav": {
+    "home": "Gida",
+    "personalSavings": "Ajiyar Kai",
+    "personalSavingsShort": "Ajiya",
+    "groupSavings": "Ajiyar Ƙungiya",
+    "groupSavingsShort": "Ƙungiyoyi",
+    "learn": "Koyi",
+    "transactions": "Ma'amaloli",
+    "account": "Asusu",
+    "profile": "Bayanin martaba",
+    "viewProfile": "Duba bayanin martaba"
+  },
+  "actions": {
+    "save": "Ajiye",
+    "saved": "An ajiye.",
+    "cancel": "Soke",
+    "edit": "Gyara",
+    "delete": "Share",
+    "confirm": "Tabbatar",
+    "back": "Koma baya",
+    "close": "Rufe",
+    "retry": "Sake gwadawa",
+    "continue": "Ci gaba",
+    "loading": "Ana ɗauka…",
+    "signOut": "Fita",
+    "signingOut": "Ana fita…"
+  },
+  "labels": {
+    "balance": "Ma'auni",
+    "nextDue": "Na gaba"
+  },
+  "time": {
+    "justNow": "yanzu",
+    "minutesAgo": "minti {{count}} da suka wuce",
+    "hoursAgo": "awa {{count}} da suka wuce",
+    "daysAgo": "kwana {{count}} da suka wuce"
+  },
+  "language": {
+    "eyebrow": "Saituna",
+    "title": "Harshe",
+    "description": "Zaɓi harshen dukan manhajar. Lambobi, kwanaki da ma'auni za su canja shima.",
+    "detail": "Zaɓi harshenka",
+    "error": "An kasa canja harshe.",
+    "names": {
+      "en": "Turanci",
+      "ar": "Larabci",
+      "fr": "Faransanci",
+      "sw": "Suwahili",
+      "pcm": "Pidgin na Najeriya",
+      "ha": "Hausa",
+      "zh": "Mandarin"
+    }
+  },
+  "forms": {
+    "copy": "Kwafa",
+    "copied": "An kwafa",
+    "working": "Ana aiki…",
+    "withdrawUsdc": "Cire USDC",
+    "sending": "Ana aikawa…",
+    "recipientPlaceholder": "Adireshin Monad na mai karɓa (0x…)",
+    "invite": "Gayyata"
+  }
+}

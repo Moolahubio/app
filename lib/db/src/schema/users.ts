@@ -38,6 +38,10 @@ export const usersTable = pgTable("users", {
   twoFactorBackupCodes: jsonb("two_factor_backup_codes").$type<string[]>(),
   // Streaks: evaluate periods/badges/freezes/vacation in the user's local tz.
   timezone: text("timezone").notNull().default("UTC"),
+  // Preferred UI language for full-app i18n (app language code, e.g. "en", "ar",
+  // "fr", "sw", "pcm", "ha", "zh"). Drives translation + RTL direction. Defaults
+  // to English for all existing and new rows.
+  language: text("language").notNull().default("en"),
   streakReminderOptIn: boolean("streak_reminder_opt_in").notNull().default(false),
   // Account-streak cadence: how often a deposit (any goal/circle) must land to
   // keep the single account streak alive. Calendar-aligned in the user's tz.

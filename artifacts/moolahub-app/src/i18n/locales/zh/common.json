@@ -1,0 +1,67 @@
+{
+  "app": {
+    "tagline": "储蓄。赚取。归属。"
+  },
+  "nav": {
+    "home": "首页",
+    "personalSavings": "个人储蓄",
+    "personalSavingsShort": "储蓄",
+    "groupSavings": "团体储蓄",
+    "groupSavingsShort": "团体",
+    "learn": "学习",
+    "transactions": "交易",
+    "account": "账户",
+    "profile": "个人资料",
+    "viewProfile": "查看资料"
+  },
+  "actions": {
+    "save": "保存",
+    "saved": "已保存。",
+    "cancel": "取消",
+    "edit": "编辑",
+    "delete": "删除",
+    "confirm": "确认",
+    "back": "返回",
+    "close": "关闭",
+    "retry": "重试",
+    "continue": "继续",
+    "loading": "加载中…",
+    "signOut": "退出登录",
+    "signingOut": "正在退出…"
+  },
+  "labels": {
+    "balance": "余额",
+    "nextDue": "下一笔"
+  },
+  "time": {
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}} 分钟前",
+    "hoursAgo": "{{count}} 小时前",
+    "daysAgo": "{{count}} 天前"
+  },
+  "language": {
+    "eyebrow": "设置",
+    "title": "语言",
+    "description": "选择整个应用的语言。数字、日期和余额也会随之更新。",
+    "detail": "选择你的语言",
+    "error": "无法更改语言。",
+    "names": {
+      "en": "英语",
+      "ar": "阿拉伯语",
+      "fr": "法语",
+      "sw": "斯瓦希里语",
+      "pcm": "尼日利亚皮钦语",
+      "ha": "豪萨语",
+      "zh": "中文"
+    }
+  },
+  "forms": {
+    "copy": "复制",
+    "copied": "已复制",
+    "working": "处理中…",
+    "withdrawUsdc": "提取 USDC",
+    "sending": "发送中…",
+    "recipientPlaceholder": "收款人 Monad 地址 (0x…)",
+    "invite": "邀请"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "app": {
+    "tagline": "ادّخر. اربح. انتمِ."
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "personalSavings": "المدخرات الشخصية",
+    "personalSavingsShort": "مدخرات",
+    "groupSavings": "المدخرات الجماعية",
+    "groupSavingsShort": "مجموعات",
+    "learn": "تعلّم",
+    "transactions": "المعاملات",
+    "account": "الحساب",
+    "profile": "الملف الشخصي",
+    "viewProfile": "عرض الملف الشخصي"
+  },
+  "actions": {
+    "save": "حفظ",
+    "saved": "تم الحفظ.",
+    "cancel": "إلغاء",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "close": "إغلاق",
+    "retry": "حاول مرة أخرى",
+    "continue": "متابعة",
+    "loading": "جارٍ التحميل…",
+    "signOut": "تسجيل الخروج",
+    "signingOut": "جارٍ تسجيل الخروج…"
+  },
+  "labels": {
+    "balance": "الرصيد",
+    "nextDue": "المستحق التالي"
+  },
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "قبل {{count}} د",
+    "hoursAgo": "قبل {{count}} س",
+    "daysAgo": "قبل {{count}} ي"
+  },
+  "language": {
+    "eyebrow": "الإعدادات",
+    "title": "اللغة",
+    "description": "اختر لغة التطبيق بالكامل. ستتحدّث الأرقام والتواريخ والأرصدة أيضًا.",
+    "detail": "اختر لغتك",
+    "error": "تعذّر تغيير اللغة.",
+    "names": {
+      "en": "الإنجليزية",
+      "ar": "العربية",
+      "fr": "الفرنسية",
+      "sw": "السواحيلية",
+      "pcm": "البيدجن النيجيرية",
+      "ha": "الهوسا",
+      "zh": "الماندرين"
+    }
+  },
+  "forms": {
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "working": "جارٍ المعالجة…",
+    "withdrawUsdc": "سحب USDC",
+    "sending": "جارٍ الإرسال…",
+    "recipientPlaceholder": "عنوان المستلم على Monad (0x…)",
+    "invite": "دعوة"
+  }
+}

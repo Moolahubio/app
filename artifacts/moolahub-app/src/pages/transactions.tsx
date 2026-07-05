@@ -1,9 +1,10 @@
 import { ArrowDownLeft, ArrowUpRight, Sparkles, Target, Bell } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Card, Badge, IconChip } from "@/components/ui";
-import { PageHeader, TxTag } from "@/components/app/bits";
+import { PageHeader, TxTag, Money } from "@/components/app/bits";
 import { useListActivity, useGetDashboardSummary } from "@workspace/api-client-react";
 import type { ActivityItem } from "@workspace/api-client-react";
-import { formatMoney } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 
 const activityIcon: Record<string, typeof ArrowDownLeft> = {
   deposit: ArrowDownLeft,
@@ -15,20 +16,10 @@ const activityIcon: Record<string, typeof ArrowDownLeft> = {
   withdrawal: ArrowUpRight,
 };
 
-const typeLabel: Record<string, string> = {
-  deposit: "Deposit",
-  payout: "Payout",
-  yield: "Yield",
-  contribution: "Contribution",
-  goal_allocate: "Allocation",
-  goal_release: "Release",
-  withdrawal: "Withdrawal",
-};
-
 function groupByDay(items: ActivityItem[]) {
   const groups: Record<string, ActivityItem[]> = {};
   for (const item of items) {
-    const key = new Date(item.createdAt).toLocaleDateString("en-US", {
+    const key = formatDate(item.createdAt, {
       month: "long",
       day: "numeric",
       year: "numeric",
@@ -39,49 +30,52 @@ function groupByDay(items: ActivityItem[]) {
 }
 
 export default function TransactionsPage() {
+  const { t } = useTranslation("transactions");
   const { data: activity, isLoading: isActivityLoading } = useListActivity({ limit: 100 });
   const { data: summary } = useGetDashboardSummary();
 
   const grouped = groupByDay(activity ?? []);
   const reminder = summary?.upcomingReminder;
 
-  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">Loading transactions…</div>;
+  if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
-        eyebrow="Transactions"
-        title="Your money, on the record"
-        description="Every deposit, contribution, and payout. Each one is linked to its proof on Monad."
+        eyebrow={t("common:nav.transactions")}
+        title={t("header.title")}
+        description={t("header.description")}
       />
 
       {reminder && (
         <Card className="p-6">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-jade-600 dark:text-jade-400" />
-            <h2 className="font-display text-lg font-bold text-foreground">Upcoming reminders</h2>
+            <h2 className="font-display text-lg font-bold text-foreground">{t("reminders.title")}</h2>
           </div>
           <ul className="mt-4 grid gap-3 sm:grid-cols-3">
             <li className="rounded-2xl border border-border bg-background p-4">
               <div className="flex items-center justify-between">
                 <Badge tone="amber" className="capitalize">
-                  reminder
+                  {t("reminders.tag")}
                 </Badge>
                 <span className="font-mono text-[10px] uppercase tracking-wide text-jade-600 dark:text-jade-400">
-                  {new Date(reminder.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  {formatDate(reminder.dueDate, { month: "short", day: "numeric" })}
                 </span>
               </div>
               <p className="mt-3 text-sm font-semibold text-foreground">{reminder.title}</p>
-              <p className="mt-2 text-sm font-bold text-foreground">{formatMoney(reminder.amountCents)}</p>
+              <p className="mt-2 text-sm font-bold text-foreground">
+                <Money cents={reminder.amountCents} />
+              </p>
             </li>
           </ul>
         </Card>
       )}
 
       <Card className="p-6">
-        <h2 className="font-display text-lg font-bold text-foreground">Transaction history</h2>
+        <h2 className="font-display text-lg font-bold text-foreground">{t("history.title")}</h2>
         {grouped.length === 0 && (
-          <p className="mt-4 text-sm text-muted-foreground">No transactions yet.</p>
+          <p className="mt-4 text-sm text-muted-foreground">{t("history.empty")}</p>
         )}
         <div className="mt-4 space-y-6">
           {grouped.map(([day, items]) => (
@@ -108,24 +102,24 @@ export default function TransactionsPage() {
                           ) : (
                             <span className="font-mono text-[11px] text-muted-foreground">
                               {item.onchainStatus === "pending" || item.onchainStatus === "queued"
-                                ? "settling on-chain…"
-                                : "off-chain"}
+                                ? t("onchain.settling")
+                                : t("onchain.offchain")}
                             </span>
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         {item.amountCents != null && (
                           <p
                             className={`text-sm font-semibold ${
                               positive ? "text-jade-600 dark:text-jade-400" : "text-foreground"
                             }`}
                           >
-                            {formatMoney(item.amountCents, { sign: true })}
+                            <Money cents={item.amountCents} sign />
                           </p>
                         )}
                         <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                          {typeLabel[item.type] ?? item.type}
+                          {t(`types.${item.type}`, { defaultValue: item.type })}
                         </p>
                       </div>
                     </li>

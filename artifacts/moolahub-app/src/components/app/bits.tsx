@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { ArrowLeft, ArrowUpRight, CheckCircle2, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatMoney, truncateAddress } from "@/lib/utils";
 
 /** Page heading used at the top of app screens. */
 export function PageHeader({
@@ -69,5 +69,46 @@ export function TxTag({
       {short}
       <ArrowUpRight className="h-3 w-3 opacity-60" />
     </a>
+  );
+}
+
+/** A money amount rendered LTR-isolated so the sign and digits never reorder
+ *  inside a right-to-left layout. Use anywhere a balance/amount is shown. */
+export function Money({
+  cents,
+  currency,
+  compact,
+  sign,
+  className,
+}: {
+  cents: number;
+  currency?: string;
+  compact?: boolean;
+  sign?: boolean;
+  className?: string;
+}) {
+  return (
+    <span dir="ltr" className={className}>
+      {formatMoney(cents, { currency, compact, sign })}
+    </span>
+  );
+}
+
+/** A blockchain address, truncated (0xAB…CDEF) and LTR-isolated for RTL safety. */
+export function Addr({
+  address,
+  lead,
+  tail,
+  className,
+}: {
+  address: string;
+  lead?: number;
+  tail?: number;
+  className?: string;
+}) {
+  return (
+    <span dir="ltr" className={cn("font-mono", className)}>
+      {truncateAddress(address, lead, tail)}
+    </span>
   );
 }

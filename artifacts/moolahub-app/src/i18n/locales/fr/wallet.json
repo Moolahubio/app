@@ -1,0 +1,72 @@
+{
+  "eyebrow": "Portefeuille",
+  "states": {
+    "loadingWallet": "Chargement de votre portefeuille…"
+  },
+  "setup": {
+    "title": "Configurez votre portefeuille",
+    "description": "Continuez avec Privy pour créer votre portefeuille {{network}}. Privy vous permet de vous inscrire avec un e-mail ou de connecter un portefeuille web3 existant. Dans les deux cas, vous pourrez déposer, épargner et retirer des USDC.",
+    "settingUp": "Configuration…",
+    "continueWithPrivy": "Continuer avec Privy",
+    "error": "Impossible de configurer votre portefeuille. Veuillez réessayer.",
+    "securityNote": "Votre portefeuille règle les fonds sur Monad, et chaque mouvement est enregistré dans le registre. Les actions sensibles comme les retraits nécessitent une nouvelle confirmation.",
+    "unavailableTitle": "Configuration du portefeuille indisponible",
+    "unavailableDescription": "La création de portefeuille n'est pas encore configurée sur ce déploiement. Veuillez revenir plus tard."
+  },
+  "intro": {
+    "getReadyTitle": "Préparez votre portefeuille",
+    "getReadyDescription": "MoolaHub fonctionne en USDC sur Monad. Configurez votre portefeuille pour déposer, épargner et retirer.",
+    "manageTitle": "Déposer et retirer des USDC",
+    "manageDescription": "MoolaHub fonctionne en USDC sur Monad. Ajoutez des USDC à votre portefeuille ou envoyez-les à n'importe quelle adresse de portefeuille Monad."
+  },
+  "balance": {
+    "available": "Solde disponible",
+    "allocatedToSavings": "alloués à l'épargne"
+  },
+  "receive": {
+    "title": "Recevoir",
+    "subtitle": "Ajouter des USDC",
+    "depositAddressLabel": "Votre adresse de dépôt USDC",
+    "sendOnly": "Envoyez uniquement des <0>USDC sur {{network}}</0> à cette adresse.",
+    "instructions": "Envoyez des USDC à votre adresse ci-dessus depuis n'importe quel portefeuille Monad.",
+    "instructionsSync": "Envoyez des USDC à votre adresse ci-dessus depuis n'importe quel portefeuille Monad, puis vérifiez :",
+    "checkForDeposits": "Vérifier les dépôts",
+    "checking": "Vérification…",
+    "creditedDeposits": "{{count}} dépôts crédités pour un total de {{amount}}",
+    "noNewDeposits": "Aucun nouveau dépôt trouvé",
+    "faucet": {
+      "title": "Robinet testnet",
+      "description": "Obtenez des USDC de test pour essayer avant d'utiliser de vrais fonds.",
+      "submit": "Recevoir des USDC de test",
+      "success": "USDC de test reçus"
+    }
+  },
+  "withdraw": {
+    "title": "Retirer",
+    "subtitle": "Envoyer des USDC à n'importe quelle adresse Monad",
+    "unavailable": "Les retraits on-chain ne sont pas disponibles sur ce déploiement pour le moment.",
+    "success": "Retrait réussi"
+  },
+  "footer": {
+    "settle": "Les fonds sont réglés sur votre propre adresse de portefeuille Monad, et chaque mouvement est enregistré dans le registre avec une référence on-chain.",
+    "selfCustody": "Votre portefeuille est auto-hébergé. Vous approuvez chaque retrait en le signant vous-même.",
+    "stepUp": "Les retraits et les versements d'objectifs nécessitent une nouvelle confirmation (mot de passe, 2FA ou code par e-mail) avant tout mouvement.",
+    "builtOnMonad": "Conçu sur Monad"
+  },
+  "banner": {
+    "title": "Connectez votre portefeuille pour cette session",
+    "description": "Connectez-vous une seule fois maintenant et vous pourrez déposer, épargner et retirer sans vous reconnecter jusqu'à votre déconnexion.",
+    "connect": "Connecter le portefeuille"
+  },
+  "privyWithdraw": {
+    "connectPrompt": "Votre portefeuille est auto-hébergé. Connectez-le pour signer le retrait vous-même.",
+    "connectButton": "Connecter le portefeuille pour retirer",
+    "success": "Retrait envoyé",
+    "errors": {
+      "unavailable": "Les retraits on-chain ne sont pas disponibles sur ce déploiement.",
+      "invalidAddress": "Saisissez une adresse Monad valide (commençant par 0x).",
+      "invalidAmount": "Saisissez un montant valide.",
+      "failed": "Échec du retrait. Veuillez réessayer."
+    }
+  }
+}

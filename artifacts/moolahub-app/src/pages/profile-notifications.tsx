@@ -11,63 +11,30 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiErrorMessage, cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type Tier = "everything" | "essential" | "minimal" | "custom";
 
 const TIERS: {
   key: Tier;
-  label: string;
-  description: string;
   recommended?: boolean;
 }[] = [
-  {
-    key: "everything",
-    label: "Everything",
-    description:
-      "All notifications: circle activity, goal milestones, deposits, reminders, and tips.",
-    recommended: true,
-  },
-  {
-    key: "essential",
-    label: "Essential",
-    description:
-      "Important updates only, like payouts, contribution due dates, and account activity.",
-  },
-  {
-    key: "minimal",
-    label: "Minimal",
-    description: "Only the most critical account and money notifications.",
-  },
-  {
-    key: "custom",
-    label: "Custom",
-    description: "Choose exactly which categories you want to hear about.",
-  },
+  { key: "everything", recommended: true },
+  { key: "essential" },
+  { key: "minimal" },
+  { key: "custom" },
 ];
 
 const CATEGORIES: {
   key: keyof NotificationCategories;
-  label: string;
-  description: string;
 }[] = [
-  {
-    key: "money",
-    label: "Money & transactions",
-    description: "Deposits, withdrawals, payouts, and contribution reminders.",
-  },
-  {
-    key: "social",
-    label: "Group savings & social",
-    description: "Invites, member activity, and circle updates.",
-  },
-  {
-    key: "engagement",
-    label: "Tips & engagement",
-    description: "Streaks, learning nudges, and product news.",
-  },
+  { key: "money" },
+  { key: "social" },
+  { key: "engagement" },
 ];
 
 export default function ProfileNotificationsPage() {
+  const { t } = useTranslation("notifications");
   const { data, isLoading } = useGetNotificationPreferences();
   const updatePrefs = useUpdateNotificationPreferences();
   const queryClient = useQueryClient();
@@ -107,7 +74,7 @@ export default function ProfileNotificationsPage() {
       await invalidate();
       flash();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not save preference.");
+      setError(apiErrorMessage(err) ?? t("settings.saveError"));
     }
   };
 
@@ -123,20 +90,20 @@ export default function ProfileNotificationsPage() {
       await invalidate();
       flash();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not save preference.");
+      setError(apiErrorMessage(err) ?? t("settings.saveError"));
     }
   };
 
   if (isLoading)
-    return <div className="p-8 text-center text-muted-foreground">Loading…</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t("common:actions.loading")}</div>;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <BackLink href="/profile" label="Account" />
+      <BackLink href="/profile" label={t("common:nav.account")} />
       <PageHeader
-        eyebrow="Notifications"
-        title="Notification settings"
-        description="Choose how much you want to hear from MoolaHub."
+        eyebrow={t("page.eyebrow")}
+        title={t("settings.title")}
+        description={t("settings.description")}
       />
 
       {error && (
@@ -146,7 +113,7 @@ export default function ProfileNotificationsPage() {
       )}
       {saved && (
         <p className="flex items-center gap-1.5 text-sm text-jade-600 dark:text-jade-400">
-          <Check className="h-4 w-4 shrink-0" /> Saved.
+          <Check className="h-4 w-4 shrink-0" /> {t("common:actions.saved")}
         </p>
       )}
 
@@ -159,7 +126,7 @@ export default function ProfileNotificationsPage() {
               type="button"
               onClick={() => selectTier(tier.key)}
               className={cn(
-                "w-full rounded-2xl border bg-card p-4 text-left transition-colors focus-ring",
+                "w-full rounded-2xl border bg-card p-4 text-start transition-colors focus-ring",
                 active
                   ? "border-jade-500 ring-1 ring-jade-500/40"
                   : "border-card-border hover:bg-accent",
@@ -167,8 +134,8 @@ export default function ProfileNotificationsPage() {
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-foreground">{tier.label}</span>
-                  {tier.recommended && <Badge tone="jade">Recommended</Badge>}
+                  <span className="text-sm font-semibold text-foreground">{t(`tiers.${tier.key}.label`)}</span>
+                  {tier.recommended && <Badge tone="jade">{t("settings.recommended")}</Badge>}
                 </div>
                 {active && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-jade-500 text-white">
@@ -176,7 +143,7 @@ export default function ProfileNotificationsPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{tier.description}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t(`tiers.${tier.key}.description`)}</p>
             </button>
           );
         })}
@@ -187,8 +154,8 @@ export default function ProfileNotificationsPage() {
           {CATEGORIES.map((cat) => (
             <div key={cat.key} className="flex items-center justify-between gap-4 px-4 py-3.5">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">{cat.label}</p>
-                <p className="text-xs text-muted-foreground">{cat.description}</p>
+                <p className="text-sm font-semibold text-foreground">{t(`categories.${cat.key}.label`)}</p>
+                <p className="text-xs text-muted-foreground">{t(`categories.${cat.key}.description`)}</p>
               </div>
               <Switch
                 checked={categories[cat.key]}

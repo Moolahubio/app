@@ -1,0 +1,34 @@
+{
+  "loading": "Ana loda darussa…",
+  "empty": "Babu darussan da ake da su.",
+  "header": {
+    "title": "Ƙarfafa harkokin kuɗi",
+    "description": "Gajerun darussa masu amfani don gina maka ƙwarin gwiwa wajen tafiyar da kuɗinka."
+  },
+  "progress": {
+    "count": "An kammala darussa {{completed}} daga cikin {{total}}",
+    "encourage": "Ci gaba da kiyaye jerin naka."
+  },
+  "featured": {
+    "revisit": "Sake dubawa",
+    "startHere": "Fara daga nan",
+    "reviewLesson": "Sake duba darasi",
+    "startLesson": "Fara darasi"
+  },
+  "card": {
+    "done": "An gama",
+    "minutes": "Minti {{count}}"
+  },
+  "detail": {
+    "loading": "Ana loda darasi…",
+    "notFound": "Ba mu sami wannan darasin ba.",
+    "allLessons": "Dukan darussa",
+    "minutesRead": "Karatun minti {{count}}",
+    "completed": "An kammala",
+    "keyTakeaways": "Muhimman abubuwa",
+    "lessonCompleted": "An kammala darasi",
+    "markComplete": "Yi masa alama a matsayin kammalalle",
+    "saving": "Ana ajiyewa…",
+    "nextLesson": "Darasi na gaba"
+  }
+}

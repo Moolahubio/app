@@ -1,0 +1,237 @@
+{
+  "avatar": {
+    "change": "更换头像"
+  },
+  "sections": {
+    "settings": "设置",
+    "manageAccount": "管理账户"
+  },
+  "menu": {
+    "profileInformation": {
+      "label": "个人资料",
+      "detail": "姓名、用户名、出生日期"
+    },
+    "wallets": {
+      "label": "钱包",
+      "detail": "Monad 上的余额和地址"
+    },
+    "security": {
+      "label": "安全",
+      "detail": "通行密钥和双重验证"
+    },
+    "streak": {
+      "label": "连续打卡频率",
+      "detail": "每天、每周或每月"
+    },
+    "notifications": {
+      "label": "通知",
+      "detail": "选择要接收的内容"
+    },
+    "transactions": {
+      "label": "交易与收益",
+      "detail": "账目与收益"
+    }
+  },
+  "profile": {
+    "loading": "正在加载你的资料…",
+    "uploadingPicture": "正在上传图片…",
+    "saveName": "保存姓名",
+    "editName": "编辑姓名",
+    "wallet": {
+      "label": "Monad 钱包 · 非托管",
+      "notProvisioned": "尚未创建"
+    },
+    "stats": {
+      "yieldEarned": "已赚取收益",
+      "yieldApy": "年化收益率"
+    },
+    "errors": {
+      "savePicture": "无法保存头像。",
+      "uploadImage": "无法上传图片。",
+      "chooseImage": "请选择图片文件。",
+      "updateName": "无法更新姓名。"
+    },
+    "signOutError": {
+      "title": "无法退出登录",
+      "description": "请重试。"
+    }
+  },
+  "information": {
+    "title": "个人资料",
+    "description": "更新你在 MoolaHub 上的展示信息。",
+    "picture": {
+      "title": "头像",
+      "uploading": "正在上传…",
+      "hint": "PNG 或 JPG，方形图片效果最佳。"
+    },
+    "fields": {
+      "fullName": "全名",
+      "fullNamePlaceholder": "你的姓名",
+      "username": "用户名",
+      "usernameHint": "可选 · 唯一",
+      "usernamePlaceholder": "用户名",
+      "dateOfBirth": "出生日期",
+      "optional": "可选",
+      "nationality": "国籍",
+      "nationalityPlaceholder": "例如：肯尼亚"
+    },
+    "errors": {
+      "nameEmpty": "姓名不能为空。",
+      "update": "无法更新资料。",
+      "savePicture": "无法保存头像。",
+      "uploadImage": "无法上传图片。",
+      "chooseImage": "请选择图片文件。"
+    },
+    "saving": "正在保存…",
+    "saveChanges": "保存更改"
+  },
+  "security": {
+    "eyebrow": "安全",
+    "title": "登录与安全",
+    "description": "为你的账户增加额外的保护层。"
+  },
+  "changePassword": {
+    "title": "密码",
+    "descriptionChange": "更改你用于登录的密码",
+    "descriptionSet": "设置密码以使用邮箱登录",
+    "change": "更改",
+    "setPassword": "设置密码",
+    "updated": "密码已更新。",
+    "needVerifiedEmail": "设置密码需要已验证的邮箱。",
+    "currentPassword": "当前密码",
+    "twoFactorCode": "双重验证码",
+    "codePlaceholder": "6 位验证码",
+    "newPassword": "新密码",
+    "newPasswordPlaceholder": "至少 8 个字符",
+    "confirmNewPassword": "确认新密码",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
+    "saving": "正在保存…",
+    "savePassword": "保存密码",
+    "sendCodeIntro": "我们会向 <strong>{{email}}</strong> 发送验证码，确认是你本人后再设置密码。",
+    "sending": "正在发送…",
+    "sendCode": "发送验证码",
+    "checkEmail": "请查看你的邮箱以获取 6 位验证码。",
+    "verificationCode": "验证码",
+    "verificationCodePlaceholder": "123456",
+    "errors": {
+      "minLength": "密码必须至少 8 个字符。",
+      "mismatch": "两次输入的密码不一致。",
+      "enterTotp": "请输入你的双重验证码以继续。",
+      "update": "无法更新你的密码。",
+      "sendCode": "无法发送验证码。请重试。",
+      "invalidCode": "该验证码无效或已过期。"
+    }
+  },
+  "manageAccount": {
+    "deactivate": {
+      "label": "停用账户",
+      "detail": "临时停用。随时重新登录即可恢复。",
+      "dialogTitle": "停用你的账户？",
+      "dialogDescription": "你的账户将被临时停用，你也会退出登录。你的数据、余额和团体储蓄都会安全保留。随时重新登录即可重新启用。",
+      "action": "停用",
+      "pending": "正在停用…",
+      "error": "无法停用账户。"
+    },
+    "delete": {
+      "label": "删除账户",
+      "detail": "永久删除你的账户和数据",
+      "dialogTitle": "删除你的账户？",
+      "dialogDescription": "此操作将永久删除你的资料并撤销访问权限。只有在余额为零且没有进行中的个人或团体储蓄时才能删除。请输入 <strong>DELETE</strong> 以确认。",
+      "action": "永久删除",
+      "pending": "正在删除…",
+      "error": "无法删除账户。"
+    }
+  },
+  "passkeys": {
+    "title": "通行密钥",
+    "description": "使用 Face ID、Touch ID 或安全密钥登录",
+    "adding": "正在添加…",
+    "add": "添加通行密钥",
+    "unsupported": "此浏览器不支持通行密钥。",
+    "loading": "正在加载通行密钥…",
+    "empty": "还没有通行密钥。添加一个可让登录更快、更安全。",
+    "defaultName": "通行密钥",
+    "added": "添加于 {{date}}",
+    "lastUsed": "上次使用 {{date}}",
+    "remove": "移除通行密钥",
+    "errors": {
+      "cancelled": "设置已取消。",
+      "add": "我们无法添加该通行密钥。请重试。",
+      "remove": "我们无法移除该通行密钥。请重试。"
+    }
+  },
+  "twoFactor": {
+    "backupCodes": {
+      "title": "保存你的备用码",
+      "copyAll": "全部复制",
+      "description": "每个备用码只能使用一次。请妥善保管。当你丢失验证器时，它们可帮助你登录。"
+    },
+    "title": "身份验证器应用",
+    "on": "已开启",
+    "off": "已关闭",
+    "description": "登录时需要输入 6 位验证码，以提升安全性",
+    "starting": "正在启动…",
+    "setUp": "设置",
+    "setup": {
+      "instructions": "使用 Google Authenticator、1Password 或任意 TOTP 应用扫描此二维码，然后输入其显示的 6 位验证码。",
+      "qrAlt": "双重验证二维码",
+      "codePlaceholder": "123456",
+      "verifying": "正在验证…",
+      "enable": "启用双重验证"
+    },
+    "codesRemaining": "剩余备用码：{{count}}",
+    "regenerate": "重新生成备用码",
+    "turnOff": "关闭",
+    "regenerateForm": {
+      "instructions": "输入当前验证码或备用码以生成一组新的备用码。你旧的备用码将失效。",
+      "codePlaceholder": "验证码",
+      "generating": "正在生成…",
+      "generate": "生成新的备用码"
+    },
+    "disableForm": {
+      "instructions": "输入当前验证码或备用码以关闭双重验证。",
+      "codePlaceholder": "验证码",
+      "turningOff": "正在关闭…",
+      "confirmTurnOff": "确认关闭"
+    },
+    "errors": {
+      "startSetup": "无法开始设置。",
+      "codeFailed": "该验证码无效。请重试。"
+    }
+  },
+  "stepUp": {
+    "title": "确认是你本人",
+    "descBoth": "请输入你的密码和双重验证码以继续。",
+    "descPassword": "请输入你的密码以继续。",
+    "descTotp": "请输入你的双重验证码以继续。",
+    "descEmail": "我们会通过邮件向你发送一次性验证码，以确认此更改。",
+    "sending": "正在发送…",
+    "sendCode": "发送验证码",
+    "codePlaceholder": "6 位验证码",
+    "passwordPlaceholder": "当前密码",
+    "errors": {
+      "sendCode": "无法发送验证码。请重试。",
+      "enterEmailCode": "请输入我们通过邮件发送给你的验证码。",
+      "enterPassword": "请输入你的密码以继续。",
+      "enterTotp": "请输入你的双重验证码以继续。"
+    }
+  },
+  "theme": {
+    "label": "主题",
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统"
+  },
+  "imageUpload": {
+    "changePicture": "更换图片",
+    "uploadPicture": "上传图片",
+    "defaultHint": "添加一张照片，让梦想更鲜活。",
+    "remove": "移除",
+    "error": "无法上传图片。",
+    "chooseImage": "请选择图片文件。"
+  },
+  "segmented": {
+    "optionsLabel": "选项"
+  }
+}

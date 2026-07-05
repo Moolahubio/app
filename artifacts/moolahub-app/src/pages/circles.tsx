@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Plus, Users, ArrowRight, ShieldCheck, Inbox } from "lucide-react";
 import { Card, Button, Badge, ProgressBar, Avatar, Eyebrow, Skeleton } from "@/components/ui";
-import { PageHeader } from "@/components/app/bits";
+import { PageHeader, Money } from "@/components/app/bits";
 import { ActionButton } from "@/components/app/forms";
 import { useListCircles, useListInvites, useAcceptInvite, useDeclineInvite, useCreateCircle, getListCirclesQueryKey, getListInvitesQueryKey } from "@workspace/api-client-react";
 import { formatMoney } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImageUploadField } from "@/components/app/ImageUploadField";
 import { avatarSrc, cn } from "@/lib/utils";
+import { useTranslation, Trans } from "react-i18next";
 import { useState } from "react";
 
 const statusTone = {
@@ -22,6 +23,7 @@ const statusTone = {
 } as const;
 
 export default function CirclesPage() {
+  const { t } = useTranslation("circles");
   const { data: circles, isLoading: circlesLoading } = useListCircles();
   const { data: invites, isLoading: invitesLoading } = useListInvites();
   
@@ -105,7 +107,7 @@ export default function CirclesPage() {
   };
 
   if (circlesLoading || invitesLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading your group savings…</div>;
+    return <div className="p-8 text-center text-muted-foreground">{t("list.loading")}</div>;
   }
 
   const visible = circles?.filter((c) => c.status !== "completed") ?? [];
@@ -114,27 +116,27 @@ export default function CirclesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHeader
-        eyebrow="Group Savings"
-        title="Your group savings"
-        description="Rotating savings with people you trust. Every round is held by an on-chain contract, not a person."
+        eyebrow={t("common:nav.groupSavings")}
+        title={t("list.title")}
+        description={t("list.description")}
         action={
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="h-4 w-4" /> Start a circle
+                <Plus className="h-4 w-4" /> {t("create.startCircle")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New circle</DialogTitle>
+                <DialogTitle>{t("create.title")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Name</Label>
-                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Family savings" />
+                  <Label>{t("create.name.label")}</Label>
+                  <Input value={name} onChange={e => setName(e.target.value)} required placeholder={t("create.name.placeholder")} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Circle type</Label>
+                  <Label>{t("create.type.label")}</Label>
                   <RadioGroup
                     value={type}
                     onValueChange={(v) => setType(v as "rotation" | "accumulation")}
@@ -149,9 +151,9 @@ export default function CirclesPage() {
                     >
                       <RadioGroupItem value="rotation" id="type-rotation" className="mt-0.5" />
                       <span className="text-sm">
-                        <span className="font-semibold text-foreground">Rotation</span>
+                        <span className="font-semibold text-foreground">{t("create.type.rotation.title")}</span>
                         <span className="block text-xs text-muted-foreground">
-                          Take turns. Everyone pays each round, and one member receives the full pot until all have had a turn.
+                          {t("create.type.rotation.description")}
                         </span>
                       </span>
                     </label>
@@ -164,9 +166,9 @@ export default function CirclesPage() {
                     >
                       <RadioGroupItem value="accumulation" id="type-accumulation" className="mt-0.5" />
                       <span className="text-sm">
-                        <span className="font-semibold text-foreground">Accumulation</span>
+                        <span className="font-semibold text-foreground">{t("create.type.accumulation.title")}</span>
                         <span className="block text-xs text-muted-foreground">
-                          Save together. Everyone pays into one shared pot and gets their own savings back at the end.
+                          {t("create.type.accumulation.description")}
                         </span>
                       </span>
                     </label>
@@ -175,7 +177,7 @@ export default function CirclesPage() {
                 {type === "rotation" ? (
                   <>
                     <div className="space-y-2">
-                      <Label>Target payout per person (USDC)</Label>
+                      <Label>{t("create.targetPayout.label")}</Label>
                       <Input
                         type="number"
                         min={1}
@@ -185,11 +187,11 @@ export default function CirclesPage() {
                         placeholder="20000"
                       />
                       <p className="text-xs text-muted-foreground">
-                        What each member receives when it's their turn.
+                        {t("create.targetPayout.hint")}
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label>Number of people (including you)</Label>
+                      <Label>{t("create.groupSize.label")}</Label>
                       <Input
                         type="number"
                         min={2}
@@ -204,11 +206,11 @@ export default function CirclesPage() {
                 ) : (
                   <>
                     <div className="space-y-2">
-                      <Label>Contribution per round (USDC)</Label>
+                      <Label>{t("create.contribution.label")}</Label>
                       <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Number of rounds</Label>
+                      <Label>{t("create.numRounds.label")}</Label>
                       <Input
                         type="number"
                         min={2}
@@ -221,60 +223,63 @@ export default function CirclesPage() {
                   </>
                 )}
                 <div className="space-y-2">
-                  <Label>Frequency</Label>
+                  <Label>{t("create.frequency.label")}</Label>
                   <Select value={frequency} onValueChange={setFrequency}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="weekly">{t("frequency.weekly")}</SelectItem>
+                      <SelectItem value="biweekly">{t("frequency.biweekly")}</SelectItem>
+                      <SelectItem value="monthly">{t("frequency.monthly")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>
-                    Member emails{" "}
+                    {t("create.emails.label")}{" "}
                     <span className="text-xs font-normal text-muted-foreground">
                       {type === "rotation"
-                        ? `(invite up to ${maxInvites}, comma-separated)`
-                        : "(up to 19, comma-separated)"}
+                        ? t("create.emails.hintRotation", { count: maxInvites })
+                        : t("create.emails.hintAccumulation")}
                     </span>
                   </Label>
-                  <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder="friend@example.com, cousin@example.com" />
+                  <Input value={emails} onChange={e => setEmails(e.target.value)} placeholder={t("create.emails.placeholder")} />
                   {emailCount > maxInvites && (
                     <p className="text-xs text-destructive">
                       {type === "rotation"
-                        ? `Too many invites. A circle of ${groupNum} has room for ${maxInvites} besides you.`
-                        : "Too many members. A circle can have at most 20 people (you + 19 invitees)."}
+                        ? t("create.emails.tooManyRotation", { size: groupNum, count: maxInvites })
+                        : t("create.emails.tooManyAccumulation")}
                     </p>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3 rounded-2xl border border-jade-500/15 bg-jade-50/50 p-4 dark:bg-jade-500/10">
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You pay per round</p>
-                    <p className="font-semibold text-foreground">{formatMoney(payPerRoundCents)}</p>
+                    <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{t("create.summary.youPay")}</p>
+                    <p className="font-semibold text-foreground"><Money cents={payPerRoundCents} /></p>
                   </div>
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                      {type === "accumulation" ? "You receive at end" : "You receive"}
+                      {type === "accumulation" ? t("create.summary.youReceiveEnd") : t("create.summary.youReceive")}
                     </p>
-                    <p className="font-semibold text-foreground">{formatMoney(receiveCents)}</p>
+                    <p className="font-semibold text-foreground"><Money cents={receiveCents} /></p>
                   </div>
                   {type === "rotation" ? (
                     <p className="col-span-2 text-xs text-muted-foreground">
-                      Each of the {groupNum || 0} members pays {formatMoney(baseCents)} base{" "}
-                      + {formatMoney(rotationFeeCents)} fee (2%). When it's your turn you receive{" "}
-                      {formatMoney(rotationReceiveCents)}. The circle starts automatically once everyone joins.
+                      {t("create.summary.rotationDetail", {
+                        count: groupNum || 0,
+                        base: formatMoney(baseCents),
+                        fee: formatMoney(rotationFeeCents),
+                        payout: formatMoney(rotationReceiveCents),
+                      })}
                     </p>
                   ) : (
                     <p className="col-span-2 text-xs text-muted-foreground">
-                      Your own savings back after {roundsNum || 0} rounds.
+                      {t("create.summary.accumulationDetail", { count: roundsNum || 0 })}
                     </p>
                   )}
                 </div>
                 <ImageUploadField
-                  label="Circle picture (optional)"
-                  hint="As the circle admin, add a photo to rally your group around the goal."
+                  label={t("create.image.label")}
+                  hint={t("create.image.hint")}
                   value={imageUrl}
                   onChange={setImageUrl}
                 />
@@ -283,7 +288,7 @@ export default function CirclesPage() {
                   className="w-full"
                   disabled={createMutation.isPending || emailCount > maxInvites || rotationInvalid}
                 >
-                  {createMutation.isPending ? "Creating…" : "Create circle"}
+                  {createMutation.isPending ? t("create.submitting") : t("create.submit")}
                 </Button>
               </form>
             </DialogContent>
@@ -296,11 +301,14 @@ export default function CirclesPage() {
           <ShieldCheck className="h-6 w-6" />
         </span>
         <p className="text-sm text-foreground">
-          <span className="font-semibold text-foreground">How a Susu works:</span> everyone
-          contributes a fixed amount each round. In a <span className="font-medium text-foreground">rotation</span>{" "}
-          circle, one member receives the full pot each round until everyone has had a turn. In an{" "}
-          <span className="font-medium text-foreground">accumulation</span> circle, everyone saves into a shared
-          pot and gets their own savings back at the end. Everything is verifiable on Monad.
+          <Trans
+            t={t}
+            i18nKey="info.susu"
+            components={{
+              b: <span className="font-semibold text-foreground" />,
+              em: <span className="font-medium text-foreground" />,
+            }}
+          />
         </p>
       </Card>
 
@@ -309,7 +317,7 @@ export default function CirclesPage() {
           <div className="flex items-center gap-2">
             <Inbox className="h-5 w-5 text-jade-600 dark:text-jade-400" />
             <h2 className="font-display text-lg font-bold text-foreground">
-              Invitations ({inviteList.length})
+              {t("invites.title", { count: inviteList.length })}
             </h2>
           </div>
           <ul className="mt-4 space-y-3">
@@ -321,7 +329,7 @@ export default function CirclesPage() {
                 <div>
                   <p className="font-semibold text-foreground">{inv.circleName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {inv.inviterName} invited you · {formatMoney(inv.contributionCents)}/{inv.frequency}
+                    {t("invites.invitedBy", { name: inv.inviterName })} · <Money cents={inv.contributionCents} />/{t(`frequency.${inv.frequency}`, { defaultValue: inv.frequency })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -334,7 +342,7 @@ export default function CirclesPage() {
                         }
                       });
                     }}
-                    label="Accept"
+                    label={t("invites.accept")}
                     pendingLabel="…"
                     size="sm"
                     pending={acceptMutation.isPending}
@@ -347,7 +355,7 @@ export default function CirclesPage() {
                         }
                       });
                     }}
-                    label="Decline"
+                    label={t("invites.decline")}
                     pendingLabel="…"
                     size="sm"
                     variant="secondary"
@@ -382,16 +390,16 @@ export default function CirclesPage() {
                   <div>
                     <p className="font-semibold text-foreground">{circle.name}</p>
                     <p className="text-xs capitalize text-muted-foreground">
-                      {circle.frequency} · {circle.memberCount} members
+                      {t(`frequency.${circle.frequency}`, { defaultValue: circle.frequency })} · {t("card.members", { count: circle.memberCount })}
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
                   <Badge tone={statusTone[circle.status as keyof typeof statusTone] ?? "neutral"} className="capitalize">
-                    {circle.status}
+                    {t(`status.${circle.status}`, { defaultValue: circle.status })}
                   </Badge>
                   <Badge tone="neutral">
-                    {circle.type === "accumulation" ? "Accumulation" : "Rotation"}
+                    {circle.type === "accumulation" ? t("type.accumulation") : t("type.rotation")}
                   </Badge>
                 </div>
               </div>
@@ -399,15 +407,15 @@ export default function CirclesPage() {
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-background px-4 py-3">
                   <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                    Per round
+                    {t("card.perRound")}
                   </p>
                   <p className="font-semibold text-foreground">
-                    {formatMoney(circle.contributionCents)}
+                    <Money cents={circle.contributionCents} />
                   </p>
                 </div>
                 <div className="rounded-2xl bg-background px-4 py-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">You receive</p>
-                  <p className="font-semibold text-foreground">{formatMoney(circle.payoutCents)}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">{t("card.youReceive")}</p>
+                  <p className="font-semibold text-foreground"><Money cents={circle.payoutCents} /></p>
                 </div>
               </div>
 
@@ -415,7 +423,7 @@ export default function CirclesPage() {
                 <div className="mt-5">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>
-                      Round {circle.currentRound} of {circle.totalRounds}
+                      {t("card.roundOf", { current: circle.currentRound, total: circle.totalRounds })}
                     </span>
                   </div>
                   <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
@@ -424,15 +432,15 @@ export default function CirclesPage() {
                 <div className="mt-5 flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">
                     {circle.targetMembers
-                      ? `${circle.memberCount} of ${circle.targetMembers} joined · starts automatically when full`
-                      : "Forming. Waiting to start."}
+                      ? t("card.joinedProgress", { joined: circle.memberCount, target: circle.targetMembers })
+                      : t("card.forming")}
                   </span>
                 </div>
               )}
 
               <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-jade-600 dark:text-jade-400">
-                View circle{" "}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                {t("card.viewCircle")}{" "}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
               </div>
               </div>
             </Card>
@@ -446,14 +454,14 @@ export default function CirclesPage() {
           <span className="flex h-12 w-12 items-center justify-center rounded-xl border border-border bg-card">
             <Plus className="h-6 w-6" />
           </span>
-          <span className="text-sm font-semibold">Start a circle</span>
+          <span className="text-sm font-semibold">{t("create.startCircle")}</span>
           <span className="max-w-[200px] text-center text-xs">
-            Invite friends or family and set your contribution
+            {t("list.emptyHint")}
           </span>
         </button>
       </div>
 
-      <Eyebrow className="pt-4 text-center text-muted-foreground">Save. Earn. Belong.</Eyebrow>
+      <Eyebrow className="pt-4 text-center text-muted-foreground">{t("common:app.tagline")}</Eyebrow>
     </div>
   );
 }

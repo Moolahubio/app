@@ -1,0 +1,69 @@
+{
+  "hero": {
+    "eyebrow": "Barka da dawowa",
+    "greeting": "Na yi farin cikin ganin ka",
+    "greetingNamed": "Na yi farin cikin ganin ka, {{name}}",
+    "totalBalance": "Jimillar ma'auni",
+    "available": "Akwai",
+    "inSavings": "A cikin tanadi",
+    "apy": "+{{apy}}% APY",
+    "addMoney": "Ƙara kuɗi",
+    "withdraw": "Cire kuɗi",
+    "growthLabel": "Ci gaba · watanni 6",
+    "earned": "an samu {{amount}}"
+  },
+  "reminders": {
+    "title": "Na gaba",
+    "allCaughtUp": "Ka cim ma komai."
+  },
+  "streak": {
+    "none": "Babu jeri har yanzu",
+    "count": {
+      "daily": "kwanaki {{count}}",
+      "weekly": "makonni {{count}}",
+      "biweekly": "lokuta {{count}} na mako biyu",
+      "monthly": "watanni {{count}}"
+    },
+    "saved": {
+      "daily": "Ka yi tanadi yau, madalla",
+      "weekly": "Ka yi tanadi wannan makon, madalla",
+      "biweekly": "Ka yi tanadi wannan lokacin, madalla",
+      "monthly": "Ka yi tanadi wannan watan, madalla"
+    },
+    "keepAlive": {
+      "daily": "Ajiya ɗaya na kiyaye jerin ka na yau da kullum",
+      "weekly": "Ajiya ɗaya na kiyaye jerin ka na mako-mako",
+      "biweekly": "Ajiya ɗaya na kiyaye jerin ka na mako biyu",
+      "monthly": "Ajiya ɗaya na kiyaye jerin ka na wata-wata"
+    },
+    "firstFlame": "Yi ajiya don kunna harshen wutar ka na farko"
+  },
+  "savings": {
+    "title": "Tanadin kanka",
+    "empty": "Babu kome a nan tukuna. Ƙirƙiri burin ka na farko."
+  },
+  "circle": {
+    "title": "Da'irar da take aiki",
+    "round": "Zagaye na {{current}} daga {{total}} · {{frequency}}",
+    "pot": "Tulu",
+    "members": "mambobi {{count}}",
+    "empty": "Babu da'ira mai aiki tukuna."
+  },
+  "frequency": {
+    "daily": "kullum",
+    "weekly": "mako-mako",
+    "biweekly": "mako biyu",
+    "monthly": "wata-wata"
+  },
+  "learn": {
+    "title": "Ci gaba da koyo",
+    "lessonTitle": "Blockchain, an bayyana a sauƙaƙe",
+    "lessonMeta": "minti 5 · Mafari",
+    "startLesson": "Fara darasi"
+  },
+  "transactions": {
+    "title": "Mu'amaloli na baya-bayan nan",
+    "viewAll": "Duba duka",
+    "empty": "Babu mu'amala tukuna."
+  }
+}

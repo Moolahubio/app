@@ -38,6 +38,17 @@
           root.style.colorScheme = dark ? "dark" : "light";
         } catch (e) {}
       })();
+      // Apply the saved language + direction before paint to avoid an RTL flash.
+      (function () {
+        try {
+          var dirs = { en: "ltr", ar: "rtl", fr: "ltr", sw: "ltr", pcm: "ltr", ha: "ltr", zh: "ltr" };
+          var stored = localStorage.getItem("moolahub-language");
+          var lang = dirs[stored] ? stored : "en";
+          var root = document.documentElement;
+          root.setAttribute("lang", lang);
+          root.setAttribute("dir", dirs[lang]);
+        } catch (e) {}
+      })();
     </script>
   </head>
   <body>

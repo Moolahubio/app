@@ -1,0 +1,56 @@
+{
+  "title": "通知",
+  "page": {
+    "eyebrow": "通知",
+    "title": "所有动态",
+    "description": "邀请、缴款、派款以及您账户中的所有动态。"
+  },
+  "loading": "正在加载通知…",
+  "empty": "您已查看所有内容。",
+  "bell": {
+    "viewAll": "查看全部"
+  },
+  "settings": {
+    "title": "通知设置",
+    "description": "选择您希望从 MoolaHub 收到多少消息。",
+    "recommended": "推荐",
+    "saveError": "无法保存偏好设置。"
+  },
+  "tiers": {
+    "everything": {
+      "label": "全部",
+      "description": "所有通知：互助会动态、目标里程碑、存款、提醒和贴士。"
+    },
+    "essential": {
+      "label": "重要",
+      "description": "仅重要更新，例如派款、缴款截止日期和账户动态。"
+    },
+    "minimal": {
+      "label": "极简",
+      "description": "仅最关键的账户和资金通知。"
+    },
+    "custom": {
+      "label": "自定义",
+      "description": "精确选择您想接收哪些类别的通知。"
+    }
+  },
+  "categories": {
+    "money": {
+      "label": "资金与交易",
+      "description": "存款、提款、派款和缴款提醒。"
+    },
+    "social": {
+      "label": "群组储蓄与社交",
+      "description": "邀请、成员动态和互助会更新。"
+    },
+    "engagement": {
+      "label": "贴士与互动",
+      "description": "连续记录、学习提醒和产品资讯。"
+    }
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "description": "您查找的页面不存在或可能已被移动。",
+    "backHome": "返回首页"
+  }
+}

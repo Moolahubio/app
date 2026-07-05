@@ -1,0 +1,237 @@
+{
+  "avatar": {
+    "change": "Canza hoton bayanin martaba"
+  },
+  "sections": {
+    "settings": "Saitunan",
+    "manageAccount": "Sarrafa asusu"
+  },
+  "menu": {
+    "profileInformation": {
+      "label": "Bayanan martaba",
+      "detail": "Suna, sunan mai amfani, ranar haihuwa"
+    },
+    "wallets": {
+      "label": "Wallet",
+      "detail": "Ma'auni da adireshi a Monad"
+    },
+    "security": {
+      "label": "Tsaro",
+      "detail": "Maɓallan shiga da tantancewa mai matakai biyu"
+    },
+    "streak": {
+      "label": "Yawan jerin",
+      "detail": "Kullum, mako-mako, ko wata-wata"
+    },
+    "notifications": {
+      "label": "Sanarwa",
+      "detail": "Zaɓi abin da zai kai gare ka"
+    },
+    "transactions": {
+      "label": "Ma'amaloli da riba",
+      "detail": "Littafin lissafi da kuɗin shiga"
+    }
+  },
+  "profile": {
+    "loading": "Ana loda bayanin martabarka…",
+    "uploadingPicture": "Ana loda hoto…",
+    "saveName": "Ajiye suna",
+    "editName": "Gyara suna",
+    "wallet": {
+      "label": "Wallet ɗin Monad · ba tare da riƙo ba",
+      "notProvisioned": "Ba a shirya ba"
+    },
+    "stats": {
+      "yieldEarned": "Ribar da aka samu",
+      "yieldApy": "APY na riba"
+    },
+    "errors": {
+      "savePicture": "An kasa ajiye hoton bayanin martaba.",
+      "uploadImage": "An kasa loda hoton.",
+      "chooseImage": "Da fatan za a zaɓi fayil ɗin hoto.",
+      "updateName": "An kasa sabunta suna."
+    },
+    "signOutError": {
+      "title": "An kasa fita",
+      "description": "Da fatan za a sake gwadawa."
+    }
+  },
+  "information": {
+    "title": "Bayanan martaba",
+    "description": "Sabunta yadda kake bayyana a duk faɗin MoolaHub.",
+    "picture": {
+      "title": "Hoton martaba",
+      "uploading": "Ana lodawa…",
+      "hint": "PNG ko JPG, mai murabba'i ya fi dacewa."
+    },
+    "fields": {
+      "fullName": "Cikakken suna",
+      "fullNamePlaceholder": "Sunanka",
+      "username": "Sunan mai amfani",
+      "usernameHint": "na zaɓi · na musamman",
+      "usernamePlaceholder": "sunan mai amfani",
+      "dateOfBirth": "Ranar haihuwa",
+      "optional": "na zaɓi",
+      "nationality": "Ƙasa",
+      "nationalityPlaceholder": "misali Bakenye"
+    },
+    "errors": {
+      "nameEmpty": "Suna ba zai iya zama fanko ba.",
+      "update": "An kasa sabunta bayanin martaba.",
+      "savePicture": "An kasa ajiye hoton bayanin martaba.",
+      "uploadImage": "An kasa loda hoton.",
+      "chooseImage": "Da fatan za a zaɓi fayil ɗin hoto."
+    },
+    "saving": "Ana ajiyewa…",
+    "saveChanges": "Ajiye canje-canje"
+  },
+  "security": {
+    "eyebrow": "Tsaro",
+    "title": "Shiga da tsaro",
+    "description": "Ƙara ƙarin matakan kariya ga asusunka."
+  },
+  "changePassword": {
+    "title": "Kalmar sirri",
+    "descriptionChange": "Canza kalmar sirrin da kake amfani wajen shiga",
+    "descriptionSet": "Saita kalmar sirri don shiga da imel ɗinka",
+    "change": "Canza",
+    "setPassword": "Saita kalmar sirri",
+    "updated": "An sabunta kalmar sirri.",
+    "needVerifiedEmail": "Ana buƙatar imel da aka tabbatar don saita kalmar sirri.",
+    "currentPassword": "Kalmar sirri ta yanzu",
+    "twoFactorCode": "Lambar tantancewa mai matakai biyu",
+    "codePlaceholder": "Lamba mai lamba 6",
+    "newPassword": "Sabuwar kalmar sirri",
+    "newPasswordPlaceholder": "Aƙalla haruffa 8",
+    "confirmNewPassword": "Tabbatar da sabuwar kalmar sirri",
+    "showPassword": "Nuna kalmar sirri",
+    "hidePassword": "Ɓoye kalmar sirri",
+    "saving": "Ana ajiyewa…",
+    "savePassword": "Ajiye kalmar sirri",
+    "sendCodeIntro": "Za mu aika lambar tantancewa zuwa <strong>{{email}}</strong> don tabbatar da kai ne kafin saita kalmar sirri.",
+    "sending": "Ana aikawa…",
+    "sendCode": "Aika lamba",
+    "checkEmail": "Duba imel ɗinka don lamba mai lamba 6.",
+    "verificationCode": "Lambar tantancewa",
+    "verificationCodePlaceholder": "123456",
+    "errors": {
+      "minLength": "Kalmar sirri dole ta kasance aƙalla haruffa 8.",
+      "mismatch": "Kalmomin sirri ba su dace ba.",
+      "enterTotp": "Shigar da lambar tantancewa mai matakai biyu don ci gaba.",
+      "update": "An kasa sabunta kalmar sirrinka.",
+      "sendCode": "An kasa aika lamba. Da fatan za a sake gwadawa.",
+      "invalidCode": "Wannan lambar ba ta da inganci ko ta ƙare."
+    }
+  },
+  "manageAccount": {
+    "deactivate": {
+      "label": "Kashe asusu",
+      "detail": "Kashe na ɗan lokaci. Sake shiga a kowane lokaci don dawo da shi.",
+      "dialogTitle": "Kashe asusunka?",
+      "dialogDescription": "Za a kashe asusunka na ɗan lokaci kuma za a fitar da kai. Bayananka, ma'aunanka, da tanadin ƙungiya za su kasance lafiya. Sake shiga a kowane lokaci don sake kunna shi.",
+      "action": "Kashe",
+      "pending": "Ana kashewa…",
+      "error": "An kasa kashe asusu."
+    },
+    "delete": {
+      "label": "Share asusu",
+      "detail": "Cire asusunka da bayananka har abada",
+      "dialogTitle": "Share asusunka?",
+      "dialogDescription": "Wannan yana cire bayanin martabarka har abada kuma yana janye damar shiga. Za ka iya share kawai lokacin da ma'aunanka ya kai sifili kuma ba ka da wani tanadi na kanka ko na ƙungiya mai aiki. Rubuta <strong>DELETE</strong> don tabbatarwa.",
+      "action": "Share har abada",
+      "pending": "Ana sharewa…",
+      "error": "An kasa share asusu."
+    }
+  },
+  "passkeys": {
+    "title": "Maɓallan shiga",
+    "description": "Shiga da Face ID, Touch ID, ko maɓallin tsaro",
+    "adding": "Ana ƙarawa…",
+    "add": "Ƙara maɓallin shiga",
+    "unsupported": "Wannan mai binciken yanar gizo ba ya goyon bayan maɓallan shiga.",
+    "loading": "Ana loda maɓallan shiga…",
+    "empty": "Babu maɓallan shiga tukuna. Ƙara ɗaya don shiga cikin sauri da aminci.",
+    "defaultName": "Maɓallin shiga",
+    "added": "An ƙara {{date}}",
+    "lastUsed": "An yi amfani ƙarshe {{date}}",
+    "remove": "Cire maɓallin shiga",
+    "errors": {
+      "cancelled": "An soke saitin.",
+      "add": "Ba mu iya ƙara wannan maɓallin shiga ba. Da fatan za a sake gwadawa.",
+      "remove": "Ba mu iya cire wannan maɓallin shiga ba. Da fatan za a sake gwadawa."
+    }
+  },
+  "twoFactor": {
+    "backupCodes": {
+      "title": "Ajiye lambobin ajiyarka",
+      "copyAll": "Kwafa duka",
+      "description": "Kowace lamba tana aiki sau ɗaya. Ajiye su a wuri mai aminci. Suna ba ka damar shiga idan ka rasa mai tantancewarka."
+    },
+    "title": "Manhajar tantancewa",
+    "on": "A kunne",
+    "off": "A kashe",
+    "description": "Buƙatar lamba mai lamba 6 lokacin shiga don ƙarin tsaro",
+    "starting": "Ana farawa…",
+    "setUp": "Saita",
+    "setup": {
+      "instructions": "Skani wannan lambar QR da Google Authenticator, 1Password, ko kowace manhajar TOTP, sannan shigar da lamba mai lamba 6 da take nunawa.",
+      "qrAlt": "Lambar QR na 2FA",
+      "codePlaceholder": "123456",
+      "verifying": "Ana tantancewa…",
+      "enable": "Kunna 2FA"
+    },
+    "codesRemaining": "Lambobin ajiya da suka rage: {{count}}",
+    "regenerate": "Sake ƙera lambobin ajiya",
+    "turnOff": "Kashe",
+    "regenerateForm": {
+      "instructions": "Shigar da lamba ta yanzu ko lambar ajiya don ƙera sabon saiti. Tsofaffin lambobin ajiyarka za su daina aiki.",
+      "codePlaceholder": "Lamba",
+      "generating": "Ana ƙerawa…",
+      "generate": "Ƙera sabbin lambobi"
+    },
+    "disableForm": {
+      "instructions": "Shigar da lamba ta yanzu ko lambar ajiya don kashe 2FA.",
+      "codePlaceholder": "Lamba",
+      "turningOff": "Ana kashewa…",
+      "confirmTurnOff": "Tabbatar da kashewa"
+    },
+    "errors": {
+      "startSetup": "An kasa fara saitin.",
+      "codeFailed": "Wannan lambar ba ta yi aiki ba. Sake gwadawa."
+    }
+  },
+  "stepUp": {
+    "title": "Tabbatar da kai ne",
+    "descBoth": "Shigar da kalmar sirrinka da lambar tantancewa mai matakai biyu don ci gaba.",
+    "descPassword": "Shigar da kalmar sirrinka don ci gaba.",
+    "descTotp": "Shigar da lambar tantancewa mai matakai biyu don ci gaba.",
+    "descEmail": "Za mu aiko maka lamba ta amfani sau ɗaya ta imel don tabbatar da wannan canjin.",
+    "sending": "Ana aikawa…",
+    "sendCode": "Aika lamba",
+    "codePlaceholder": "Lamba mai lamba 6",
+    "passwordPlaceholder": "Kalmar sirri ta yanzu",
+    "errors": {
+      "sendCode": "An kasa aika lamba. Da fatan za a sake gwadawa.",
+      "enterEmailCode": "Da fatan za a shigar da lambar da muka aiko maka ta imel.",
+      "enterPassword": "Da fatan za a shigar da kalmar sirrinka don ci gaba.",
+      "enterTotp": "Da fatan za a shigar da lambar tantancewa mai matakai biyu don ci gaba."
+    }
+  },
+  "theme": {
+    "label": "Jigo",
+    "light": "Haske",
+    "dark": "Duhu",
+    "system": "Tsarin"
+  },
+  "imageUpload": {
+    "changePicture": "Canza hoto",
+    "uploadPicture": "Loda hoto",
+    "defaultHint": "Ƙara hoto don ci gaba da rayar da mafarki.",
+    "remove": "Cire",
+    "error": "An kasa loda hoton.",
+    "chooseImage": "Da fatan za a zaɓi fayil ɗin hoto."
+  },
+  "segmented": {
+    "optionsLabel": "Zaɓuɓɓuka"
+  }
+}

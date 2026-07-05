@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useRegister, useUsernameAvailable, getUsernameAvailableQueryKey } from "@workspace/api-client-react";
@@ -18,6 +19,7 @@ const REFERRAL_SOURCES = [
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/;
 
 export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rememberMe: boolean) => void }) {
+  const { t } = useTranslation("auth");
   const register = useRegister();
 
   const [name, setName] = useState("");
@@ -52,16 +54,16 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
     const trimmedUser = username.trim().toLowerCase();
     const trimmedEmail = email.trim().toLowerCase();
 
-    if (!trimmedName) return setError("Please enter your legal name.");
+    if (!trimmedName) return setError(t("errors.name"));
     if (!USERNAME_RE.test(trimmedUser))
-      return setError("Username must be 3–30 characters: letters, numbers, or underscores.");
-    if (!dateOfBirth) return setError("Please enter your date of birth.");
+      return setError(t("errors.username"));
+    if (!dateOfBirth) return setError(t("errors.dobRequired"));
     if (new Date(`${dateOfBirth}T00:00:00Z`).getTime() >= Date.now())
-      return setError("Please enter a valid date of birth.");
+      return setError(t("errors.dobInvalid"));
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmedEmail))
-      return setError("Please enter a valid email address.");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
-    if (password !== confirm) return setError("Passwords don't match.");
+      return setError(t("errors.email"));
+    if (password.length < 8) return setError(t("errors.passwordLength"));
+    if (password !== confirm) return setError(t("errors.passwordMatch"));
 
     try {
       await register.mutateAsync({
@@ -77,41 +79,41 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
       });
       onRegistered(trimmedEmail, rememberMe);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not create your account. Please try again.");
+      setError(apiErrorMessage(err) ?? t("errors.createAccount"));
     }
   };
 
   const usernameStatus = !debounced
     ? null
     : !usernameValid
-      ? { ok: false, text: "3–30 letters, numbers, or underscores" }
+      ? { ok: false, text: t("username.hint") }
       : availability.isFetching
-        ? { ok: null, text: "Checking…" }
+        ? { ok: null, text: t("username.checking") }
         : availability.data
           ? availability.data.available
-            ? { ok: true, text: "Available" }
-            : { ok: false, text: availability.data.reason ?? "Taken" }
+            ? { ok: true, text: t("username.available") }
+            : { ok: false, text: availability.data.reason ?? t("username.taken") }
           : null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <label className="block">
         <span className="text-sm font-medium text-foreground">
-          Legal name <span className="text-xs font-normal text-muted-foreground">· private</span>
+          {t("fields.legalName")} <span className="text-xs font-normal text-muted-foreground">{t("fields.private")}</span>
         </span>
         <input
           autoComplete="name"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Jane Doe"
+          placeholder={t("fields.namePlaceholder")}
           className={`mt-1.5 ${authInputClass}`}
         />
       </label>
 
       <label className="block">
         <span className="text-sm font-medium text-foreground">
-          Username <span className="text-xs font-normal text-muted-foreground">· public</span>
+          {t("fields.username")} <span className="text-xs font-normal text-muted-foreground">{t("fields.public")}</span>
         </span>
         <input
           autoCapitalize="none"
@@ -119,7 +121,7 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
           required
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          placeholder="janedoe"
+          placeholder={t("fields.usernamePlaceholder")}
           className={`mt-1.5 ${authInputClass}`}
         />
         {usernameStatus && (
@@ -140,7 +142,7 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Date of birth</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.dateOfBirth")}</span>
         <input
           type="date"
           required
@@ -151,20 +153,20 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Email</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.email")}</span>
         <input
           type="email"
           autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder={t("fields.emailPlaceholder")}
           className={`mt-1.5 ${authInputClass}`}
         />
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Password</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.password")}</span>
         <div className="relative mt-1.5">
           <input
             type={showPassword ? "text" : "password"}
@@ -172,14 +174,14 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-            className={`${authInputClass} pr-10`}
+            placeholder={t("fields.passwordMinPlaceholder")}
+            className={`${authInputClass} pe-10`}
           />
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus-ring"
+            aria-label={showPassword ? t("password.hide") : t("password.show")}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -187,32 +189,32 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-foreground">Confirm password</span>
+        <span className="text-sm font-medium text-foreground">{t("fields.confirmPassword")}</span>
         <input
           type={showPassword ? "text" : "password"}
           autoComplete="new-password"
           required
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          placeholder="Re-enter your password"
+          placeholder={t("fields.confirmPasswordPlaceholder")}
           className={`mt-1.5 ${authInputClass}`}
         />
       </label>
 
       <label className="block">
         <span className="text-sm font-medium text-foreground">
-          How did you hear about MoolaHub?{" "}
-          <span className="text-xs font-normal text-muted-foreground">· optional</span>
+          {t("signUp.referralLabel")}{" "}
+          <span className="text-xs font-normal text-muted-foreground">{t("fields.optional")}</span>
         </span>
         <select
           value={referralSource}
           onChange={(e) => setReferralSource(e.target.value)}
           className={`mt-1.5 ${authInputClass}`}
         >
-          <option value="">Select one…</option>
+          <option value="">{t("signUp.referralPlaceholder")}</option>
           {REFERRAL_SOURCES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {t(`signUp.sources.${s}`)}
             </option>
           ))}
         </select>
@@ -225,7 +227,7 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
           onChange={(e) => setRememberMe(e.target.checked)}
           className="h-4 w-4 rounded border-border"
         />
-        Keep me logged in for 30 days
+        {t("rememberMe")}
       </label>
 
       {error && (
@@ -235,7 +237,7 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
       )}
 
       <Button type="submit" size="lg" className="w-full" disabled={register.isPending}>
-        {register.isPending ? "Creating account…" : "Create account"}
+        {register.isPending ? t("signUp.submitting") : t("signUp.submit")}
       </Button>
     </form>
   );

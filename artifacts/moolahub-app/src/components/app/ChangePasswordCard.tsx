@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import { KeyRound, AlertCircle, Check, Eye, EyeOff, MailCheck } from "lucide-react";
 import { Card, Button } from "@/components/ui";
 import {
@@ -17,6 +18,7 @@ const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-jade-500/60 focus-ring";
 
 export function ChangePasswordCard() {
+  const { t } = useTranslation("account");
   const { data: user } = useGetMe();
   const changePassword = useChangePassword();
   const forgotPassword = useForgotPassword();
@@ -62,10 +64,10 @@ export function ChangePasswordCard() {
     e.preventDefault();
     setError(null);
     setDone(false);
-    if (next.length < 8) return setError("Password must be at least 8 characters.");
-    if (next !== confirm) return setError("Passwords don't match.");
+    if (next.length < 8) return setError(t("changePassword.errors.minLength"));
+    if (next !== confirm) return setError(t("changePassword.errors.mismatch"));
     if (needsTotp && !totpCode.trim()) {
-      return setError("Enter your two-factor authentication code to continue.");
+      return setError(t("changePassword.errors.enterTotp"));
     }
     try {
       await changePassword.mutateAsync({
@@ -79,7 +81,7 @@ export function ChangePasswordCard() {
       resetForm();
       setDone(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not update your password.");
+      setError(apiErrorMessage(err) ?? t("changePassword.errors.update"));
     }
   };
 
@@ -92,15 +94,15 @@ export function ChangePasswordCard() {
       await forgotPassword.mutateAsync({ data: { email: user.email } });
       setEmailPhase("code");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "Could not send the code. Please try again.");
+      setError(apiErrorMessage(err) ?? t("changePassword.errors.sendCode"));
     }
   };
 
   const handleSetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (next.length < 8) return setError("Password must be at least 8 characters.");
-    if (next !== confirm) return setError("Passwords don't match.");
+    if (next.length < 8) return setError(t("changePassword.errors.minLength"));
+    if (next !== confirm) return setError(t("changePassword.errors.mismatch"));
     if (!user?.email) return;
     try {
       await resetPassword.mutateAsync({
@@ -111,7 +113,7 @@ export function ChangePasswordCard() {
       queryClient.setQueryData(getGetMeQueryKey(), null);
       queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetMeQueryKey()[0] });
     } catch (err) {
-      setError(apiErrorMessage(err) ?? "That code is invalid or has expired.");
+      setError(apiErrorMessage(err) ?? t("changePassword.errors.invalidCode"));
     }
   };
 

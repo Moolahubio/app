@@ -1,4 +1,5 @@
 import { Link, useParams, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, Clock, Lightbulb, ArrowRight } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
 import { BackLink } from "@/components/app/bits";
@@ -7,6 +8,7 @@ import { useGetLesson, useListLessons, useCompleteLesson, getGetLessonQueryKey, 
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function LessonPage() {
+  const { t } = useTranslation("learn");
   const { slug } = useParams();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -15,28 +17,28 @@ export default function LessonPage() {
   const { data: lessonsList } = useListLessons();
   const completeMutation = useCompleteLesson();
 
-  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading lesson…</div>;
-  if (!lesson) return <div className="p-8 text-center text-muted-foreground">We couldn't find that lesson.</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;
+  if (!lesson) return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
 
   const index = lessonsList?.findIndex((l) => l.slug === slug) ?? -1;
   const next = index !== -1 && lessonsList ? lessonsList[index + 1] : undefined;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <BackLink href="/learn" label="All lessons" />
+      <BackLink href="/learn" label={t("detail.allLessons")} />
 
       <article>
         <div className="flex items-center gap-3">
           <Badge tone={lesson.level === "Beginner" ? "jade" : "sky"}>{lesson.level}</Badge>
           <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" /> {lesson.minutes} min read
+            <Clock className="h-4 w-4" /> {t("detail.minutesRead", { count: lesson.minutes })}
           </span>
           <span className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
             {lesson.category}
           </span>
           {lesson.completed && (
             <Badge tone="jade">
-              <CheckCircle2 className="h-3 w-3" /> Completed
+              <CheckCircle2 className="h-3 w-3" /> {t("detail.completed")}
             </Badge>
           )}
         </div>
@@ -62,13 +64,13 @@ export default function LessonPage() {
           <Card className="mt-10 border-jade-500/15 bg-jade-50/50 p-6 dark:bg-jade-500/15">
             <div className="flex items-center gap-2 text-jade-700 dark:text-jade-300">
               <Lightbulb className="h-5 w-5" />
-              <h2 className="font-display text-lg font-bold">Key takeaways</h2>
+              <h2 className="font-display text-lg font-bold">{t("detail.keyTakeaways")}</h2>
             </div>
             <ul className="mt-4 space-y-3">
-              {lesson.takeaways.map((t) => (
-                <li key={t} className="flex items-start gap-2.5">
+              {lesson.takeaways.map((takeaway) => (
+                <li key={takeaway} className="flex items-start gap-2.5">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-jade-500" />
-                  <span className="text-foreground">{t}</span>
+                  <span className="text-foreground">{takeaway}</span>
                 </li>
               ))}
             </ul>
@@ -78,7 +80,7 @@ export default function LessonPage() {
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           {lesson.completed ? (
             <Badge tone="jade" className="px-4 py-2">
-              <CheckCircle2 className="h-4 w-4" /> Lesson completed
+              <CheckCircle2 className="h-4 w-4" /> {t("detail.lessonCompleted")}
             </Badge>
           ) : (
             <ActionButton
@@ -91,8 +93,8 @@ export default function LessonPage() {
                   }
                 });
               }}
-              label="Mark complete"
-              pendingLabel="Saving…"
+              label={t("detail.markComplete")}
+              pendingLabel={t("detail.saving")}
               pending={completeMutation.isPending}
             />
           )}
@@ -101,13 +103,13 @@ export default function LessonPage() {
               href={`/learn/${next.slug}`}
               className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              <span className="text-right">
+              <span className="text-end">
                 <span className="block font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                  Next lesson
+                  {t("detail.nextLesson")}
                 </span>
                 {next.title}
               </span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
             </Link>
           )}
         </div>

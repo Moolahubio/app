@@ -1,0 +1,67 @@
+{
+  "app": {
+    "tagline": "Save. Earn. Belong."
+  },
+  "nav": {
+    "home": "Home",
+    "personalSavings": "My Savings",
+    "personalSavingsShort": "Savings",
+    "groupSavings": "Group Savings",
+    "groupSavingsShort": "Groups",
+    "learn": "Learn",
+    "transactions": "Transactions",
+    "account": "Account",
+    "profile": "Profile",
+    "viewProfile": "See your profile"
+  },
+  "actions": {
+    "save": "Save",
+    "saved": "Don save.",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Go back",
+    "close": "Close",
+    "retry": "Try again",
+    "continue": "Continue",
+    "loading": "E dey load…",
+    "signOut": "Comot",
+    "signingOut": "Dey comot…"
+  },
+  "labels": {
+    "balance": "Balance",
+    "nextDue": "Next payment"
+  },
+  "time": {
+    "justNow": "just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago"
+  },
+  "language": {
+    "eyebrow": "Settings",
+    "title": "Language",
+    "description": "Choose di language wey di whole app go use. Numbers, dates and balance go change too.",
+    "detail": "Choose your language",
+    "error": "We no fit change your language.",
+    "names": {
+      "en": "English",
+      "ar": "Arabic",
+      "fr": "French",
+      "sw": "Swahili",
+      "pcm": "Naija Pidgin",
+      "ha": "Hausa",
+      "zh": "Mandarin"
+    }
+  },
+  "forms": {
+    "copy": "Copy",
+    "copied": "Copy don",
+    "working": "E dey work…",
+    "withdrawUsdc": "Withdraw USDC",
+    "sending": "E dey send…",
+    "recipientPlaceholder": "Recipient Monad address (0x…)",
+    "invite": "Invite"
+  }
+}

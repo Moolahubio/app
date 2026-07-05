@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { usePrivy, useLogin } from "@privy-io/react-auth";
 import { Wallet } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 import { useGetMe, useGetWallet, getGetMeQueryKey } from "@workspace/api-client-react";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
@@ -58,6 +59,7 @@ export function WalletSessionBanner() {
 }
 
 function WalletSessionBannerInner() {
+  const { t } = useTranslation("wallet");
   const { data: wallet } = useGetWallet();
   const { data: me } = useGetMe();
   const { ready, authenticated } = usePrivy();
@@ -84,14 +86,14 @@ function WalletSessionBannerInner() {
           <Wallet className="h-5 w-5" />
         </span>
         <div>
-          <p className="text-sm font-semibold text-foreground">Connect your wallet for this session</p>
+          <p className="text-sm font-semibold text-foreground">{t("banner.title")}</p>
           <p className="text-sm text-muted-foreground">
-            Connect once now and you can deposit, save, and withdraw without connecting again until you sign out.
+            {t("banner.description")}
           </p>
         </div>
       </div>
       <Button variant="secondary" className="shrink-0" onClick={handleConnect}>
-        Connect wallet
+        {t("banner.connect")}
       </Button>
     </div>
   );

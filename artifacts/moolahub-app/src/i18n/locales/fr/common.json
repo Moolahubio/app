@@ -1,0 +1,67 @@
+{
+  "app": {
+    "tagline": "Épargnez. Gagnez. Appartenez."
+  },
+  "nav": {
+    "home": "Accueil",
+    "personalSavings": "Épargne personnelle",
+    "personalSavingsShort": "Épargne",
+    "groupSavings": "Épargne de groupe",
+    "groupSavingsShort": "Groupes",
+    "learn": "Apprendre",
+    "transactions": "Transactions",
+    "account": "Compte",
+    "profile": "Profil",
+    "viewProfile": "Voir le profil"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "saved": "Enregistré.",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "close": "Fermer",
+    "retry": "Réessayer",
+    "continue": "Continuer",
+    "loading": "Chargement…",
+    "signOut": "Se déconnecter",
+    "signingOut": "Déconnexion…"
+  },
+  "labels": {
+    "balance": "Solde",
+    "nextDue": "Prochaine échéance"
+  },
+  "time": {
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{count}} min",
+    "hoursAgo": "il y a {{count}} h",
+    "daysAgo": "il y a {{count}} j"
+  },
+  "language": {
+    "eyebrow": "Paramètres",
+    "title": "Langue",
+    "description": "Choisissez la langue de toute l'application. Les nombres, dates et soldes s'adaptent aussi.",
+    "detail": "Choisissez votre langue",
+    "error": "Impossible de changer la langue.",
+    "names": {
+      "en": "Anglais",
+      "ar": "Arabe",
+      "fr": "Français",
+      "sw": "Swahili",
+      "pcm": "Pidgin nigérian",
+      "ha": "Haoussa",
+      "zh": "Mandarin"
+    }
+  },
+  "forms": {
+    "copy": "Copier",
+    "copied": "Copié",
+    "working": "Traitement…",
+    "withdrawUsdc": "Retirer des USDC",
+    "sending": "Envoi…",
+    "recipientPlaceholder": "Adresse Monad du destinataire (0x…)",
+    "invite": "Inviter"
+  }
+}

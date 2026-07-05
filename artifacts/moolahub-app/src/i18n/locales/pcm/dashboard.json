@@ -1,0 +1,69 @@
+{
+  "hero": {
+    "eyebrow": "Welcome back",
+    "greeting": "Good to see you",
+    "greetingNamed": "Good to see you, {{name}}",
+    "totalBalance": "Total balance",
+    "available": "Wey ready",
+    "inSavings": "For savings",
+    "apy": "+{{apy}}% APY",
+    "addMoney": "Add money",
+    "withdraw": "Comot money",
+    "growthLabel": "Growth · 6 months",
+    "earned": "{{amount}} wey you don earn"
+  },
+  "reminders": {
+    "title": "Wetin dey next",
+    "allCaughtUp": "You don complete everything."
+  },
+  "streak": {
+    "none": "No streak yet",
+    "count": {
+      "daily": "{{count}} days",
+      "weekly": "{{count}} weeks",
+      "biweekly": "{{count}} two-week periods",
+      "monthly": "{{count}} months"
+    },
+    "saved": {
+      "daily": "You save today, well done",
+      "weekly": "You save dis week, well done",
+      "biweekly": "You save dis period, well done",
+      "monthly": "You save dis month, well done"
+    },
+    "keepAlive": {
+      "daily": "One deposit go keep your daily streak alive",
+      "weekly": "One deposit go keep your weekly streak alive",
+      "biweekly": "One deposit go keep your biweekly streak alive",
+      "monthly": "One deposit go keep your monthly streak alive"
+    },
+    "firstFlame": "Make one deposit to light your first flame"
+  },
+  "savings": {
+    "title": "Your own savings",
+    "empty": "Nothing dey here yet. Create your first goal."
+  },
+  "circle": {
+    "title": "Active circle",
+    "round": "Round {{current}} of {{total}} · {{frequency}}",
+    "pot": "Pot",
+    "members": "{{count}} members",
+    "empty": "No active circle yet."
+  },
+  "frequency": {
+    "daily": "daily",
+    "weekly": "weekly",
+    "biweekly": "biweekly",
+    "monthly": "monthly"
+  },
+  "learn": {
+    "title": "Keep learning",
+    "lessonTitle": "Blockchain, wey dem explain simple",
+    "lessonMeta": "5 min · Beginner",
+    "startLesson": "Start lesson"
+  },
+  "transactions": {
+    "title": "Recent transactions",
+    "viewAll": "See all",
+    "empty": "No transaction yet."
+  }
+}
