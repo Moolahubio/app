@@ -108,6 +108,9 @@ ENABLE_PRIVY_CUSTODY = "true"
 
 [userenv.development]
 
+[userenv.production]
+PUBLIC_APP_URL = "https://app.moolahub.io"
+
 [nix]
 channel = "stable-25_05"
 packages = ["solc"]
