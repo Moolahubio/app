@@ -1,10 +1,10 @@
 {
-  "eyebrow": "Karibisha na Upate",
-  "title": "Waalike marafiki, mpate pamoja",
-  "description": "Shiriki MoolaHub na upate sehemu ya ada za jukwaa kutoka kwa kila mtu unayemleta — kwa muda wote anaoendelea kuweka akiba.",
+  "eyebrow": "Karibisha, Upate Malipo",
+  "title": "Karibisha, Upate Malipo",
+  "description": "Pata angalau asilimia 10 ya ada ambazo marafiki zako hulipa. Unaweza kupata hadi $1,000 kwa mwezi.",
   "states": {
-    "loading": "Inapakia dashibodi yako ya rufaa…",
-    "error": "Tumeshindwa kupakia dashibodi yako ya rufaa.",
+    "loading": "Inapakia rufaa zako…",
+    "error": "Tumeshindwa kupakia rufaa zako.",
     "retry": "Jaribu tena"
   },
   "hero": {
@@ -16,12 +16,26 @@
   },
   "code": {
     "title": "Kiungo chako cha mwaliko",
-    "subtitle": "Shiriki kiungo hiki au msimbo. Yeyote atakayejisajili nacho ataunganishwa nawe.",
+    "subtitle": "Shiriki kiungo au msimbo wako. Yeyote atakayejisajili nacho ataunganishwa nawe.",
     "codeLabel": "Msimbo wa rufaa",
     "linkLabel": "Kiungo cha mwaliko",
     "share": "Shiriki mwaliko",
     "shareTitle": "Jiunge nami MoolaHub",
-    "shareText": "Weka akiba kwa USDC na ujiunge na miduara ya akiba MoolaHub. Tumia kiungo changu kuanza:"
+    "shareText": "Weka akiba kwa USDC na ujiunge na miduara ya akiba MoolaHub. Tumia kiungo changu kuanza:",
+    "edit": "Hariri msimbo",
+    "editHint": "Chagua herufi au nambari 4 hadi 15. Hii ndiyo marafiki wataandika ili kujiunga kupitia wewe.",
+    "save": "Hifadhi msimbo",
+    "saving": "Inahifadhi…",
+    "cancel": "Ghairi",
+    "placeholder": "MSIMBOWAKO",
+    "success": "Msimbo wako wa rufaa umesasishwa.",
+    "confirmTitle": "Ubadilishe msimbo wako wa rufaa?",
+    "confirmBody": "Msimbo wako wa zamani utaacha kufanya kazi mara moja. Yeyote ambaye bado ana kiungo chako cha zamani hatahesabiwa kama rufaa yako.",
+    "confirmAction": "Ubadilishe",
+    "errors": {
+      "format": "Tumia herufi au nambari 4 hadi 15, bila nafasi.",
+      "unchanged": "Huo tayari ndio msimbo wako."
+    }
   },
   "stats": {
     "activeReferrals": "Waweka akiba hai",
@@ -34,14 +48,14 @@
     "subtitle": "Kadiri unavyopendekeza waweka akiba hai wengi, ndivyo sehemu yako ya ada inavyoongezeka.",
     "current": "Sasa",
     "progressToNext": "Waweka akiba hai {{count}} zaidi kufikia {{tier}}",
-    "maxed": "Umefikia kiwango cha juu — sehemu ya juu ya asilimia {{rate}}. 🎉",
+    "maxed": "Umefikia kiwango cha juu kabisa, sehemu ya juu ya asilimia {{rate}}.",
     "activeRange": "Waweka akiba hai {{min}}+",
     "names": {
-      "starter": "Mwanzilishi",
-      "builder": "Mjenzi",
-      "connector": "Muunganishi",
-      "leader": "Kiongozi",
-      "champion": "Bingwa"
+      "starter": "Shaba",
+      "builder": "Fedha",
+      "connector": "Dhahabu",
+      "leader": "Platinamu",
+      "champion": "Almasi"
     }
   },
   "withdraw": {
@@ -55,11 +69,17 @@
     "min": "Kiwango cha chini {{amount}}",
     "max": "Inapatikana {{amount}}",
     "monthly": "{{used}} kati ya {{cap}} vimetolewa mwezi huu",
+    "locked": {
+      "title": "Utoaji hufunguliwa ukifika {{min}}",
+      "progress": "{{current}} kati ya {{min}}",
+      "needMore": "Pata {{amount}} zaidi ili kutoa.",
+      "monthlyReached": "Umefikia kikomo chako cha {{cap}} kwa mwezi huu. Kinaanzishwa upya tarehe 1."
+    },
     "errors": {
       "amount": "Weka kiasi sahihi.",
       "min": "Utoaji wa chini kabisa ni {{amount}}.",
       "max": "Unaweza kutoa hadi {{amount}} kwa sasa.",
-      "monthly": "Hii itapita kikomo chako cha mwezi cha {{cap}} — umebakiwa na {{amount}} mwezi huu."
+      "monthly": "Hii itapita kikomo chako cha mwezi cha {{cap}}. Umebakiwa na {{amount}} mwezi huu."
     }
   },
   "referrals": {
@@ -77,16 +97,16 @@
     "title": "Jinsi inavyofanya kazi",
     "steps": {
       "share": {
-        "title": "Shiriki kiungo chako",
-        "desc": "Tuma kiungo chako cha mwaliko kwa marafiki na familia."
+        "title": "Tuma msimbo wako wa rufaa",
+        "desc": "Shiriki msimbo au kiungo chako na marafiki na familia ili wajiunge na MoolaHub."
       },
       "save": {
-        "title": "Wanaweka akiba",
-        "desc": "Wanapojisajili na kudumisha mfululizo wa akiba, wanakuwa hai."
+        "title": "Waache waweke akiba",
+        "desc": "Wanapojisajili na kuendelea kuweka akiba, unapata sehemu ya ada wanazolipa. Kadiri wanavyoweka akiba zaidi, ndivyo unavyopata zaidi."
       },
       "earn": {
-        "title": "Unapata",
-        "desc": "Pata asilimia {{rate}}+ ya ada za jukwaa wanazozalisha — kila mara."
+        "title": "Pata mapato",
+        "desc": "Weka angalau asilimia {{rate}} ya ada hizo, hadi $1,000 kwa mwezi."
       }
     }
   },
@@ -94,6 +114,6 @@
     "note": "Utoaji: kiwango cha chini {{min}} kwa kila utoaji, hadi {{max}} kila mwezi wa kalenda."
   },
   "signup": {
-    "invited": "Mwaliko umetumika — unajiunga kupitia rafiki. 🎉"
+    "invited": "Mwaliko umetumika. Unajiunga kupitia rafiki."
   }
 }

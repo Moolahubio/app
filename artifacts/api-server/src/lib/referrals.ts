@@ -19,6 +19,7 @@ import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
 import { requireWalletForUser, getWalletForUser } from "./wallet";
 import { getAllowedOrigins } from "./origins";
 import { AppError } from "./errors";
+import { isUniqueViolation } from "./dbErrors";
 import { notify } from "./notifications";
 import { formatMoney } from "./money";
 import { logger } from "./logger";
@@ -124,6 +125,79 @@ export async function getOrCreateReferralCode(userId: string): Promise<string> {
     // Otherwise it was a code collision — loop and try a fresh code.
   }
   throw new AppError("Couldn't generate a referral code. Please try again.");
+}
+
+// -------------------------------------------------------- custom (vanity) codes
+
+// Custom codes: 4–15 letters/numbers. Wider than the generated alphabet on
+// purpose — vanity codes are self-chosen for memorability, and every generated
+// code is still a valid subset, so validation stays uniform.
+const CUSTOM_CODE_RE = /^[A-Z0-9]{4,15}$/;
+
+// Reserved words that must never be claimed: referral codes appear verbatim in
+// public /register?ref=CODE links, so a vanity code impersonating the platform
+// (or offensive) is a phishing/abuse vector.
+const RESERVED_CODES = new Set([
+  "MOOLA", "MOOLAHUB", "ADMIN", "SUPPORT", "OFFICIAL", "HELP", "TEAM", "STAFF",
+  "SECURITY", "SYSTEM", "ROOT", "MOD", "NULL", "REGISTER", "LOGIN",
+]);
+const BANNED_SUBSTRINGS = ["FUCK", "SHIT", "CUNT", "NIGGER", "FAGGOT", "RAPE"];
+
+// Light in-memory, per-user throttle on code changes. Bounds vanity-code
+// squatting sweeps and 409-based enumeration of which codes are taken.
+// Per-process (mirrors gasTopupThrottle); move to a shared store if scaled out.
+const CODE_CHANGE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const CODE_CHANGE_MAX = Number(process.env.REFERRAL_CODE_CHANGE_CAP) || 5;
+const codeChangeHits = new Map<string, number[]>();
+
+function allowCodeChange(userId: string): boolean {
+  const now = Date.now();
+  const recent = (codeChangeHits.get(userId) ?? []).filter((t) => now - t < CODE_CHANGE_WINDOW_MS);
+  if (recent.length >= CODE_CHANGE_MAX) {
+    codeChangeHits.set(userId, recent);
+    return false;
+  }
+  recent.push(now);
+  codeChangeHits.set(userId, recent);
+  return true;
+}
+
+/**
+ * Set the user's custom referral code. Validates format + reserved/blocked
+ * words, then upserts on the user's row (INSERT ... ON CONFLICT (user_id) DO
+ * UPDATE). The user_id conflict is absorbed by DO UPDATE, so any surviving
+ * 23505 can only be the global unique(code) constraint — mapped to a clean 409.
+ *
+ * Trade-off: changing a code frees the old one. Old invite links stop working,
+ * and the freed code may later be claimed by someone else (who would then
+ * capture sign-ups from the original owner's stale links). Accepted for now; no
+ * code-history table. The frontend confirms this before saving.
+ */
+export async function setReferralCode(userId: string, rawCode: string): Promise<string> {
+  if (!allowCodeChange(userId)) {
+    throw new AppError("You're changing your code too often. Please try again later.", 429);
+  }
+  // Validate AFTER normalizing so lowercase submissions pass.
+  const code = (rawCode ?? "").trim().toUpperCase();
+  if (!CUSTOM_CODE_RE.test(code)) {
+    throw new AppError("Codes must be 4 to 15 letters or numbers, with no spaces.", 400);
+  }
+  if (RESERVED_CODES.has(code) || BANNED_SUBSTRINGS.some((w) => code.includes(w))) {
+    throw new AppError("That code isn't available. Please pick another.", 409);
+  }
+  try {
+    const [row] = await db
+      .insert(referralCodesTable)
+      .values({ userId, code })
+      .onConflictDoUpdate({ target: referralCodesTable.userId, set: { code } })
+      .returning({ code: referralCodesTable.code });
+    return row.code;
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new AppError("That code is already taken. Please pick another.", 409);
+    }
+    throw err;
+  }
 }
 
 /** Build the public sign-up link for a code (best-effort server origin). */

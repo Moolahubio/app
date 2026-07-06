@@ -1,10 +1,10 @@
 {
-  "eyebrow": "Ka Gayyata Ka Sami Riba",
-  "title": "Gayyaci abokai, ku sami riba tare",
-  "description": "Raba MoolaHub ka sami kaso na kuɗin sabis daga kowa da ka kawo — muddin yana ci gaba da ajiya.",
+  "eyebrow": "Ka Gayyata, A Biya Ka",
+  "title": "Ka Gayyata, A Biya Ka",
+  "description": "Ka sami aƙalla kashi 10% na kuɗin da abokanka ke biya. Kana iya samun har $1,000 a wata.",
   "states": {
-    "loading": "Ana loda dashboard ɗin gayyatarka…",
-    "error": "Mun kasa loda dashboard ɗin gayyatarka.",
+    "loading": "Ana loda gayyatarka…",
+    "error": "Mun kasa loda gayyatarka.",
     "retry": "Sake gwadawa"
   },
   "hero": {
@@ -16,12 +16,26 @@
   },
   "code": {
     "title": "Hanyar gayyatarka",
-    "subtitle": "Raba wannan hanyar ko lambar. Duk wanda ya yi rajista da ita zai haɗu da kai.",
+    "subtitle": "Raba hanyarka ko lambarka. Duk wanda ya yi rajista da ita zai haɗu da kai.",
     "codeLabel": "Lambar gayyata",
     "linkLabel": "Hanyar gayyata",
     "share": "Raba gayyata",
     "shareTitle": "Ka haɗu da ni a MoolaHub",
-    "shareText": "Yi ajiya da USDC ka shiga da'irorin ajiya a MoolaHub. Yi amfani da hanyata don farawa:"
+    "shareText": "Yi ajiya da USDC ka shiga da'irorin ajiya a MoolaHub. Yi amfani da hanyata don farawa:",
+    "edit": "Gyara lamba",
+    "editHint": "Zaɓi haruffa ko lambobi 4 zuwa 15. Wannan shi ne abin da abokai za su rubuta don shiga ta gare ka.",
+    "save": "Ajiye lamba",
+    "saving": "Ana ajiyewa…",
+    "cancel": "Soke",
+    "placeholder": "LAMBARKA",
+    "success": "An sabunta lambar gayyatarka.",
+    "confirmTitle": "Ka canza lambar gayyatarka?",
+    "confirmBody": "Tsohuwar lambarka za ta daina aiki nan take. Duk wanda har yanzu yake da tsohuwar hanyarka ba za a ƙidaya shi a matsayin gayyatarka ba.",
+    "confirmAction": "Ka canza ta",
+    "errors": {
+      "format": "Yi amfani da haruffa ko lambobi 4 zuwa 15, ba tare da fili ba.",
+      "unchanged": "Wannan tuni lambarka ce."
+    }
   },
   "stats": {
     "activeReferrals": "Masu ajiya masu aiki",
@@ -34,14 +48,14 @@
     "subtitle": "Yawan masu ajiya masu aiki da ka gayyata, shi ke ƙara kason ka na kuɗin sabis.",
     "current": "Na yanzu",
     "progressToNext": "Sauran masu ajiya masu aiki {{count}} don kaiwa {{tier}}",
-    "maxed": "Ka kai matakin ƙarshe — mafi girman kaso na {{rate}}%. 🎉",
+    "maxed": "Ka kai matakin ƙarshe, mafi girman kaso na {{rate}}%.",
     "activeRange": "Masu ajiya masu aiki {{min}}+",
     "names": {
-      "starter": "Mai Farawa",
-      "builder": "Mai Ginawa",
-      "connector": "Mai Haɗawa",
-      "leader": "Jagora",
-      "champion": "Zakara"
+      "starter": "Tagulla",
+      "builder": "Azurfa",
+      "connector": "Zinariya",
+      "leader": "Platinum",
+      "champion": "Lu'ulu'u"
     }
   },
   "withdraw": {
@@ -55,11 +69,17 @@
     "min": "Mafi ƙaranci {{amount}}",
     "max": "Akwai {{amount}}",
     "monthly": "An cire {{used}} daga {{cap}} a wannan watan",
+    "locked": {
+      "title": "Cirewa na buɗewa a {{min}}",
+      "progress": "{{current}} daga {{min}}",
+      "needMore": "Ka sami {{amount}} ƙari don cirewa.",
+      "monthlyReached": "Ka kai iyakarka ta {{cap}} a wannan watan. Yana sake farawa a ranar 1."
+    },
     "errors": {
       "amount": "Shigar da adadi mai inganci.",
       "min": "Mafi ƙarancin cirewa shine {{amount}}.",
       "max": "Za ka iya cire {{amount}} kaɗai a yanzu.",
-      "monthly": "Wannan zai wuce iyakar watanka na {{cap}} — kana da {{amount}} da ya rage a wannan watan."
+      "monthly": "Wannan zai wuce iyakar watanka na {{cap}}. Kana da {{amount}} da ya rage a wannan watan."
     }
   },
   "referrals": {
@@ -77,16 +97,16 @@
     "title": "Yadda yake aiki",
     "steps": {
       "share": {
-        "title": "Raba hanyarka",
-        "desc": "Aika hanyar gayyatarka ga abokai da dangi."
+        "title": "Aika lambar gayyatarka",
+        "desc": "Raba lambarka ko hanyarka da abokai da dangi don su shiga MoolaHub."
       },
       "save": {
-        "title": "Suna ajiya",
-        "desc": "Idan sun yi rajista suka ci gaba da ajiya, sun zama masu aiki."
+        "title": "Bar su su yi ajiya",
+        "desc": "Idan sun yi rajista suka ci gaba da ajiya, kana samun kaso na kuɗin da suke biya. Yawan ajiyar da suke yi, shi ke ƙara maka riba."
       },
       "earn": {
-        "title": "Kana samu",
-        "desc": "Ka sami {{rate}}%+ na kuɗin sabis da suke samarwa — kowane lokaci."
+        "title": "Karɓi ribarka",
+        "desc": "Ka riƙe aƙalla kashi {{rate}}% na waɗannan kuɗin, har $1,000 a wata."
       }
     }
   },
@@ -94,6 +114,6 @@
     "note": "Cirewa: mafi ƙaranci {{min}} kowace cirewa, har zuwa {{max}} a kowane wata."
   },
   "signup": {
-    "invited": "An yi amfani da gayyata — kana shiga ta hannun aboki. 🎉"
+    "invited": "An yi amfani da gayyata. Kana shiga ta hannun aboki."
   }
 }

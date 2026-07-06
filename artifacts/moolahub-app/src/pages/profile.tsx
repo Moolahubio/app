@@ -153,7 +153,7 @@ export default function ProfilePage() {
   const accountItems: Item[] = [
     { icon: UserCircle, label: t("menu.profileInformation.label"), detail: t("menu.profileInformation.detail"), href: "/profile/information" },
     { icon: WalletIcon, label: t("menu.wallets.label"), detail: t("menu.wallets.detail"), href: "/wallet" },
-    { icon: Gift, label: t("referrals:eyebrow"), detail: t("referrals:description"), href: "/referrals" },
+    { icon: Gift, label: t("referrals:title"), detail: t("referrals:description"), href: "/referrals" },
   ];
 
   const settingsItems: Item[] = [

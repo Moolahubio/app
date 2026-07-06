@@ -1,27 +1,41 @@
 {
-  "eyebrow": "Parrainez & Gagnez",
-  "title": "Invitez vos amis, gagnez ensemble",
-  "description": "Partagez MoolaHub et gagnez une part des frais de la plateforme sur chaque personne que vous parrainez — tant qu'elle continue d'épargner.",
+  "eyebrow": "Parrainez. Soyez payé.",
+  "title": "Parrainez. Soyez payé.",
+  "description": "Gagnez au moins 10 % des frais que vos amis paient. Vous pouvez toucher jusqu'à 1 000 $ par mois.",
   "states": {
-    "loading": "Chargement de votre tableau de parrainage…",
-    "error": "Impossible de charger votre tableau de parrainage.",
+    "loading": "Chargement de vos parrainages…",
+    "error": "Impossible de charger vos parrainages.",
     "retry": "Réessayer"
   },
   "hero": {
     "tierLabel": "Votre palier",
     "rateLabel": "Vous gagnez",
     "rateValue": "{{rate}} % des frais",
-    "lifetimeLabel": "Gains à ce jour",
+    "lifetimeLabel": "Gagné jusqu'ici",
     "activeLabel": "{{count}} épargnants actifs"
   },
   "code": {
     "title": "Votre lien d'invitation",
-    "subtitle": "Partagez ce lien ou ce code. Toute personne qui s'inscrit avec est liée à vous.",
+    "subtitle": "Partagez votre lien ou votre code. Toute personne qui s'inscrit avec est liée à vous.",
     "codeLabel": "Code de parrainage",
     "linkLabel": "Lien d'invitation",
     "share": "Partager l'invitation",
     "shareTitle": "Rejoignez-moi sur MoolaHub",
-    "shareText": "Épargnez en USDC et rejoignez des cercles d'épargne sur MoolaHub. Utilisez mon lien pour commencer :"
+    "shareText": "Épargnez en USDC et rejoignez des cercles d'épargne sur MoolaHub. Utilisez mon lien pour commencer :",
+    "edit": "Modifier le code",
+    "editHint": "Choisissez 4 à 15 lettres ou chiffres. C'est ce que vos amis saisiront pour vous rejoindre.",
+    "save": "Enregistrer le code",
+    "saving": "Enregistrement…",
+    "cancel": "Annuler",
+    "placeholder": "VOTRECODE",
+    "success": "Votre code de parrainage est mis à jour.",
+    "confirmTitle": "Changer votre code de parrainage ?",
+    "confirmBody": "Votre ancien code cesse de fonctionner aussitôt. Toute personne ayant encore votre ancien lien ne sera pas comptée comme votre parrainage.",
+    "confirmAction": "Le changer",
+    "errors": {
+      "format": "Utilisez 4 à 15 lettres ou chiffres, sans espaces.",
+      "unchanged": "C'est déjà votre code."
+    }
   },
   "stats": {
     "activeReferrals": "Épargnants actifs",
@@ -34,14 +48,14 @@
     "subtitle": "Plus vous parrainez d'épargnants actifs, plus votre part des frais augmente.",
     "current": "Actuel",
     "progressToNext": "{{count}} épargnants actifs de plus pour atteindre {{tier}}",
-    "maxed": "Vous avez atteint le palier le plus élevé — la part maximale de {{rate}} %. 🎉",
+    "maxed": "Vous avez atteint le palier le plus élevé, la part maximale de {{rate}} %.",
     "activeRange": "{{min}}+ épargnants actifs",
     "names": {
-      "starter": "Débutant",
-      "builder": "Bâtisseur",
-      "connector": "Connecteur",
-      "leader": "Leader",
-      "champion": "Champion"
+      "starter": "Bronze",
+      "builder": "Argent",
+      "connector": "Or",
+      "leader": "Platine",
+      "champion": "Diamant"
     }
   },
   "withdraw": {
@@ -55,11 +69,17 @@
     "min": "Minimum {{amount}}",
     "max": "Disponible {{amount}}",
     "monthly": "{{used}} sur {{cap}} retirés ce mois-ci",
+    "locked": {
+      "title": "Les retraits se débloquent à {{min}}",
+      "progress": "{{current}} sur {{min}}",
+      "needMore": "Gagnez {{amount}} de plus pour retirer.",
+      "monthlyReached": "Vous avez atteint votre limite de {{cap}} pour ce mois-ci. Elle se réinitialise le 1er."
+    },
     "errors": {
       "amount": "Saisissez un montant valide.",
       "min": "Le retrait minimum est de {{amount}}.",
       "max": "Vous pouvez retirer au maximum {{amount}} pour le moment.",
-      "monthly": "Cela dépasserait votre limite mensuelle de {{cap}} — il vous reste {{amount}} ce mois-ci."
+      "monthly": "Cela dépasserait votre limite mensuelle de {{cap}}. Il vous reste {{amount}} ce mois-ci."
     }
   },
   "referrals": {
@@ -77,16 +97,16 @@
     "title": "Comment ça marche",
     "steps": {
       "share": {
-        "title": "Partagez votre lien",
-        "desc": "Envoyez votre lien d'invitation à vos amis et votre famille."
+        "title": "Envoyez votre code de parrainage",
+        "desc": "Partagez votre code ou votre lien avec vos amis et votre famille pour qu'ils rejoignent MoolaHub."
       },
       "save": {
-        "title": "Ils épargnent",
-        "desc": "Lorsqu'ils s'inscrivent et maintiennent une série d'épargne, ils deviennent actifs."
+        "title": "Laissez-les épargner",
+        "desc": "Quand ils s'inscrivent et continuent d'épargner, vous gagnez une part des frais qu'ils paient. Plus ils épargnent, plus vous gagnez."
       },
       "earn": {
-        "title": "Vous gagnez",
-        "desc": "Gagnez {{rate}} %+ des frais de plateforme qu'ils génèrent — à chaque fois."
+        "title": "Recevez vos gains",
+        "desc": "Gardez au moins {{rate}} % de ces frais, jusqu'à 1 000 $ par mois."
       }
     }
   },
@@ -94,6 +114,6 @@
     "note": "Retraits : minimum {{min}} par retrait, jusqu'à {{max}} par mois civil."
   },
   "signup": {
-    "invited": "Invitation appliquée — vous rejoignez grâce à un ami. 🎉"
+    "invited": "Invitation appliquée. Vous rejoignez grâce à un ami."
   }
 }

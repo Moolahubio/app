@@ -1,10 +1,14 @@
 import { Router, type IRouter } from "express";
-import { GetReferralOverviewResponse, WithdrawReferralEarningsBody } from "@workspace/api-zod";
+import {
+  GetReferralOverviewResponse,
+  WithdrawReferralEarningsBody,
+  SetReferralCodeBody,
+} from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { verifyStepUp } from "../lib/stepUp";
-import { getReferralOverview, withdrawReferralEarnings } from "../lib/referrals";
+import { getReferralOverview, withdrawReferralEarnings, setReferralCode } from "../lib/referrals";
 
 const router: IRouter = Router();
 
@@ -45,6 +49,26 @@ router.post(
     }
 
     res.json({ ok: true });
+  },
+);
+
+router.post(
+  "/referral/code",
+  requireJsonAndAllowedOrigin,
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const user = (req as AuthRequest).user;
+    const parsed = SetReferralCodeBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid request" });
+      return;
+    }
+    try {
+      const code = await setReferralCode(user.id, parsed.data.code);
+      res.json({ code });
+    } catch (e) {
+      sendError(res, e, "Couldn't update your referral code");
+    }
   },
 );
 

@@ -694,6 +694,18 @@ export const WithdrawReferralEarningsResponse = zod.object({
 
 
 /**
+ * @summary Set a custom (vanity) referral code
+ */
+export const SetReferralCodeBody = zod.object({
+  "code": zod.string().describe('Desired code, 4 to 15 letters or numbers (normalized to uppercase). Must be unique and not a reserved word.')
+})
+
+export const SetReferralCodeResponse = zod.object({
+  "code": zod.string()
+})
+
+
+/**
  * @summary List user's circles
  */
 export const ListCirclesResponseItem = zod.object({

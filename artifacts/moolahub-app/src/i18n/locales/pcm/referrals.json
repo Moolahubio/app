@@ -1,10 +1,10 @@
 {
-  "eyebrow": "Refer & Earn",
-  "title": "Invite your friends, make money together",
-  "description": "Share MoolaHub make you dey collect part of the platform fees from everybody wey you bring — as long as dem still dey save.",
+  "eyebrow": "Refer, Collect Money",
+  "title": "Refer, Collect Money",
+  "description": "Collect at least 10% of the fees wey your friends dey pay. You fit make up to $1,000 every month.",
   "states": {
-    "loading": "Dey load your referral dashboard…",
-    "error": "We no fit load your referral dashboard.",
+    "loading": "Dey load your referrals…",
+    "error": "We no fit load your referrals.",
     "retry": "Try again"
   },
   "hero": {
@@ -16,12 +16,26 @@
   },
   "code": {
     "title": "Your invite link",
-    "subtitle": "Share this link or code. Anybody wey sign up with am go connect to you.",
+    "subtitle": "Share your link or code. Anybody wey sign up with am go connect to you.",
     "codeLabel": "Referral code",
     "linkLabel": "Invite link",
     "share": "Share invite",
     "shareTitle": "Join me for MoolaHub",
-    "shareText": "Save with USDC and join savings circles for MoolaHub. Use my link take start:"
+    "shareText": "Save with USDC and join savings circles for MoolaHub. Use my link take start:",
+    "edit": "Edit code",
+    "editHint": "Pick 4 to 15 letters or numbers. Na wetin your friends go type take join through you.",
+    "save": "Save code",
+    "saving": "Dey save…",
+    "cancel": "Cancel",
+    "placeholder": "YOURCODE",
+    "success": "Your referral code don update.",
+    "confirmTitle": "You wan change your referral code?",
+    "confirmBody": "Your old code go stop to work sharp sharp. Anybody wey still get your old link no go count as your referral.",
+    "confirmAction": "Change am",
+    "errors": {
+      "format": "Use 4 to 15 letters or numbers, no space.",
+      "unchanged": "Na your code be that already."
+    }
   },
   "stats": {
     "activeReferrals": "Active savers",
@@ -34,14 +48,14 @@
     "subtitle": "The more active savers wey you refer, the bigger your share of the fees.",
     "current": "Now",
     "progressToNext": "{{count}} more active savers make you reach {{tier}}",
-    "maxed": "You don reach the top level — the highest {{rate}}% share. 🎉",
+    "maxed": "You don reach the top level, the highest {{rate}}% share.",
     "activeRange": "{{min}}+ active savers",
     "names": {
-      "starter": "Starter",
-      "builder": "Builder",
-      "connector": "Connector",
-      "leader": "Leader",
-      "champion": "Champion"
+      "starter": "Bronze",
+      "builder": "Silver",
+      "connector": "Gold",
+      "leader": "Platinum",
+      "champion": "Diamond"
     }
   },
   "withdraw": {
@@ -55,11 +69,17 @@
     "min": "Minimum {{amount}}",
     "max": "Available {{amount}}",
     "monthly": "You don comot {{used}} out of {{cap}} this month",
+    "locked": {
+      "title": "Withdrawals go open when you reach {{min}}",
+      "progress": "{{current}} out of {{min}}",
+      "needMore": "Earn {{amount}} more make you fit withdraw.",
+      "monthlyReached": "You don reach your {{cap}} limit for this month. E go reset on the 1st."
+    },
     "errors": {
       "amount": "Put correct amount.",
       "min": "The smallest withdrawal na {{amount}}.",
       "max": "Na {{amount}} you fit comot now.",
-      "monthly": "This one go pass your {{cap}} monthly limit — you get {{amount}} remain this month."
+      "monthly": "This one go pass your {{cap}} monthly limit. You get {{amount}} remain this month."
     }
   },
   "referrals": {
@@ -77,16 +97,16 @@
     "title": "How e dey work",
     "steps": {
       "share": {
-        "title": "Share your link",
-        "desc": "Send your invite link give friends and family."
+        "title": "Send your referral code",
+        "desc": "Share your code or link with friends and family make dem fit join MoolaHub."
       },
       "save": {
-        "title": "Dem dey save",
-        "desc": "When dem sign up and keep savings streak, dem go become active."
+        "title": "Make dem save",
+        "desc": "When dem sign up and continue to save, you dey collect part of the fees wey dem dey pay. The more dem save, the more you dey earn."
       },
       "earn": {
-        "title": "You dey earn",
-        "desc": "Earn {{rate}}%+ of the platform fees wey dem dey make — every time."
+        "title": "Collect your earnings",
+        "desc": "Keep at least {{rate}}% of those fees, up to $1,000 every month."
       }
     }
   },
@@ -94,6 +114,6 @@
     "note": "Withdrawals: minimum {{min}} each time, up to {{max}} every month."
   },
   "signup": {
-    "invited": "Invite don work — you dey join through friend. 🎉"
+    "invited": "Invite don work. You dey join through friend."
   }
 }

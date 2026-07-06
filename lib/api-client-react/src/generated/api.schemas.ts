@@ -88,6 +88,15 @@ export interface ReferralWithdrawInput {
   reauthCode?: string | null;
 }
 
+export interface SetReferralCodeInput {
+  /** Desired code, 4 to 15 letters or numbers (normalized to uppercase). Must be unique and not a reserved word. */
+  code: string;
+}
+
+export interface ReferralCodeResponse {
+  code: string;
+}
+
 export interface StreakHero {
   count: number;
   status: string;

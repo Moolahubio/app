@@ -1,10 +1,10 @@
 {
-  "eyebrow": "Refer & Earn",
-  "title": "Invite friends, earn together",
-  "description": "Share MoolaHub and earn a share of the platform fees from everyone you bring on board — for as long as they keep saving.",
+  "eyebrow": "Refer. Get Paid.",
+  "title": "Refer. Get Paid.",
+  "description": "Earn at least 10% of the fees your friends pay. You can get up to $1,000 a month.",
   "states": {
-    "loading": "Loading your referral dashboard…",
-    "error": "We couldn't load your referral dashboard.",
+    "loading": "Loading your referrals…",
+    "error": "We couldn't load your referrals.",
     "retry": "Try again"
   },
   "hero": {
@@ -16,12 +16,26 @@
   },
   "code": {
     "title": "Your invite link",
-    "subtitle": "Share this link or code. Anyone who signs up with it is linked to you.",
+    "subtitle": "Share your link or code. Anyone who signs up with it is linked to you.",
     "codeLabel": "Referral code",
     "linkLabel": "Invite link",
     "share": "Share invite",
     "shareTitle": "Join me on MoolaHub",
-    "shareText": "Save in USDC and join savings circles on MoolaHub. Use my link to get started:"
+    "shareText": "Save in USDC and join savings circles on MoolaHub. Use my link to get started:",
+    "edit": "Edit code",
+    "editHint": "Pick 4 to 15 letters or numbers. This is what friends type to join through you.",
+    "save": "Save code",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "placeholder": "YOURCODE",
+    "success": "Your referral code is updated.",
+    "confirmTitle": "Change your referral code?",
+    "confirmBody": "Your old code stops working right away. Anyone who still has your old link won't be counted as your referral.",
+    "confirmAction": "Change it",
+    "errors": {
+      "format": "Use 4 to 15 letters or numbers, with no spaces.",
+      "unchanged": "That is already your code."
+    }
   },
   "stats": {
     "activeReferrals": "Active savers",
@@ -34,14 +48,14 @@
     "subtitle": "The more active savers you refer, the bigger your share of the fees.",
     "current": "Current",
     "progressToNext": "{{count}} more active savers to reach {{tier}}",
-    "maxed": "You've reached the top tier — the maximum {{rate}}% share. 🎉",
+    "maxed": "You've reached the top tier, the maximum {{rate}}% share.",
     "activeRange": "{{min}}+ active savers",
     "names": {
-      "starter": "Starter",
-      "builder": "Builder",
-      "connector": "Connector",
-      "leader": "Leader",
-      "champion": "Champion"
+      "starter": "Bronze",
+      "builder": "Silver",
+      "connector": "Gold",
+      "leader": "Platinum",
+      "champion": "Diamond"
     }
   },
   "withdraw": {
@@ -55,11 +69,17 @@
     "min": "Minimum {{amount}}",
     "max": "Available {{amount}}",
     "monthly": "{{used}} of {{cap}} withdrawn this month",
+    "locked": {
+      "title": "Withdrawals unlock at {{min}}",
+      "progress": "{{current}} of {{min}}",
+      "needMore": "Earn {{amount}} more to withdraw.",
+      "monthlyReached": "You've hit your {{cap}} limit for this month. It resets on the 1st."
+    },
     "errors": {
       "amount": "Enter a valid amount.",
       "min": "The minimum withdrawal is {{amount}}.",
       "max": "You can withdraw at most {{amount}} right now.",
-      "monthly": "That would pass your {{cap}} monthly limit — you have {{amount}} left this month."
+      "monthly": "That would pass your {{cap}} monthly limit. You have {{amount}} left this month."
     }
   },
   "referrals": {
@@ -77,16 +97,16 @@
     "title": "How it works",
     "steps": {
       "share": {
-        "title": "Share your link",
-        "desc": "Send your invite link to friends and family."
+        "title": "Send your referral code",
+        "desc": "Share your code or link with friends and family so they can join MoolaHub."
       },
       "save": {
-        "title": "They save",
-        "desc": "When they sign up and keep a savings streak, they become active."
+        "title": "Let them save",
+        "desc": "When they sign up and keep saving, you earn a share of the fees they pay. The more they save, the more you earn."
       },
       "earn": {
-        "title": "You earn",
-        "desc": "Earn {{rate}}%+ of the platform fees they generate — every time."
+        "title": "Get earnings",
+        "desc": "Keep at least {{rate}}% of those fees, up to $1,000 a month."
       }
     }
   },
@@ -94,6 +114,6 @@
     "note": "Withdrawals: minimum {{min}} per withdrawal, up to {{max}} each calendar month."
   },
   "signup": {
-    "invited": "Invite applied — you're joining through a friend. 🎉"
+    "invited": "Invite applied. You're joining through a friend."
   }
 }

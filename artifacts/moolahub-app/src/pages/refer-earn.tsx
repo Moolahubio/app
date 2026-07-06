@@ -13,6 +13,18 @@ import {
   ShieldCheck,
   Flame,
   Link2,
+  Medal,
+  Award,
+  Crown,
+  Gem,
+  Send,
+  TrendingUp,
+  Briefcase,
+  Lock,
+  Pencil,
+  Check,
+  X,
+  type LucideIcon,
 } from "lucide-react";
 import { Card, Badge, Button } from "@/components/ui";
 import { PageHeader, BackLink, Money } from "@/components/app/bits";
@@ -20,6 +32,7 @@ import { CopyButton } from "@/components/app/forms";
 import {
   useGetReferralOverview,
   useWithdrawReferralEarnings,
+  useSetReferralCode,
   getGetReferralOverviewQueryKey,
   getGetWalletQueryKey,
   getGetDashboardSummaryQueryKey,
@@ -37,16 +50,45 @@ const TIERS = [
   { key: "champion", min: 101, rate: 20 },
 ] as const;
 
+/**
+ * A unique icon per tier (metal/gem ladder). Keyed by the stable backend tier
+ * key; only the display name + icon are cosmetic, the keys never change.
+ */
+const TIER_ICONS: Record<string, LucideIcon> = {
+  starter: Medal,
+  builder: Award,
+  connector: Trophy,
+  leader: Crown,
+  champion: Gem,
+};
+
+/** Icon per "how it works" step. */
+const HOW_ICONS: Record<string, LucideIcon> = {
+  share: Send,
+  save: TrendingUp,
+  earn: Briefcase,
+};
+
+/** Custom referral code format (mirrors the backend rule). */
+const CUSTOM_CODE_RE = /^[A-Z0-9]{4,15}$/;
+
 export default function ReferEarnPage() {
   const { t } = useTranslation("referrals");
   const { data: overview, isLoading, isError, error, refetch } = useGetReferralOverview();
 
   const queryClient = useQueryClient();
   const withdraw = useWithdrawReferralEarnings();
+  const setCode = useSetReferralCode();
   const { requestProof, stepUpDialog } = useStepUpGate();
 
   const [amount, setAmount] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Custom-code editor state.
+  const [editingCode, setEditingCode] = useState(false);
+  const [codeDraft, setCodeDraft] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [confirmingCode, setConfirmingCode] = useState(false);
 
   if (isError && !overview) {
     return (
@@ -70,11 +112,62 @@ export default function ReferEarnPage() {
   const nextKey = o.tier.nextTierKey ?? null;
   const maxWithdrawable = Math.max(0, Math.min(o.availableCents, w.remainingThisMonthCents));
 
+  const TierIcon = TIER_ICONS[o.tier.key] ?? Trophy;
+
   // Progress within the current tier toward the next threshold.
   const progressPct =
     nextAt && nextAt > o.tier.minActive
       ? Math.min(100, Math.round(((o.activeReferrals - o.tier.minActive) / (nextAt - o.tier.minActive)) * 100))
       : 100;
+
+  const startEditCode = () => {
+    setCodeDraft(o.code);
+    setCodeError(null);
+    setConfirmingCode(false);
+    setEditingCode(true);
+  };
+
+  const cancelEditCode = () => {
+    setEditingCode(false);
+    setConfirmingCode(false);
+    setCodeError(null);
+  };
+
+  // Validate locally, then require an explicit confirm before saving: changing
+  // a code frees the old one and breaks any links already shared.
+  const reviewCode = () => {
+    setCodeError(null);
+    const next = codeDraft.trim().toUpperCase();
+    if (!CUSTOM_CODE_RE.test(next)) {
+      setCodeError(t("code.errors.format"));
+      return;
+    }
+    if (next === o.code) {
+      setCodeError(t("code.errors.unchanged"));
+      return;
+    }
+    setConfirmingCode(true);
+  };
+
+  const saveCode = () => {
+    const next = codeDraft.trim().toUpperCase();
+    setCode.mutate(
+      { data: { code: next } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetReferralOverviewQueryKey() });
+          setEditingCode(false);
+          setConfirmingCode(false);
+          setCodeError(null);
+          toast({ title: t("code.success") });
+        },
+        onError: (err) => {
+          setConfirmingCode(false);
+          setCodeError(apiErrorMessage(err) ?? t("states.error"));
+        },
+      },
+    );
+  };
 
   const handleWithdraw = async () => {
     setFormError(null);
@@ -151,7 +244,7 @@ export default function ReferEarnPage() {
               {t("hero.tierLabel")}
             </p>
             <div className="mt-1.5 flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-jade-400" />
+              <TierIcon className="h-6 w-6 text-jade-400" />
               <h2 className="font-display text-2xl font-bold">{t(`tier.names.${o.tier.key}`)}</h2>
             </div>
             <p className="mt-2 text-sm text-white/70">
@@ -187,17 +280,94 @@ export default function ReferEarnPage() {
         </div>
 
         <div className="mt-5 space-y-3">
-          <div>
-            <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              {t("code.codeLabel")}
-            </p>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
-              <code dir="ltr" className="font-mono text-lg font-bold tracking-[0.2em] text-foreground">
-                {o.code}
-              </code>
-              <CopyButton value={o.code} />
+          {editingCode ? (
+            <div>
+              <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                {t("code.codeLabel")}
+              </p>
+              <input
+                dir="ltr"
+                value={codeDraft}
+                onChange={(e) => setCodeDraft(e.target.value.toUpperCase())}
+                maxLength={15}
+                autoFocus
+                disabled={setCode.isPending}
+                placeholder={t("code.placeholder")}
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 font-mono text-lg font-bold tracking-[0.2em] text-foreground outline-none transition-colors placeholder:font-sans placeholder:text-sm placeholder:tracking-normal placeholder:text-muted-foreground focus:border-jade-500/60 focus-ring disabled:opacity-60"
+              />
+              <p className="mt-1.5 text-xs text-muted-foreground">{t("code.editHint")}</p>
+
+              {codeError && (
+                <p className="mt-1.5 text-sm text-red-600 dark:text-red-400" role="alert">
+                  {codeError}
+                </p>
+              )}
+
+              {confirmingCode ? (
+                <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-50/70 p-3 dark:bg-amber-500/10">
+                  <p className="text-sm font-semibold text-foreground">{t("code.confirmTitle")}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("code.confirmBody")}</p>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={saveCode}
+                      disabled={setCode.isPending}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-jade-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-jade-400 focus-ring disabled:opacity-50"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {setCode.isPending ? t("code.saving") : t("code.confirmAction")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingCode(false)}
+                      disabled={setCode.isPending}
+                      className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted focus-ring disabled:opacity-50"
+                    >
+                      {t("code.cancel")}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={reviewCode}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-jade-500 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-jade-400 focus-ring"
+                  >
+                    <Check className="h-3.5 w-3.5" /> {t("code.save")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEditCode}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted focus-ring"
+                  >
+                    <X className="h-3.5 w-3.5" /> {t("code.cancel")}
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div>
+              <div className="mb-1.5 flex items-center justify-between">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                  {t("code.codeLabel")}
+                </p>
+                <button
+                  type="button"
+                  onClick={startEditCode}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-jade-600 transition-colors hover:text-jade-500 focus-ring dark:text-jade-400"
+                >
+                  <Pencil className="h-3 w-3" /> {t("code.edit")}
+                </button>
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
+                <code dir="ltr" className="font-mono text-lg font-bold tracking-[0.2em] text-foreground">
+                  {o.code}
+                </code>
+                <CopyButton value={o.code} />
+              </div>
+            </div>
+          )}
 
           <div>
             <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
@@ -283,6 +453,7 @@ export default function ReferEarnPage() {
         <ul className="mt-5 divide-y divide-border">
           {TIERS.map((tier) => {
             const isCurrent = tier.key === o.tier.key;
+            const RowIcon = TIER_ICONS[tier.key] ?? Trophy;
             return (
               <li
                 key={tier.key}
@@ -296,7 +467,7 @@ export default function ReferEarnPage() {
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    <Trophy className="h-4 w-4" />
+                    <RowIcon className="h-4 w-4" />
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-foreground">{t(`tier.names.${tier.key}`)}</p>
@@ -331,6 +502,53 @@ export default function ReferEarnPage() {
           </div>
         </div>
 
+        {maxWithdrawable < w.minCents ? (
+          <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Lock className="h-4 w-4 text-muted-foreground" />
+              {t("withdraw.locked.title", { min: formatMoney(w.minCents) })}
+            </div>
+            {o.availableCents < w.minCents ? (
+              <>
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-jade-500 transition-all"
+                    style={{ width: `${Math.min(100, Math.round((o.availableCents / w.minCents) * 100))}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("withdraw.locked.progress", {
+                    current: formatMoney(o.availableCents),
+                    min: formatMoney(w.minCents),
+                  })}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {t("withdraw.locked.needMore", { amount: formatMoney(w.minCents - o.availableCents) })}
+                </p>
+              </>
+            ) : (
+              <div className="mt-3">
+                <p className="text-sm text-muted-foreground">
+                  {t("withdraw.locked.monthlyReached", { cap: formatMoney(w.maxMonthlyCents) })}
+                </p>
+                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-ink-800 dark:bg-white/40"
+                    style={{
+                      width: `${Math.min(100, Math.round((w.withdrawnThisMonthCents / w.maxMonthlyCents) * 100))}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {t("withdraw.monthly", {
+                    used: formatMoney(w.withdrawnThisMonthCents),
+                    cap: formatMoney(w.maxMonthlyCents),
+                  })}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
         <div className="mt-5 space-y-3">
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -403,6 +621,7 @@ export default function ReferEarnPage() {
             </p>
           )}
         </div>
+        )}
         {stepUpDialog}
       </Card>
 
@@ -454,19 +673,22 @@ export default function ReferEarnPage() {
       <Card className="p-6">
         <h2 className="font-display text-lg font-bold text-foreground">{t("how.title")}</h2>
         <ol className="mt-4 space-y-4">
-          {(["share", "save", "earn"] as const).map((step, i) => (
-            <li key={step} className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-jade-500 text-xs font-bold text-white">
-                {i + 1}
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">{t(`how.steps.${step}.title`)}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t(`how.steps.${step}.desc`, { rate: ratePct })}
-                </p>
-              </div>
-            </li>
-          ))}
+          {(["share", "save", "earn"] as const).map((step) => {
+            const StepIcon = HOW_ICONS[step];
+            return (
+              <li key={step} className="flex gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-jade-50 text-jade-600 dark:bg-jade-500/15 dark:text-jade-300">
+                  <StepIcon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{t(`how.steps.${step}.title`)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t(`how.steps.${step}.desc`, { rate: ratePct })}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </Card>
 

@@ -229,6 +229,26 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
         </select>
       </label>
 
+      <label className="block">
+        <span className="text-sm font-medium text-foreground">
+          {t("signUp.inviteLabel")}{" "}
+          <span className="text-xs font-normal text-muted-foreground">{t("fields.optional")}</span>
+        </span>
+        <input
+          autoCapitalize="characters"
+          autoComplete="off"
+          value={referralCode ?? ""}
+          onChange={(e) => setReferralCode(e.target.value.toUpperCase() || null)}
+          placeholder={t("signUp.invitePlaceholder")}
+          className={`mt-1.5 ${authInputClass}`}
+        />
+        {referralCode && (
+          <span className="mt-1 flex items-center gap-1 text-xs text-jade-600 dark:text-jade-400">
+            <Check className="h-3 w-3" /> {t("referrals:signup.invited")}
+          </span>
+        )}
+      </label>
+
       <label className="flex items-center gap-2 text-sm text-muted-foreground">
         <input
           type="checkbox"
@@ -238,12 +258,6 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
         />
         {t("rememberMe")}
       </label>
-
-      {referralCode && (
-        <p className="flex items-center gap-1.5 rounded-xl bg-jade-50/70 px-3 py-2 text-sm text-jade-700 dark:bg-jade-500/10 dark:text-jade-300">
-          <Check className="h-4 w-4 shrink-0" /> {t("referrals:signup.invited")}
-        </p>
-      )}
 
       {error && (
         <p className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400" role="alert">

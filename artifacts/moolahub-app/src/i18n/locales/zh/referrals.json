@@ -1,10 +1,10 @@
 {
   "eyebrow": "推荐赚钱",
-  "title": "邀请好友，一起赚钱",
-  "description": "分享 MoolaHub，从你带来的每一位用户身上赚取平台手续费分成——只要他们持续储蓄。",
+  "title": "推荐赚钱",
+  "description": "至少赚取好友所付手续费的 10%。每月最多可赚 1,000 美元。",
   "states": {
-    "loading": "正在加载你的推荐面板…",
-    "error": "无法加载你的推荐面板。",
+    "loading": "正在加载你的推荐…",
+    "error": "无法加载你的推荐。",
     "retry": "重试"
   },
   "hero": {
@@ -16,12 +16,26 @@
   },
   "code": {
     "title": "你的邀请链接",
-    "subtitle": "分享此链接或代码。任何使用它注册的人都会与你绑定。",
+    "subtitle": "分享你的链接或代码。任何使用它注册的人都会与你绑定。",
     "codeLabel": "推荐码",
     "linkLabel": "邀请链接",
     "share": "分享邀请",
     "shareTitle": "来 MoolaHub 加入我",
-    "shareText": "在 MoolaHub 用 USDC 储蓄并加入储蓄圈。使用我的链接开始："
+    "shareText": "在 MoolaHub 用 USDC 储蓄并加入储蓄圈。使用我的链接开始：",
+    "edit": "编辑推荐码",
+    "editHint": "选择 4 到 15 个字母或数字。好友将输入它来通过你加入。",
+    "save": "保存推荐码",
+    "saving": "保存中…",
+    "cancel": "取消",
+    "placeholder": "你的推荐码",
+    "success": "你的推荐码已更新。",
+    "confirmTitle": "更改你的推荐码？",
+    "confirmBody": "你的旧推荐码会立即失效。仍持有你旧链接的人将不会算作你的推荐。",
+    "confirmAction": "更改",
+    "errors": {
+      "format": "请使用 4 到 15 个字母或数字，不含空格。",
+      "unchanged": "这已经是你的推荐码了。"
+    }
   },
   "stats": {
     "activeReferrals": "活跃储蓄者",
@@ -34,14 +48,14 @@
     "subtitle": "你推荐的活跃储蓄者越多，你的手续费分成就越高。",
     "current": "当前",
     "progressToNext": "再邀请 {{count}} 位活跃储蓄者即可达到{{tier}}",
-    "maxed": "你已达到最高等级——最高 {{rate}}% 分成。🎉",
+    "maxed": "你已达到最高等级，最高 {{rate}}% 分成。",
     "activeRange": "{{min}}+ 位活跃储蓄者",
     "names": {
-      "starter": "新手",
-      "builder": "建设者",
-      "connector": "连接者",
-      "leader": "领袖",
-      "champion": "冠军"
+      "starter": "青铜",
+      "builder": "白银",
+      "connector": "黄金",
+      "leader": "铂金",
+      "champion": "钻石"
     }
   },
   "withdraw": {
@@ -55,11 +69,17 @@
     "min": "最低 {{amount}}",
     "max": "可用 {{amount}}",
     "monthly": "本月已提取 {{used}}（上限 {{cap}}）",
+    "locked": {
+      "title": "提取额达到 {{min}} 时解锁",
+      "progress": "{{current}} / {{min}}",
+      "needMore": "再赚 {{amount}} 即可提取。",
+      "monthlyReached": "你本月已达到 {{cap}} 的限额。将于每月 1 日重置。"
+    },
     "errors": {
       "amount": "请输入有效金额。",
       "min": "最低提取金额为 {{amount}}。",
       "max": "你现在最多可提取 {{amount}}。",
-      "monthly": "这将超出你每月 {{cap}} 的限额——本月你还剩 {{amount}}。"
+      "monthly": "这将超出你每月 {{cap}} 的限额。本月你还剩 {{amount}}。"
     }
   },
   "referrals": {
@@ -77,16 +97,16 @@
     "title": "运作方式",
     "steps": {
       "share": {
-        "title": "分享你的链接",
-        "desc": "把邀请链接发给亲友。"
+        "title": "发送你的推荐码",
+        "desc": "把你的推荐码或链接分享给亲友，让他们加入 MoolaHub。"
       },
       "save": {
-        "title": "他们储蓄",
-        "desc": "当他们注册并保持储蓄连续记录时，就会变为活跃。"
+        "title": "让他们储蓄",
+        "desc": "当他们注册并持续储蓄时，你会赚取他们所付手续费的分成。他们存得越多，你赚得越多。"
       },
       "earn": {
-        "title": "你赚取",
-        "desc": "赚取他们所产生平台手续费的 {{rate}}%+——每一次。"
+        "title": "领取收益",
+        "desc": "保留这些手续费的至少 {{rate}}%，每月最多 1,000 美元。"
       }
     }
   },
@@ -94,6 +114,6 @@
     "note": "提取：每次最低 {{min}}，每个日历月最多 {{max}}。"
   },
   "signup": {
-    "invited": "邀请已应用——你正通过好友加入。🎉"
+    "invited": "邀请已应用。你正通过好友加入。"
   }
 }

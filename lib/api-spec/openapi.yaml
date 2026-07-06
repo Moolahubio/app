@@ -855,6 +855,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/OkResponse"
 
+  /referral/code:
+    post:
+      operationId: setReferralCode
+      tags: [referral]
+      summary: Set a custom (vanity) referral code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetReferralCodeInput"
+      responses:
+        "200":
+          description: Updated referral code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralCodeResponse"
+
   # ---- Circles ----
   /circles:
     get:
@@ -1737,6 +1756,23 @@ components:
           description: >-
             Required (step-up) when the account has neither a password nor 2FA.
             Obtain via POST /auth/stepup/request-code.
+
+    SetReferralCodeInput:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: >-
+            Desired code, 4 to 15 letters or numbers (normalized to uppercase).
+            Must be unique and not a reserved word.
+
+    ReferralCodeResponse:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
 
     # ---- Streaks ----
     StreakHero:

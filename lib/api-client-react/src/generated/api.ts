@@ -60,6 +60,7 @@ import type {
   PrivyAuthInput,
   PrivyLinkInput,
   ProfileUpdate,
+  ReferralCodeResponse,
   ReferralOverview,
   ReferralWithdrawInput,
   RegisterInput,
@@ -68,6 +69,7 @@ import type {
   ReleaseFromGoalResult,
   ResendCodeInput,
   ResetPasswordInput,
+  SetReferralCodeInput,
   SettlementOverviewResponse,
   StepUpProofInput,
   StreakFrequencyInput,
@@ -2849,6 +2851,77 @@ export const useWithdrawReferralEarnings = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getWithdrawReferralEarningsMutationOptions(options));
+    }
+
+export const getSetReferralCodeUrl = () => {
+
+
+
+
+  return `/api/referral/code`
+}
+
+/**
+ * @summary Set a custom (vanity) referral code
+ */
+export const setReferralCode = async (setReferralCodeInput: SetReferralCodeInput, options?: RequestInit): Promise<ReferralCodeResponse> => {
+
+  return customFetch<ReferralCodeResponse>(getSetReferralCodeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setReferralCodeInput,)
+  }
+);}
+
+
+
+
+export const getSetReferralCodeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setReferralCode>>, TError,{data: BodyType<SetReferralCodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setReferralCode>>, TError,{data: BodyType<SetReferralCodeInput>}, TContext> => {
+
+const mutationKey = ['setReferralCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setReferralCode>>, {data: BodyType<SetReferralCodeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setReferralCode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetReferralCodeMutationResult = NonNullable<Awaited<ReturnType<typeof setReferralCode>>>
+    export type SetReferralCodeMutationBody = BodyType<SetReferralCodeInput>
+    export type SetReferralCodeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set a custom (vanity) referral code
+ */
+export const useSetReferralCode = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setReferralCode>>, TError,{data: BodyType<SetReferralCodeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setReferralCode>>,
+        TError,
+        {data: BodyType<SetReferralCodeInput>},
+        TContext
+      > => {
+      return useMutation(getSetReferralCodeMutationOptions(options));
     }
 
 export const getListCirclesUrl = () => {
