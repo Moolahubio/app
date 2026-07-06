@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "@/i18n";
 import {
@@ -14,20 +7,8 @@ import {
   getLanguageDef,
   readStoredLanguage,
   type LanguageCode,
-  type LanguageDef,
 } from "@/i18n/languages";
-
-interface LanguageContextValue {
-  language: LanguageCode;
-  dir: "ltr" | "rtl";
-  languages: LanguageDef[];
-  /** Apply a language locally (state + i18next + <html> + localStorage). Does NOT
-   *  persist to the server — that is done explicitly on user actions via
-   *  `useLanguageSetting`, so hydrating from the server can reuse this safely. */
-  setLanguage: (code: LanguageCode) => void;
-}
-
-const LanguageContext = createContext<LanguageContextValue | null>(null);
+import { LanguageContext, type LanguageContextValue } from "@/hooks/language-context";
 
 function applyDocumentLanguage(code: LanguageCode) {
   const def = getLanguageDef(code);
@@ -68,10 +49,4 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
     </I18nextProvider>
   );
-}
-
-export function useLanguage(): LanguageContextValue {
-  const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error("useLanguage must be used within a LanguageProvider");
-  return ctx;
 }

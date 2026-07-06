@@ -5,7 +5,7 @@ import {
   getGetMeQueryKey,
   getGetProfileQueryKey,
 } from "@workspace/api-client-react";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/language-context";
 import type { LanguageCode } from "@/i18n/languages";
 
 /**
