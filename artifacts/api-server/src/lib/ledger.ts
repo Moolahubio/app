@@ -15,14 +15,17 @@ import {
  *   wallet:<userId>  available, unallocated balance in the user's wallet
  *   goal:<goalId>    allocated to a goal (still in the wallet, earmarked)
  *   pool:<circleId>  a Susu circle's escrowed pot
- *   external         the outside world: on-chain USDC in/out
- *   yield            yield source
- *   fees             platform fees
+ *   external          the outside world: on-chain USDC in/out
+ *   yield             yield source
+ *   fees              platform fees
+ *   referral:<userId> a member's earned Refer & Earn commission (held until
+ *                     withdrawn); credited from `fees`/`external` on accrual.
  */
 export const acct = {
   wallet: (userId: string) => `wallet:${userId}`,
   goal: (goalId: string) => `goal:${goalId}`,
   pool: (circleId: string) => `pool:${circleId}`,
+  referral: (userId: string) => `referral:${userId}`,
   external: "external",
   yield: "yield",
   fees: "fees",
@@ -44,6 +47,8 @@ function describe(key: string): AccountSeed {
     return { key, kind: "goal", label: "Goal allocation", goalId: key.slice(5) };
   if (key.startsWith("pool:"))
     return { key, kind: "pool", label: "Circle pot", circleId: key.slice(5) };
+  if (key.startsWith("referral:"))
+    return { key, kind: "referral", label: "Referral earnings", userId: key.slice(9) };
   if (key === "external") return { key, kind: "external", label: "External (on-chain)" };
   if (key === "yield") return { key, kind: "yield", label: "Yield" };
   if (key === "fees") return { key, kind: "fees", label: "Platform fees" };

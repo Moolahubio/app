@@ -17,6 +17,7 @@
     "test:goals-onchain": "tsx src/lib/goals-onchain.e2e.ts",
     "test:goals-race": "tsx src/lib/goals-race.e2e.ts",
     "test:streaks": "tsx src/lib/streaks.e2e.ts",
+    "test:referrals": "tsx src/lib/referrals.e2e.ts",
     "test:circles": "pnpm run test:susu && pnpm run test:susu-accumulation && pnpm run test:susu-http && pnpm run test:susu-http-authz && pnpm run test:susu-invite-authz",
     "test:twofactor": "tsx src/lib/twofactor.e2e.ts",
     "test:twofactor-http": "tsx src/lib/twofactor-http.e2e.ts",

@@ -822,6 +822,39 @@ paths:
               schema:
                 $ref: "#/components/schemas/OkResponse"
 
+  # ---- Refer & Earn ----
+  /referral:
+    get:
+      operationId: getReferralOverview
+      tags: [referral]
+      summary: Get the user's Refer & Earn code, tier, earnings and referrals
+      responses:
+        "200":
+          description: Referral overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralOverview"
+
+  /referral/withdraw:
+    post:
+      operationId: withdrawReferralEarnings
+      tags: [referral]
+      summary: Withdraw available referral earnings (step-up required)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferralWithdrawInput"
+      responses:
+        "200":
+          description: Withdrawal submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+
   # ---- Circles ----
   /circles:
     get:
@@ -1582,6 +1615,129 @@ components:
         ok:
           type: boolean
 
+    # ---- Refer & Earn ----
+    ReferralTierInfo:
+      type: object
+      required: [key, rateBps, minActive]
+      properties:
+        key:
+          type: string
+          description: One of starter | builder | connector | leader | champion.
+        rateBps:
+          type: integer
+          description: Current earn rate in basis points (1000 = 10%).
+        minActive:
+          type: integer
+          description: Active-saver count at which this tier begins.
+        nextTierKey:
+          type: ["string", "null"]
+        nextTierRateBps:
+          type: ["integer", "null"]
+        nextTierAtActive:
+          type: ["integer", "null"]
+          description: Active savers needed to reach the next tier.
+
+    ReferralWithdrawalLimits:
+      type: object
+      required:
+        [
+          minCents,
+          maxMonthlyCents,
+          withdrawnThisMonthCents,
+          remainingThisMonthCents,
+          hasWallet,
+        ]
+      properties:
+        minCents:
+          type: integer
+        maxMonthlyCents:
+          type: integer
+        withdrawnThisMonthCents:
+          type: integer
+        remainingThisMonthCents:
+          type: integer
+        hasWallet:
+          type: boolean
+
+    ReferralReferee:
+      type: object
+      required: [name, joinedAt, status, activityCount, feesEarnedCents]
+      properties:
+        name:
+          type: string
+        username:
+          type: ["string", "null"]
+        joinedAt:
+          type: string
+        status:
+          type: string
+          description: One of active | inactive | pending.
+        activityCount:
+          type: integer
+          description: Non-monetary activity signal (current savings-streak length).
+        feesEarnedCents:
+          type: integer
+          description: Commission you earned from this member (your own data).
+
+    ReferralOverview:
+      type: object
+      required:
+        [
+          code,
+          link,
+          tier,
+          activeReferrals,
+          totalReferred,
+          pendingCents,
+          availableCents,
+          lifetimeCents,
+          withdrawal,
+          referrals,
+        ]
+      properties:
+        code:
+          type: string
+        link:
+          type: string
+        tier:
+          $ref: "#/components/schemas/ReferralTierInfo"
+        activeReferrals:
+          type: integer
+        totalReferred:
+          type: integer
+        pendingCents:
+          type: integer
+        availableCents:
+          type: integer
+        lifetimeCents:
+          type: integer
+        withdrawal:
+          $ref: "#/components/schemas/ReferralWithdrawalLimits"
+        referrals:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferralReferee"
+
+    ReferralWithdrawInput:
+      type: object
+      required: [amountCents]
+      properties:
+        amountCents:
+          type: integer
+        currentPassword:
+          type: ["string", "null"]
+          description: Required (step-up) when the account already has a password set.
+        twoFactorCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has TOTP 2FA enabled, in
+            addition to currentPassword if a password is also set.
+        reauthCode:
+          type: ["string", "null"]
+          description: >-
+            Required (step-up) when the account has neither a password nor 2FA.
+            Obtain via POST /auth/stepup/request-code.
+
     # ---- Streaks ----
     StreakHero:
       type: object
@@ -1863,6 +2019,12 @@ components:
         referralSource:
           type: ["string", "null"]
           description: One of Twitter | Telegram | WhatsApp | Discord | LinkedIn | Friends | Others.
+        referralCode:
+          type: ["string", "null"]
+          description: >-
+            Optional Refer & Earn code (from a friend's invite link
+            /register?ref=CODE). Invalid or self codes are ignored silently and
+            never block sign-up.
         rememberMe:
           type: boolean
 

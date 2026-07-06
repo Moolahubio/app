@@ -37,6 +37,7 @@ import { privyEnabled, verifyPrivyToken, getPrivyProfile, getPrivyEmbeddedWallet
 import { privyCustodyEnabled } from "../lib/chain";
 import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from "../lib/password";
 import { issueVerificationCode, consumeVerificationCode } from "../lib/emailVerification";
+import { attributeReferral } from "../lib/referrals";
 import { issuePasswordResetCode, consumePasswordResetCode } from "../lib/passwordReset";
 import { sendPasswordChangedEmail } from "../lib/email";
 import { loginLockoutRemaining, recordFailedLogin, clearLoginAttempts } from "../lib/loginThrottle";
@@ -164,6 +165,7 @@ router.post("/auth/register", requireJsonAndAllowedOrigin, async (req, res): Pro
   const username = parsed.data.username.trim().toLowerCase();
   const { password, dateOfBirth } = parsed.data;
   const referralSource = parsed.data.referralSource ?? null;
+  const referralCode = parsed.data.referralCode ?? null;
 
   if (!name) {
     res.status(400).json({ error: "Please enter your legal name." });
@@ -228,6 +230,9 @@ router.post("/auth/register", requireJsonAndAllowedOrigin, async (req, res): Pro
     }
     throw err;
   }
+
+  // Attribute the Refer & Earn invite (best-effort; never blocks sign-up).
+  await attributeReferral(user.id, referralCode);
 
   await issueVerificationCode(user.id, email, name);
   res.json(RegisterResponse.parse({ emailVerificationRequired: true, email }));

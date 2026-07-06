@@ -226,6 +226,7 @@ export const RegisterBody = zod.object({
   "password": zod.string().min(registerBodyPasswordMin),
   "dateOfBirth": zod.string().describe('ISO date (YYYY-MM-DD); must be in the past.'),
   "referralSource": zod.string().nullish().describe('One of Twitter | Telegram | WhatsApp | Discord | LinkedIn | Friends | Others.'),
+  "referralCode": zod.string().nullish().describe('Optional Refer & Earn code (from a friend\'s invite link \/register?ref=CODE). Invalid or self codes are ignored silently and never block sign-up.'),
   "rememberMe": zod.boolean().optional()
 })
 
@@ -636,6 +637,58 @@ export const ConfirmWithdrawalResponse = zod.object({
  * @summary Top up gas (MON) on a non-custodial wallet before it signs
  */
 export const EnsureWalletGasResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Get the user's Refer & Earn code, tier, earnings and referrals
+ */
+export const GetReferralOverviewResponse = zod.object({
+  "code": zod.string(),
+  "link": zod.string(),
+  "tier": zod.object({
+  "key": zod.string().describe('One of starter | builder | connector | leader | champion.'),
+  "rateBps": zod.number().describe('Current earn rate in basis points (1000 = 10%).'),
+  "minActive": zod.number().describe('Active-saver count at which this tier begins.'),
+  "nextTierKey": zod.string().nullish(),
+  "nextTierRateBps": zod.number().nullish(),
+  "nextTierAtActive": zod.number().nullish().describe('Active savers needed to reach the next tier.')
+}),
+  "activeReferrals": zod.number(),
+  "totalReferred": zod.number(),
+  "pendingCents": zod.number(),
+  "availableCents": zod.number(),
+  "lifetimeCents": zod.number(),
+  "withdrawal": zod.object({
+  "minCents": zod.number(),
+  "maxMonthlyCents": zod.number(),
+  "withdrawnThisMonthCents": zod.number(),
+  "remainingThisMonthCents": zod.number(),
+  "hasWallet": zod.boolean()
+}),
+  "referrals": zod.array(zod.object({
+  "name": zod.string(),
+  "username": zod.string().nullish(),
+  "joinedAt": zod.string(),
+  "status": zod.string().describe('One of active | inactive | pending.'),
+  "activityCount": zod.number().describe('Non-monetary activity signal (current savings-streak length).'),
+  "feesEarnedCents": zod.number().describe('Commission you earned from this member (your own data).')
+}))
+})
+
+
+/**
+ * @summary Withdraw available referral earnings (step-up required)
+ */
+export const WithdrawReferralEarningsBody = zod.object({
+  "amountCents": zod.number(),
+  "currentPassword": zod.string().nullish().describe('Required (step-up) when the account already has a password set.'),
+  "twoFactorCode": zod.string().nullish().describe('Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.'),
+  "reauthCode": zod.string().nullish().describe('Required (step-up) when the account has neither a password nor 2FA. Obtain via POST \/auth\/stepup\/request-code.')
+})
+
+export const WithdrawReferralEarningsResponse = zod.object({
   "ok": zod.boolean()
 })
 

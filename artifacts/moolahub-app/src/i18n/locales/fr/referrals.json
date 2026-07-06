@@ -1,0 +1,99 @@
+{
+  "eyebrow": "Parrainez & Gagnez",
+  "title": "Invitez vos amis, gagnez ensemble",
+  "description": "Partagez MoolaHub et gagnez une part des frais de la plateforme sur chaque personne que vous parrainez — tant qu'elle continue d'épargner.",
+  "states": {
+    "loading": "Chargement de votre tableau de parrainage…",
+    "error": "Impossible de charger votre tableau de parrainage.",
+    "retry": "Réessayer"
+  },
+  "hero": {
+    "tierLabel": "Votre palier",
+    "rateLabel": "Vous gagnez",
+    "rateValue": "{{rate}} % des frais",
+    "lifetimeLabel": "Gains à ce jour",
+    "activeLabel": "{{count}} épargnants actifs"
+  },
+  "code": {
+    "title": "Votre lien d'invitation",
+    "subtitle": "Partagez ce lien ou ce code. Toute personne qui s'inscrit avec est liée à vous.",
+    "codeLabel": "Code de parrainage",
+    "linkLabel": "Lien d'invitation",
+    "share": "Partager l'invitation",
+    "shareTitle": "Rejoignez-moi sur MoolaHub",
+    "shareText": "Épargnez en USDC et rejoignez des cercles d'épargne sur MoolaHub. Utilisez mon lien pour commencer :"
+  },
+  "stats": {
+    "activeReferrals": "Épargnants actifs",
+    "totalReferred": "Total parrainé",
+    "available": "Disponible",
+    "pending": "En attente"
+  },
+  "tier": {
+    "title": "Votre palier de gains",
+    "subtitle": "Plus vous parrainez d'épargnants actifs, plus votre part des frais augmente.",
+    "current": "Actuel",
+    "progressToNext": "{{count}} épargnants actifs de plus pour atteindre {{tier}}",
+    "maxed": "Vous avez atteint le palier le plus élevé — la part maximale de {{rate}} %. 🎉",
+    "activeRange": "{{min}}+ épargnants actifs",
+    "names": {
+      "starter": "Débutant",
+      "builder": "Bâtisseur",
+      "connector": "Connecteur",
+      "leader": "Leader",
+      "champion": "Champion"
+    }
+  },
+  "withdraw": {
+    "title": "Retirer les gains",
+    "subtitle": "Transférez votre commission vers votre portefeuille.",
+    "amountPlaceholder": "0.00",
+    "maxAction": "Max",
+    "submit": "Retirer",
+    "submitting": "Retrait en cours…",
+    "success": "Retrait en route vers votre portefeuille.",
+    "min": "Minimum {{amount}}",
+    "max": "Disponible {{amount}}",
+    "monthly": "{{used}} sur {{cap}} retirés ce mois-ci",
+    "errors": {
+      "amount": "Saisissez un montant valide.",
+      "min": "Le retrait minimum est de {{amount}}.",
+      "max": "Vous pouvez retirer au maximum {{amount}} pour le moment.",
+      "monthly": "Cela dépasserait votre limite mensuelle de {{cap}} — il vous reste {{amount}} ce mois-ci."
+    }
+  },
+  "referrals": {
+    "title": "Vos parrainages",
+    "subtitle": "Toutes les personnes que vous avez amenées sur MoolaHub.",
+    "empty": "Aucun parrainage pour l'instant. Partagez votre lien pour commencer à gagner.",
+    "joined": "Inscrit le {{date}}",
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif",
+      "pending": "En attente"
+    }
+  },
+  "how": {
+    "title": "Comment ça marche",
+    "steps": {
+      "share": {
+        "title": "Partagez votre lien",
+        "desc": "Envoyez votre lien d'invitation à vos amis et votre famille."
+      },
+      "save": {
+        "title": "Ils épargnent",
+        "desc": "Lorsqu'ils s'inscrivent et maintiennent une série d'épargne, ils deviennent actifs."
+      },
+      "earn": {
+        "title": "Vous gagnez",
+        "desc": "Gagnez {{rate}} %+ des frais de plateforme qu'ils génèrent — à chaque fois."
+      }
+    }
+  },
+  "limits": {
+    "note": "Retraits : minimum {{min}} par retrait, jusqu'à {{max}} par mois civil."
+  },
+  "signup": {
+    "invited": "Invitation appliquée — vous rejoignez grâce à un ami. 🎉"
+  }
+}

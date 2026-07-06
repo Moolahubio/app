@@ -13,6 +13,7 @@ export * from "./notifications";
 export * from "./lessons";
 export * from "./onchain";
 export * from "./streaks";
+export * from "./referrals";
 
 import { usersTable } from "./users";
 import { walletsTable } from "./wallets";

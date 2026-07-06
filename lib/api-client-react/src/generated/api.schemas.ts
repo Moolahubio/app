@@ -17,6 +17,77 @@ export interface OkResponse {
   ok: boolean;
 }
 
+export interface ReferralTierInfo {
+  /** One of starter | builder | connector | leader | champion. */
+  key: string;
+  /** Current earn rate in basis points (1000 = 10%). */
+  rateBps: number;
+  /** Active-saver count at which this tier begins. */
+  minActive: number;
+  /** @nullable */
+  nextTierKey?: string | null;
+  /** @nullable */
+  nextTierRateBps?: number | null;
+  /**
+     * Active savers needed to reach the next tier.
+     * @nullable
+     */
+  nextTierAtActive?: number | null;
+}
+
+export interface ReferralWithdrawalLimits {
+  minCents: number;
+  maxMonthlyCents: number;
+  withdrawnThisMonthCents: number;
+  remainingThisMonthCents: number;
+  hasWallet: boolean;
+}
+
+export interface ReferralReferee {
+  name: string;
+  /** @nullable */
+  username?: string | null;
+  joinedAt: string;
+  /** One of active | inactive | pending. */
+  status: string;
+  /** Non-monetary activity signal (current savings-streak length). */
+  activityCount: number;
+  /** Commission you earned from this member (your own data). */
+  feesEarnedCents: number;
+}
+
+export interface ReferralOverview {
+  code: string;
+  link: string;
+  tier: ReferralTierInfo;
+  activeReferrals: number;
+  totalReferred: number;
+  pendingCents: number;
+  availableCents: number;
+  lifetimeCents: number;
+  withdrawal: ReferralWithdrawalLimits;
+  referrals: ReferralReferee[];
+}
+
+export interface ReferralWithdrawInput {
+  amountCents: number;
+  /**
+     * Required (step-up) when the account already has a password set.
+     * @nullable
+     */
+  currentPassword?: string | null;
+  /**
+     * Required (step-up) when the account has TOTP 2FA enabled, in addition to currentPassword if a password is also set.
+     * @nullable
+     */
+  twoFactorCode?: string | null;
+  /**
+     * Required (step-up) when the account has neither a password nor 2FA. Obtain via POST /auth/stepup/request-code.
+     * @nullable
+     */
+  reauthCode?: string | null;
+}
+
 export interface StreakHero {
   count: number;
   status: string;
@@ -211,6 +282,11 @@ export interface RegisterInput {
      * @nullable
      */
   referralSource?: string | null;
+  /**
+     * Optional Refer & Earn code (from a friend's invite link /register?ref=CODE). Invalid or self codes are ignored silently and never block sign-up.
+     * @nullable
+     */
+  referralCode?: string | null;
   rememberMe?: boolean;
 }
 

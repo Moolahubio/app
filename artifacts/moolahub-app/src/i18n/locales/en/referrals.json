@@ -1,0 +1,99 @@
+{
+  "eyebrow": "Refer & Earn",
+  "title": "Invite friends, earn together",
+  "description": "Share MoolaHub and earn a share of the platform fees from everyone you bring on board — for as long as they keep saving.",
+  "states": {
+    "loading": "Loading your referral dashboard…",
+    "error": "We couldn't load your referral dashboard.",
+    "retry": "Try again"
+  },
+  "hero": {
+    "tierLabel": "Your tier",
+    "rateLabel": "You earn",
+    "rateValue": "{{rate}}% of fees",
+    "lifetimeLabel": "Earned so far",
+    "activeLabel": "{{count}} active savers"
+  },
+  "code": {
+    "title": "Your invite link",
+    "subtitle": "Share this link or code. Anyone who signs up with it is linked to you.",
+    "codeLabel": "Referral code",
+    "linkLabel": "Invite link",
+    "share": "Share invite",
+    "shareTitle": "Join me on MoolaHub",
+    "shareText": "Save in USDC and join savings circles on MoolaHub. Use my link to get started:"
+  },
+  "stats": {
+    "activeReferrals": "Active savers",
+    "totalReferred": "Total referred",
+    "available": "Available",
+    "pending": "Pending"
+  },
+  "tier": {
+    "title": "Your earning tier",
+    "subtitle": "The more active savers you refer, the bigger your share of the fees.",
+    "current": "Current",
+    "progressToNext": "{{count}} more active savers to reach {{tier}}",
+    "maxed": "You've reached the top tier — the maximum {{rate}}% share. 🎉",
+    "activeRange": "{{min}}+ active savers",
+    "names": {
+      "starter": "Starter",
+      "builder": "Builder",
+      "connector": "Connector",
+      "leader": "Leader",
+      "champion": "Champion"
+    }
+  },
+  "withdraw": {
+    "title": "Withdraw earnings",
+    "subtitle": "Move your commission to your wallet.",
+    "amountPlaceholder": "0.00",
+    "maxAction": "Max",
+    "submit": "Withdraw",
+    "submitting": "Withdrawing…",
+    "success": "Withdrawal on its way to your wallet.",
+    "min": "Minimum {{amount}}",
+    "max": "Available {{amount}}",
+    "monthly": "{{used}} of {{cap}} withdrawn this month",
+    "errors": {
+      "amount": "Enter a valid amount.",
+      "min": "The minimum withdrawal is {{amount}}.",
+      "max": "You can withdraw at most {{amount}} right now.",
+      "monthly": "That would pass your {{cap}} monthly limit — you have {{amount}} left this month."
+    }
+  },
+  "referrals": {
+    "title": "Your referrals",
+    "subtitle": "Everyone you've brought to MoolaHub.",
+    "empty": "No referrals yet. Share your link to start earning.",
+    "joined": "Joined {{date}}",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending"
+    }
+  },
+  "how": {
+    "title": "How it works",
+    "steps": {
+      "share": {
+        "title": "Share your link",
+        "desc": "Send your invite link to friends and family."
+      },
+      "save": {
+        "title": "They save",
+        "desc": "When they sign up and keep a savings streak, they become active."
+      },
+      "earn": {
+        "title": "You earn",
+        "desc": "Earn {{rate}}%+ of the platform fees they generate — every time."
+      }
+    }
+  },
+  "limits": {
+    "note": "Withdrawals: minimum {{min}} per withdrawal, up to {{max}} each calendar month."
+  },
+  "signup": {
+    "invited": "Invite applied — you're joining through a friend. 🎉"
+  }
+}

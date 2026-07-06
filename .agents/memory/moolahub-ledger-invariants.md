@@ -27,6 +27,22 @@ whole tx (money included) rolls back. Enqueue the on-chain settlement row in the
 SAME tx (atomic with the ledger posting); the reconciler does the actual send
 out of band and patches the tx hash back onto the records.
 
+## Period caps need their OWN per-user advisory lock (not the balance lock)
+**Rule:** Any "max X per calendar period" cap (e.g. the referral withdrawal
+monthly cap, min $100 / max $1,000 per UTC month) must serialize concurrent
+requests for that user by taking a dedicated transaction-scoped advisory lock
+(`pg_advisory_xact_lock(hashtext('referral-wd:'||userId))`) at the TOP of the tx,
+*before* re-reading the period sum — then re-check the cap under that lock.
+**Why:** `ledger.transfer()` only locks the two *accounts* it moves between, and
+only to prevent overdraft. Two concurrent withdrawals both read the same
+month-sum before either transfer runs, both pass the cap check, then serialize
+harmlessly on the balance lock — so a user with a big balance withdraws up to 2×
+the monthly cap. The balance can't go negative, but the cap is bypassed. A naive
+"re-check inside the tx" does NOT fix this; the re-check must run under a lock
+taken before the read.
+**How to apply:** the cap lock key is distinct from account keys and is always
+acquired first, so it can't deadlock with transfer()'s account-ordered locks.
+
 ## Deposit dedup uses the BARE on-chain tx hash
 **Rule:** `syncDeposits()` must dedupe incoming on-chain deposits by the bare tx
 hash (`IncomingPayment.hash`), not the `opId` (`hash:logIndex`) form, and record

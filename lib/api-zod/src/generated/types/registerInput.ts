@@ -21,5 +21,10 @@ export interface RegisterInput {
      * @nullable
      */
   referralSource?: string | null;
+  /**
+     * Optional Refer & Earn code (from a friend's invite link /register?ref=CODE). Invalid or self codes are ignored silently and never block sign-up.
+     * @nullable
+     */
+  referralCode?: string | null;
   rememberMe?: boolean;
 }

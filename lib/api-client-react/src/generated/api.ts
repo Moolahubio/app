@@ -60,6 +60,8 @@ import type {
   PrivyAuthInput,
   PrivyLinkInput,
   ProfileUpdate,
+  ReferralOverview,
+  ReferralWithdrawInput,
   RegisterInput,
   RegisterPasskeyOptionsInput,
   ReleaseFromGoalInput,
@@ -2699,6 +2701,154 @@ export const useEnsureWalletGas = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getEnsureWalletGasMutationOptions(options));
+    }
+
+export const getGetReferralOverviewUrl = () => {
+
+
+
+
+  return `/api/referral`
+}
+
+/**
+ * @summary Get the user's Refer & Earn code, tier, earnings and referrals
+ */
+export const getReferralOverview = async ( options?: RequestInit): Promise<ReferralOverview> => {
+
+  return customFetch<ReferralOverview>(getGetReferralOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReferralOverviewQueryKey = () => {
+    return [
+    `/api/referral`
+    ] as const;
+    }
+
+
+export const getGetReferralOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getReferralOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReferralOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReferralOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReferralOverview>>> = ({ signal }) => getReferralOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReferralOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReferralOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getReferralOverview>>>
+export type GetReferralOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the user's Refer & Earn code, tier, earnings and referrals
+ */
+
+export function useGetReferralOverview<TData = Awaited<ReturnType<typeof getReferralOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReferralOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReferralOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getWithdrawReferralEarningsUrl = () => {
+
+
+
+
+  return `/api/referral/withdraw`
+}
+
+/**
+ * @summary Withdraw available referral earnings (step-up required)
+ */
+export const withdrawReferralEarnings = async (referralWithdrawInput: ReferralWithdrawInput, options?: RequestInit): Promise<OkResponse> => {
+
+  return customFetch<OkResponse>(getWithdrawReferralEarningsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      referralWithdrawInput,)
+  }
+);}
+
+
+
+
+export const getWithdrawReferralEarningsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawReferralEarnings>>, TError,{data: BodyType<ReferralWithdrawInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof withdrawReferralEarnings>>, TError,{data: BodyType<ReferralWithdrawInput>}, TContext> => {
+
+const mutationKey = ['withdrawReferralEarnings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof withdrawReferralEarnings>>, {data: BodyType<ReferralWithdrawInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  withdrawReferralEarnings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WithdrawReferralEarningsMutationResult = NonNullable<Awaited<ReturnType<typeof withdrawReferralEarnings>>>
+    export type WithdrawReferralEarningsMutationBody = BodyType<ReferralWithdrawInput>
+    export type WithdrawReferralEarningsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Withdraw available referral earnings (step-up required)
+ */
+export const useWithdrawReferralEarnings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawReferralEarnings>>, TError,{data: BodyType<ReferralWithdrawInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof withdrawReferralEarnings>>,
+        TError,
+        {data: BodyType<ReferralWithdrawInput>},
+        TContext
+      > => {
+      return useMutation(getWithdrawReferralEarningsMutationOptions(options));
     }
 
 export const getListCirclesUrl = () => {

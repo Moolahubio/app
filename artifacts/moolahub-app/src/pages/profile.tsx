@@ -13,6 +13,7 @@ import {
   Receipt,
   Flame,
   Languages,
+  Gift,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
@@ -152,6 +153,7 @@ export default function ProfilePage() {
   const accountItems: Item[] = [
     { icon: UserCircle, label: t("menu.profileInformation.label"), detail: t("menu.profileInformation.detail"), href: "/profile/information" },
     { icon: WalletIcon, label: t("menu.wallets.label"), detail: t("menu.wallets.detail"), href: "/wallet" },
+    { icon: Gift, label: t("referrals:eyebrow"), detail: t("referrals:description"), href: "/referrals" },
   ];
 
   const settingsItems: Item[] = [

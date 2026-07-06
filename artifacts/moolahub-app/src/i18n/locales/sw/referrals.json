@@ -1,0 +1,99 @@
+{
+  "eyebrow": "Karibisha na Upate",
+  "title": "Waalike marafiki, mpate pamoja",
+  "description": "Shiriki MoolaHub na upate sehemu ya ada za jukwaa kutoka kwa kila mtu unayemleta — kwa muda wote anaoendelea kuweka akiba.",
+  "states": {
+    "loading": "Inapakia dashibodi yako ya rufaa…",
+    "error": "Tumeshindwa kupakia dashibodi yako ya rufaa.",
+    "retry": "Jaribu tena"
+  },
+  "hero": {
+    "tierLabel": "Kiwango chako",
+    "rateLabel": "Unapata",
+    "rateValue": "Asilimia {{rate}} ya ada",
+    "lifetimeLabel": "Ulichopata hadi sasa",
+    "activeLabel": "Waweka akiba hai {{count}}"
+  },
+  "code": {
+    "title": "Kiungo chako cha mwaliko",
+    "subtitle": "Shiriki kiungo hiki au msimbo. Yeyote atakayejisajili nacho ataunganishwa nawe.",
+    "codeLabel": "Msimbo wa rufaa",
+    "linkLabel": "Kiungo cha mwaliko",
+    "share": "Shiriki mwaliko",
+    "shareTitle": "Jiunge nami MoolaHub",
+    "shareText": "Weka akiba kwa USDC na ujiunge na miduara ya akiba MoolaHub. Tumia kiungo changu kuanza:"
+  },
+  "stats": {
+    "activeReferrals": "Waweka akiba hai",
+    "totalReferred": "Jumla ya waliopendekezwa",
+    "available": "Inapatikana",
+    "pending": "Inasubiri"
+  },
+  "tier": {
+    "title": "Kiwango chako cha mapato",
+    "subtitle": "Kadiri unavyopendekeza waweka akiba hai wengi, ndivyo sehemu yako ya ada inavyoongezeka.",
+    "current": "Sasa",
+    "progressToNext": "Waweka akiba hai {{count}} zaidi kufikia {{tier}}",
+    "maxed": "Umefikia kiwango cha juu — sehemu ya juu ya asilimia {{rate}}. 🎉",
+    "activeRange": "Waweka akiba hai {{min}}+",
+    "names": {
+      "starter": "Mwanzilishi",
+      "builder": "Mjenzi",
+      "connector": "Muunganishi",
+      "leader": "Kiongozi",
+      "champion": "Bingwa"
+    }
+  },
+  "withdraw": {
+    "title": "Toa mapato",
+    "subtitle": "Hamisha kamisheni yako kwenye pochi yako.",
+    "amountPlaceholder": "0.00",
+    "maxAction": "Juu",
+    "submit": "Toa",
+    "submitting": "Inatoa…",
+    "success": "Utoaji uko njiani kwenda pochi yako.",
+    "min": "Kiwango cha chini {{amount}}",
+    "max": "Inapatikana {{amount}}",
+    "monthly": "{{used}} kati ya {{cap}} vimetolewa mwezi huu",
+    "errors": {
+      "amount": "Weka kiasi sahihi.",
+      "min": "Utoaji wa chini kabisa ni {{amount}}.",
+      "max": "Unaweza kutoa hadi {{amount}} kwa sasa.",
+      "monthly": "Hii itapita kikomo chako cha mwezi cha {{cap}} — umebakiwa na {{amount}} mwezi huu."
+    }
+  },
+  "referrals": {
+    "title": "Rufaa zako",
+    "subtitle": "Kila mtu uliyemleta MoolaHub.",
+    "empty": "Bado hakuna rufaa. Shiriki kiungo chako uanze kupata.",
+    "joined": "Alijiunga {{date}}",
+    "status": {
+      "active": "Hai",
+      "inactive": "Hana shughuli",
+      "pending": "Inasubiri"
+    }
+  },
+  "how": {
+    "title": "Jinsi inavyofanya kazi",
+    "steps": {
+      "share": {
+        "title": "Shiriki kiungo chako",
+        "desc": "Tuma kiungo chako cha mwaliko kwa marafiki na familia."
+      },
+      "save": {
+        "title": "Wanaweka akiba",
+        "desc": "Wanapojisajili na kudumisha mfululizo wa akiba, wanakuwa hai."
+      },
+      "earn": {
+        "title": "Unapata",
+        "desc": "Pata asilimia {{rate}}+ ya ada za jukwaa wanazozalisha — kila mara."
+      }
+    }
+  },
+  "limits": {
+    "note": "Utoaji: kiwango cha chini {{min}} kwa kila utoaji, hadi {{max}} kila mwezi wa kalenda."
+  },
+  "signup": {
+    "invited": "Mwaliko umetumika — unajiunga kupitia rafiki. 🎉"
+  }
+}

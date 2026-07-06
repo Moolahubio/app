@@ -29,9 +29,17 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [referralSource, setReferralSource] = useState("");
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Capture an invite code from the sign-up link (?ref=CODE) so the new
+  // account is attributed to the referrer on registration.
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("ref");
+    if (code && code.trim()) setReferralCode(code.trim().toUpperCase());
+  }, []);
 
   // Live username availability (debounced).
   const [debounced, setDebounced] = useState("");
@@ -74,6 +82,7 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
           password,
           dateOfBirth,
           referralSource: referralSource || null,
+          referralCode: referralCode || null,
           rememberMe,
         },
       });
@@ -229,6 +238,12 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
         />
         {t("rememberMe")}
       </label>
+
+      {referralCode && (
+        <p className="flex items-center gap-1.5 rounded-xl bg-jade-50/70 px-3 py-2 text-sm text-jade-700 dark:bg-jade-500/10 dark:text-jade-300">
+          <Check className="h-4 w-4 shrink-0" /> {t("referrals:signup.invited")}
+        </p>
+      )}
 
       {error && (
         <p className="flex items-center gap-1.5 text-sm text-red-600 dark:text-red-400" role="alert">

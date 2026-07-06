@@ -1,0 +1,99 @@
+{
+  "eyebrow": "推荐赚钱",
+  "title": "邀请好友，一起赚钱",
+  "description": "分享 MoolaHub，从你带来的每一位用户身上赚取平台手续费分成——只要他们持续储蓄。",
+  "states": {
+    "loading": "正在加载你的推荐面板…",
+    "error": "无法加载你的推荐面板。",
+    "retry": "重试"
+  },
+  "hero": {
+    "tierLabel": "你的等级",
+    "rateLabel": "你可赚取",
+    "rateValue": "手续费的 {{rate}}%",
+    "lifetimeLabel": "累计已赚",
+    "activeLabel": "{{count}} 位活跃储蓄者"
+  },
+  "code": {
+    "title": "你的邀请链接",
+    "subtitle": "分享此链接或代码。任何使用它注册的人都会与你绑定。",
+    "codeLabel": "推荐码",
+    "linkLabel": "邀请链接",
+    "share": "分享邀请",
+    "shareTitle": "来 MoolaHub 加入我",
+    "shareText": "在 MoolaHub 用 USDC 储蓄并加入储蓄圈。使用我的链接开始："
+  },
+  "stats": {
+    "activeReferrals": "活跃储蓄者",
+    "totalReferred": "推荐总数",
+    "available": "可提取",
+    "pending": "处理中"
+  },
+  "tier": {
+    "title": "你的赚取等级",
+    "subtitle": "你推荐的活跃储蓄者越多，你的手续费分成就越高。",
+    "current": "当前",
+    "progressToNext": "再邀请 {{count}} 位活跃储蓄者即可达到{{tier}}",
+    "maxed": "你已达到最高等级——最高 {{rate}}% 分成。🎉",
+    "activeRange": "{{min}}+ 位活跃储蓄者",
+    "names": {
+      "starter": "新手",
+      "builder": "建设者",
+      "connector": "连接者",
+      "leader": "领袖",
+      "champion": "冠军"
+    }
+  },
+  "withdraw": {
+    "title": "提取收益",
+    "subtitle": "将你的佣金转入钱包。",
+    "amountPlaceholder": "0.00",
+    "maxAction": "全部",
+    "submit": "提取",
+    "submitting": "提取中…",
+    "success": "提取已在前往你钱包的路上。",
+    "min": "最低 {{amount}}",
+    "max": "可用 {{amount}}",
+    "monthly": "本月已提取 {{used}}（上限 {{cap}}）",
+    "errors": {
+      "amount": "请输入有效金额。",
+      "min": "最低提取金额为 {{amount}}。",
+      "max": "你现在最多可提取 {{amount}}。",
+      "monthly": "这将超出你每月 {{cap}} 的限额——本月你还剩 {{amount}}。"
+    }
+  },
+  "referrals": {
+    "title": "你的推荐",
+    "subtitle": "你带到 MoolaHub 的所有人。",
+    "empty": "还没有推荐。分享你的链接开始赚取。",
+    "joined": "加入于 {{date}}",
+    "status": {
+      "active": "活跃",
+      "inactive": "不活跃",
+      "pending": "待定"
+    }
+  },
+  "how": {
+    "title": "运作方式",
+    "steps": {
+      "share": {
+        "title": "分享你的链接",
+        "desc": "把邀请链接发给亲友。"
+      },
+      "save": {
+        "title": "他们储蓄",
+        "desc": "当他们注册并保持储蓄连续记录时，就会变为活跃。"
+      },
+      "earn": {
+        "title": "你赚取",
+        "desc": "赚取他们所产生平台手续费的 {{rate}}%+——每一次。"
+      }
+    }
+  },
+  "limits": {
+    "note": "提取：每次最低 {{min}}，每个日历月最多 {{max}}。"
+  },
+  "signup": {
+    "invited": "邀请已应用——你正通过好友加入。🎉"
+  }
+}

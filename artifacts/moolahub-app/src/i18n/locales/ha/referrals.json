@@ -1,0 +1,99 @@
+{
+  "eyebrow": "Ka Gayyata Ka Sami Riba",
+  "title": "Gayyaci abokai, ku sami riba tare",
+  "description": "Raba MoolaHub ka sami kaso na kuɗin sabis daga kowa da ka kawo — muddin yana ci gaba da ajiya.",
+  "states": {
+    "loading": "Ana loda dashboard ɗin gayyatarka…",
+    "error": "Mun kasa loda dashboard ɗin gayyatarka.",
+    "retry": "Sake gwadawa"
+  },
+  "hero": {
+    "tierLabel": "Matakinka",
+    "rateLabel": "Kana samu",
+    "rateValue": "{{rate}}% na kuɗin sabis",
+    "lifetimeLabel": "Abin da ka samu ya zuwa yanzu",
+    "activeLabel": "Masu ajiya masu aiki {{count}}"
+  },
+  "code": {
+    "title": "Hanyar gayyatarka",
+    "subtitle": "Raba wannan hanyar ko lambar. Duk wanda ya yi rajista da ita zai haɗu da kai.",
+    "codeLabel": "Lambar gayyata",
+    "linkLabel": "Hanyar gayyata",
+    "share": "Raba gayyata",
+    "shareTitle": "Ka haɗu da ni a MoolaHub",
+    "shareText": "Yi ajiya da USDC ka shiga da'irorin ajiya a MoolaHub. Yi amfani da hanyata don farawa:"
+  },
+  "stats": {
+    "activeReferrals": "Masu ajiya masu aiki",
+    "totalReferred": "Jimillar da aka gayyata",
+    "available": "Akwai",
+    "pending": "Ana jira"
+  },
+  "tier": {
+    "title": "Matakin samun ribarka",
+    "subtitle": "Yawan masu ajiya masu aiki da ka gayyata, shi ke ƙara kason ka na kuɗin sabis.",
+    "current": "Na yanzu",
+    "progressToNext": "Sauran masu ajiya masu aiki {{count}} don kaiwa {{tier}}",
+    "maxed": "Ka kai matakin ƙarshe — mafi girman kaso na {{rate}}%. 🎉",
+    "activeRange": "Masu ajiya masu aiki {{min}}+",
+    "names": {
+      "starter": "Mai Farawa",
+      "builder": "Mai Ginawa",
+      "connector": "Mai Haɗawa",
+      "leader": "Jagora",
+      "champion": "Zakara"
+    }
+  },
+  "withdraw": {
+    "title": "Cire riba",
+    "subtitle": "Tura kwamishanka zuwa walat ɗinka.",
+    "amountPlaceholder": "0.00",
+    "maxAction": "Iyaka",
+    "submit": "Cire",
+    "submitting": "Ana cirewa…",
+    "success": "Cirewar tana kan hanya zuwa walat ɗinka.",
+    "min": "Mafi ƙaranci {{amount}}",
+    "max": "Akwai {{amount}}",
+    "monthly": "An cire {{used}} daga {{cap}} a wannan watan",
+    "errors": {
+      "amount": "Shigar da adadi mai inganci.",
+      "min": "Mafi ƙarancin cirewa shine {{amount}}.",
+      "max": "Za ka iya cire {{amount}} kaɗai a yanzu.",
+      "monthly": "Wannan zai wuce iyakar watanka na {{cap}} — kana da {{amount}} da ya rage a wannan watan."
+    }
+  },
+  "referrals": {
+    "title": "Gayyatarka",
+    "subtitle": "Duk wanda ka kawo MoolaHub.",
+    "empty": "Babu gayyata tukuna. Raba hanyarka don fara samun riba.",
+    "joined": "Ya shiga {{date}}",
+    "status": {
+      "active": "Mai aiki",
+      "inactive": "Ba ya aiki",
+      "pending": "Ana jira"
+    }
+  },
+  "how": {
+    "title": "Yadda yake aiki",
+    "steps": {
+      "share": {
+        "title": "Raba hanyarka",
+        "desc": "Aika hanyar gayyatarka ga abokai da dangi."
+      },
+      "save": {
+        "title": "Suna ajiya",
+        "desc": "Idan sun yi rajista suka ci gaba da ajiya, sun zama masu aiki."
+      },
+      "earn": {
+        "title": "Kana samu",
+        "desc": "Ka sami {{rate}}%+ na kuɗin sabis da suke samarwa — kowane lokaci."
+      }
+    }
+  },
+  "limits": {
+    "note": "Cirewa: mafi ƙaranci {{min}} kowace cirewa, har zuwa {{max}} a kowane wata."
+  },
+  "signup": {
+    "invited": "An yi amfani da gayyata — kana shiga ta hannun aboki. 🎉"
+  }
+}

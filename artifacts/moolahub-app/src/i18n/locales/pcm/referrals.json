@@ -1,0 +1,99 @@
+{
+  "eyebrow": "Refer & Earn",
+  "title": "Invite your friends, make money together",
+  "description": "Share MoolaHub make you dey collect part of the platform fees from everybody wey you bring — as long as dem still dey save.",
+  "states": {
+    "loading": "Dey load your referral dashboard…",
+    "error": "We no fit load your referral dashboard.",
+    "retry": "Try again"
+  },
+  "hero": {
+    "tierLabel": "Your level",
+    "rateLabel": "You dey earn",
+    "rateValue": "{{rate}}% of the fees",
+    "lifetimeLabel": "Wetin you don earn so far",
+    "activeLabel": "{{count}} active savers"
+  },
+  "code": {
+    "title": "Your invite link",
+    "subtitle": "Share this link or code. Anybody wey sign up with am go connect to you.",
+    "codeLabel": "Referral code",
+    "linkLabel": "Invite link",
+    "share": "Share invite",
+    "shareTitle": "Join me for MoolaHub",
+    "shareText": "Save with USDC and join savings circles for MoolaHub. Use my link take start:"
+  },
+  "stats": {
+    "activeReferrals": "Active savers",
+    "totalReferred": "Total wey you refer",
+    "available": "Available",
+    "pending": "Dey wait"
+  },
+  "tier": {
+    "title": "Your earning level",
+    "subtitle": "The more active savers wey you refer, the bigger your share of the fees.",
+    "current": "Now",
+    "progressToNext": "{{count}} more active savers make you reach {{tier}}",
+    "maxed": "You don reach the top level — the highest {{rate}}% share. 🎉",
+    "activeRange": "{{min}}+ active savers",
+    "names": {
+      "starter": "Starter",
+      "builder": "Builder",
+      "connector": "Connector",
+      "leader": "Leader",
+      "champion": "Champion"
+    }
+  },
+  "withdraw": {
+    "title": "Comot your earnings",
+    "subtitle": "Move your commission go your wallet.",
+    "amountPlaceholder": "0.00",
+    "maxAction": "Max",
+    "submit": "Withdraw",
+    "submitting": "Dey withdraw…",
+    "success": "Your withdrawal don dey go your wallet.",
+    "min": "Minimum {{amount}}",
+    "max": "Available {{amount}}",
+    "monthly": "You don comot {{used}} out of {{cap}} this month",
+    "errors": {
+      "amount": "Put correct amount.",
+      "min": "The smallest withdrawal na {{amount}}.",
+      "max": "Na {{amount}} you fit comot now.",
+      "monthly": "This one go pass your {{cap}} monthly limit — you get {{amount}} remain this month."
+    }
+  },
+  "referrals": {
+    "title": "People wey you refer",
+    "subtitle": "Everybody wey you bring come MoolaHub.",
+    "empty": "No referral yet. Share your link make you start to earn.",
+    "joined": "Join {{date}}",
+    "status": {
+      "active": "Active",
+      "inactive": "No dey active",
+      "pending": "Dey wait"
+    }
+  },
+  "how": {
+    "title": "How e dey work",
+    "steps": {
+      "share": {
+        "title": "Share your link",
+        "desc": "Send your invite link give friends and family."
+      },
+      "save": {
+        "title": "Dem dey save",
+        "desc": "When dem sign up and keep savings streak, dem go become active."
+      },
+      "earn": {
+        "title": "You dey earn",
+        "desc": "Earn {{rate}}%+ of the platform fees wey dem dey make — every time."
+      }
+    }
+  },
+  "limits": {
+    "note": "Withdrawals: minimum {{min}} each time, up to {{max}} every month."
+  },
+  "signup": {
+    "invited": "Invite don work — you dey join through friend. 🎉"
+  }
+}

@@ -16,6 +16,7 @@ import accountRouter from "./account";
 import operationsRouter from "./operations";
 import streaksRouter from "./streaks";
 import onchainRouter from "./onchain";
+import referralRouter from "./referral";
 
 const router: IRouter = Router();
 
@@ -36,5 +37,6 @@ router.use(accountRouter);
 router.use(operationsRouter);
 router.use(streaksRouter);
 router.use(onchainRouter);
+router.use(referralRouter);
 
 export default router;

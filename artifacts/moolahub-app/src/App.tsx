@@ -31,6 +31,7 @@ import ProfileNotifications from "@/pages/profile-notifications";
 import ProfileStreak from "@/pages/profile-streak";
 import ProfileLanguage from "@/pages/profile-language";
 import Streaks from "@/pages/streaks";
+import ReferEarn from "@/pages/refer-earn";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,9 @@ function Router() {
       </Route>
       <Route path="/streaks">
         <ProtectedRoute component={Streaks} />
+      </Route>
+      <Route path="/referrals">
+        <ProtectedRoute component={ReferEarn} />
       </Route>
       <Route path="/">
         <ProtectedRoute component={Dashboard} />
