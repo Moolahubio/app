@@ -233,7 +233,7 @@ export default function ReferEarnPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <BackLink href="/profile" label={t("common:actions.back")} />
-      <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
 
       {/* hero — tier, rate, lifetime */}
       <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">
