@@ -473,10 +473,7 @@ export default function ReferEarnPage() {
       <Card className="flex items-start gap-3 border-jade-500/15 bg-jade-50/60 p-5 dark:bg-jade-500/10">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-jade-600" />
         <p className="text-sm text-muted-foreground">
-          {t("limits.note", { min: formatMoney(w.minCents), max: formatMoney(w.maxMonthlyCents) })}{" "}
-          <Badge tone="jade" className="ms-1">
-            {t("common:footer.builtOnMonad", "Built on Monad")}
-          </Badge>
+          {t("limits.note", { min: formatMoney(w.minCents), max: formatMoney(w.maxMonthlyCents) })}
         </p>
       </Card>
     </div>
