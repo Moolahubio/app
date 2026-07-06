@@ -200,11 +200,26 @@ export async function setReferralCode(userId: string, rawCode: string): Promise<
   }
 }
 
+/**
+ * Base origin used to build public sign-up links. Prefers PUBLIC_APP_URL (the
+ * app's canonical public domain, e.g. a custom domain set in production) so
+ * shared referral links always use that domain regardless of which host the API
+ * happens to be served on. Falls back to the first allowed origin when unset
+ * (dev / preview), preserving the previous behaviour.
+ */
+function referralBaseOrigin(): string {
+  const configured = process.env.PUBLIC_APP_URL?.trim();
+  if (configured) {
+    const withScheme = /^https?:\/\//i.test(configured) ? configured : `https://${configured}`;
+    return withScheme.replace(/\/+$/, "");
+  }
+  const origin = getAllowedOrigins()[0];
+  return origin ? origin.replace(/\/+$/, "") : "";
+}
+
 /** Build the public sign-up link for a code (best-effort server origin). */
 function referralLink(code: string): string {
-  const origin = getAllowedOrigins()[0];
-  const base = origin ? origin.replace(/\/+$/, "") : "";
-  return `${base}/register?ref=${code}`;
+  return `${referralBaseOrigin()}/register?ref=${code}`;
 }
 
 /**
