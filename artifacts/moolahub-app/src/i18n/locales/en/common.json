@@ -59,9 +59,37 @@
     "copy": "Copy",
     "copied": "Copied",
     "working": "Working…",
-    "withdrawUsdc": "Withdraw USDC",
     "sending": "Sending…",
-    "recipientPlaceholder": "Recipient Monad address (0x…)",
-    "invite": "Invite"
+    "invite": "Invite",
+    "invalidAmount": "Enter a valid amount."
+  },
+  "technical": {
+    "send": {
+      "submit": "Withdraw USDC",
+      "recipientPlaceholder": "Recipient Monad address (0x…)"
+    },
+    "title": "Technical details",
+    "address": "Account address",
+    "network": "Network"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "server": "Something went wrong on our side. Your money hasn't moved. Please try again in a minute.",
+    "network": "We couldn't reach MoolaHub. Check your connection and try again.",
+    "tooMany": "Too many tries. Please wait a moment and try again.",
+    "cancelled": "Cancelled. Nothing was taken.",
+    "notEnough": "You don't have enough available for that. Add money or choose a smaller amount.",
+    "partner": "We couldn't reach our payment partner. Your money hasn't moved. Try again in a minute.",
+    "processing": "Processing. This can take a few minutes. We'll let you know.",
+    "didNotGoThrough": "That didn't go through. Nothing left your balance."
+  },
+  "states": {
+    "loadError": "We couldn't load this. Check your connection and try again.",
+    "balanceStale": "Showing your last known balance. We'll update it shortly."
+  },
+  "legal": {
+    "balanceFooter": "Held as USDC · Not a bank deposit · Not insured",
+    "addMoney": "Your balance is held as USDC, a US-dollar digital currency issued by Circle. MoolaHub is not a bank. Your balance is not a bank deposit and is not FDIC-insured or government-backed.",
+    "transfersOut": "Sends to outside accounts can't be reversed."
   }
 }

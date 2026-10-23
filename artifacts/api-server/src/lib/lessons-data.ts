@@ -27,11 +27,11 @@ export const LESSONS: LessonDef[] = [
     body: [
       {
         heading: "The Power of Collective Saving",
-        text: "A Susu (also called Esusu, Tontine, or Chit Fund depending on the culture) is a rotating savings and credit association. A group of trusted people each contribute a fixed amount at regular intervals, and each period one member receives the entire pot."
+        text: "A Susu (also called Esusu, Tontine, or Chit Fund depending on the culture) is a rotating savings and credit association. A group of trusted people each contribute a fixed amount at regular intervals, and each period one member receives that round's pot."
       },
       {
         heading: "How It Works",
-        text: "Imagine 10 friends each contribute $100 every month. Each month, one person receives $1,000. After 10 months, everyone has both contributed $1,000 and received $1,000 — but the value is in receiving a lump sum you could not have saved alone in one month."
+        text: "Imagine 10 friends each contribute $100 every month. Each month, one person receives that month's pot of $1,000, less any fee the circle charges. After 10 months, everyone has paid in and had their turn. The value is in receiving a lump sum you could not have saved alone in one month. On MoolaHub, each circle shows its fee and payout before you join."
       },
       {
         heading: "Why It Works",
@@ -39,10 +39,10 @@ export const LESSONS: LessonDef[] = [
       }
     ],
     takeaways: [
-      "A Susu is a rotating savings group where members take turns receiving the total pot",
+      "A Susu is a rotating savings group where members take turns receiving the pot",
       "Lump sums are powerful for major purchases, emergencies, and investment",
       "Social accountability helps members stay disciplined about saving",
-      "MoolaHub brings Susu circles on-chain for transparency and trust"
+      "Every MoolaHub circle shows its rules, fee and payout order up front"
     ]
   },
   {
@@ -56,28 +56,28 @@ export const LESSONS: LessonDef[] = [
     body: [
       {
         heading: "What is USDC?",
-        text: "USDC (USD Coin) is a stablecoin — a cryptocurrency whose value is pegged 1:1 to the US dollar. Unlike Bitcoin, 1 USDC always equals $1.00. It is issued by Circle, a regulated financial company, with dollar reserves fully audited and verified."
+        text: "USDC (USD Coin) is a stablecoin: a digital currency designed to keep its value at one US dollar. It is issued by Circle, which backs it with cash and short-term US government securities and publishes regular reserve reports. It is designed to stay at $1.00, but that isn't guaranteed: in March 2023 its price briefly fell below $1 when part of its reserves was stuck at a failed bank."
       },
       {
-        heading: "Why USDC on Monad?",
-        text: "Monad is a high-performance, EVM-compatible blockchain that is fast, cheap, and energy-efficient. Sending USDC on Monad costs fractions of a cent and settles in about a second — compared to traditional wire transfers that can take days and cost $25–$50."
+        heading: "Why a digital dollar?",
+        text: "USDC moves over modern payment networks that are fast and cheap. A transfer can cost a fraction of a cent and settle in seconds, compared with international wire transfers that can take days and cost $25 to $50."
       },
       {
         heading: "Is It Safe?",
-        text: "USDC is one of the most regulated and trusted stablecoins in the world. Every USDC is backed by actual dollars held in regulated financial institutions. MoolaHub is non-custodial — meaning your funds are always in your own wallet, not held by us."
+        text: "USDC is one of the most widely used stablecoins, and Circle reports on its reserves every month. Your MoolaHub balance is held as USDC in an account in your name. Money paid into some group savings circles is held by MoolaHub until it is paid out, and each circle's page says how its money is held. Your balance is not a bank deposit and is not insured."
       }
     ],
     takeaways: [
-      "USDC is a digital dollar — 1 USDC = $1.00, always",
-      "It runs on the Monad blockchain: fast, cheap, and transparent",
-      "MoolaHub is non-custodial — you control your funds at all times",
-      "On-chain transactions are publicly verifiable, adding trust to your circles"
+      "USDC is a digital dollar designed to stay at $1.00, but that isn't guaranteed",
+      "Digital-dollar transfers are fast and cheap compared with wires",
+      "Your balance is not a bank deposit and is not insured",
+      "Check each circle's page to see how its money is held"
     ]
   },
   {
     slug: "setting-savings-goals",
     title: "Savings goals that actually stick",
-    summary: "The science and art of setting savings goals that you actually achieve — and how automation makes it easier.",
+    summary: "The science and art of setting savings goals that you actually achieve, and how a simple routine makes it easier.",
     minutes: 6,
     level: "beginner",
     category: "personal-finance",
@@ -92,14 +92,14 @@ export const LESSONS: LessonDef[] = [
         text: "Set Specific goals (what exactly are you saving for?), Measurable targets (how much?), Achievable amounts (realistic given your income), Relevant to your life, and Time-bound with a clear deadline. 'Emergency fund of $2,000 by March' beats 'save for emergencies' every time."
       },
       {
-        heading: "Auto-Save: Make It Invisible",
-        text: "The most powerful savings tool is automation. When money moves to a goal before you can spend it, you adapt your spending to what's left. MoolaHub's auto-save feature allocates funds to your goals on a schedule — you set it once and the discipline happens automatically."
+        heading: "Make It a Routine",
+        text: "The most powerful savings tool is a routine. When money moves to a goal right after you get paid, you adapt your spending to what's left. Each MoolaHub goal comes with a contribution plan that suggests a small amount for each day, week or month, and your savings streak nudges you before a period closes. You still move the money yourself, so you stay in control."
       }
     ],
     takeaways: [
       "Specific goals with deadlines are dramatically more effective than vague intentions",
       "Use the SMART framework: Specific, Measurable, Achievable, Relevant, Time-bound",
-      "Auto-save removes the discipline requirement by moving money before you see it",
+      "A fixed routine, right after payday, turns saving into a habit",
       "Multiple focused goals (emergency, holiday, investment) beat one big abstract goal"
     ]
   },
@@ -147,18 +147,18 @@ export const LESSONS: LessonDef[] = [
       },
       {
         heading: "Why It Matters for Savings Circles",
-        text: "Traditional Susus require trust in a person — usually the organizer. If they disappear with the pot, there is no recourse. On-chain Susus use smart contracts: code that automatically distributes funds according to the rules everyone agreed to, with built-in safeguards. Each payout holds back the recipient's own future contributions as collateral inside the contract, so if someone takes their turn and then stops paying in, that collateral covers the members still waiting rather than leaving them stranded."
+        text: "Traditional Susus require trust in a person, usually the organizer. If they disappear with the pot, there is no recourse. A smart contract is code that can pay out by the rules everyone agreed to, without a middleman. MoolaHub plans to run circles on audited contracts. Until then, some circle money is held by MoolaHub, and each circle's page says how its money is held."
       },
       {
-        heading: "The Monad Blockchain",
-        text: "MoolaHub uses Monad — a high-performance, EVM-compatible Layer-1 blockchain. It settles transactions in about a second for fractions of a cent in fees, thanks to parallel execution that lets it handle thousands of transactions per second. It uses proof-of-stake consensus, far more energy-efficient than older blockchains. It is designed for exactly the kind of everyday financial transactions MoolaHub powers."
+        heading: "Speed and Cost",
+        text: "Modern networks settle a transfer in seconds for a fraction of a cent, and proof-of-stake designs use far less energy than older blockchains. You can see which network your balance uses by turning on Technical details in Settings."
       }
     ],
     takeaways: [
       "A blockchain is a public, tamper-resistant ledger maintained by thousands of computers",
-      "Smart contracts enforce rules automatically — no trusted middleman required",
-      "The Monad blockchain is fast, cheap, and designed for everyday financial use",
-      "On-chain transparency means your circle's funds can be verified by anyone"
+      "Smart contracts can enforce rules automatically, once they are audited and live",
+      "Modern networks are fast and cheap enough for everyday payments",
+      "Check each circle's page to see how its money is held"
     ]
   },
   {
@@ -176,16 +176,16 @@ export const LESSONS: LessonDef[] = [
       },
       {
         heading: "Crypto Rails: A Different Path",
-        text: "Sending USDC on Monad costs roughly $0.01–$0.05 regardless of the amount. Send $5 or $5,000 — the cost is the same. The recipient receives funds in seconds and can convert to local currency through local exchanges or peer-to-peer markets."
+        text: "Sending USDC over a modern network can cost a few cents whatever the amount, and the recipient receives it in seconds. Turning it into local currency is the hard part: it means a local exchange or a peer-to-peer market, each with its own fees and risks."
       },
       {
         heading: "The Practical Reality",
-        text: "For crypto remittances to work, the recipient needs a way to convert USDC to local currency. In many African countries, mobile money integration and peer-to-peer USDC markets are growing rapidly. The infrastructure is still maturing, but the trajectory is clear: crypto will fundamentally disrupt remittances."
+        text: "For crypto remittances to work, the recipient needs a way to convert USDC to local currency. In many African countries, mobile money integration and peer-to-peer USDC markets are growing rapidly. The infrastructure is still maturing, so compare the total cost, including conversion, before you send."
       }
     ],
     takeaways: [
       "Traditional remittances cost 6–10% in fees — billions wasted annually",
-      "USDC transfers on Monad cost pennies regardless of amount",
+      "Digital-dollar transfers can cost pennies regardless of amount",
       "Recipient needs local conversion options — infrastructure is growing",
       "Crypto remittances are a major use case driving blockchain adoption in Africa"
     ]

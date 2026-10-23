@@ -496,7 +496,6 @@ export const GetDashboardSummaryResponse = zod.object({
   "pendingCents": zod.number().optional().describe('On-chain wallet outflows still settling (not yet reflected on-chain).'),
   "balanceUnavailable": zod.boolean().optional().describe('True when an on-chain balance read failed, so displayed figures may be understated.'),
   "circlePotCents": zod.number(),
-  "yieldApy": zod.number(),
   "recentActivity": zod.array(zod.object({
   "id": zod.string(),
   "type": zod.string(),
@@ -647,6 +646,7 @@ export const EnsureWalletGasResponse = zod.object({
 export const GetReferralOverviewResponse = zod.object({
   "code": zod.string(),
   "link": zod.string(),
+  "rewardsEnabled": zod.boolean().describe('False while currency referral rewards are off (REFERRAL_REWARDS_ENABLED); the app then shows only the invite link.'),
   "tier": zod.object({
   "key": zod.string().describe('One of starter | builder | connector | leader | champion.'),
   "rateBps": zod.number().describe('Current earn rate in basis points (1000 = 10%).'),

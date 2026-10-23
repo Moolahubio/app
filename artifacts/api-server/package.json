@@ -25,11 +25,15 @@
     "test:reset-http": "tsx src/lib/password-reset-http.e2e.ts",
     "test:reset-throttle-http": "tsx src/lib/password-reset-throttle-http.e2e.ts",
     "test:stepup-http": "tsx src/lib/stepup-http.e2e.ts",
-    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http && pnpm run test:reset-http && pnpm run test:reset-throttle-http && pnpm run test:stepup-http"
+    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http && pnpm run test:reset-http && pnpm run test:reset-throttle-http && pnpm run test:stepup-http",
+    "test:sentry-scrub": "tsx src/lib/sentryScrub.test.ts",
+    "test:offline": "pnpm run test:circles && pnpm run test:goals-race && pnpm run test:streaks && pnpm run test:referrals && pnpm run test:auth"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",
+    "@opentelemetry/api": "1.9.1",
     "@privy-io/server-auth": "^1.32.5",
+    "@sentry/node": "11.5.0",
     "@simplewebauthn/server": "^13.3.1",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",

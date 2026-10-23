@@ -11,7 +11,7 @@ import {
   getGetTwoFactorStatusQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 type SetupState = {
@@ -95,7 +95,7 @@ export function TwoFactorCard() {
       setSetup(res);
       setCode("");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("twoFactor.errors.startSetup"));
+      setError(toUserError(err, t("twoFactor.errors.startSetup")));
     }
   };
 
@@ -116,7 +116,7 @@ export function TwoFactorCard() {
       setCode("");
       await invalidate();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("twoFactor.errors.codeFailed"));
+      setError(toUserError(err, t("twoFactor.errors.codeFailed")));
     }
   };
 
@@ -130,7 +130,7 @@ export function TwoFactorCard() {
       setBackupCodes(null);
       await invalidate();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("twoFactor.errors.codeFailed"));
+      setError(toUserError(err, t("twoFactor.errors.codeFailed")));
     }
   };
 
@@ -144,7 +144,7 @@ export function TwoFactorCard() {
       setRegenCode("");
       await invalidate();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("twoFactor.errors.codeFailed"));
+      setError(toUserError(err, t("twoFactor.errors.codeFailed")));
     }
   };
 

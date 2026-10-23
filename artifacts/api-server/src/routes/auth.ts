@@ -554,7 +554,7 @@ router.post("/auth/privy", requireJsonAndAllowedOrigin, async (req, res): Promis
   }
 
   if (!privyEnabled()) {
-    res.status(400).json({ error: "Privy sign-in is not configured." });
+    res.status(400).json({ error: "That sign-in option isn't available right now." });
     return;
   }
 
@@ -562,7 +562,7 @@ router.post("/auth/privy", requireJsonAndAllowedOrigin, async (req, res): Promis
   try {
     did = await verifyPrivyToken(parsed.data.token);
   } catch {
-    res.status(401).json({ error: "Invalid Privy token" });
+    res.status(401).json({ error: "We couldn't finish setting up your account. Please try again." });
     return;
   }
 
@@ -631,7 +631,7 @@ router.post("/auth/privy/link", requireJsonAndAllowedOrigin, requireAuth, async 
     return;
   }
   if (!privyEnabled()) {
-    res.status(400).json({ error: "Privy is not configured." });
+    res.status(400).json({ error: "That isn't available right now." });
     return;
   }
 
@@ -639,7 +639,7 @@ router.post("/auth/privy/link", requireJsonAndAllowedOrigin, requireAuth, async 
   try {
     did = await verifyPrivyToken(parsed.data.token);
   } catch {
-    res.status(400).json({ error: "Invalid Privy token" });
+    res.status(400).json({ error: "We couldn't finish setting up your account. Please try again." });
     return;
   }
 
@@ -659,7 +659,7 @@ router.post("/auth/privy/link", requireJsonAndAllowedOrigin, requireAuth, async 
 
   const [other] = await db.select().from(usersTable).where(eq(usersTable.privyDid, did));
   if (other && other.id !== user.id) {
-    res.status(409).json({ error: "This Privy identity is already linked to another account." });
+    res.status(409).json({ error: "This sign-in is already linked to another account." });
     return;
   }
 

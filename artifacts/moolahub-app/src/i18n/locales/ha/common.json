@@ -59,9 +59,37 @@
     "copy": "Kwafa",
     "copied": "An kwafa",
     "working": "Ana aiki…",
-    "withdrawUsdc": "Cire USDC",
     "sending": "Ana aikawa…",
-    "recipientPlaceholder": "Adireshin Monad na mai karɓa (0x…)",
-    "invite": "Gayyata"
+    "invite": "Gayyata",
+    "invalidAmount": "Shigar da adadi mai inganci."
+  },
+  "technical": {
+    "send": {
+      "submit": "Cire USDC",
+      "recipientPlaceholder": "Adireshin Monad na mai karɓa (0x…)"
+    },
+    "title": "Bayanan fasaha",
+    "address": "Adireshin asusu",
+    "network": "Hanyar sadarwa"
+  },
+  "errors": {
+    "generic": "Wani abu ya faru ba daidai ba. Da fatan a sake gwadawa.",
+    "server": "Wani abu ya faru ba daidai ba a ɓangarenmu. Kuɗinka ba su motsa ba. Da fatan a sake gwadawa nan da minti ɗaya.",
+    "network": "Ba mu iya isa MoolaHub ba. Duba haɗin intanet ɗinka sannan ka sake gwadawa.",
+    "tooMany": "Gwaje-gwaje sun yi yawa. Da fatan a jira kaɗan sannan a sake gwadawa.",
+    "cancelled": "An soke. Ba a ɗauki komai ba.",
+    "notEnough": "Ba ka da isasshen kuɗi a ma'auni don wannan. Ƙara kuɗi ko zaɓi ƙaramin adadi.",
+    "partner": "Ba mu iya isa abokin biyan kuɗinmu ba. Kuɗinka ba su motsa ba. Sake gwadawa nan da minti ɗaya.",
+    "processing": "Ana aiwatarwa. Wannan zai iya ɗaukar 'yan mintuna. Za mu sanar da kai.",
+    "didNotGoThrough": "Bai yi nasara ba. Babu abin da ya fita daga ma'aunin ka."
+  },
+  "states": {
+    "loadError": "Ba mu iya loda wannan ba. Duba haɗin intanet ɗinka sannan ka sake gwadawa.",
+    "balanceStale": "Muna nuna ma'aunin ka na ƙarshe da muka sani. Za mu sabunta shi nan ba da jimawa ba."
+  },
+  "legal": {
+    "balanceFooter": "Ana riƙe shi a matsayin USDC · Ba ajiyar banki ba ce · Ba shi da inshora",
+    "addMoney": "Ana riƙe ma'aunin ka a matsayin USDC, kuɗin dijital na dalar Amurka da kamfanin Circle ke fitarwa. MoolaHub ba banki ba ne. Ma'aunin ka ba ajiyar banki ba ne, kuma ba shi da inshorar FDIC ko goyon bayan gwamnati.",
+    "transfersOut": "Ba za a iya mayar da tura kuɗi zuwa asusun waje ba."
   }
 }

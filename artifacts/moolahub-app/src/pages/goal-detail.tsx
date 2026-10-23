@@ -1,7 +1,7 @@
 import { useParams, useLocation } from "wouter";
 import { Repeat, Calendar, Target, Sparkles, Link2, ExternalLink, Trash2 } from "lucide-react";
 import { Card, Badge } from "@/components/ui";
-import { BackLink, Money, Addr } from "@/components/app/bits";
+import { BackLink, Money, Addr, TxStatus, LoadError } from "@/components/app/bits";
 import { AmountForm } from "@/components/app/forms";
 import { PrivyGoalDepositForm, PrivyGoalReleaseForm } from "@/components/app/PrivyGoalForms";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
@@ -21,20 +21,22 @@ import {
 } from "@workspace/api-client-react";
 import type { ReleaseFromGoalResult } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
-import { formatMoney, formatDate, pct, apiErrorMessage } from "@/lib/utils";
+import { formatMoney, formatDate, pct, toUserError } from "@/lib/utils";
 import { asFrequency, buildGoalPlan, nextContribution } from "@/lib/contribution-plan";
 import { useTranslation, Trans } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
 
-const EXPLORER_FALLBACK = "https://testnet.monadvision.com";
+const EXPLORER_FALLBACK = import.meta.env.VITE_EXPLORER_URL ?? "https://testnet.monadvision.com";
 
 export default function GoalDetailPage() {
   const { t } = useTranslation("goals");
   const { id } = useParams();
   const [, navigate] = useLocation();
-  const { data: goal, isLoading } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
+  const [technical] = useTechnicalDetails();
+  const { data: goal, isLoading, isError, error, refetch } = useGetGoal(id!, { query: { enabled: !!id, queryKey: getGetGoalQueryKey(id!) } });
   const { data: wallet } = useGetWallet();
   const { data: onchainConfig } = useOnchainConfig();
 
@@ -49,7 +51,21 @@ export default function GoalDetailPage() {
   const { requestProof, stepUpDialog } = useStepUpGate();
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;
-  if (!goal) return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
+  if (!goal) {
+    // Only a 404 is "not found"; any other failure gets a retry, not a dead end.
+    const notFound = !isError || (error as { status?: number } | null)?.status === 404;
+    if (!notFound) {
+      return (
+        <div className="mx-auto max-w-4xl space-y-6">
+          <BackLink href="/goals" label={t("common:nav.personalSavings")} />
+          <Card>
+            <LoadError onRetry={() => void refetch()} />
+          </Card>
+        </div>
+      );
+    }
+    return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
+  }
 
   const remaining = Math.max(0, goal.targetCents - goal.savedCents);
   const progress = pct(goal.savedCents, goal.targetCents);
@@ -120,9 +136,9 @@ export default function GoalDetailPage() {
               components={[<Money cents={goal.savedCents} />, <Money cents={goal.targetCents} />]}
             />
           </p>
-          {onchain && (
+          {technical && onchain && (
             <Badge tone="jade" className="mt-3 bg-jade-50 text-jade-700 ring-jade-500/20 dark:bg-jade-500/15 dark:text-jade-300">
-              <Link2 className="h-3.5 w-3.5" /> {t("detail.onChain")}
+              <Link2 className="h-3.5 w-3.5" /> {t("technical.badge")}
             </Badge>
           )}
         </Card>
@@ -169,7 +185,7 @@ export default function GoalDetailPage() {
                   presets={[1000, 2500, 5000]}
                   submitLabel={t("deposit.addFunds")}
                   pending={allocateMutation.isPending}
-                  error={apiErrorMessage(allocateMutation.error)}
+                  error={toUserError(allocateMutation.error)}
                   ok={allocOk}
                 />
               )}
@@ -221,7 +237,7 @@ export default function GoalDetailPage() {
                   submitLabel={t("withdraw.submit")}
                   variant="secondary"
                   pending={releaseMutation.isPending}
-                  error={apiErrorMessage(releaseMutation.error)}
+                  error={toUserError(releaseMutation.error)}
                   ok={releaseOk}
                 />
               )}
@@ -295,14 +311,14 @@ export default function GoalDetailPage() {
             </p>
           )}
 
-          {onchain && goal.vaultAddress && (
+          {technical && onchain && goal.vaultAddress && (
             <Card className="p-6">
               <div className="flex items-center gap-2">
                 <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
-                <h2 className="font-display text-lg font-bold text-foreground">{t("vault.title")}</h2>
+                <h2 className="font-display text-lg font-bold text-foreground">{t("technical.vault.title")}</h2>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("vault.description", { fee: feePct })}
+                {t("technical.vault.description", { fee: feePct })}
               </p>
               <a
                 href={`${explorer}/address/${goal.vaultAddress}`}
@@ -331,7 +347,7 @@ export default function GoalDetailPage() {
                       </p>
                       <p className="text-xs text-muted-foreground"><Money cents={h.amountCents} /></p>
                     </div>
-                    {h.txHash ? (
+                    {technical && h.txHash ? (
                       <a
                         href={`${explorer}/tx/${h.txHash}`}
                         target="_blank"
@@ -342,7 +358,7 @@ export default function GoalDetailPage() {
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     ) : (
-                      <Badge tone="neutral" className="capitalize">{t(`activity.status.${h.onchainStatus}`, { defaultValue: h.onchainStatus })}</Badge>
+                      <TxStatus status={h.onchainStatus} />
                     )}
                   </li>
                 ))}
@@ -360,7 +376,7 @@ export default function GoalDetailPage() {
                 : t("delete.descEmpty")}
             </p>
             {deleteMutation.error && (
-              <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
+              <p className="mt-3 text-sm text-rose-600">{toUserError(deleteMutation.error)}</p>
             )}
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {!confirmDelete ? (

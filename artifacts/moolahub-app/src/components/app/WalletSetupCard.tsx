@@ -17,13 +17,15 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
 
 const NETWORK = import.meta.env.VITE_CHAIN_NAME ?? "Monad Testnet";
 
 function SetupButton() {
   const { t } = useTranslation("wallet");
+  const [technical] = useTechnicalDetails();
   const { getAccessToken, authenticated } = usePrivy();
   const { wallets } = useWallets();
   const { createWallet } = useCreateWallet();
@@ -72,7 +74,7 @@ function SetupButton() {
         queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() }),
       ]);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("setup.error"));
+      setError(toUserError(err, t("setup.error")));
     } finally {
       setBusy(false);
     }
@@ -113,11 +115,20 @@ function SetupButton() {
       </span>
       <h2 className="mt-4 font-display text-xl font-bold text-foreground">{t("setup.title")}</h2>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-        {t("setup.description", { network: NETWORK })}
+        {t("setup.description")}
       </p>
+      {technical && (
+        <p className="mx-auto mt-2 max-w-md text-xs text-muted-foreground">
+          {t("technical.setup.description", { network: NETWORK })}
+        </p>
+      )}
 
       <Button className="mt-6" onClick={handleClick} disabled={pending}>
-        {pending ? t("setup.settingUp") : t("setup.continueWithPrivy")}
+        {pending
+          ? t("setup.settingUp")
+          : technical
+            ? t("technical.setup.continueWithPrivy")
+            : t("common:actions.continue")}
       </Button>
 
       {error && (
@@ -128,7 +139,7 @@ function SetupButton() {
 
       <p className="mx-auto mt-6 flex max-w-md items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-jade-600" />
-        {t("setup.securityNote")}
+        {technical ? t("technical.setup.securityNote") : t("setup.securityNote")}
       </p>
 
       {stepUpDialog}

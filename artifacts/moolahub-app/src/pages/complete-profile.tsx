@@ -16,7 +16,7 @@ import {
   getGetProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,30}$/;
 
@@ -105,7 +105,7 @@ export default function CompleteProfile() {
       ]);
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("errors.saveDetails"));
+      setError(toUserError(err, t("errors.saveDetails")));
     } finally {
       setSubmitting(false);
     }

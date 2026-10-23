@@ -12,8 +12,8 @@
       "detail": "Suna, sunan mai amfani, ranar haihuwa"
     },
     "wallets": {
-      "label": "Wallet",
-      "detail": "Ma'auni da adireshi a Monad"
+      "label": "Ma'auni",
+      "detail": "Ƙara kuɗi kuma ka ga abin da ake da shi"
     },
     "security": {
       "label": "Tsaro",
@@ -28,8 +28,12 @@
       "detail": "Zaɓi abin da zai kai gare ka"
     },
     "transactions": {
-      "label": "Ma'amaloli da riba",
-      "detail": "Littafin lissafi da kuɗin shiga"
+      "label": "Ma'amaloli",
+      "detail": "Duk abin da ya motsa"
+    },
+    "advanced": {
+      "label": "Na ci gaba",
+      "detail": "Bayanan fasaha"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "Ana loda hoto…",
     "saveName": "Ajiye suna",
     "editName": "Gyara suna",
-    "wallet": {
-      "label": "Wallet ɗin Monad · ba tare da riƙo ba",
-      "notProvisioned": "Ba a shirya ba"
-    },
-    "stats": {
-      "yieldEarned": "Ribar da aka samu",
-      "yieldApy": "APY na riba"
-    },
     "errors": {
       "savePicture": "An kasa ajiye hoton bayanin martaba.",
       "uploadImage": "An kasa loda hoton.",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "An kasa fita",
       "description": "Da fatan za a sake gwadawa."
+    },
+    "stats": {
+      "available": "Akwai",
+      "inSavings": "A cikin tanadi"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "Zaɓuɓɓuka"
+  },
+  "technical": {
+    "wallet": {
+      "label": "Wallet ɗin Monad · ba tare da riƙo ba",
+      "notProvisioned": "Ba a shirya ba"
+    }
+  },
+  "advanced": {
+    "title": "Na ci gaba",
+    "description": "Ƙarin zaɓuɓɓuka ga masu son ganin yadda MoolaHub ke aiki.",
+    "technicalLabel": "Bayanan fasaha",
+    "technicalDescription": "Nuna sunayen hanyoyin sadarwa, adireshin asusu, lambobin mu'amala da hanyoyin zuwa bayanan jama'a. Ba za ka taɓa buƙatar wannan don amfani da MoolaHub ba.",
+    "savedNote": "An adana wannan zaɓin a wannan na'urar."
   }
 }

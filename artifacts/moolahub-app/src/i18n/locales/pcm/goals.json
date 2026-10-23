@@ -2,7 +2,7 @@
   "list": {
     "loading": "Dey load your personal savings…",
     "title": "Your personal savings",
-    "description": "Set target and date, and we go track how you dey go. Every goal na pot inside your one wallet, no be separate account.",
+    "description": "Set target and date, and we go track how you dey go. Every goal na pot inside your balance, no be separate account.",
     "newGoal": "New goal",
     "createGoal": "Create goal"
   },
@@ -30,7 +30,7 @@
       "placeholder": "e.g. Emergency fund"
     },
     "target": {
-      "label": "Target amount (USDC)"
+      "label": "Target amount"
     },
     "deadline": {
       "label": "Target date"
@@ -71,20 +71,19 @@
     "loading": "Dey load goal…",
     "notFound": "We no fit find that goal.",
     "savedLabel": "saved",
-    "savedOfTarget": "<0></0> of <1></1>",
-    "onChain": "On-chain"
+    "savedOfTarget": "<0></0> of <1></1>"
   },
   "deposit": {
-    "title": "Add money",
+    "title": "Move am go goal",
     "description": "Move money from your available balance go inside this allocation.",
-    "descriptionOnchain": "Move money from your available balance go inside this goal on-chain vault. Deposit na free.",
-    "addFunds": "Add money",
+    "descriptionOnchain": "Move money from the balance wey dey available enter this goal. No fee.",
+    "addFunds": "Move am go goal",
     "success": "Money don enter goal"
   },
   "withdraw": {
-    "title": "Withdraw",
-    "feeNote": "Dem go collect {{fee}}% withdrawal fee on-chain. You go receive the amount after dem remove the fee.",
-    "submit": "Withdraw go available",
+    "title": "Move am go balance",
+    "feeNote": "{{fee}}% fee dey when you move money comot from this goal. You go get the amount after fee.",
+    "submit": "Move am go balance",
     "released": "{{amount}} don release go available",
     "releasedWithFee": "{{amount}} don release (after {{fee}} fee)"
   },
@@ -110,10 +109,6 @@
       "monthly": "Continue every month. About <0>{{count}} months</0> of contributions remain make you reach your target."
     }
   },
-  "vault": {
-    "title": "On-chain vault",
-    "description": "The money wey you allocate dey enter this vault for Monad. Dem dey collect {{fee}}% protocol fee for every withdrawal."
-  },
   "activity": {
     "title": "Activity",
     "types": {
@@ -122,9 +117,9 @@
     },
     "status": {
       "none": "None",
-      "pending": "Dey wait",
-      "confirmed": "Confirmed",
-      "failed": "Fail"
+      "pending": "E dey process…",
+      "confirmed": "E don do",
+      "failed": "E no go through"
     }
   },
   "delete": {
@@ -137,25 +132,32 @@
   },
   "toast": {
     "streakTitle": "Streak still dey alive 🔥",
-    "streakDescription": "Nice, that deposit dey count for your savings streak."
+    "streakDescription": "Nice, e dey count for your savings streak."
   },
   "privy": {
-    "loadingWallet": "Dey load your wallet…",
+    "loadingWallet": "We dey prepare…",
     "connect": {
       "deposit": {
-        "prompt": "Your wallet na self-custodial. Connect am make you sign the deposit yourself.",
-        "button": "Connect wallet to deposit"
+        "prompt": "Confirm say na you make you move money enter this goal.",
+        "button": "Continue"
       },
       "withdrawal": {
-        "prompt": "Your wallet na self-custodial. Connect am make you sign the withdrawal yourself.",
-        "button": "Connect wallet to withdraw"
+        "prompt": "Confirm say na you make you move money comot from this goal.",
+        "button": "Continue"
       }
     },
     "errors": {
-      "unavailable": "On-chain goal savings no dey available for this deployment.",
+      "unavailable": "Moving money go goals no dey available now.",
       "invalidAmount": "Enter valid amount.",
-      "depositFailed": "Deposit fail. Abeg try again.",
-      "withdrawalFailed": "Withdrawal fail. Abeg try again."
+      "depositFailed": "E no go through. Abeg try again.",
+      "withdrawalFailed": "E no go through. Abeg try again."
+    }
+  },
+  "technical": {
+    "badge": "On-chain",
+    "vault": {
+      "title": "On-chain vault",
+      "description": "The money wey you allocate dey enter this vault for Monad. Dem dey collect {{fee}}% protocol fee for every withdrawal."
     }
   }
 }

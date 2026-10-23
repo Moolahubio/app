@@ -2,11 +2,11 @@
   "list": {
     "loading": "Chargement de votre épargne collective…",
     "title": "Votre épargne collective",
-    "description": "Une épargne tournante avec des personnes de confiance. Chaque tour est détenu par un contrat on-chain, pas par une personne.",
+    "description": "Une épargne tournante avec des personnes de confiance. Chaque cercle affiche ses règles, ses frais et l'ordre des versements avant que vous ne le rejoigniez.",
     "emptyHint": "Invitez des amis ou de la famille et définissez votre contribution"
   },
   "info": {
-    "susu": "<b>Comment fonctionne une Susu :</b> chacun verse un montant fixe à chaque tour. Dans un cercle à <em>rotation</em>, un membre reçoit toute la cagnotte à chaque tour jusqu'à ce que chacun ait eu son tour. Dans un cercle à <em>accumulation</em>, tout le monde épargne dans une cagnotte commune et récupère sa propre épargne à la fin. Tout est vérifiable sur Monad."
+    "susu": "<b>Comment fonctionne une Susu :</b> chacun verse un montant fixe à chaque tour. Dans un cercle à <em>rotation</em>, un membre reçoit la cagnotte à chaque tour jusqu'à ce que chacun ait eu son tour. Dans un cercle à <em>accumulation</em>, tout le monde épargne dans une cagnotte commune et récupère sa propre épargne à la fin."
   },
   "frequency": {
     "weekly": "Hebdomadaire",
@@ -35,7 +35,7 @@
       "label": "Type de cercle",
       "rotation": {
         "title": "Rotation",
-        "description": "À tour de rôle. Chacun paie à chaque tour, et un membre reçoit toute la cagnotte jusqu'à ce que tous aient eu leur tour."
+        "description": "À tour de rôle. Chacun paie à chaque tour, et un membre reçoit la cagnotte jusqu'à ce que tous aient eu leur tour."
       },
       "accumulation": {
         "title": "Accumulation",
@@ -43,14 +43,14 @@
       }
     },
     "targetPayout": {
-      "label": "Versement cible par personne (USDC)",
+      "label": "Versement cible par personne",
       "hint": "Ce que chaque membre reçoit lorsque c'est son tour."
     },
     "groupSize": {
       "label": "Nombre de personnes (vous compris)"
     },
     "contribution": {
-      "label": "Contribution par tour (USDC)"
+      "label": "Contribution par tour"
     },
     "numRounds": {
       "label": "Nombre de tours"
@@ -96,11 +96,10 @@
   "detail": {
     "loading": "Chargement du cercle…",
     "notFound": "Nous n'avons pas trouvé ce cercle.",
-    "onChain": "On-chain",
     "formingSuffix": "en formation",
     "submitting": "Envoi…",
-    "contribute": "Contribuer {{amount}}",
-    "contributedThisRound": "Contribué ce tour-ci",
+    "contribute": "Verser {{amount}}",
+    "contributedThisRound": "Versé ce tour-ci",
     "notStarted": "Ce cercle n'a pas encore démarré",
     "stats": {
       "rounds": "Tours",
@@ -126,8 +125,8 @@
     "schedule": {
       "membersTitle": "Membres",
       "payoutTitle": "Calendrier des versements",
-      "descAccumulation": "Tout le monde épargne dans une cagnotte commune. Après {{count}} tours, chaque membre récupère sa propre épargne, verrouillée on-chain.",
-      "descRotation": "La rotation est verrouillée on-chain, donc chacun sait qui reçoit la cagnotte, et quand.",
+      "descAccumulation": "Tout le monde épargne dans une cagnotte commune. Après {{count}} tours, chaque membre récupère sa propre épargne.",
+      "descRotation": "L'ordre des versements est fixé au démarrage du cercle, afin que chacun sache qui reçoit la cagnotte, et quand.",
       "you": "(vous)",
       "savingsReturned": "Épargne restituée",
       "saving": "En épargne",
@@ -139,10 +138,6 @@
       "title": "Progression des tours",
       "roundsOf": "{{current}} sur {{total}} tours"
     },
-    "escrow": {
-      "title": "Séquestre on-chain",
-      "description": "Les contributions sont réglées dans ce séquestre Susu sur Monad. Des frais de protocole de {{fee}} % sont prélevés sur chaque versement."
-    },
     "history": {
       "title": "Vos contributions",
       "round": "Tour {{round}}"
@@ -153,11 +148,18 @@
     }
   },
   "privy": {
-    "loadingWallet": "Chargement de votre portefeuille…",
-    "selfCustody": "Votre portefeuille est auto-conservé. Connectez-le pour signer vous-même la contribution.",
-    "connect": "Connecter le portefeuille pour contribuer",
-    "notAvailable": "Les contributions on-chain ne sont pas disponibles sur ce déploiement.",
-    "failed": "La contribution a échoué. Veuillez réessayer.",
+    "loadingWallet": "Préparation…",
+    "selfCustody": "Confirmez votre identité pour verser.",
+    "connect": "Continuer",
+    "notAvailable": "Les versements ne sont pas disponibles pour le moment. Réessayez plus tard.",
+    "failed": "L'opération n'a pas abouti. Veuillez réessayer.",
     "submitting": "Envoi…"
+  },
+  "technical": {
+    "badge": "On-chain",
+    "escrow": {
+      "title": "Séquestre on-chain",
+      "description": "Les contributions sont réglées dans ce séquestre Susu sur Monad. Des frais de protocole de {{fee}} % sont prélevés sur chaque versement."
+    }
   }
 }

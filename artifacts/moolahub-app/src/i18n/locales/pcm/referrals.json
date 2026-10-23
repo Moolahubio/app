@@ -20,7 +20,7 @@
     "linkLabel": "Invite link",
     "share": "Share invite",
     "shareTitle": "Save better for MoolaHub",
-    "shareText": "I dey save with USDC for MoolaHub, and I join savings circles wey dey keep me on track. Na the easiest way wey I don find to reach my money goals. Come make we save together:",
+    "shareText": "I dey save for dollars for MoolaHub, and I join savings circles wey dey keep me on track. Na the easiest way wey I don find to reach my money goals. Come make we save together:",
     "edit": "Edit code",
     "editHint": "Pick 4 to 15 letters or numbers. Na wetin your friends go type take join through you.",
     "save": "Save code",
@@ -59,12 +59,12 @@
   },
   "withdraw": {
     "title": "Comot your earnings",
-    "subtitle": "Move your commission go your wallet.",
+    "subtitle": "Move your earnings go your balance.",
     "amountPlaceholder": "0.00",
     "maxAction": "Max",
     "submit": "Withdraw",
     "submitting": "Dey withdraw…",
-    "success": "Your withdrawal don dey go your wallet.",
+    "success": "E dey come your balance.",
     "min": "Minimum {{amount}}",
     "max": "Available {{amount}}",
     "monthly": "You don comot {{used}} out of {{cap}} this month",
@@ -114,5 +114,12 @@
   },
   "signup": {
     "invited": "Invite don work. You dey join through friend."
+  },
+  "invite": {
+    "title": "Invite your friends",
+    "description": "Share MoolaHub with the people wey you dey save with."
+  },
+  "paused": {
+    "note": "We don pause invite rewards. The rewards wey you don earn still dey your account, and withdrawal dey off for now."
   }
 }

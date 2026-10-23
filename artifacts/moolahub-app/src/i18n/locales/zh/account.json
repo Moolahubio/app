@@ -12,8 +12,8 @@
       "detail": "姓名、用户名、出生日期"
     },
     "wallets": {
-      "label": "钱包",
-      "detail": "Monad 上的余额和地址"
+      "label": "余额",
+      "detail": "充值并查看可用金额"
     },
     "security": {
       "label": "安全",
@@ -28,8 +28,12 @@
       "detail": "选择要接收的内容"
     },
     "transactions": {
-      "label": "交易与收益",
-      "detail": "账目与收益"
+      "label": "交易",
+      "detail": "所有资金变动"
+    },
+    "advanced": {
+      "label": "高级",
+      "detail": "技术详情"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "正在上传图片…",
     "saveName": "保存姓名",
     "editName": "编辑姓名",
-    "wallet": {
-      "label": "Monad 钱包 · 非托管",
-      "notProvisioned": "尚未创建"
-    },
-    "stats": {
-      "yieldEarned": "已赚取收益",
-      "yieldApy": "年化收益率"
-    },
     "errors": {
       "savePicture": "无法保存头像。",
       "uploadImage": "无法上传图片。",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "无法退出登录",
       "description": "请重试。"
+    },
+    "stats": {
+      "available": "可用",
+      "inSavings": "储蓄中"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "选项"
+  },
+  "technical": {
+    "wallet": {
+      "label": "Monad 钱包 · 非托管",
+      "notProvisioned": "尚未创建"
+    }
+  },
+  "advanced": {
+    "title": "高级",
+    "description": "为想了解 MoolaHub 运作方式的用户提供的更多选项。",
+    "technicalLabel": "技术详情",
+    "technicalDescription": "显示网络名称、账户地址、交易 ID 和公开记录链接。使用 MoolaHub 时你完全不需要这些信息。",
+    "savedNote": "此选项保存在本设备上。"
   }
 }

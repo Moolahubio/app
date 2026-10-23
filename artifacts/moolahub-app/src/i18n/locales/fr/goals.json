@@ -2,7 +2,7 @@
   "list": {
     "loading": "Chargement de votre épargne personnelle…",
     "title": "Votre épargne personnelle",
-    "description": "Fixez un objectif et une date, et nous suivrons votre progression. Chaque objectif est une cagnotte au sein de votre portefeuille unique, pas un compte distinct.",
+    "description": "Fixez un objectif et une date, et nous suivrons votre progression. Chaque objectif est une cagnotte au sein de votre solde, pas un compte distinct.",
     "newGoal": "Nouvel objectif",
     "createGoal": "Créer un objectif"
   },
@@ -30,7 +30,7 @@
       "placeholder": "ex. Fonds d'urgence"
     },
     "target": {
-      "label": "Montant cible (USDC)"
+      "label": "Montant cible"
     },
     "deadline": {
       "label": "Date cible"
@@ -71,20 +71,19 @@
     "loading": "Chargement de l'objectif…",
     "notFound": "Nous n'avons pas trouvé cet objectif.",
     "savedLabel": "épargné",
-    "savedOfTarget": "<0></0> sur <1></1>",
-    "onChain": "On-chain"
+    "savedOfTarget": "<0></0> sur <1></1>"
   },
   "deposit": {
-    "title": "Ajouter de l'argent",
+    "title": "Placer dans l'objectif",
     "description": "Transférez des fonds de votre solde disponible vers cette allocation.",
-    "descriptionOnchain": "Transférez des fonds de votre solde disponible vers le coffre on-chain de cet objectif. Les dépôts sont gratuits.",
-    "addFunds": "Ajouter des fonds",
+    "descriptionOnchain": "Déplacez de l'argent de votre solde disponible vers cet objectif. Sans frais.",
+    "addFunds": "Placer dans l'objectif",
     "success": "Fonds ajoutés à l'objectif"
   },
   "withdraw": {
-    "title": "Retirer",
-    "feeNote": "Des frais de retrait de {{fee}} % sont prélevés on-chain. Vous recevez le montant net de ces frais.",
-    "submit": "Retirer vers le disponible",
+    "title": "Remettre dans le solde",
+    "feeNote": "Des frais de {{fee}} % s'appliquent lorsque vous retirez de l'argent de cet objectif. Vous recevez le montant après déduction des frais.",
+    "submit": "Remettre dans le solde",
     "released": "{{amount}} versé vers le disponible",
     "releasedWithFee": "{{amount}} versé (après des frais de {{fee}})"
   },
@@ -110,10 +109,6 @@
       "monthly": "Continuez chaque mois. Il reste environ <0>{{count}} mois</0> de versements pour atteindre votre objectif."
     }
   },
-  "vault": {
-    "title": "Coffre on-chain",
-    "description": "Les fonds que vous allouez sont déposés dans ce coffre sur Monad. Des frais de protocole de {{fee}} % sont prélevés à chaque retrait."
-  },
   "activity": {
     "title": "Activité",
     "types": {
@@ -122,9 +117,9 @@
     },
     "status": {
       "none": "Aucun",
-      "pending": "En attente",
-      "confirmed": "Confirmé",
-      "failed": "Échoué"
+      "pending": "En cours…",
+      "confirmed": "Terminé",
+      "failed": "Non abouti"
     }
   },
   "delete": {
@@ -137,25 +132,32 @@
   },
   "toast": {
     "streakTitle": "Série maintenue 🔥",
-    "streakDescription": "Bravo, ce dépôt compte pour votre série d'épargne."
+    "streakDescription": "Bravo, cela compte pour votre série d'épargne."
   },
   "privy": {
-    "loadingWallet": "Chargement de votre portefeuille…",
+    "loadingWallet": "Préparation…",
     "connect": {
       "deposit": {
-        "prompt": "Votre portefeuille est à autoconservation. Connectez-le pour signer le dépôt vous-même.",
-        "button": "Connecter le portefeuille pour déposer"
+        "prompt": "Confirmez votre identité pour placer de l'argent dans cet objectif.",
+        "button": "Continuer"
       },
       "withdrawal": {
-        "prompt": "Votre portefeuille est à autoconservation. Connectez-le pour signer le retrait vous-même.",
-        "button": "Connecter le portefeuille pour retirer"
+        "prompt": "Confirmez votre identité pour retirer de l'argent de cet objectif.",
+        "button": "Continuer"
       }
     },
     "errors": {
-      "unavailable": "L'épargne d'objectif on-chain n'est pas disponible sur ce déploiement.",
+      "unavailable": "Le placement dans les objectifs n'est pas disponible pour le moment.",
       "invalidAmount": "Saisissez un montant valide.",
-      "depositFailed": "Le dépôt a échoué. Veuillez réessayer.",
-      "withdrawalFailed": "Le retrait a échoué. Veuillez réessayer."
+      "depositFailed": "L'opération n'a pas abouti. Veuillez réessayer.",
+      "withdrawalFailed": "L'opération n'a pas abouti. Veuillez réessayer."
+    }
+  },
+  "technical": {
+    "badge": "On-chain",
+    "vault": {
+      "title": "Coffre on-chain",
+      "description": "Les fonds que vous allouez sont déposés dans ce coffre sur Monad. Des frais de protocole de {{fee}} % sont prélevés à chaque retrait."
     }
   }
 }

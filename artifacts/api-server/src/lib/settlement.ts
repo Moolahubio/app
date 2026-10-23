@@ -553,15 +553,15 @@ async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void>
     case "faucet":
     case "withdrawal":
     case "goal_deposit":
-      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · on-chain transfer failed");
+      await reverseLedgerTransaction(tx, row.transactionId, "Didn't go through · returned to your balance");
       return;
     // goal_withdraw settles the net release AND the fee on one on-chain
     // withdrawal, so both ledger txns must be reversed together.
     case "goal_withdraw": {
-      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · goal withdrawal failed");
+      await reverseLedgerTransaction(tx, row.transactionId, "Didn't go through · move from goal");
       const parsed = goalFromMemo(row.memo);
       if (parsed?.feeTxnId) {
-        await reverseLedgerTransaction(tx, parsed.feeTxnId, "Reversal · goal withdrawal fee");
+        await reverseLedgerTransaction(tx, parsed.feeTxnId, "Didn't go through · fee returned");
       }
       return;
     }
@@ -569,7 +569,7 @@ async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void>
     // contribution, delete the contribution record (it never settled), and
     // unwind the round it may have triggered.
     case "escrow_contribute": {
-      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · circle contribution failed");
+      await reverseLedgerTransaction(tx, row.transactionId, "Didn't go through · circle payment");
       if (row.contributionId) {
         await tx.delete(contributionsTable).where(eq(contributionsTable.id, row.contributionId));
       }
@@ -582,7 +582,7 @@ async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void>
     // contribution record (it never settled), and unwind any payout the
     // (now-reversed) round completion may have triggered.
     case "accumulation_contribute": {
-      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · circle contribution failed");
+      await reverseLedgerTransaction(tx, row.transactionId, "Didn't go through · circle payment");
       if (row.contributionId) {
         await tx.delete(contributionsTable).where(eq(contributionsTable.id, row.contributionId));
       }
@@ -594,7 +594,7 @@ async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void>
     // failed to send: reverse the payout and reopen the member's claim so a
     // retry can pay them. This should be rare, so log it loudly.
     case "payout": {
-      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · payout failed");
+      await reverseLedgerTransaction(tx, row.transactionId, "Didn't go through · payout");
       const circleId = payoutCircleFromMemo(row.memo);
       const [origTxn] = await tx
         .select({ userId: transactionsTable.userId })
@@ -619,7 +619,7 @@ async function reverseForKind(tx: Executor, row: OnchainTransfer): Promise<void>
     }
     // Legacy direct "contribution" transfers have no round machinery to unwind.
     default:
-      await reverseLedgerTransaction(tx, row.transactionId, "Reversal · on-chain transfer failed");
+      await reverseLedgerTransaction(tx, row.transactionId, "Didn't go through · returned to your balance");
       return;
   }
 }
@@ -657,8 +657,8 @@ async function markFailed(row: OnchainTransfer, reason: string): Promise<void> {
       row.sourceUserId,
       {
         type: "refund",
-        title: "Transfer reversed",
-        body: `A ${formatMoney(row.amountCents)} transfer couldn't be completed on-chain and was returned to your balance.`,
+        title: "That didn't go through",
+        body: `A ${formatMoney(row.amountCents)} transfer couldn't be completed. The money is back in your balance.`,
         link: "/wallet",
       },
       { email: true },

@@ -5,7 +5,7 @@ import { PageHeader, BackLink } from "@/components/app/bits";
 import { useStreak, getGetStreaksQueryKey } from "@/hooks/use-streak";
 import { useSetStreakFrequency } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage, cn } from "@/lib/utils";
+import { toUserError, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 type Frequency = "daily" | "weekly" | "monthly";
@@ -41,7 +41,7 @@ export default function ProfileStreakPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("profile.frequencyError"));
+      setError(toUserError(err, t("profile.frequencyError")));
     }
   };
 

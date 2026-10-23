@@ -6,11 +6,8 @@
     "totalBalance": "总余额",
     "available": "可用",
     "inSavings": "储蓄中",
-    "apy": "+{{apy}}% 年化收益",
     "addMoney": "充值",
-    "withdraw": "提现",
-    "growthLabel": "增长 · 6 个月",
-    "earned": "已赚取 {{amount}}"
+    "withdraw": "提现"
   },
   "reminders": {
     "title": "接下来",
@@ -31,12 +28,12 @@
       "monthly": "本月已储蓄，做得好"
     },
     "keepAlive": {
-      "daily": "一次存款即可延续你的每日连续记录",
-      "weekly": "一次存款即可延续你的每周连续记录",
-      "biweekly": "一次存款即可延续你的双周连续记录",
-      "monthly": "一次存款即可延续你的每月连续记录"
+      "daily": "储蓄一次即可延续你的每日连续记录",
+      "weekly": "储蓄一次即可延续你的每周连续记录",
+      "biweekly": "储蓄一次即可延续你的双周连续记录",
+      "monthly": "储蓄一次即可延续你的每月连续记录"
     },
-    "firstFlame": "存一笔款，点燃你的第一团火焰"
+    "firstFlame": "储蓄一次，点燃你的第一团火焰"
   },
   "savings": {
     "title": "个人储蓄",
@@ -57,8 +54,8 @@
   },
   "learn": {
     "title": "继续学习",
-    "lessonTitle": "通俗易懂的区块链",
-    "lessonMeta": "5 分钟 · 初级",
+    "lessonTitle": "真正能坚持的储蓄目标",
+    "lessonMeta": "6 分钟 · 初级",
     "startLesson": "开始课程"
   },
   "transactions": {

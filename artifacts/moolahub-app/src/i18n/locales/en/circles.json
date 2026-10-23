@@ -2,11 +2,11 @@
   "list": {
     "loading": "Loading your group savings…",
     "title": "Your group savings",
-    "description": "Rotating savings with people you trust. Every round is held by an on-chain contract, not a person.",
+    "description": "Rotating savings with people you trust. Every circle shows its rules, fee and payout order before you join.",
     "emptyHint": "Invite friends or family and set your contribution"
   },
   "info": {
-    "susu": "<b>How a Susu works:</b> everyone contributes a fixed amount each round. In a <em>rotation</em> circle, one member receives the full pot each round until everyone has had a turn. In an <em>accumulation</em> circle, everyone saves into a shared pot and gets their own savings back at the end. Everything is verifiable on Monad."
+    "susu": "<b>How a Susu works:</b> everyone pays in a fixed amount each round. In a <em>rotation</em> circle, one member receives the pot each round until everyone has had a turn. In an <em>accumulation</em> circle, everyone saves into a shared pot and gets their own savings back at the end."
   },
   "frequency": {
     "weekly": "Weekly",
@@ -35,7 +35,7 @@
       "label": "Circle type",
       "rotation": {
         "title": "Rotation",
-        "description": "Take turns. Everyone pays each round, and one member receives the full pot until all have had a turn."
+        "description": "Take turns. Everyone pays each round, and one member receives the pot until all have had a turn."
       },
       "accumulation": {
         "title": "Accumulation",
@@ -43,14 +43,14 @@
       }
     },
     "targetPayout": {
-      "label": "Target payout per person (USDC)",
+      "label": "Target payout per person",
       "hint": "What each member receives when it's their turn."
     },
     "groupSize": {
       "label": "Number of people (including you)"
     },
     "contribution": {
-      "label": "Contribution per round (USDC)"
+      "label": "Contribution per round"
     },
     "numRounds": {
       "label": "Number of rounds"
@@ -96,11 +96,10 @@
   "detail": {
     "loading": "Loading circle…",
     "notFound": "We couldn't find that circle.",
-    "onChain": "On-chain",
     "formingSuffix": "forming",
     "submitting": "Submitting…",
-    "contribute": "Contribute {{amount}}",
-    "contributedThisRound": "Contributed this round",
+    "contribute": "Pay in {{amount}}",
+    "contributedThisRound": "Paid in this round",
     "notStarted": "This circle hasn't started yet",
     "stats": {
       "rounds": "Rounds",
@@ -126,8 +125,8 @@
     "schedule": {
       "membersTitle": "Members",
       "payoutTitle": "Payout schedule",
-      "descAccumulation": "Everyone saves into one shared pot. After {{count}} rounds, each member gets their own savings back, locked on-chain.",
-      "descRotation": "The rotation is locked on-chain, so everyone knows who receives the pot, and when.",
+      "descAccumulation": "Everyone saves into one shared pot. After {{count}} rounds, each member gets their own savings back.",
+      "descRotation": "The payout order is set when the circle starts, so everyone knows who receives the pot, and when.",
       "you": "(you)",
       "savingsReturned": "Savings returned",
       "saving": "Saving",
@@ -139,10 +138,6 @@
       "title": "Round progress",
       "roundsOf": "{{current}} of {{total}} rounds"
     },
-    "escrow": {
-      "title": "On-chain escrow",
-      "description": "Contributions settle into this Susu escrow on Monad. A {{fee}}% protocol fee is taken from each payout."
-    },
     "history": {
       "title": "Your contributions",
       "round": "Round {{round}}"
@@ -153,11 +148,18 @@
     }
   },
   "privy": {
-    "loadingWallet": "Loading your wallet…",
-    "selfCustody": "Your wallet is self-custodial. Connect it to sign the contribution yourself.",
-    "connect": "Connect wallet to contribute",
-    "notAvailable": "On-chain contributions aren't available on this deployment.",
-    "failed": "Contribution failed. Please try again.",
+    "loadingWallet": "Getting things ready…",
+    "selfCustody": "Confirm it's you to pay in.",
+    "connect": "Continue",
+    "notAvailable": "Paying in isn't available right now. Please try again later.",
+    "failed": "That didn't go through. Please try again.",
     "submitting": "Submitting…"
+  },
+  "technical": {
+    "badge": "On-chain",
+    "escrow": {
+      "title": "On-chain escrow",
+      "description": "Contributions settle into this Susu escrow on Monad. A {{fee}}% protocol fee is taken from each payout."
+    }
   }
 }

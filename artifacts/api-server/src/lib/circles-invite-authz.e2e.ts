@@ -43,6 +43,7 @@ delete process.env.RESEND_API_KEY;
 
 const { db, pool, usersTable, circlesTable, ledgerAccountsTable, postingsTable, transactionsTable } =
   await import("@workspace/db");
+const { purgeTestData } = await import("@workspace/db/testing");
 const { inArray } = await import("drizzle-orm");
 const { createWalletForUser } = await import("./wallet");
 const { acct } = await import("./ledger");
@@ -249,33 +250,10 @@ async function runInviteHijack(type: "rotation" | "accumulation") {
 
 async function cleanup() {
   try {
-    const keys = [
-      ...allUsers.map((u) => acct.wallet(u.id)),
-      ...allCircleIds.map((id) => acct.pool(id)),
-    ];
-    if (keys.length) {
-      const accts = await db
-        .select({ id: ledgerAccountsTable.id })
-        .from(ledgerAccountsTable)
-        .where(inArray(ledgerAccountsTable.key, keys));
-      const acctIds = accts.map((a) => a.id);
-      if (acctIds.length) {
-        const txnRows = await db
-          .selectDistinct({ id: postingsTable.transactionId })
-          .from(postingsTable)
-          .where(inArray(postingsTable.accountId, acctIds));
-        const txnIds = txnRows.map((r) => r.id);
-        if (txnIds.length) {
-          await db.delete(transactionsTable).where(inArray(transactionsTable.id, txnIds));
-        }
-      }
-    }
-    if (allCircleIds.length) {
-      await db.delete(circlesTable).where(inArray(circlesTable.id, allCircleIds));
-    }
-    if (allUsers.length) {
-      await db.delete(usersTable).where(inArray(usersTable.id, allUsers.map((u) => u.id)));
-    }
+    // Postings are append-only and no longer cascade away, so purge explicitly:
+    // every transaction that touched the test accounts (both sides, including
+    // the shared `external` account), then the circles/goals and users.
+    await purgeTestData({ userIds: allUsers.map((u) => u.id), circleIds: allCircleIds });
   } catch (e) {
     console.error("[cleanup] failed:", e);
   }

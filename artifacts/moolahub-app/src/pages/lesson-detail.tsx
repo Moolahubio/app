@@ -6,6 +6,8 @@ import { BackLink } from "@/components/app/bits";
 import { ActionButton } from "@/components/app/forms";
 import { useGetLesson, useListLessons, useCompleteLesson, getGetLessonQueryKey, getListLessonsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
+import { visibleLessons } from "@/lib/lessons";
 
 export default function LessonPage() {
   const { t } = useTranslation("learn");
@@ -14,7 +16,10 @@ export default function LessonPage() {
   const queryClient = useQueryClient();
 
   const { data: lesson, isLoading } = useGetLesson(slug!, { query: { enabled: !!slug, queryKey: getGetLessonQueryKey(slug!) } });
-  const { data: lessonsList } = useListLessons();
+  const [technical] = useTechnicalDetails();
+  const { data: allLessons } = useListLessons();
+  // "Next lesson" stays on the everyday track unless Technical details is on.
+  const lessonsList = allLessons ? visibleLessons(allLessons, technical) : allLessons;
   const completeMutation = useCompleteLesson();
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;

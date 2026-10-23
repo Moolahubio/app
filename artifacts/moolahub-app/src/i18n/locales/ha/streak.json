@@ -29,11 +29,11 @@
     "aria": "Jerin tanadi: lokuta {{count}}"
   },
   "atRisk": {
-    "message": "Ajiya ɗaya kafin <strong>{{date}}</strong> na kiyaye jerin ka. Babu gaggawa, kowace ajiya ta buri ko da'ira tana ƙidaya."
+    "message": "Tanadi ɗaya kafin <strong>{{date}}</strong> na kiyaye jerin ka. Babu gaggawa, matsar da kuɗi zuwa kowace manufa ko biya cikin kowace da'ira yana ƙidaya."
   },
   "hero": {
     "captionActive": "Jeri na {{count}}-{{period}} · ci gaba",
-    "captionEmpty": "Yi ajiya a wannan {{period}} don kunna harshen wutar ka"
+    "captionEmpty": "Yi tanadi sau ɗaya a wannan {{period}} don kunna harshen wutar ka"
   },
   "stats": {
     "current": "{{unit}} na yanzu",
@@ -59,10 +59,10 @@
   },
   "card": {
     "streakTitle": "Jerin {{frequency}}",
-    "oneDepositPer": "Ajiya ɗaya a kowace {{period}} na kiyaye harshen wutar ka.",
+    "oneDepositPer": "Tanadi ɗaya a kowace {{period}} na kiyaye harshen wutar ka.",
     "change": "Canza",
-    "goalDepositsCount": "Ajiyar buri tana ƙidaya",
-    "circleContributionsCount": "Gudummawar da'ira tana ƙidaya",
+    "goalDepositsCount": "Matsar da kuɗi zuwa manufofi yana ƙidaya",
+    "circleContributionsCount": "Biya cikin da'irori yana ƙidaya",
     "changeOncePerYear": "Ana iya canza yawan sau sau ɗaya a shekara.",
     "changeOncePerYearNext": "Ana iya canza yawan sau sau ɗaya a shekara. Canji na gaba zai buɗe a {{year}}."
   },
@@ -122,7 +122,7 @@
   },
   "profile": {
     "title": "Yawan sau na jeri",
-    "description": "Zaɓi sau nawa ake buƙatar ajiya don kiyaye jerin tanadin ka.",
+    "description": "Zaɓi sau nawa kake buƙatar yin tanadi don kiyaye jerin tanadin ka.",
     "frequencyError": "An kasa canza yawan sau na jerin ka.",
     "recommended": "An ba da shawara",
     "lockNote": "Kana iya canza yawan sau na jerin ka sau ɗaya a shekarar kalanda.",
@@ -130,15 +130,15 @@
     "options": {
       "daily": {
         "label": "Kullum",
-        "description": "Kiyaye harshen wuta da ajiya kowace rana. Mafi kyau ga al'adar tanadi ta yau da kullum."
+        "description": "Kiyaye harshen wuta ta hanyar yin tanadi kowace rana. Mafi kyau ga al'adar tanadi ta yau da kullum."
       },
       "weekly": {
         "label": "Mako-mako",
-        "description": "Ajiya ɗaya a kowane lokaci a cikin mako na kiyaye jerin ka. Sannu-sannu, mai dorewa."
+        "description": "Tanadi ɗaya a kowane lokaci a cikin mako na kiyaye jerin ka. Sannu-sannu, mai dorewa."
       },
       "monthly": {
         "label": "Wata-wata",
-        "description": "Ajiya ɗaya kowane watan kalanda shi ne duk abin da ake buƙata. Mai laushi kuma ba matsi."
+        "description": "Tanadi ɗaya kowane watan kalanda shi ne duk abin da ake buƙata. Mai laushi kuma ba matsi."
       }
     }
   }

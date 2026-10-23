@@ -12,7 +12,7 @@ import {
   useConfirmGoalRelease,
 } from "@workspace/api-client-react";
 import type { ReleaseFromGoalResult } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError, isUserCancellation } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -161,10 +161,8 @@ export function PrivyGoalDepositForm({
       setOk(t("deposit.success"));
       onSuccess();
     } catch (e) {
-      setError(
-        apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : t("privy.errors.depositFailed")),
-      );
+      // Closing the confirm prompt isn't an error: nothing moved.
+      if (!isUserCancellation(e)) setError(toUserError(e, t("privy.errors.depositFailed")));
     } finally {
       setPending(false);
     }
@@ -268,10 +266,8 @@ export function PrivyGoalReleaseForm({
       setOk(null);
       onSuccess(result);
     } catch (e) {
-      setError(
-        apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : t("privy.errors.withdrawalFailed")),
-      );
+      // Closing the confirm prompt isn't an error: nothing moved.
+      if (!isUserCancellation(e)) setError(toUserError(e, t("privy.errors.withdrawalFailed")));
     } finally {
       setPending(false);
     }

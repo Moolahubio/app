@@ -13,24 +13,28 @@ import {
   Trash2
 } from "lucide-react";
 import { Card, Badge, Avatar, ProgressBar } from "@/components/ui";
-import { BackLink, Money, Addr } from "@/components/app/bits";
+import { BackLink, Money, Addr, TxStatus, LoadError } from "@/components/app/bits";
 import { ActionButton, InviteForm } from "@/components/app/forms";
 import { PrivyContributeButton } from "@/components/app/PrivyContributeButton";
 import { isWeb3Enabled } from "@/components/app/Web3Provider";
 import { useOnchainConfig } from "@/lib/onchain/config";
 import { useGetCircle, useGetWallet, useStartCircle, useContributeToCircle, useInviteToCircle, useDeleteCircle, getGetCircleQueryKey, getListCirclesQueryKey, getGetStreaksQueryKey } from "@workspace/api-client-react";
 import { toast } from "@/hooks/use-toast";
-import { formatMoney, formatDate, apiErrorMessage, cn } from "@/lib/utils";
+import { formatMoney, formatDate, toUserError, cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
+
+const EXPLORER_FALLBACK = import.meta.env.VITE_EXPLORER_URL ?? "https://testnet.monadvision.com";
 
 export default function CircleDetailPage() {
   const { t } = useTranslation("circles");
   const { id } = useParams();
   const [, navigate] = useLocation();
-  const { data: circle, isLoading } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
+  const [technical] = useTechnicalDetails();
+  const { data: circle, isLoading, isError, error, refetch } = useGetCircle(id!, { query: { enabled: !!id, queryKey: getGetCircleQueryKey(id!) } });
   const { data: wallet } = useGetWallet();
   const { data: onchainConfig } = useOnchainConfig();
 
@@ -42,7 +46,22 @@ export default function CircleDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("detail.loading")}</div>;
-  if (!circle) return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
+  if (!circle) {
+    // Only a 404 is "not found"; any other failure gets a retry, not a dead end.
+    const notFound = !isError || (error as { status?: number } | null)?.status === 404;
+    if (!notFound) {
+      return (
+        <div className="mx-auto max-w-5xl space-y-6">
+          <BackLink href="/circles" label={t("common:nav.groupSavings")} />
+          <Card>
+            <LoadError onRetry={() => void refetch()} />
+          </Card>
+        </div>
+      );
+    }
+    return <div className="p-8 text-center text-muted-foreground">{t("detail.notFound")}</div>;
+  }
+  const explorer = circle.explorerUrl ?? EXPLORER_FALLBACK;
 
   const isForming = circle.status === "forming";
   const isActive = circle.status === "active";
@@ -98,9 +117,9 @@ export default function CircleDetailPage() {
             <Badge tone="neutral" className="bg-white/10 text-white/70 ring-white/15">
               {isAccumulation ? t("type.accumulation") : t("type.rotation")}
             </Badge>
-            {circle.contractAddress && (
+            {technical && circle.contractAddress && (
               <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-                <Link2 className="h-3.5 w-3.5" /> {t("detail.onChain")}
+                <Link2 className="h-3.5 w-3.5" /> {t("technical.badge")}
               </Badge>
             )}
           </div>
@@ -165,7 +184,7 @@ export default function CircleDetailPage() {
           )}
         </div>
         {contributeMutation.error && (
-          <p className="mt-3 text-sm text-rose-300">{apiErrorMessage(contributeMutation.error)}</p>
+          <p className="mt-3 text-sm text-rose-300" role="alert">{toUserError(contributeMutation.error)}</p>
         )}
       </Card>
 
@@ -230,7 +249,7 @@ export default function CircleDetailPage() {
             {t("detail.delete.description")}
           </p>
           {deleteMutation.error && (
-            <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(deleteMutation.error)}</p>
+            <p className="mt-3 text-sm text-rose-600">{toUserError(deleteMutation.error)}</p>
           )}
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {!confirmDelete ? (
@@ -349,17 +368,17 @@ export default function CircleDetailPage() {
             <ProgressBar value={circle.currentRound} total={circle.totalRounds} className="mt-2" />
           </Card>
 
-          {circle.contractAddress && (
+          {technical && circle.contractAddress && (
             <Card className="p-6">
               <div className="flex items-center gap-2">
                 <Link2 className="h-5 w-5 text-jade-600 dark:text-jade-400" />
-                <h2 className="font-display text-lg font-bold text-foreground">{t("detail.escrow.title")}</h2>
+                <h2 className="font-display text-lg font-bold text-foreground">{t("technical.escrow.title")}</h2>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("detail.escrow.description", { fee: ((circle.feeBps ?? 0) / 100).toFixed(0) })}
+                {t("technical.escrow.description", { fee: ((circle.feeBps ?? 0) / 100).toFixed(0) })}
               </p>
               <a
-                href={`${circle.explorerUrl ?? "https://testnet.monadvision.com"}/address/${circle.contractAddress}`}
+                href={`${explorer}/address/${circle.contractAddress}`}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-mono text-xs text-foreground transition hover:border-jade-500/40 hover:text-jade-700"
@@ -383,9 +402,9 @@ export default function CircleDetailPage() {
                       <p className="text-sm font-semibold text-foreground">{t("detail.history.round", { round: h.round })}</p>
                       <p className="text-xs text-muted-foreground"><Money cents={h.amountCents} /></p>
                     </div>
-                    {h.txHash ? (
+                    {technical && h.txHash ? (
                       <a
-                        href={`${circle.explorerUrl ?? "https://testnet.monadvision.com"}/tx/${h.txHash}`}
+                        href={`${explorer}/tx/${h.txHash}`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 font-mono text-xs text-jade-700 dark:text-jade-300 transition hover:text-jade-800"
@@ -394,7 +413,7 @@ export default function CircleDetailPage() {
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     ) : (
-                      <Badge tone="neutral" className="capitalize">{h.status}</Badge>
+                      <TxStatus status={h.status} />
                     )}
                   </li>
                 ))}

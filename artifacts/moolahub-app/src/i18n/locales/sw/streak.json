@@ -29,11 +29,11 @@
     "aria": "Mfululizo wa kuweka akiba: vipindi {{count}}"
   },
   "atRisk": {
-    "message": "Amana moja tu kabla ya <strong>{{date}}</strong> huweka mfululizo wako hai. Hakuna haraka, amana yoyote ya lengo au duara inahesabika."
+    "message": "Akiba moja tu kabla ya <strong>{{date}}</strong> huweka mfululizo wako hai. Hakuna haraka, kuhamisha pesa kwenye lengo lolote au kulipa kwenye duara lolote kunahesabika."
   },
   "hero": {
     "captionActive": "Mfululizo wa {{period}} {{count}} · endelea nao",
-    "captionEmpty": "Weka amana {{period}} huu ili kuwasha mwali wako"
+    "captionEmpty": "Weka akiba mara moja {{period}} huu ili kuwasha mwali wako"
   },
   "stats": {
     "current": "{{unit}} ya sasa",
@@ -59,10 +59,10 @@
   },
   "card": {
     "streakTitle": "Mfululizo wa {{frequency}}",
-    "oneDepositPer": "Amana moja kwa {{period}} huweka mwali wako ukiwaka.",
+    "oneDepositPer": "Akiba moja kwa {{period}} huweka mwali wako ukiwaka.",
     "change": "Badilisha",
-    "goalDepositsCount": "Amana za malengo zinahesabika",
-    "circleContributionsCount": "Michango ya duara inahesabika",
+    "goalDepositsCount": "Kuhamisha pesa kwenye malengo kunahesabika",
+    "circleContributionsCount": "Kulipa kwenye miduara kunahesabika",
     "changeOncePerYear": "Marudio yanaweza kubadilika mara moja kwa mwaka.",
     "changeOncePerYearNext": "Marudio yanaweza kubadilika mara moja kwa mwaka. Mabadiliko yanayofuata yatafunguliwa mwaka {{year}}."
   },
@@ -122,7 +122,7 @@
   },
   "profile": {
     "title": "Marudio ya mfululizo",
-    "description": "Chagua ni mara ngapi amana inahitaji kutokea ili kuweka mfululizo wako wa kuweka akiba hai.",
+    "description": "Chagua ni mara ngapi unahitaji kuweka akiba ili kuweka mfululizo wako wa akiba hai.",
     "frequencyError": "Haikuwezekana kubadilisha marudio ya mfululizo wako.",
     "recommended": "Inapendekezwa",
     "lockNote": "Unaweza kubadilisha marudio ya mfululizo wako mara moja kwa mwaka wa kalenda.",
@@ -130,15 +130,15 @@
     "options": {
       "daily": {
         "label": "Kila siku",
-        "description": "Weka mwali ukiwaka kwa amana kila siku. Bora kwa tabia ya kuweka akiba ya kila siku."
+        "description": "Weka mwali ukiwaka kwa kuweka akiba kila siku. Bora kwa tabia ya kuweka akiba ya kila siku."
       },
       "weekly": {
         "label": "Kila wiki",
-        "description": "Amana moja wakati wowote katika wiki huweka mfululizo wako ukiendelea. Kasi tulivu na thabiti."
+        "description": "Akiba moja wakati wowote katika wiki huweka mfululizo wako ukiendelea. Kasi tulivu na thabiti."
       },
       "monthly": {
         "label": "Kila mwezi",
-        "description": "Amana moja tu kila mwezi wa kalenda inatosha. Ya upole na bila shinikizo."
+        "description": "Akiba moja tu kila mwezi wa kalenda inatosha. Ya upole na bila shinikizo."
       }
     }
   }

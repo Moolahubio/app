@@ -11,7 +11,7 @@ import {
   useDeletePasskey,
   getListPasskeysQueryKey,
 } from "@workspace/api-client-react";
-import { apiErrorMessage, formatDate } from "@/lib/utils";
+import { toUserError, formatDate } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
 
@@ -53,7 +53,7 @@ export function PasskeysCard() {
       if (err instanceof Error && err.name === "NotAllowedError") {
         setError(t("passkeys.errors.cancelled"));
       } else {
-        setError(apiErrorMessage(err) ?? t("passkeys.errors.add"));
+        setError(toUserError(err, t("passkeys.errors.add")));
       }
     }
   };
@@ -64,7 +64,7 @@ export function PasskeysCard() {
       await deleteMutation.mutateAsync({ id });
       await invalidate();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("passkeys.errors.remove"));
+      setError(toUserError(err, t("passkeys.errors.remove")));
     }
   };
 

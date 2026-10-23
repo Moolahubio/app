@@ -29,11 +29,11 @@
     "aria": "Savings streak: {{count}} periods"
   },
   "atRisk": {
-    "message": "A single deposit before <strong>{{date}}</strong> keeps your streak alive. No rush, any goal or circle deposit counts."
+    "message": "A single save before <strong>{{date}}</strong> keeps your streak alive. No rush, moving money to any goal or paying into any circle counts."
   },
   "hero": {
     "captionActive": "{{count}}-{{period}} streak · keep it going",
-    "captionEmpty": "Make a deposit this {{period}} to light your flame"
+    "captionEmpty": "Save once this {{period}} to light your flame"
   },
   "stats": {
     "current": "Current {{unit}}",
@@ -59,10 +59,10 @@
   },
   "card": {
     "streakTitle": "{{frequency}} streak",
-    "oneDepositPer": "One deposit per {{period}} keeps your flame lit.",
+    "oneDepositPer": "One save per {{period}} keeps your flame lit.",
     "change": "Change",
-    "goalDepositsCount": "Goal deposits count",
-    "circleContributionsCount": "Circle contributions count",
+    "goalDepositsCount": "Moving money to goals counts",
+    "circleContributionsCount": "Paying into circles counts",
     "changeOncePerYear": "Frequency can change once a year.",
     "changeOncePerYearNext": "Frequency can change once a year. Next change unlocks in {{year}}."
   },
@@ -122,7 +122,7 @@
   },
   "profile": {
     "title": "Streak frequency",
-    "description": "Choose how often a deposit needs to happen to keep your savings streak alive.",
+    "description": "Choose how often you need to save to keep your savings streak alive.",
     "frequencyError": "Could not change your streak frequency.",
     "recommended": "Recommended",
     "lockNote": "You can change your streak frequency once per calendar year.",
@@ -130,15 +130,15 @@
     "options": {
       "daily": {
         "label": "Daily",
-        "description": "Keep the flame alive with a deposit every day. Best for an everyday saving habit."
+        "description": "Keep the flame alive by saving every day. Best for an everyday saving habit."
       },
       "weekly": {
         "label": "Weekly",
-        "description": "One deposit any time during the week keeps your streak going. A calm, steady pace."
+        "description": "One save any time during the week keeps your streak going. A calm, steady pace."
       },
       "monthly": {
         "label": "Monthly",
-        "description": "A single deposit each calendar month is all it takes. Gentle and low-pressure."
+        "description": "A single save each calendar month is all it takes. Gentle and low-pressure."
       }
     }
   }

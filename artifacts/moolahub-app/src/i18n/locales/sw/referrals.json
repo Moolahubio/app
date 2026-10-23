@@ -20,7 +20,7 @@
     "linkLabel": "Kiungo cha mwaliko",
     "share": "Shiriki mwaliko",
     "shareTitle": "Weka akiba kwa werevu kwenye MoolaHub",
-    "shareText": "Ninaweka akiba kwa USDC kwenye MoolaHub na kujiunga na miduara ya akiba inayoniweka kwenye mstari. Ndiyo njia rahisi zaidi niliyopata ya kufikia malengo yangu ya kifedha. Njoo tuweke akiba pamoja:",
+    "shareText": "Ninaweka akiba kwa dola kwenye MoolaHub na kujiunga na miduara ya akiba inayoniweka kwenye mstari. Ndiyo njia rahisi zaidi niliyopata ya kufikia malengo yangu ya kifedha. Njoo tuweke akiba pamoja:",
     "edit": "Hariri msimbo",
     "editHint": "Chagua herufi au nambari 4 hadi 15. Hii ndiyo marafiki wataandika ili kujiunga kupitia wewe.",
     "save": "Hifadhi msimbo",
@@ -59,12 +59,12 @@
   },
   "withdraw": {
     "title": "Toa mapato",
-    "subtitle": "Hamisha kamisheni yako kwenye pochi yako.",
+    "subtitle": "Hamisha mapato yako kwenye salio lako.",
     "amountPlaceholder": "0.00",
     "maxAction": "Juu",
     "submit": "Toa",
     "submitting": "Inatoa…",
-    "success": "Utoaji uko njiani kwenda pochi yako.",
+    "success": "Iko njiani kwenda kwenye salio lako.",
     "min": "Kiwango cha chini {{amount}}",
     "max": "Inapatikana {{amount}}",
     "monthly": "{{used}} kati ya {{cap}} vimetolewa mwezi huu",
@@ -114,5 +114,12 @@
   },
   "signup": {
     "invited": "Mwaliko umetumika. Unajiunga kupitia rafiki."
+  },
+  "invite": {
+    "title": "Waalike marafiki",
+    "description": "Shiriki MoolaHub na watu unaoweka nao akiba."
+  },
+  "paused": {
+    "note": "Zawadi za mwaliko zimesitishwa. Zawadi ulizopata zinabaki kwenye akaunti yako, na utoaji umezimwa kwa sasa."
   }
 }

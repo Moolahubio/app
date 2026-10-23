@@ -1,3 +1,4 @@
+import { STATUS_CODES } from "node:http";
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -7,6 +8,8 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { isAllowedOrigin } from "./lib/origins";
+import { captureServerError } from "./lib/observability";
+import { AppError } from "./lib/errors";
 
 const app: Express = express();
 
@@ -65,13 +68,38 @@ app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: "Not found" });
 });
 
+/**
+ * The 4xx a client error carries: an AppError, or an http-errors error from
+ * Express middleware (body-parser marks those `expose: true`). Upstream errors
+ * that merely carry a status (an RPC's 429, say) are not client errors.
+ */
+function clientErrorStatus(err: unknown): number | undefined {
+  if (err instanceof AppError) return err.statusCode < 500 ? err.statusCode : undefined;
+  const e = err as { status?: unknown; expose?: unknown } | null;
+  return e?.expose === true && typeof e.status === "number" && e.status >= 400 && e.status < 500 ? e.status : undefined;
+}
+
 // Global error handler (last middleware). Logs the full error server-side and
 // returns a generic message; never leaks stack traces or internals. Express 5
-// forwards rejected async handlers here automatically.
+// forwards rejected async handlers here automatically. Client errors (malformed
+// JSON, an oversized body, an AppError) keep their 4xx; everything else is an
+// unexpected 500 and is captured to Sentry.
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
-  logger.error({ err, url: req.url?.split("?")[0] }, "unhandled error");
+  const url = req.url?.split("?")[0];
+  const clientStatus = clientErrorStatus(err);
+  if (clientStatus === undefined) {
+    logger.error({ err, url }, "unhandled error");
+    captureServerError(err, { req });
+  } else {
+    logger.warn({ status: clientStatus, url }, "rejected request");
+  }
   if (res.headersSent) return;
-  res.status(500).json({ error: "Internal server error" });
+  if (clientStatus === undefined) {
+    res.status(500).json({ error: "Internal server error" });
+  } else {
+    const message = err instanceof AppError ? err.message : (STATUS_CODES[clientStatus] ?? "Bad request");
+    res.status(clientStatus).json({ error: message });
+  }
 });
 
 export default app;

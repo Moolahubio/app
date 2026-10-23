@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, integer, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, integer, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -23,11 +23,18 @@ export const ledgerAccountsTable = pgTable("ledger_accounts", {
   key: text("key").notNull().unique(),
   kind: text("kind").notNull(),
   label: text("label").notNull(),
-  userId: uuid("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
-  goalId: uuid("goal_id").references(() => goalsTable.id, { onDelete: "cascade" }),
-  circleId: uuid("circle_id").references(() => circlesTable.id, { onDelete: "cascade" }),
+  // RESTRICT, not cascade: deleting a user, goal or circle must never take its
+  // ledger history with it. Those rows are soft-deleted (users.deleted_at,
+  // goals.status) and a forming circle is only hard-deleted before it has any.
+  userId: uuid("user_id").references(() => usersTable.id, { onDelete: "restrict" }),
+  goalId: uuid("goal_id").references(() => goalsTable.id, { onDelete: "restrict" }),
+  circleId: uuid("circle_id").references(() => circlesTable.id, { onDelete: "restrict" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  index("ledger_accounts_user_id_idx").on(t.userId),
+  index("ledger_accounts_goal_id_idx").on(t.goalId),
+  index("ledger_accounts_circle_id_idx").on(t.circleId),
+]);
 
 export const transactionsTable = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -96,14 +103,25 @@ export const transactionsTable = pgTable("transactions", {
   uniqueIndex("transactions_contribution_tx_hash_uniq")
     .on(t.txHash)
     .where(sql`${t.type} = 'contribution' and ${t.txHash} is not null`),
+  index("transactions_user_id_idx").on(t.userId),
+  index("transactions_circle_id_idx").on(t.circleId),
 ]);
 
+/**
+ * Append-only. Migration 0003 adds triggers that reject UPDATE, DELETE and
+ * TRUNCATE and revokes those privileges from the app role, so a mistake is
+ * corrected with a reversal transaction, never by editing history. The foreign
+ * keys RESTRICT for the same reason.
+ */
 export const postingsTable = pgTable("postings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  transactionId: uuid("transaction_id").notNull().references(() => transactionsTable.id, { onDelete: "cascade" }),
-  accountId: uuid("account_id").notNull().references(() => ledgerAccountsTable.id, { onDelete: "cascade" }),
+  transactionId: uuid("transaction_id").notNull().references(() => transactionsTable.id, { onDelete: "restrict" }),
+  accountId: uuid("account_id").notNull().references(() => ledgerAccountsTable.id, { onDelete: "restrict" }),
   amountCents: integer("amount_cents").notNull(),
-});
+}, (t) => [
+  index("postings_transaction_id_idx").on(t.transactionId),
+  index("postings_account_id_idx").on(t.accountId),
+]);
 
 export const insertTransactionSchema = createInsertSchema(transactionsTable).omit({ id: true, createdAt: true });
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;

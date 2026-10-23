@@ -556,7 +556,7 @@ async function sendReminders(now: Date): Promise<void> {
       await notify(s.userId, {
         type: "streak_reminder",
         title: "Keep your streak going",
-        body: `Your ${unitNoun(freq)} streak window closes ${when}. A small save to any goal or circle keeps your flame alive — no rush.`,
+        body: `Your ${unitNoun(freq)} streak window closes ${when}. A small save to any goal or circle keeps your flame alive. No rush.`,
         link: "/streaks",
       });
       await db
@@ -618,18 +618,33 @@ export async function evaluateStreaks(now: Date = new Date()): Promise<void> {
 }
 
 let streakTimer: ReturnType<typeof setInterval> | null = null;
+let streakRunning = false;
 const STREAK_INTERVAL_MS = 6 * 60 * 60 * 1000; // every 6h; idempotent so frequency is safe
+
+/**
+ * One guarded evaluator pass. A failure (e.g. the DB is briefly unreachable in
+ * grantFreezes' first query) is logged, never left as an unhandled rejection:
+ * on Node that would crash the whole API process, request paths included. A
+ * slow pass is never overlapped by the next tick.
+ */
+async function runStreakPass(label: string): Promise<void> {
+  if (streakRunning) return;
+  streakRunning = true;
+  try {
+    await evaluateStreaks();
+  } catch (e) {
+    logger.error({ err: e }, `[streaks] ${label} evaluate failed`);
+  } finally {
+    streakRunning = false;
+  }
+}
 
 /** Start the periodic streak evaluator and run once on boot to recover. */
 export async function startStreakLoop(): Promise<void> {
   if (streakTimer) return;
-  try {
-    await evaluateStreaks();
-  } catch (e) {
-    logger.error({ err: e }, "[streaks] boot evaluate failed");
-  }
+  await runStreakPass("boot");
   streakTimer = setInterval(() => {
-    void evaluateStreaks();
+    void runStreakPass("scheduled");
   }, STREAK_INTERVAL_MS);
   streakTimer.unref?.();
 }

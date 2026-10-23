@@ -8,7 +8,13 @@ import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { verifyStepUp } from "../lib/stepUp";
-import { getReferralOverview, withdrawReferralEarnings, setReferralCode } from "../lib/referrals";
+import {
+  getReferralOverview,
+  withdrawReferralEarnings,
+  setReferralCode,
+  referralRewardsEnabled,
+  REWARDS_PAUSED_MSG,
+} from "../lib/referrals";
 
 const router: IRouter = Router();
 
@@ -27,6 +33,12 @@ router.post(
   requireJsonAndAllowedOrigin,
   requireAuth,
   async (req, res): Promise<void> => {
+    // Rewards off: refuse before asking for step-up, so nobody re-enters a
+    // password for a withdrawal that can't happen.
+    if (!referralRewardsEnabled()) {
+      res.status(403).json({ error: REWARDS_PAUSED_MSG });
+      return;
+    }
     const user = (req as AuthRequest).user;
     const parsed = WithdrawReferralEarningsBody.safeParse(req.body);
     if (!parsed.success) {

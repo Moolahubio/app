@@ -9,7 +9,7 @@ import {
   useLoginPasskeyVerify,
   getGetMeQueryKey,
 } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -51,7 +51,7 @@ export function PasskeySignIn({
       if (err instanceof Error && err.name === "NotAllowedError") {
         setPasskeyError(t("passkey.cancelled"));
       } else {
-        setPasskeyError(apiErrorMessage(err) ?? t("passkey.error"));
+        setPasskeyError(toUserError(err, t("passkey.error")));
       }
     }
   };

@@ -6,11 +6,8 @@
     "totalBalance": "Salio jumla",
     "available": "Inayopatikana",
     "inSavings": "Katika akiba",
-    "apy": "+{{apy}}% APY",
     "addMoney": "Ongeza pesa",
-    "withdraw": "Toa",
-    "growthLabel": "Ukuaji · miezi 6",
-    "earned": "{{amount}} imepatikana"
+    "withdraw": "Toa pesa"
   },
   "reminders": {
     "title": "Linalofuata",
@@ -31,12 +28,12 @@
       "monthly": "Umeweka akiba mwezi huu, hongera"
     },
     "keepAlive": {
-      "daily": "Amana moja huendeleza mfululizo wako wa kila siku",
-      "weekly": "Amana moja huendeleza mfululizo wako wa kila wiki",
-      "biweekly": "Amana moja huendeleza mfululizo wako wa kila wiki mbili",
-      "monthly": "Amana moja huendeleza mfululizo wako wa kila mwezi"
+      "daily": "Akiba moja huendeleza mfululizo wako wa kila siku",
+      "weekly": "Akiba moja huendeleza mfululizo wako wa kila wiki",
+      "biweekly": "Akiba moja huendeleza mfululizo wako wa kila wiki mbili",
+      "monthly": "Akiba moja huendeleza mfululizo wako wa kila mwezi"
     },
-    "firstFlame": "Weka amana ili kuwasha mwali wako wa kwanza"
+    "firstFlame": "Weka akiba mara moja ili kuwasha mwali wako wa kwanza"
   },
   "savings": {
     "title": "Akiba binafsi",
@@ -57,8 +54,8 @@
   },
   "learn": {
     "title": "Endelea kujifunza",
-    "lessonTitle": "Blockchain, imefafanuliwa kwa urahisi",
-    "lessonMeta": "dakika 5 · Anayeanza",
+    "lessonTitle": "Malengo ya akiba yanayodumu kweli",
+    "lessonMeta": "dakika 6 · Anayeanza",
     "startLesson": "Anza somo"
   },
   "transactions": {

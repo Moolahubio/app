@@ -19,7 +19,7 @@
   "tiers": {
     "everything": {
       "label": "Kome",
-      "description": "Dukan sanarwoyi: ayyukan da'ira, matakan buri, ajiyar kuɗi, tunatarwa, da shawarwari."
+      "description": "Dukan sanarwoyi: ayyukan da'ira, matakan buri, kuɗin da aka ƙara, tunatarwa, da shawarwari."
     },
     "essential": {
       "label": "Mahimmanci",
@@ -37,7 +37,7 @@
   "categories": {
     "money": {
       "label": "Kuɗi da ma'amaloli",
-      "description": "Ajiya, cirewa, biyan kuɗi, da tunatarwar gudummawa."
+      "description": "Kuɗin da aka ƙara da aka aika, biyan kuɗi, da tunatarwar biya."
     },
     "social": {
       "label": "Tanadin ƙungiya da zamantakewa",

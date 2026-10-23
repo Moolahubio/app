@@ -12,8 +12,8 @@
       "detail": "Name, username, date wey you born"
     },
     "wallets": {
-      "label": "Wallets",
-      "detail": "Balance & address for Monad"
+      "label": "Balance",
+      "detail": "Add money and see wetin dey available"
     },
     "security": {
       "label": "Security",
@@ -28,8 +28,12 @@
       "detail": "Choose wetin go reach you"
     },
     "transactions": {
-      "label": "Transactions & yield",
-      "detail": "Ledger and money wey you don earn"
+      "label": "Transactions",
+      "detail": "Everything wey move"
+    },
+    "advanced": {
+      "label": "Advanced",
+      "detail": "Technical details"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "We dey upload picture…",
     "saveName": "Save name",
     "editName": "Edit name",
-    "wallet": {
-      "label": "Monad wallet · na you dey hold am",
-      "notProvisioned": "Never set up"
-    },
-    "stats": {
-      "yieldEarned": "Yield wey you don earn",
-      "yieldApy": "Yield APY"
-    },
     "errors": {
       "savePicture": "We no fit save your profile picture.",
       "uploadImage": "We no fit upload the image.",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "We no fit sign you out",
       "description": "Abeg try again."
+    },
+    "stats": {
+      "available": "Wey ready",
+      "inSavings": "For savings"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "Options"
+  },
+  "technical": {
+    "wallet": {
+      "label": "Monad wallet · na you dey hold am",
+      "notProvisioned": "Never set up"
+    }
+  },
+  "advanced": {
+    "title": "Advanced",
+    "description": "Extra options for people wey wan see how MoolaHub dey work.",
+    "technicalLabel": "Technical details",
+    "technicalDescription": "Show network names, account addresses, transaction IDs and links to public records. You no need am at all to use MoolaHub.",
+    "savedNote": "We save this choice for this device."
   }
 }

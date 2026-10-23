@@ -19,7 +19,7 @@
   "tiers": {
     "everything": {
       "label": "Kila kitu",
-      "description": "Arifa zote: shughuli za duara, hatua za malengo, amana, vikumbusho, na vidokezo."
+      "description": "Arifa zote: shughuli za duara, hatua za malengo, pesa zilizoongezwa, vikumbusho, na vidokezo."
     },
     "essential": {
       "label": "Muhimu",
@@ -37,7 +37,7 @@
   "categories": {
     "money": {
       "label": "Fedha na miamala",
-      "description": "Amana, utoaji, malipo, na vikumbusho vya michango."
+      "description": "Pesa zilizoongezwa na kutumwa, malipo, na vikumbusho vya malipo."
     },
     "social": {
       "label": "Akiba ya kikundi na kijamii",

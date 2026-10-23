@@ -16,7 +16,7 @@ import { getWalletForUser, requireWalletForUser, requireServerCustody } from "./
 import { getUserCircleEscrowAddresses } from "./circles";
 import { walletSpendableCents } from "./onchainBalances";
 import { notify } from "./notifications";
-import { formatMoney, truncateAddress } from "./money";
+import { formatMoney } from "./money";
 import { logger } from "./logger";
 
 /**
@@ -49,9 +49,9 @@ function isUniqueViolation(e: unknown): boolean {
  */
 export async function faucetDeposit(userId: string, amountCents: number) {
   const wallet = await getWalletForUser(userId);
-  if (!wallet) throw new AppError("Wallet not provisioned");
+  if (!wallet) throw new AppError("Your account isn't set up to add money yet.");
   if (amountCents <= 0 || amountCents > 1_000_00) {
-    throw new AppError("Enter an amount up to 1,000 test USDC.");
+    throw new AppError("Enter an amount up to $1,000 of test money.");
   }
   // When on-chain settlement is configured, the mint must actually land before
   // the credit is spendable, so we book the ledger 'pending' and settle via the
@@ -62,7 +62,7 @@ export async function faucetDeposit(userId: string, amountCents: number) {
   const txn = await db.transaction(async (tx) => {
     const t = await transfer({
       type: "deposit",
-      description: "Test USDC received (faucet)",
+      description: "Test money added",
       userId,
       fromKey: acct.external,
       toKey: acct.wallet(userId),
@@ -88,8 +88,8 @@ export async function faucetDeposit(userId: string, amountCents: number) {
   if (settle) kickReconciler();
   await notify(userId, {
     type: "deposit",
-    title: "USDC received",
-    body: `${formatMoney(amountCents)} was added to your wallet.`,
+    title: "Money added",
+    body: `${formatMoney(amountCents)} of test money was added to your balance.`,
     link: "/transactions",
   });
   return txn;
@@ -152,7 +152,7 @@ export async function syncDeposits(
     try {
       await transfer({
         type: "deposit",
-        description: `USDC deposit from ${truncateAddress(p.from, 4, 4)}`,
+        description: "Money added",
         userId,
         fromKey: acct.external,
         toKey: acct.wallet(userId),
@@ -171,8 +171,8 @@ export async function syncDeposits(
     }
     await notify(userId, {
       type: "deposit",
-      title: "USDC received",
-      body: `${formatMoney(p.amountCents)} was added to your wallet.`,
+      title: "Money added",
+      body: `${formatMoney(p.amountCents)} was added to your balance.`,
       link: "/transactions",
     });
     credited += 1;
@@ -184,7 +184,7 @@ export async function syncDeposits(
 /** Withdraw USDC on-chain to an external Monad address. */
 export async function withdrawToAddress(userId: string, amountCents: number, destination: string) {
   if (!isValidAddress(destination)) {
-    throw new AppError("Enter a valid Monad address (starts with 0x).");
+    throw new AppError("Check the destination and try again.");
   }
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
   // Server-signed withdrawal path (custodial wallets only). A non-custodial
@@ -194,20 +194,20 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
   // path (POST /wallet/withdraw/submitted) instead.
   const wallet = await requireServerCustody(
     userId,
-    "This wallet is non-custodial — withdrawals are signed on your device.",
+    "Cash outs for your account are confirmed on your device.",
   );
   // Gate on the spendable balance: on-chain (confirmed minus in-flight outflows)
   // when configured, else the ledger balance offline. On-chain USDC is the source
   // of truth for what can be spent whenever a chain is available.
   if ((await walletSpendableCents(userId, wallet.address)) < amountCents) {
-    throw new AppError("Insufficient available balance.");
+    throw new AppError("You don't have enough available for that.");
   }
   const settle = onchainEnabled();
 
   const txn = await db.transaction(async (tx) => {
     const t = await transfer({
       type: "withdrawal",
-      description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
+      description: "Cash out",
       userId,
       fromKey: acct.wallet(userId),
       toKey: acct.external,
@@ -236,8 +236,8 @@ export async function withdrawToAddress(userId: string, amountCents: number, des
     userId,
     {
       type: "withdrawal",
-      title: "Withdrawal sent",
-      body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
+      title: "Cash out sent",
+      body: `${formatMoney(amountCents)} left your balance. Transfers out can't be reversed.`,
       link: "/transactions",
     },
     { email: true },
@@ -266,18 +266,18 @@ export async function confirmClientWithdrawal(
 ): Promise<{ alreadyRecorded: boolean }> {
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
   if (!isValidAddress(destination)) {
-    throw new AppError("Enter a valid Monad address (starts with 0x).");
+    throw new AppError("Check the destination and try again.");
   }
   const wallet = await requireWalletForUser(userId);
   if (wallet.custody !== "privy") {
     // Server-custody wallets withdraw via the server-signed /wallet/withdraw
     // path; only non-custodial wallets confirm a client-signed send here.
-    throw new AppError("This wallet doesn't use client-signed withdrawals.");
+    throw new AppError("That isn't available for your account right now.");
   }
   if (destination.toLowerCase() === wallet.address.toLowerCase()) {
     // A self-transfer verifies on-chain (from===to===wallet) but moves nothing;
     // booking it would inflate the ledger/history with a phantom withdrawal.
-    throw new AppError("Enter a destination other than your own wallet.");
+    throw new AppError("Enter a destination other than your own account.");
   }
   // Reject internal platform addresses as destinations. A client could sign a raw
   // USDC transfer straight into the goal vault / a circle escrow / the factory /
@@ -294,7 +294,7 @@ export async function confirmClientWithdrawal(
       .map((a) => a.toLowerCase()),
   );
   if (internalAddresses.has(destination.toLowerCase())) {
-    throw new AppError("That destination isn't allowed. Enter an external wallet address.");
+    throw new AppError("That destination isn't allowed. Check it and try again.");
   }
 
   const verified = await verifyUsdcTransferReceipt({
@@ -308,13 +308,13 @@ export async function confirmClientWithdrawal(
       { userId, txHash, reason: verified.reason },
       "client withdrawal receipt verification failed",
     );
-    throw new AppError("We couldn't verify that withdrawal on-chain. Please try again.");
+    throw new AppError("We couldn't confirm that cash out yet. Please try again in a minute.");
   }
 
   try {
     await transfer({
       type: "withdrawal",
-      description: `USDC withdrawal to ${truncateAddress(destination, 4, 4)}`,
+      description: "Cash out",
       userId,
       fromKey: acct.wallet(userId),
       toKey: acct.external,
@@ -333,8 +333,8 @@ export async function confirmClientWithdrawal(
     userId,
     {
       type: "withdrawal",
-      title: "Withdrawal sent",
-      body: `${formatMoney(amountCents)} sent to ${truncateAddress(destination, 4, 4)}.`,
+      title: "Cash out sent",
+      body: `${formatMoney(amountCents)} left your balance. Transfers out can't be reversed.`,
       link: "/transactions",
     },
     { email: true },

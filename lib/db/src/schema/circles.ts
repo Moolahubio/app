@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, integer, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, integer, boolean, unique, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -20,7 +20,9 @@ export const circlesTable = pgTable("circles", {
   contractAddress: text("contract_address"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  byCreator: index("circles_created_by_id_idx").on(t.createdById),
+}));
 
 export const circleMembersTable = pgTable("circle_members", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -36,6 +38,7 @@ export const circleMembersTable = pgTable("circle_members", {
   uniqMember: unique().on(t.circleId, t.userId),
   uniqPosition: unique("circle_members_circle_id_position_unique").on(t.circleId, t.position),
   uniqPayoutRound: unique("circle_members_circle_id_payout_round_unique").on(t.circleId, t.payoutRound),
+  byUser: index("circle_members_user_id_idx").on(t.userId),
 }));
 
 export const circleInvitesTable = pgTable("circle_invites", {
@@ -48,6 +51,7 @@ export const circleInvitesTable = pgTable("circle_invites", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (t) => ({
   uniqInvite: unique().on(t.circleId, t.email),
+  byInviter: index("circle_invites_invited_by_id_idx").on(t.invitedById),
 }));
 
 export const contributionsTable = pgTable("contributions", {
@@ -61,6 +65,7 @@ export const contributionsTable = pgTable("contributions", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   uniqContribution: unique().on(t.circleId, t.userId, t.round),
+  byUser: index("contributions_user_id_idx").on(t.userId),
 }));
 
 export const insertCircleSchema = createInsertSchema(circlesTable).omit({ id: true, createdAt: true, updatedAt: true });

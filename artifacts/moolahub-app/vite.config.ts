@@ -26,6 +26,12 @@ if (!basePath) {
   );
 }
 
+// Source maps are only built when they can be uploaded to Sentry, as hidden
+// maps (no sourceMappingURL), and the plugin deletes them after the upload.
+// dist/public is served as-is, so the build script also fails if any .map
+// file is left behind. Without SENTRY_AUTH_TOKEN no maps exist at all.
+const uploadSourceMaps = Boolean(process.env.SENTRY_AUTH_TOKEN);
+
 export default defineConfig({
   base: basePath,
   define: {
@@ -54,6 +60,25 @@ export default defineConfig({
           ),
         ]
       : []),
+    // Must stay last.
+    ...(uploadSourceMaps
+      ? [
+          await import("@sentry/bundler-plugins/vite").then((m) =>
+            m.sentryVitePlugin({
+              org: process.env.SENTRY_ORG,
+              project: process.env.SENTRY_PROJECT_WEB,
+              authToken: process.env.SENTRY_AUTH_TOKEN,
+              release: { name: process.env.SENTRY_RELEASE || undefined },
+              telemetry: false,
+              sourcemaps: {
+                filesToDeleteAfterUpload: [
+                  path.resolve(import.meta.dirname, "dist/public/**/*.map"),
+                ],
+              },
+            }),
+          ),
+        ]
+      : []),
   ],
   resolve: {
     alias: {
@@ -69,6 +94,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    sourcemap: uploadSourceMaps ? "hidden" : false,
   },
   server: {
     port,

@@ -3,7 +3,7 @@ import { Trans, useTranslation } from "react-i18next";
 import { AlertCircle, KeyRound, ArrowLeft, Eye, EyeOff, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useForgotPassword, useResetPassword } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { authInputClass } from "./AuthShell";
 
 type Phase = "request" | "reset";
@@ -37,7 +37,7 @@ export function ForgotPasswordStep({
       await forgot.mutateAsync({ data: { email: email.trim() } });
       setPhase("reset");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("forgot.genericError"));
+      setError(toUserError(err, t("forgot.genericError")));
     }
   };
 
@@ -48,7 +48,7 @@ export function ForgotPasswordStep({
       await forgot.mutateAsync({ data: { email: email.trim() } });
       setResent(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("resend.error"));
+      setError(toUserError(err, t("resend.error")));
     }
   };
 
@@ -61,7 +61,7 @@ export function ForgotPasswordStep({
       });
       onDone(email.trim());
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("forgot.codeError"));
+      setError(toUserError(err, t("forgot.codeError")));
     }
   };
 

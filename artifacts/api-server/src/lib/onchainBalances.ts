@@ -43,7 +43,7 @@ const WALLET_OUT_KINDS = [
 ] as const;
 
 const BALANCE_UNAVAILABLE_MSG =
-  "We couldn't verify your on-chain balance right now. Please try again in a moment.";
+  "We couldn't check your latest balance right now. Please try again in a moment.";
 
 /** Matches `goal:<goalId>` and `goal:<goalId>:<feeTxnId>` settlement memos. */
 function goalMemoFilter(goalId: string) {

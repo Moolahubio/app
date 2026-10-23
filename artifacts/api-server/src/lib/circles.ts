@@ -27,12 +27,15 @@ import { walletSpendableCents } from "./onchainBalances";
 import { recordSave } from "./streaks";
 import { sendEmail, brandedEmail, appUrl } from "./email";
 import { notify, notifyMany } from "./notifications";
-import { formatMoney } from "./money";
+import { formatMoney, parseBps } from "./money";
 import { isUniqueViolation } from "./dbErrors";
 import { logger } from "./logger";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
-const FEE_BPS = Number(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS) || 200;
+// An explicit 0 means no fee; only an unset value falls back to 2%.
+const FEE_BPS = parseBps(process.env.CIRCLE_FEE_BPS ?? process.env.FEE_BPS, 200, (raw) =>
+  logger.warn({ raw }, "[circles] invalid CIRCLE_FEE_BPS; using the 200 bps default"),
+);
 /** Must match MAX_MEMBERS in MoolaHubSusuEscrow.sol. Bounding roster size prevents
  *  the stall-recovery loops (cancelStalled → _accrueRefunds + _flagDelinquents)
  *  from exceeding block gas, which would permanently lock member contributions. */
@@ -333,7 +336,7 @@ export async function contribute(userId: string, circleId: string) {
   // contribute to ledger-only accumulation circles without a wallet) are unaffected.
   const custodyWallet = await getWalletForUser(userId);
   if (custodyWallet && custodyWallet.custody !== "server") {
-    throw new AppError("Savings groups aren't available for non-custodial wallets yet.");
+    throw new AppError("Group savings aren't available for your account yet.");
   }
 
   // On-chain settlement routes a rotation contribution into the circle's own
@@ -355,7 +358,7 @@ export async function contribute(userId: string, circleId: string) {
   const wantsOnchain = onchainEnabled();
   if (wantsOnchain && !isAccumulation && !circle.contractAddress) {
     throw new AppError(
-      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+      "This circle isn't ready to take payments yet. Please try again shortly.",
     );
   }
   const escrow = wantsOnchain && !isAccumulation ? circle.contractAddress : null;
@@ -364,7 +367,7 @@ export async function contribute(userId: string, circleId: string) {
     // Fail closed: on-chain is configured but there's no platform-custody
     // address to receive the contribution, so it could never actually settle.
     throw new AppError(
-      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+      "This circle isn't ready to take payments yet. Please try again shortly.",
     );
   }
   const settlesOnchain = Boolean(escrow || accumulationDest);
@@ -520,27 +523,27 @@ export async function confirmClientContribute(
   if (wallet.custody !== "privy") {
     // Server-custody members contribute via the server-signed contribute() path;
     // only non-custodial wallets confirm a client-signed contribution here.
-    throw new AppError("This wallet doesn't use client-signed contributions.");
+    throw new AppError("That isn't available for your account right now.");
   }
 
   // Non-custodial contributions must settle on-chain — mirror contribute()'s
   // routing: rotation → the circle's escrow; accumulation → platform-custody.
   if (!onchainEnabled()) {
     throw new AppError(
-      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+      "This circle isn't ready to take payments yet. Please try again shortly.",
     );
   }
   const isAccumulation = circle.type === "accumulation";
   const escrow = !isAccumulation ? circle.contractAddress : null;
   if (!isAccumulation && !escrow) {
     throw new AppError(
-      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+      "This circle isn't ready to take payments yet. Please try again shortly.",
     );
   }
   const accumulationDest = isAccumulation ? platformAddress() : null;
   if (isAccumulation && !accumulationDest) {
     throw new AppError(
-      "This savings group isn't ready for on-chain contributions yet. Please try again shortly.",
+      "This circle isn't ready to take payments yet. Please try again shortly.",
     );
   }
 
@@ -560,7 +563,7 @@ export async function confirmClientContribute(
         { userId, circleId, round, txHash, reason: verified.reason },
         "client circle contribution receipt verification failed",
       );
-      throw new AppError("We couldn't verify that contribution on-chain. Please try again.");
+      throw new AppError("We couldn't confirm that payment yet. Please try again in a minute.");
     }
     settledRound = verified.settledRound;
   } else if (accumulationDest) {
@@ -575,7 +578,7 @@ export async function confirmClientContribute(
         { userId, circleId, round, txHash, reason: verified.reason },
         "client accumulation contribution receipt verification failed",
       );
-      throw new AppError("We couldn't verify that contribution on-chain. Please try again.");
+      throw new AppError("We couldn't confirm that payment yet. Please try again in a minute.");
     }
   }
 

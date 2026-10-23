@@ -19,7 +19,6 @@ export interface DashboardSummary {
   /** True when an on-chain balance read failed, so displayed figures may be understated. */
   balanceUnavailable?: boolean;
   circlePotCents: number;
-  yieldApy: number;
   recentActivity: ActivityItem[];
   activeGoals: Goal[];
   activeCircles: CircleSummary[];

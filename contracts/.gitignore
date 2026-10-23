@@ -4,3 +4,7 @@ lib/
 broadcast/
 .env
 *.log
+
+# Rehearsal output written by the fork tests (spec §5 ceremony dry runs); real manifests live in
+# deployments/base-mainnet/ and deployments/base-sepolia/ and are committed.
+deployments/rehearsal/

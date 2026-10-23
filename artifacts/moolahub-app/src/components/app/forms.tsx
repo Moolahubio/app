@@ -3,6 +3,16 @@ import { useTranslation } from "react-i18next";
 import { CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { Button } from "@/components/ui";
 import { formatMoney, cn } from "@/lib/utils";
+import { parseAmountToCents, centsToAmountInput } from "@/lib/amount";
+
+/** "$" shown before every amount input: users type dollars, never a token amount. */
+function DollarPrefix() {
+  return (
+    <span dir="ltr" className="me-1 text-lg font-semibold text-muted-foreground" aria-hidden>
+      $
+    </span>
+  );
+}
 
 /** Copy text to the clipboard with a brief confirmation. */
 export function CopyButton({ value, className }: { value: string; className?: string }) {
@@ -51,27 +61,39 @@ export function AmountForm({
 }) {
   const { t } = useTranslation();
   const [value, setValue] = useState("");
+  const [invalid, setInvalid] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!value) return;
-    void onSubmit(Math.floor(parseFloat(value) * 100));
+    // String-based parse: "0.29" is 29¢, never 28¢ from float math.
+    const cents = parseAmountToCents(value);
+    if (cents === null || cents <= 0) {
+      setInvalid(true);
+      return;
+    }
+    setInvalid(false);
+    void onSubmit(cents);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="flex items-center rounded-2xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+      <div dir="ltr" className="flex items-center rounded-2xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+        <DollarPrefix />
         <input
           name="amount"
           inputMode="decimal"
           autoComplete="off"
           placeholder="0.00"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setInvalid(false);
+          }}
+          aria-invalid={invalid || undefined}
           className="h-12 w-full bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
           required
         />
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">USDC</span>
       </div>
 
       {presets && (
@@ -80,7 +102,10 @@ export function AmountForm({
             <button
               key={p}
               type="button"
-              onClick={() => setValue((p / 100).toString())}
+              onClick={() => {
+                setValue(centsToAmountInput(p));
+                setInvalid(false);
+              }}
               className="cursor-pointer rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground transition-[color,border-color,transform] duration-150 hover:border-jade-500/40 hover:text-jade-700 dark:hover:text-jade-300 active:scale-[0.98] focus-ring"
             >
               <span dir="ltr">+{formatMoney(p, { compact: true })}</span>
@@ -89,9 +114,9 @@ export function AmountForm({
         </div>
       )}
 
-      {error && (
-        <p className="flex items-center gap-1.5 text-sm text-red-600">
-          <AlertCircle className="h-4 w-4" /> {error}
+      {(invalid || error) && (
+        <p className="flex items-center gap-1.5 text-sm text-red-600" role="alert">
+          <AlertCircle className="h-4 w-4" /> {invalid ? t("forms.invalidAmount") : error}
         </p>
       )}
       {ok && (
@@ -107,6 +132,10 @@ export function AmountForm({
   );
 }
 
+/**
+ * Send to an outside account address. Technical details only: the default
+ * views have no address entry (spec §1), so this renders behind the toggle.
+ */
 export function WithdrawForm({
   onSubmit,
   pending = false,
@@ -121,11 +150,18 @@ export function WithdrawForm({
   const { t } = useTranslation();
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("");
+  const [invalid, setInvalid] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount || !destination) return;
-    void onSubmit({ destination, amountCents: Math.floor(parseFloat(amount) * 100) });
+    const amountCents = parseAmountToCents(amount);
+    if (amountCents === null || amountCents <= 0) {
+      setInvalid(true);
+      return;
+    }
+    setInvalid(false);
+    void onSubmit({ destination: destination.trim(), amountCents });
   };
 
   return (
@@ -135,13 +171,14 @@ export function WithdrawForm({
         type="text"
         autoComplete="off"
         spellCheck={false}
-        placeholder={t("forms.recipientPlaceholder")}
+        placeholder={t("technical.send.recipientPlaceholder")}
         required
         value={destination}
         onChange={e => setDestination(e.target.value)}
         className="h-12 w-full rounded-2xl border border-border bg-card px-4 font-mono text-sm text-foreground outline-none focus:ring-2 focus:ring-jade-500/40"
       />
-      <div className="flex items-center rounded-2xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+      <div dir="ltr" className="flex items-center rounded-2xl border border-border bg-card px-4 focus-within:ring-2 focus-within:ring-jade-500/40">
+        <DollarPrefix />
         <input
           name="amount"
           inputMode="decimal"
@@ -149,14 +186,18 @@ export function WithdrawForm({
           placeholder="0.00"
           required
           value={amount}
-          onChange={e => setAmount(e.target.value)}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            setInvalid(false);
+          }}
+          aria-invalid={invalid || undefined}
           className="h-12 w-full bg-transparent text-lg font-semibold text-foreground outline-none placeholder:text-muted-foreground"
         />
-        <span className="font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">USDC</span>
       </div>
-      {error && (
-        <p className="flex items-center gap-1.5 text-sm text-red-600">
-          <AlertCircle className="h-4 w-4" /> {error}
+      <p className="text-xs text-muted-foreground">{t("legal.transfersOut")}</p>
+      {(invalid || error) && (
+        <p className="flex items-center gap-1.5 text-sm text-red-600" role="alert">
+          <AlertCircle className="h-4 w-4" /> {invalid ? t("forms.invalidAmount") : error}
         </p>
       )}
       {ok && (
@@ -165,7 +206,7 @@ export function WithdrawForm({
         </p>
       )}
       <Button type="submit" variant="secondary" disabled={pending || !amount || !destination} className="w-full">
-        {pending ? t("forms.sending") : t("forms.withdrawUsdc")}
+        {pending ? t("forms.sending") : t("technical.send.submit")}
       </Button>
     </form>
   );

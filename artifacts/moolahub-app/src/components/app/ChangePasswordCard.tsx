@@ -12,7 +12,7 @@ import {
   getGetTwoFactorStatusQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 
 const inputClass =
   "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-jade-500/60 focus-ring";
@@ -81,7 +81,7 @@ export function ChangePasswordCard() {
       resetForm();
       setDone(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("changePassword.errors.update"));
+      setError(toUserError(err, t("changePassword.errors.update")));
     }
   };
 
@@ -94,7 +94,7 @@ export function ChangePasswordCard() {
       await forgotPassword.mutateAsync({ data: { email: user.email } });
       setEmailPhase("code");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("changePassword.errors.sendCode"));
+      setError(toUserError(err, t("changePassword.errors.sendCode")));
     }
   };
 
@@ -113,7 +113,7 @@ export function ChangePasswordCard() {
       queryClient.setQueryData(getGetMeQueryKey(), null);
       queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== getGetMeQueryKey()[0] });
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("changePassword.errors.invalidCode"));
+      setError(toUserError(err, t("changePassword.errors.invalidCode")));
     }
   };
 

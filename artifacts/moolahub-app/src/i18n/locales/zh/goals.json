@@ -2,7 +2,7 @@
   "list": {
     "loading": "正在加载你的个人储蓄…",
     "title": "你的个人储蓄",
-    "description": "设定目标金额和日期，我们会为你追踪进度。每个目标都是你唯一钱包中的一个存钱罐，而不是独立账户。",
+    "description": "设定目标金额和日期，我们会为你追踪进度。每个目标都是你余额中的一个存钱罐，而不是独立账户。",
     "newGoal": "新建目标",
     "createGoal": "创建目标"
   },
@@ -30,14 +30,14 @@
       "placeholder": "例如 应急基金"
     },
     "target": {
-      "label": "目标金额（USDC）"
+      "label": "目标金额"
     },
     "deadline": {
       "label": "目标日期"
     },
     "frequency": {
-      "label": "存款频率",
-      "hint": "存款从小额开始以养成习惯，并逐步增加，直到达成你的目标。"
+      "label": "储蓄频率",
+      "hint": "储蓄金额从小额开始以养成习惯，并逐步增加，直到达成你的目标。"
     },
     "plan": {
       "eyebrow": "你的储蓄计划",
@@ -71,20 +71,19 @@
     "loading": "正在加载目标…",
     "notFound": "我们找不到该目标。",
     "savedLabel": "已储蓄",
-    "savedOfTarget": "<0></0> / <1></1>",
-    "onChain": "链上"
+    "savedOfTarget": "<0></0> / <1></1>"
   },
   "deposit": {
-    "title": "充值",
+    "title": "转入目标",
     "description": "将资金从你的可用余额转入此分配。",
-    "descriptionOnchain": "将资金从你的可用余额转入此目标的链上金库。存款免费。",
-    "addFunds": "添加资金",
+    "descriptionOnchain": "将可用余额转入此目标，不收取费用。",
+    "addFunds": "转入目标",
     "success": "资金已添加至目标"
   },
   "withdraw": {
-    "title": "提现",
-    "feeNote": "链上收取 {{fee}}% 的提现手续费。你将收到扣除手续费后的金额。",
-    "submit": "提现至可用余额",
+    "title": "转回余额",
+    "feeNote": "从此目标转出资金时收取 {{fee}}% 的费用，你将收到扣除费用后的金额。",
+    "submit": "转回余额",
     "released": "已释放 {{amount}} 至可用余额",
     "releasedWithFee": "已释放 {{amount}}（扣除 {{fee}} 手续费后）"
   },
@@ -93,11 +92,11 @@
     "targetDate": "目标日期"
   },
   "plan": {
-    "title": "存款计划",
+    "title": "储蓄计划",
     "subtitle": "{{cadence}} · 逐步增加",
     "step": "第 {{current}}/{{total}} 步",
     "complete": "已完成",
-    "nextContribution": "下一笔存款",
+    "nextContribution": "下一笔储蓄",
     "thisCadence": {
       "daily": "今天",
       "weekly": "本周",
@@ -105,14 +104,10 @@
     },
     "allDone": "你已完成计划的每一步。🎉",
     "keepGoing": {
-      "daily": "继续每日坚持。还剩约 <0>{{count}} 天</0> 的存款即可达成你的目标。",
-      "weekly": "继续每周坚持。还剩约 <0>{{count}} 周</0> 的存款即可达成你的目标。",
-      "monthly": "继续每月坚持。还剩约 <0>{{count}} 个月</0> 的存款即可达成你的目标。"
+      "daily": "继续每日坚持。还剩约 <0>{{count}} 天</0> 的储蓄即可达成你的目标。",
+      "weekly": "继续每周坚持。还剩约 <0>{{count}} 周</0> 的储蓄即可达成你的目标。",
+      "monthly": "继续每月坚持。还剩约 <0>{{count}} 个月</0> 的储蓄即可达成你的目标。"
     }
-  },
-  "vault": {
-    "title": "链上金库",
-    "description": "你分配的资金会存入 Monad 上的此金库。每次提现收取 {{fee}}% 的协议费。"
   },
   "activity": {
     "title": "活动",
@@ -122,9 +117,9 @@
     },
     "status": {
       "none": "无",
-      "pending": "处理中",
-      "confirmed": "已确认",
-      "failed": "已失败"
+      "pending": "处理中…",
+      "confirmed": "已完成",
+      "failed": "未成功"
     }
   },
   "delete": {
@@ -137,25 +132,32 @@
   },
   "toast": {
     "streakTitle": "连续记录已延续 🔥",
-    "streakDescription": "太好了，这笔存款计入你的储蓄连续记录。"
+    "streakDescription": "太好了，这计入你的储蓄连续记录。"
   },
   "privy": {
-    "loadingWallet": "正在加载你的钱包…",
+    "loadingWallet": "正在准备…",
     "connect": {
       "deposit": {
-        "prompt": "你的钱包由你自行托管。连接钱包以亲自签署此存款。",
-        "button": "连接钱包以存款"
+        "prompt": "确认是你本人以将资金转入此目标。",
+        "button": "继续"
       },
       "withdrawal": {
-        "prompt": "你的钱包由你自行托管。连接钱包以亲自签署此提现。",
-        "button": "连接钱包以提现"
+        "prompt": "确认是你本人以从此目标转出资金。",
+        "button": "继续"
       }
     },
     "errors": {
-      "unavailable": "此部署不支持链上目标储蓄。",
+      "unavailable": "目前无法向目标转入资金。",
       "invalidAmount": "请输入有效金额。",
-      "depositFailed": "存款失败。请重试。",
-      "withdrawalFailed": "提现失败。请重试。"
+      "depositFailed": "操作未成功，请重试。",
+      "withdrawalFailed": "操作未成功，请重试。"
+    }
+  },
+  "technical": {
+    "badge": "链上",
+    "vault": {
+      "title": "链上金库",
+      "description": "你分配的资金会存入 Monad 上的此金库。每次提现收取 {{fee}}% 的协议费。"
     }
   }
 }

@@ -64,6 +64,7 @@ export const referralEarningsTable = pgTable("referral_earnings", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   byReferrer: index("referral_earnings_referrer_idx").on(t.referrerId),
+  byReferee: index("referral_earnings_referee_idx").on(t.refereeId),
 }));
 
 /**
@@ -81,6 +82,7 @@ export const referralWithdrawalsTable = pgTable("referral_withdrawals", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   byUserPeriod: index("referral_withdrawals_user_period_idx").on(t.userId, t.period),
+  byTransaction: index("referral_withdrawals_transaction_idx").on(t.transactionId),
 }));
 
 export const insertReferralCodeSchema = createInsertSchema(referralCodesTable).omit({ id: true, createdAt: true });

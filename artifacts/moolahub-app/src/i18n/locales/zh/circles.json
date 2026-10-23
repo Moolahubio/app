@@ -2,11 +2,11 @@
   "list": {
     "loading": "正在加载你的团体储蓄…",
     "title": "你的团体储蓄",
-    "description": "与你信任的人一起进行轮转储蓄。每一轮都由链上合约托管，而非个人。",
+    "description": "与你信任的人一起进行轮转储蓄。每个互助圈在你加入前都会展示其规则、费用和领取顺序。",
     "emptyHint": "邀请亲友并设定你的缴款金额"
   },
   "info": {
-    "susu": "<b>Susu 的运作方式：</b>每一轮每人缴纳固定金额。在<em>轮转</em>圈中，每一轮由一名成员领取全部资金池，直到每个人都轮到为止。在<em>累积</em>圈中，所有人存入一个共享资金池，最后各自取回自己的储蓄。一切都可在 Monad 上验证。"
+    "susu": "<b>Susu 的运作方式：</b>每一轮每人缴纳固定金额。在<em>轮转</em>圈中，每一轮由一名成员领取资金池，直到每个人都轮到为止。在<em>累积</em>圈中，所有人存入一个共享资金池，最后各自取回自己的储蓄。"
   },
   "frequency": {
     "weekly": "每周",
@@ -35,7 +35,7 @@
       "label": "储蓄圈类型",
       "rotation": {
         "title": "轮转",
-        "description": "轮流领取。每一轮每人缴款，由一名成员领取全部资金池，直到每个人都轮到为止。"
+        "description": "轮流领取。每一轮每人缴款，由一名成员领取资金池，直到每个人都轮到为止。"
       },
       "accumulation": {
         "title": "累积",
@@ -43,14 +43,14 @@
       }
     },
     "targetPayout": {
-      "label": "每人目标领取金额（USDC）",
+      "label": "每人目标领取金额",
       "hint": "轮到某成员时其领取的金额。"
     },
     "groupSize": {
       "label": "人数（包括你在内）"
     },
     "contribution": {
-      "label": "每轮缴款（USDC）"
+      "label": "每轮缴款"
     },
     "numRounds": {
       "label": "轮数"
@@ -96,7 +96,6 @@
   "detail": {
     "loading": "正在加载储蓄圈…",
     "notFound": "我们找不到该储蓄圈。",
-    "onChain": "链上",
     "formingSuffix": "组建中",
     "submitting": "正在提交…",
     "contribute": "缴款 {{amount}}",
@@ -126,8 +125,8 @@
     "schedule": {
       "membersTitle": "成员",
       "payoutTitle": "领取时间表",
-      "descAccumulation": "所有人存入一个共享资金池。经过 {{count}} 轮后，每名成员取回各自的储蓄，并在链上锁定。",
-      "descRotation": "轮转顺序已在链上锁定，因此每个人都知道谁在何时领取资金池。",
+      "descAccumulation": "所有人存入同一个共享资金池。{{count}} 轮后，每位成员取回自己的储蓄。",
+      "descRotation": "互助圈开始时即确定领取顺序，因此每个人都知道谁在何时领取资金池。",
       "you": "（你）",
       "savingsReturned": "储蓄已返还",
       "saving": "储蓄中",
@@ -139,10 +138,6 @@
       "title": "轮次进度",
       "roundsOf": "{{current}}/{{total}} 轮"
     },
-    "escrow": {
-      "title": "链上托管",
-      "description": "缴款结算至 Monad 上的这个 Susu 托管账户。每次领取会收取 {{fee}}% 的协议费。"
-    },
     "history": {
       "title": "你的缴款记录",
       "round": "第 {{round}} 轮"
@@ -153,11 +148,18 @@
     }
   },
   "privy": {
-    "loadingWallet": "正在加载你的钱包…",
-    "selfCustody": "你的钱包由你自行托管。连接钱包以自行签署此次缴款。",
-    "connect": "连接钱包以缴款",
-    "notAvailable": "此部署环境不支持链上缴款。",
-    "failed": "缴款失败。请重试。",
+    "loadingWallet": "正在准备…",
+    "selfCustody": "确认是你本人以缴款。",
+    "connect": "继续",
+    "notAvailable": "目前无法缴款，请稍后再试。",
+    "failed": "操作未成功，请重试。",
     "submitting": "正在提交…"
+  },
+  "technical": {
+    "badge": "链上",
+    "escrow": {
+      "title": "链上托管",
+      "description": "缴款结算至 Monad 上的这个 Susu 托管账户。每次领取会收取 {{fee}}% 的协议费。"
+    }
   }
 }

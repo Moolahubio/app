@@ -12,6 +12,8 @@ import type { ReferralWithdrawalLimits } from './referralWithdrawalLimits';
 export interface ReferralOverview {
   code: string;
   link: string;
+  /** False while currency referral rewards are off (REFERRAL_REWARDS_ENABLED); the app then shows only the invite link. */
+  rewardsEnabled: boolean;
   tier: ReferralTierInfo;
   activeReferrals: number;
   totalReferred: number;

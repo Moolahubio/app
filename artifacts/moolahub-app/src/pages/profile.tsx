@@ -14,11 +14,12 @@ import {
   Flame,
   Languages,
   Gift,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Card, Avatar, Eyebrow } from "@/components/ui";
-import { PageHeader, Money, Addr } from "@/components/app/bits";
+import { PageHeader, Money, Addr, BalanceFooter, LoadError } from "@/components/app/bits";
 import { CopyButton } from "@/components/app/forms";
 import { ManageAccountCard } from "@/components/app/ManageAccountCard";
 import {
@@ -30,9 +31,10 @@ import {
   getGetProfileQueryKey,
 } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
-import { avatarSrc, apiErrorMessage } from "@/lib/utils";
+import { avatarSrc, toUserError } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
 
 type Item = {
   icon: typeof WalletIcon;
@@ -81,8 +83,14 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export default function ProfilePage() {
   const { t } = useTranslation("account");
-  const { data: user, isLoading: isUserLoading } = useGetMe();
-  const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
+  const [technical] = useTechnicalDetails();
+  const { data: user, isLoading: isUserLoading, refetch: refetchUser } = useGetMe();
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    refetch: refetchSummary,
+  } = useGetDashboardSummary();
   const logoutMutation = useLogout();
   const updateProfile = useUpdateProfile();
   const queryClient = useQueryClient();
@@ -105,7 +113,7 @@ export default function ProfilePage() {
         await updateProfile.mutateAsync({ data: { avatarUrl: res.objectPath } });
         await invalidateUser();
       } catch (err) {
-        setProfileError(apiErrorMessage(err) ?? t("profile.errors.savePicture"));
+        setProfileError(toUserError(err, t("profile.errors.savePicture")));
       }
     },
     onError: () => setProfileError(t("profile.errors.uploadImage")),
@@ -113,9 +121,15 @@ export default function ProfilePage() {
 
   if (isUserLoading || isSummaryLoading)
     return <div className="p-8 text-center text-muted-foreground">{t("profile.loading")}</div>;
-  if (!user || !summary) return null;
+  if (!user) {
+    return (
+      <Card className="mx-auto max-w-2xl">
+        <LoadError onRetry={() => void refetchUser()} />
+      </Card>
+    );
+  }
 
-  const address = user.walletAddress ?? t("profile.wallet.notProvisioned");
+  const address = user.walletAddress ?? t("technical.wallet.notProvisioned");
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -146,14 +160,14 @@ export default function ProfilePage() {
       await invalidateUser();
       setEditingName(false);
     } catch (err) {
-      setProfileError(apiErrorMessage(err) ?? t("profile.errors.updateName"));
+      setProfileError(toUserError(err, t("profile.errors.updateName")));
     }
   };
 
   const accountItems: Item[] = [
     { icon: UserCircle, label: t("menu.profileInformation.label"), detail: t("menu.profileInformation.detail"), href: "/profile/information" },
     { icon: WalletIcon, label: t("menu.wallets.label"), detail: t("menu.wallets.detail"), href: "/wallet" },
-    { icon: Gift, label: t("referrals:title"), detail: t("referrals:description"), href: "/referrals" },
+    { icon: Gift, label: t("referrals:invite.title"), detail: t("referrals:invite.description"), href: "/referrals" },
   ];
 
   const settingsItems: Item[] = [
@@ -162,6 +176,7 @@ export default function ProfilePage() {
     { icon: Languages, label: t("common:language.title"), detail: t("common:language.detail"), href: "/profile/language" },
     { icon: Bell, label: t("menu.notifications.label"), detail: t("menu.notifications.detail"), href: "/profile/notifications" },
     { icon: Receipt, label: t("menu.transactions.label"), detail: t("menu.transactions.detail"), href: "/transactions" },
+    { icon: SlidersHorizontal, label: t("menu.advanced.label"), detail: t("menu.advanced.detail"), href: "/profile/advanced" },
   ];
 
   return (
@@ -251,43 +266,54 @@ export default function ProfilePage() {
           </p>
         )}
 
-        <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex items-center gap-2">
-            <WalletIcon className="h-4 w-4 text-jade-400" />
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
-              {t("profile.wallet.label")}
-            </p>
+        {technical && (
+          <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="flex items-center gap-2">
+              <WalletIcon className="h-4 w-4 text-jade-400" />
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/60">
+                {t("technical.wallet.label")}
+              </p>
+            </div>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <Addr address={address} lead={8} tail={8} className="truncate text-sm text-white/80" />
+              {user.walletAddress && <CopyButton value={address} />}
+            </div>
           </div>
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <Addr address={address} lead={8} tail={8} className="truncate text-sm text-white/80" />
-            {user.walletAddress && <CopyButton value={address} />}
-          </div>
-        </div>
+        )}
       </Card>
 
-      {/* balance snapshot */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("common:labels.balance")}</p>
-          <p className="mt-1 font-display text-2xl font-bold text-foreground">
-            <Money cents={summary.totalCents} />
-          </p>
+      {/* balance snapshot: real ledger figures only, never projected earnings */}
+      {summary ? (
+        <div className="space-y-2">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card className="p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("common:labels.balance")}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-foreground">
+                <Money cents={summary.totalCents} />
+              </p>
+            </Card>
+            <Card className="p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                {t("profile.stats.available")}
+              </p>
+              <p className="mt-1 font-display text-2xl font-bold text-foreground">
+                <Money cents={summary.availableCents} />
+              </p>
+            </Card>
+            <Card className="p-5">
+              <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("profile.stats.inSavings")}</p>
+              <p className="mt-1 font-display text-2xl font-bold text-foreground">
+                <Money cents={summary.goalTotalCents} />
+              </p>
+            </Card>
+          </div>
+          <BalanceFooter className="px-1" />
+        </div>
+      ) : isSummaryError ? (
+        <Card>
+          <LoadError onRetry={() => void refetchSummary()} />
         </Card>
-        <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
-            {t("profile.stats.yieldEarned")}
-          </p>
-          <p className="mt-1 font-display text-2xl font-bold text-jade-600 dark:text-jade-400">
-            <Money cents={Math.floor(summary.totalCents * 0.041)} />
-          </p>
-        </Card>
-        <Card className="p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{t("profile.stats.yieldApy")}</p>
-          <p className="mt-1 font-display text-2xl font-bold text-foreground">
-            {(summary.yieldApy * 100).toFixed(1)}%
-          </p>
-        </Card>
-      </div>
+      ) : null}
 
       {/* account */}
       <div className="space-y-2">

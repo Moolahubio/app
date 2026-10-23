@@ -2,7 +2,7 @@
   "loading": "جارٍ تحميل المعاملات…",
   "header": {
     "title": "أموالك، موثّقة بالكامل",
-    "description": "كل إيداع ومساهمة ودفعة. كل واحدة مرتبطة بإثباتها على شبكة Monad."
+    "description": "كل ما أضفته ودفعته ونقلته واستلمته، في مكان واحد."
   },
   "reminders": {
     "title": "تذكيرات قادمة",
@@ -12,17 +12,21 @@
     "title": "سجل المعاملات",
     "empty": "لا توجد معاملات بعد."
   },
-  "onchain": {
-    "settling": "قيد التسوية على السلسلة…",
-    "offchain": "خارج السلسلة"
-  },
   "types": {
-    "deposit": "إيداع",
+    "deposit": "أموال مضافة",
     "payout": "دفعة",
-    "yield": "عائد",
-    "contribution": "مساهمة",
-    "goal_allocate": "تخصيص",
-    "goal_release": "تحرير",
-    "withdrawal": "سحب"
+    "yield": "أرباح",
+    "contribution": "دفعة",
+    "goal_allocate": "نُقل إلى هدف",
+    "goal_release": "نُقل إلى الرصيد",
+    "withdrawal": "سحب",
+    "fee": "رسوم",
+    "referral_earning": "مكافأة دعوة",
+    "referral_withdrawal": "نقل مكافأة الدعوة"
+  },
+  "status": {
+    "processing": "قيد المعالجة…",
+    "done": "تم",
+    "failed": "لم تتم"
   }
 }

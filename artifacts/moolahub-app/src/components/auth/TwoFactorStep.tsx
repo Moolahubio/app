@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui";
 import { useTwoFactorLogin, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 
 export function TwoFactorStep({
   challengeId,
@@ -31,7 +31,7 @@ export function TwoFactorStep({
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("twoFactor.error"));
+      setError(toUserError(err, t("twoFactor.error")));
     }
   };
 

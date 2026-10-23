@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { AlertCircle, Eye, EyeOff, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useRegister, useUsernameAvailable, getUsernameAvailableQueryKey } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { authInputClass } from "./AuthShell";
 
 const REFERRAL_SOURCES = [
@@ -88,7 +88,7 @@ export function SignUpForm({ onRegistered }: { onRegistered: (email: string, rem
       });
       onRegistered(trimmedEmail, rememberMe);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("errors.createAccount"));
+      setError(toUserError(err, t("errors.createAccount")));
     }
   };
 

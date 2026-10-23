@@ -4,10 +4,14 @@ import { CheckCircle2, Clock, GraduationCap, ArrowRight } from "lucide-react";
 import { Card, Badge, Eyebrow } from "@/components/ui";
 import { PageHeader } from "@/components/app/bits";
 import { useListLessons } from "@workspace/api-client-react";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
+import { visibleLessons } from "@/lib/lessons";
 
 export default function LearnPage() {
   const { t } = useTranslation("learn");
-  const { data: lessons, isLoading } = useListLessons();
+  const [technical] = useTechnicalDetails();
+  const { data: allLessons, isLoading } = useListLessons();
+  const lessons = allLessons ? visibleLessons(allLessons, technical) : allLessons;
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>;
   if (!lessons || lessons.length === 0) return <div className="p-8 text-center text-muted-foreground">{t("empty")}</div>;

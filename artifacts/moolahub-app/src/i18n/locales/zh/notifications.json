@@ -19,7 +19,7 @@
   "tiers": {
     "everything": {
       "label": "全部",
-      "description": "所有通知：互助会动态、目标里程碑、存款、提醒和贴士。"
+      "description": "所有通知：互助会动态、目标里程碑、充值、提醒和贴士。"
     },
     "essential": {
       "label": "重要",
@@ -37,7 +37,7 @@
   "categories": {
     "money": {
       "label": "资金与交易",
-      "description": "存款、提款、派款和缴款提醒。"
+      "description": "充值和转出、派款以及缴款提醒。"
     },
     "social": {
       "label": "群组储蓄与社交",

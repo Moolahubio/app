@@ -1,8 +1,11 @@
 name: contracts-ci
 
-# Build + test the Foundry contracts and run Slither static analysis on every
-# pull request and on pushes to main that touch contracts/. Dependencies are
-# cloned at pinned tags into lib/ (which is gitignored), matching foundry.toml.
+# Foundry build, size gate, tests (default profile, CI profile, Base fork) and Slither for contracts/.
+#
+# Everything is pinned (spec §5 "CI"): the Foundry release, every action (by commit SHA) and both dependencies
+# (by commit SHA; lib/ is gitignored and cloned here). Bump a pin only in a reviewed PR that also re-runs the
+# deployment rehearsal: the compiler toolchain and the dependency sources are part of every initcode hash in
+# the ceremony manifest.
 
 on:
   push:
@@ -14,6 +17,10 @@ on:
     paths:
       - "contracts/**"
       - ".github/workflows/contracts-ci.yml"
+  schedule:
+    # Nightly: the long CI-profile invariant runs and the Base fork suites on main's head.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -23,70 +30,192 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  OZ_TAG: v5.1.0
-  FORGE_STD_TAG: v1.9.4
+  # forge/cast/anvil 1.7.1, commit 4072e48705af9d93e3c0f6e29e93b5e9a40caed8 (checked below).
+  FOUNDRY_VERSION: v1.7.1
+  FOUNDRY_COMMIT: 4072e48705af9d93e3c0f6e29e93b5e9a40caed8
+  # OpenZeppelin Contracts v5.1.0 and forge-std v1.9.4, by commit.
+  OZ_SHA: 69c8def5f222ff96f2b5beff05dfba996368aa79
+  FORGE_STD_SHA: 1eea5bae12ae557d589f9f0f0edae2faa47cb262
+  SLITHER_VERSION: 0.11.6
+  CRYTIC_COMPILE_VERSION: 0.4.2
 
 jobs:
-  test:
-    name: Build & test (forge)
+  build-test:
+    name: Build, size gate, test (default profile)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: contracts
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install Foundry (pinned)
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1.9.2
         with:
-          version: stable
+          version: ${{ env.FOUNDRY_VERSION }}
 
-      - name: Install dependencies (pinned)
+      - name: Check Foundry version
+        run: forge --version | tee /dev/stderr | grep -q "$FOUNDRY_COMMIT"
+
+      - name: Install dependencies (pinned commits)
         run: |
-          git clone --depth 1 --branch "$OZ_TAG" https://github.com/OpenZeppelin/openzeppelin-contracts lib/openzeppelin-contracts
-          git clone --depth 1 --branch "$FORGE_STD_TAG" https://github.com/foundry-rs/forge-std lib/forge-std
+          fetch() { # repo sha dir
+            git init -q "$3" && git -C "$3" remote add origin "$1"
+            git -C "$3" fetch -q --depth 1 origin "$2" && git -C "$3" checkout -q FETCH_HEAD
+            test "$(git -C "$3" rev-parse HEAD)" = "$2"
+          }
+          fetch https://github.com/OpenZeppelin/openzeppelin-contracts "$OZ_SHA" lib/openzeppelin-contracts
+          fetch https://github.com/foundry-rs/forge-std "$FORGE_STD_SHA" lib/forge-std
 
-      - name: Build
+      - name: Build with sizes
+        # `forge build --sizes` exits non-zero when a runtime exceeds EIP-170 (24,576 bytes).
         run: forge build --sizes
 
-      - name: Test
+      - name: Size gate (EIP-170 runtime and EIP-3860 initcode)
+        run: |
+          forge build --sizes --json > sizes.json
+          over=$(jq -r 'keys_unsorted[] as $n | select(.[$n].runtime_margin < 0 or .[$n].init_margin < 0)
+            | "\($n): runtime \(.[$n].runtime_size) B, initcode \(.[$n].init_size) B"' sizes.json)
+          if [ -n "$over" ]; then echo "::error::contracts over the size limits:"; echo "$over"; exit 1; fi
+          jq -r 'keys_unsorted[] as $n | "\($n) \(.[$n].runtime_size) \(.[$n].init_size)"' sizes.json | sort -k2 -nr
+
+      - name: Test (default profile; fork suites skip without BASE_RPC_URL)
         run: forge test -vvv
+
+      - name: Committed ceremony manifests match this build
+        run: |
+          shopt -s nullglob
+          for m in deployments/base-mainnet/manifest.json deployments/base-sepolia/manifest.json; do
+            echo "== $m"; bash script/check-manifest-bytecode.sh "$m"
+          done
 
       - name: Format check (informational)
         run: forge fmt --check
         continue-on-error: true
 
-  slither:
-    name: Static analysis (Slither)
+  ci-profile:
+    name: CI profile (${{ matrix.name }})
     runs-on: ubuntu-latest
+    # About an hour per invariant suite at 10,000 runs x depth 200 on one core.
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: rotating invariants 10000x200
+            args: --match-path test/circles/invariant/MHRotatingInvariant.t.sol
+          - name: accumulation invariants 10000x200
+            args: --match-path test/circles/invariant/MHAccumulationInvariant.t.sol
+          - name: fuzz 1000 runs
+            args: --no-match-path "test/circles/invariant/*"
+    defaults:
+      run:
+        working-directory: contracts
+    env:
+      FOUNDRY_PROFILE: ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Foundry (pinned)
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1.9.2
+        with:
+          version: ${{ env.FOUNDRY_VERSION }}
+
+      - name: Install dependencies (pinned commits)
+        run: |
+          fetch() {
+            git init -q "$3" && git -C "$3" remote add origin "$1"
+            git -C "$3" fetch -q --depth 1 origin "$2" && git -C "$3" checkout -q FETCH_HEAD
+            test "$(git -C "$3" rev-parse HEAD)" = "$2"
+          }
+          fetch https://github.com/OpenZeppelin/openzeppelin-contracts "$OZ_SHA" lib/openzeppelin-contracts
+          fetch https://github.com/foundry-rs/forge-std "$FORGE_STD_SHA" lib/forge-std
+
+      - name: forge test (FOUNDRY_PROFILE=ci)
+        run: forge test ${{ matrix.args }} -vv
+
+  fork:
+    name: Base fork suites (circles + deployment rehearsal)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: contracts
+    env:
+      # Archive-capable Base mainnet RPC: the suites fork the pinned block 52,933,005. Secrets are not passed to
+      # pull requests from forks; the suites then skip themselves.
+      BASE_RPC_URL: ${{ secrets.BASE_RPC_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Foundry (pinned)
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1.9.2
+        with:
+          version: ${{ env.FOUNDRY_VERSION }}
+
+      - name: Install dependencies (pinned commits)
+        run: |
+          fetch() {
+            git init -q "$3" && git -C "$3" remote add origin "$1"
+            git -C "$3" fetch -q --depth 1 origin "$2" && git -C "$3" checkout -q FETCH_HEAD
+            test "$(git -C "$3" rev-parse HEAD)" = "$2"
+          }
+          fetch https://github.com/OpenZeppelin/openzeppelin-contracts "$OZ_SHA" lib/openzeppelin-contracts
+          fetch https://github.com/foundry-rs/forge-std "$FORGE_STD_SHA" lib/forge-std
+
+      - name: Fork tests (Appendix A, real Safe deployment rehearsal, circles on real USDC and Gauntlet)
+        if: env.BASE_RPC_URL != ''
+        run: forge test --match-path "test/fork/*" -vv
+
+      - name: No RPC secret
+        if: env.BASE_RPC_URL == ''
+        run: echo "::warning::BASE_RPC_URL secret not set; Base fork suites not run."
+
+  slither:
+    name: Static analysis (Slither, pinned)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       security-events: write
+    defaults:
+      run:
+        working-directory: contracts
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install Foundry (pinned)
+        uses: foundry-rs/foundry-toolchain@dba66c27052e63476d886f22216e119ba7e615bf # v1.9.2
         with:
-          version: stable
+          version: ${{ env.FOUNDRY_VERSION }}
 
-      - name: Install dependencies (pinned)
+      - name: Install dependencies (pinned commits)
         run: |
-          git clone --depth 1 --branch "$OZ_TAG" https://github.com/OpenZeppelin/openzeppelin-contracts contracts/lib/openzeppelin-contracts
-          git clone --depth 1 --branch "$FORGE_STD_TAG" https://github.com/foundry-rs/forge-std contracts/lib/forge-std
+          fetch() {
+            git init -q "$3" && git -C "$3" remote add origin "$1"
+            git -C "$3" fetch -q --depth 1 origin "$2" && git -C "$3" checkout -q FETCH_HEAD
+            test "$(git -C "$3" rev-parse HEAD)" = "$2"
+          }
+          fetch https://github.com/OpenZeppelin/openzeppelin-contracts "$OZ_SHA" lib/openzeppelin-contracts
+          fetch https://github.com/foundry-rs/forge-std "$FORGE_STD_SHA" lib/forge-std
 
-      - name: Run Slither
-        id: slither
-        uses: crytic/slither-action@v0.4.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          target: "contracts/"
-          slither-config: "contracts/slither.config.json"
-          fail-on: high
-          sarif: results.sarif
+          python-version: "3.12"
+
+      - name: Install Slither (pinned)
+        run: python -m pip install "slither-analyzer==${SLITHER_VERSION}" "crytic-compile==${CRYTIC_COMPILE_VERSION}"
+
+      - name: Build with the pinned forge (Slither reads these artifacts)
+        run: forge build --build-info
+
+      - name: Run Slither (fail on High)
+        run: slither . --config-file slither.config.json --ignore-compile --fail-high --sarif results.sarif
 
       - name: Upload SARIF to code scanning
-        if: always() && steps.slither.outputs.sarif != ''
-        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('contracts/results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         continue-on-error: true
         with:
-          sarif_file: ${{ steps.slither.outputs.sarif }}
+          sarif_file: contracts/results.sarif

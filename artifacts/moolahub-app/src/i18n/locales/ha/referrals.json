@@ -20,7 +20,7 @@
     "linkLabel": "Hanyar gayyata",
     "share": "Raba gayyata",
     "shareTitle": "Yi ajiya cikin wayo a MoolaHub",
-    "shareText": "Ina ajiya da USDC a MoolaHub kuma ina shiga da'irorin ajiya da ke sa in ci gaba. Ita ce hanya mafi sauƙi da na samu na cimma burina na kuɗi. Zo mu yi ajiya tare:",
+    "shareText": "Ina tanadi da dala a MoolaHub kuma ina shiga da'irorin tanadi da ke sa in ci gaba. Ita ce hanya mafi sauƙi da na samu na cimma burina na kuɗi. Zo mu yi tanadi tare:",
     "edit": "Gyara lamba",
     "editHint": "Zaɓi haruffa ko lambobi 4 zuwa 15. Wannan shi ne abin da abokai za su rubuta don shiga ta gare ka.",
     "save": "Ajiye lamba",
@@ -59,12 +59,12 @@
   },
   "withdraw": {
     "title": "Cire riba",
-    "subtitle": "Tura kwamishanka zuwa walat ɗinka.",
+    "subtitle": "Matsar da abin da ka samu zuwa ma'aunin ka.",
     "amountPlaceholder": "0.00",
     "maxAction": "Iyaka",
     "submit": "Cire",
     "submitting": "Ana cirewa…",
-    "success": "Cirewar tana kan hanya zuwa walat ɗinka.",
+    "success": "Yana kan hanyar zuwa ma'aunin ka.",
     "min": "Mafi ƙaranci {{amount}}",
     "max": "Akwai {{amount}}",
     "monthly": "An cire {{used}} daga {{cap}} a wannan watan",
@@ -114,5 +114,12 @@
   },
   "signup": {
     "invited": "An yi amfani da gayyata. Kana shiga ta hannun aboki."
+  },
+  "invite": {
+    "title": "Gayyaci abokai",
+    "description": "Raba MoolaHub da mutanen da kuke tanadi tare."
+  },
+  "paused": {
+    "note": "An dakatar da ladan gayyata. Ladan da ka riga ka samu suna nan a asusun ka, kuma an kashe cirewa a yanzu."
   }
 }

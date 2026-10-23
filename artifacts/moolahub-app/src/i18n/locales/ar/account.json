@@ -12,8 +12,8 @@
       "detail": "الاسم واسم المستخدم وتاريخ الميلاد"
     },
     "wallets": {
-      "label": "المحافظ",
-      "detail": "الرصيد والعنوان على Monad"
+      "label": "الرصيد",
+      "detail": "أضف أموالًا واطّلع على المتاح"
     },
     "security": {
       "label": "الأمان",
@@ -28,8 +28,12 @@
       "detail": "اختر ما يصل إليك"
     },
     "transactions": {
-      "label": "المعاملات والعائد",
-      "detail": "السجل والأرباح"
+      "label": "المعاملات",
+      "detail": "كل ما تحرّك من أموال"
+    },
+    "advanced": {
+      "label": "متقدّم",
+      "detail": "التفاصيل التقنية"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "جارٍ رفع الصورة…",
     "saveName": "حفظ الاسم",
     "editName": "تعديل الاسم",
-    "wallet": {
-      "label": "محفظة Monad · غير احتجازية",
-      "notProvisioned": "غير مُهيّأة"
-    },
-    "stats": {
-      "yieldEarned": "العائد المكتسب",
-      "yieldApy": "نسبة العائد السنوية"
-    },
     "errors": {
       "savePicture": "تعذّر حفظ صورة الملف الشخصي.",
       "uploadImage": "تعذّر رفع الصورة.",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "تعذّر تسجيل الخروج",
       "description": "يُرجى المحاولة مرة أخرى."
+    },
+    "stats": {
+      "available": "المتاح",
+      "inSavings": "في المدخرات"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "خيارات"
+  },
+  "technical": {
+    "wallet": {
+      "label": "محفظة Monad · غير احتجازية",
+      "notProvisioned": "غير مُهيّأة"
+    }
+  },
+  "advanced": {
+    "title": "متقدّم",
+    "description": "خيارات إضافية لمن يريد معرفة كيف يعمل MoolaHub.",
+    "technicalLabel": "التفاصيل التقنية",
+    "technicalDescription": "يعرض أسماء الشبكات وعناوين الحسابات ومعرّفات المعاملات وروابط السجلات العامة. لن تحتاج إلى ذلك أبدًا لاستخدام MoolaHub.",
+    "savedNote": "يُحفظ هذا الاختيار على هذا الجهاز."
   }
 }

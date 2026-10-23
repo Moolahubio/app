@@ -1,0 +1,103 @@
+name: db-ci
+
+# Database gate (spec §7, A2). Applies lib/db/migrations with drizzle-kit
+# migrate to a local Supabase stack (so anon / authenticated / service_role and
+# Supabase's default privileges are the real ones), checks the migrations match
+# the Drizzle schema, asserts grants, RLS, role timeouts and ledger integrity
+# (lib/db/ci/assert-db.sql), then runs the offline API e2e suites AS THE
+# LEAST-PRIVILEGE APP ROLE, plus the Sentry scrub test. No secrets are used:
+# every credential below exists only inside this throwaway container.
+
+on:
+  pull_request:
+    paths:
+      - "lib/db/**"
+      - "artifacts/api-server/**"
+      - "scripts/post-merge.sh"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/db-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "lib/db/**"
+      - "artifacts/api-server/**"
+      - "scripts/post-merge.sh"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/db-ci.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SUPABASE_CLI_VERSION: 2.120.0
+  # Local Supabase defaults: the owner role runs migrations, assertions and the
+  # e2e teardown purge; the app role runs the suites.
+  MIGRATIONS_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+  DATABASE_URL: postgresql://moolahub_app:ci-only-app-password@127.0.0.1:54322/postgres
+
+jobs:
+  db:
+    name: Migrate, assert, e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: ${{ env.SUPABASE_CLI_VERSION }}
+
+      - name: Start Supabase (database only)
+        run: |
+          supabase init --workdir "$RUNNER_TEMP/supabase-ci"
+          supabase start --workdir "$RUNNER_TEMP/supabase-ci" \
+            -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
+
+      - name: Migrations match the Drizzle schema
+        run: |
+          pnpm --filter @workspace/db run generate
+          git diff --exit-code -- lib/db/migrations
+          test -z "$(git status --porcelain -- lib/db/migrations)"
+
+      - name: Apply migrations (drizzle-kit migrate)
+        run: pnpm run db:migrate
+
+      - name: Re-running migrate is a no-op
+        run: pnpm run db:migrate
+
+      - name: Assert grants, RLS, timeouts and ledger integrity
+        run: pnpm run db:assert
+
+      # The out-of-band step every environment does once (see migration 0002),
+      # here with a throwaway password for the throwaway container.
+      - name: Let the app role log in
+        run: psql "$MIGRATIONS_DATABASE_URL" -v ON_ERROR_STOP=1 -c "ALTER ROLE moolahub_app WITH LOGIN PASSWORD 'ci-only-app-password'"
+
+      - name: Sentry scrub test
+        run: pnpm --filter @workspace/api-server run test:sentry-scrub
+
+      - name: Offline e2e suites as moolahub_app
+        run: |
+          APP_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+          echo "::add-mask::$APP_ENCRYPTION_KEY"
+          export APP_ENCRYPTION_KEY
+          pnpm --filter @workspace/api-server run test:offline
+
+      - name: Assertions still hold after the suites
+        run: pnpm run db:assert

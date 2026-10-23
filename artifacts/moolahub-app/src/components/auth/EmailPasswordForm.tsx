@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui";
 import { useLogin, getGetMeQueryKey } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { authInputClass } from "./AuthShell";
 
 export function EmailPasswordForm({
@@ -47,7 +47,7 @@ export function EmailPasswordForm({
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("signIn.error"));
+      setError(toUserError(err, t("signIn.error")));
     }
   };
 

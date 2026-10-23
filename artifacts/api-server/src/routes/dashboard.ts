@@ -87,7 +87,6 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
       pendingCents: bal.pendingCents,
       balanceUnavailable: bal.balanceUnavailable,
       circlePotCents,
-      yieldApy: 4.5,
       recentActivity,
       activeGoals,
       activeCircles,
