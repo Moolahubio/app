@@ -20,7 +20,7 @@
     "linkLabel": "Lien d'invitation",
     "share": "Partager l'invitation",
     "shareTitle": "Épargnez plus malin sur MoolaHub",
-    "shareText": "J'épargne en USDC sur MoolaHub et je rejoins des cercles d'épargne qui me gardent motivé. C'est le moyen le plus simple que j'ai trouvé pour atteindre mes objectifs financiers. Viens épargner avec moi :",
+    "shareText": "J'épargne en dollars sur MoolaHub et je rejoins des cercles d'épargne qui me gardent motivé. C'est le moyen le plus simple que j'ai trouvé pour atteindre mes objectifs financiers. Viens épargner avec moi :",
     "edit": "Modifier le code",
     "editHint": "Choisissez 4 à 15 lettres ou chiffres. C'est ce que vos amis saisiront pour vous rejoindre.",
     "save": "Enregistrer le code",
@@ -59,12 +59,12 @@
   },
   "withdraw": {
     "title": "Retirer les gains",
-    "subtitle": "Transférez votre commission vers votre portefeuille.",
+    "subtitle": "Transférez vos gains vers votre solde.",
     "amountPlaceholder": "0.00",
     "maxAction": "Max",
     "submit": "Retirer",
     "submitting": "Retrait en cours…",
-    "success": "Retrait en route vers votre portefeuille.",
+    "success": "En route vers votre solde.",
     "min": "Minimum {{amount}}",
     "max": "Disponible {{amount}}",
     "monthly": "{{used}} sur {{cap}} retirés ce mois-ci",
@@ -114,5 +114,12 @@
   },
   "signup": {
     "invited": "Invitation appliquée. Vous rejoignez grâce à un ami."
+  },
+  "invite": {
+    "title": "Invitez des amis",
+    "description": "Partagez MoolaHub avec les personnes avec qui vous épargnez."
+  },
+  "paused": {
+    "note": "Les récompenses de parrainage sont suspendues. Les récompenses déjà gagnées restent sur votre compte, et les retraits sont désactivés pour le moment."
   }
 }

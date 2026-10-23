@@ -8,18 +8,17 @@ import {
   BookOpen,
   Bell,
   ChevronRight,
-  TrendingUp,
 } from "lucide-react";
 import { Card, Button, Badge, ProgressBar, IconChip, Eyebrow, Skeleton } from "@/components/ui";
-import { AscendingChart } from "@/components/marketing/AscendingChart";
-import { Money } from "@/components/app/bits";
+import { Money, BalanceFooter, LoadError } from "@/components/app/bits";
 import { useGetDashboardSummary, useGetMe } from "@workspace/api-client-react";
 import { useStreak } from "@/hooks/use-streak";
 import { streakVisual } from "@/components/app/StreakFlame";
-import { formatMoney, pct, timeAgo, formatDate } from "@/lib/utils";
+import { pct, timeAgo, formatDate } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
-const YIELD_APY = 0.041;
+// The featured lesson is a savings one; plumbing lessons are an opt-in track.
+const FEATURED_LESSON = { slug: "setting-savings-goals", emoji: "🎯" };
 
 const activityIcon: Record<string, typeof ArrowDownLeft> = {
   deposit: ArrowDownLeft,
@@ -39,10 +38,19 @@ function streakFreqKey(frequency: string): "daily" | "weekly" | "biweekly" | "mo
 export default function DashboardPage() {
   const { t } = useTranslation("dashboard");
   const { data: user } = useGetMe();
-  const { data: summary, isLoading } = useGetDashboardSummary();
+  const { data: summary, isLoading, isError, refetch } = useGetDashboardSummary();
   const { data: streak } = useStreak();
 
   const firstName = user?.name?.split(" ")[0] ?? "";
+
+  // A failed load must never read as a $0 balance or spin forever.
+  if (!summary && isError && !isLoading) {
+    return (
+      <Card className="mx-auto max-w-6xl">
+        <LoadError onRetry={() => void refetch()} />
+      </Card>
+    );
+  }
 
   if (isLoading || !summary) {
     return (
@@ -60,7 +68,8 @@ export default function DashboardPage() {
     recentActivity,
     activeGoals,
     activeCircles,
-    upcomingReminder
+    upcomingReminder,
+    balanceUnavailable,
   } = summary;
 
   const activeCircle = activeCircles.find((c) => c.status === "active") ?? activeCircles[0];
@@ -100,10 +109,10 @@ export default function DashboardPage() {
                   <Money cents={goalTotalCents} className="font-semibold text-white" />
                 </span>
               </div>
+              {balanceUnavailable && (
+                <p className="mt-2 text-xs text-amber-300">{t("common:states.balanceStale")}</p>
+              )}
             </div>
-            <Badge tone="jade" className="bg-jade-500/15 text-jade-300 ring-jade-400/20">
-              <TrendingUp className="h-3.5 w-3.5" /> {t("hero.apy", { apy: (YIELD_APY * 100).toFixed(1) })}
-            </Badge>
           </div>
 
           <div className="relative z-10 mt-6 flex flex-wrap gap-3">
@@ -120,15 +129,7 @@ export default function DashboardPage() {
             </Button>
           </div>
 
-          <div className="relative z-10 mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="flex items-center justify-between text-xs text-white/65">
-              <span className="font-mono uppercase tracking-[0.15em]">{t("hero.growthLabel")}</span>
-              <span className="text-jade-400">
-                {t("hero.earned", { amount: formatMoney(Math.floor(totalCents * YIELD_APY), { sign: true }) })}
-              </span>
-            </div>
-            <AscendingChart className="mt-1 max-h-28" />
-          </div>
+          <BalanceFooter tone="onDark" className="relative z-10 mt-6" />
         </Card>
 
         {/* --------------------------------------------------- Reminders */}
@@ -273,14 +274,14 @@ export default function DashboardPage() {
             <h2 className="font-display text-lg font-bold text-foreground">{t("learn.title")}</h2>
           </div>
           <div className="mt-5 flex-1">
-            <span className="text-3xl">⛓️</span>
+            <span className="text-3xl">{FEATURED_LESSON.emoji}</span>
             <p className="mt-3 font-semibold leading-snug text-foreground">{t("learn.lessonTitle")}</p>
             <p className="mt-1 font-mono text-xs uppercase tracking-wide text-muted-foreground">
               {t("learn.lessonMeta")}
             </p>
           </div>
           <Button
-            href={`/learn/understanding-blockchain`}
+            href={`/learn/${FEATURED_LESSON.slug}`}
             variant="secondary"
             size="sm"
             className="mt-5 w-full"

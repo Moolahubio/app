@@ -2,7 +2,7 @@
   "loading": "Loading transactions…",
   "header": {
     "title": "Your money, on the record",
-    "description": "Every deposit, contribution, and payout. Each one is linked to its proof on Monad."
+    "description": "Everything you've added, paid in, moved and received, in one place."
   },
   "reminders": {
     "title": "Upcoming reminders",
@@ -12,17 +12,21 @@
     "title": "Transaction history",
     "empty": "No transactions yet."
   },
-  "onchain": {
-    "settling": "settling on-chain…",
-    "offchain": "off-chain"
-  },
   "types": {
-    "deposit": "Deposit",
+    "deposit": "Money added",
     "payout": "Payout",
-    "yield": "Yield",
-    "contribution": "Contribution",
-    "goal_allocate": "Allocation",
-    "goal_release": "Release",
-    "withdrawal": "Withdrawal"
+    "yield": "Earnings",
+    "contribution": "Paid in",
+    "goal_allocate": "Moved to goal",
+    "goal_release": "Moved to balance",
+    "withdrawal": "Cash out",
+    "fee": "Fee",
+    "referral_earning": "Invite reward",
+    "referral_withdrawal": "Invite reward moved"
+  },
+  "status": {
+    "processing": "Processing…",
+    "done": "Done",
+    "failed": "Didn't go through"
   }
 }

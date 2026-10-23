@@ -16,7 +16,7 @@ import {
   useRequestStepUpCode,
   getGetTwoFactorStatusQueryKey,
 } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 
 export type StepUpProof = {
   currentPassword?: string;
@@ -82,7 +82,7 @@ export function useStepUpGate() {
       await requestCode.mutateAsync();
       setCodeSent(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("stepUp.errors.sendCode"));
+      setError(toUserError(err, t("stepUp.errors.sendCode")));
     }
   };
 

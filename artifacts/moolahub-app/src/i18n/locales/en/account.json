@@ -12,8 +12,8 @@
       "detail": "Name, username, date of birth"
     },
     "wallets": {
-      "label": "Wallets",
-      "detail": "Balance & address on Monad"
+      "label": "Balance",
+      "detail": "Add money and see what's available"
     },
     "security": {
       "label": "Security",
@@ -28,8 +28,12 @@
       "detail": "Choose what reaches you"
     },
     "transactions": {
-      "label": "Transactions & yield",
-      "detail": "Ledger and earnings"
+      "label": "Transactions",
+      "detail": "Everything that moved"
+    },
+    "advanced": {
+      "label": "Advanced",
+      "detail": "Technical details"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "Uploading picture…",
     "saveName": "Save name",
     "editName": "Edit name",
-    "wallet": {
-      "label": "Monad wallet · non-custodial",
-      "notProvisioned": "Not provisioned"
-    },
-    "stats": {
-      "yieldEarned": "Yield earned",
-      "yieldApy": "Yield APY"
-    },
     "errors": {
       "savePicture": "Could not save profile picture.",
       "uploadImage": "Could not upload image.",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "Could not sign out",
       "description": "Please try again."
+    },
+    "stats": {
+      "available": "Available",
+      "inSavings": "In savings"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "Options"
+  },
+  "technical": {
+    "wallet": {
+      "label": "Monad wallet · non-custodial",
+      "notProvisioned": "Not provisioned"
+    }
+  },
+  "advanced": {
+    "title": "Advanced",
+    "description": "Extra options for people who want to see how MoolaHub works.",
+    "technicalLabel": "Technical details",
+    "technicalDescription": "Show network names, account addresses, transaction IDs and links to public records. You never need this to use MoolaHub.",
+    "savedNote": "This choice is saved on this device."
   }
 }

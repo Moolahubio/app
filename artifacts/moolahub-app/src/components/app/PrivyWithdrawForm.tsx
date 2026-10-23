@@ -8,7 +8,7 @@ import { WithdrawForm } from "@/components/app/forms";
 import { ERC20_ABI } from "@/lib/onchain/abis";
 import { centsToUnits } from "@/lib/onchain/ids";
 import { useEnsureWalletGas, useConfirmWithdrawal } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError, isUserCancellation } from "@/lib/utils";
 
 /**
  * Withdrawal UI for a NON-CUSTODIAL (Privy embedded EOA) wallet. Unlike the
@@ -53,10 +53,10 @@ export function PrivyWithdrawForm({
     return (
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          {t("privyWithdraw.connectPrompt")}
+          {t("technical.privyWithdraw.connectPrompt")}
         </p>
         <Button variant="secondary" className="w-full" onClick={() => login()}>
-          {t("privyWithdraw.connectButton")}
+          {t("technical.privyWithdraw.connectButton")}
         </Button>
       </div>
     );
@@ -66,15 +66,15 @@ export function PrivyWithdrawForm({
     setError(null);
     setOk(null);
     if (!usdcAddress) {
-      setError(t("privyWithdraw.errors.unavailable"));
+      setError(t("technical.privyWithdraw.errors.unavailable"));
       return;
     }
     if (!isAddress(data.destination)) {
-      setError(t("privyWithdraw.errors.invalidAddress"));
+      setError(t("technical.privyWithdraw.errors.invalidAddress"));
       return;
     }
     if (data.amountCents <= 0) {
-      setError(t("privyWithdraw.errors.invalidAmount"));
+      setError(t("technical.privyWithdraw.errors.invalidAmount"));
       return;
     }
     setPending(true);
@@ -135,13 +135,11 @@ export function PrivyWithdrawForm({
       }
 
       pendingTx.current = null;
-      setOk(t("privyWithdraw.success"));
+      setOk(t("technical.privyWithdraw.success"));
       onSuccess();
     } catch (e) {
-      setError(
-        apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : t("privyWithdraw.errors.failed")),
-      );
+      // Closing the confirm prompt isn't an error: nothing moved.
+      if (!isUserCancellation(e)) setError(toUserError(e, t("technical.privyWithdraw.errors.failed")));
     } finally {
       setPending(false);
     }

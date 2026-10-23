@@ -59,6 +59,8 @@ export interface ReferralReferee {
 export interface ReferralOverview {
   code: string;
   link: string;
+  /** False while currency referral rewards are off (REFERRAL_REWARDS_ENABLED); the app then shows only the invite link. */
+  rewardsEnabled: boolean;
   tier: ReferralTierInfo;
   activeReferrals: number;
   totalReferred: number;
@@ -562,7 +564,6 @@ export interface DashboardSummary {
   /** True when an on-chain balance read failed, so displayed figures may be understated. */
   balanceUnavailable?: boolean;
   circlePotCents: number;
-  yieldApy: number;
   recentActivity: ActivityItem[];
   activeGoals: Goal[];
   activeCircles: CircleSummary[];

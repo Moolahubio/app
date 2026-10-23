@@ -29,11 +29,11 @@
     "aria": "Série d'épargne : {{count}} périodes"
   },
   "atRisk": {
-    "message": "Un seul dépôt avant le <strong>{{date}}</strong> maintient votre série en vie. Pas de précipitation, tout dépôt vers un objectif ou un cercle compte."
+    "message": "Une seule épargne avant le <strong>{{date}}</strong> maintient votre série en vie. Pas de précipitation, placer de l'argent dans un objectif ou verser dans un cercle compte."
   },
   "hero": {
     "captionActive": "Série de {{count}} {{period}} · continuez ainsi",
-    "captionEmpty": "Faites un dépôt ce {{period}} pour allumer votre flamme"
+    "captionEmpty": "Épargnez une fois ce {{period}} pour allumer votre flamme"
   },
   "stats": {
     "current": "{{unit}} en cours",
@@ -59,10 +59,10 @@
   },
   "card": {
     "streakTitle": "Série {{frequency}}",
-    "oneDepositPer": "Un dépôt par {{period}} garde votre flamme allumée.",
+    "oneDepositPer": "Une épargne par {{period}} garde votre flamme allumée.",
     "change": "Modifier",
-    "goalDepositsCount": "Les dépôts vers un objectif comptent",
-    "circleContributionsCount": "Les contributions à un cercle comptent",
+    "goalDepositsCount": "Placer de l'argent dans un objectif compte",
+    "circleContributionsCount": "Verser dans un cercle compte",
     "changeOncePerYear": "La fréquence peut changer une fois par an.",
     "changeOncePerYearNext": "La fréquence peut changer une fois par an. Le prochain changement se débloque en {{year}}."
   },
@@ -122,7 +122,7 @@
   },
   "profile": {
     "title": "Fréquence de la série",
-    "description": "Choisissez à quelle fréquence un dépôt doit avoir lieu pour maintenir votre série d'épargne en vie.",
+    "description": "Choisissez à quelle fréquence vous devez épargner pour maintenir votre série d'épargne en vie.",
     "frequencyError": "Impossible de modifier la fréquence de votre série.",
     "recommended": "Recommandé",
     "lockNote": "Vous pouvez modifier la fréquence de votre série une fois par année civile.",
@@ -130,15 +130,15 @@
     "options": {
       "daily": {
         "label": "Quotidienne",
-        "description": "Gardez la flamme allumée avec un dépôt chaque jour. Idéal pour une habitude d'épargne quotidienne."
+        "description": "Gardez la flamme allumée en épargnant chaque jour. Idéal pour une habitude d'épargne quotidienne."
       },
       "weekly": {
         "label": "Hebdomadaire",
-        "description": "Un dépôt à tout moment de la semaine maintient votre série. Un rythme calme et régulier."
+        "description": "Une épargne à tout moment de la semaine maintient votre série. Un rythme calme et régulier."
       },
       "monthly": {
         "label": "Mensuelle",
-        "description": "Un seul dépôt par mois civil suffit. Doux et sans pression."
+        "description": "Une seule épargne par mois civil suffit. Doux et sans pression."
       }
     }
   }

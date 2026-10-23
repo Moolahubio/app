@@ -12,8 +12,8 @@
       "detail": "Nom, nom d'utilisateur, date de naissance"
     },
     "wallets": {
-      "label": "Portefeuilles",
-      "detail": "Solde et adresse sur Monad"
+      "label": "Solde",
+      "detail": "Ajoutez de l'argent et consultez votre disponible"
     },
     "security": {
       "label": "Sécurité",
@@ -28,8 +28,12 @@
       "detail": "Choisissez ce qui vous parvient"
     },
     "transactions": {
-      "label": "Transactions et rendement",
-      "detail": "Registre et gains"
+      "label": "Transactions",
+      "detail": "Tous vos mouvements"
+    },
+    "advanced": {
+      "label": "Avancé",
+      "detail": "Détails techniques"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "Téléversement de la photo…",
     "saveName": "Enregistrer le nom",
     "editName": "Modifier le nom",
-    "wallet": {
-      "label": "Portefeuille Monad · non dépositaire",
-      "notProvisioned": "Non provisionné"
-    },
-    "stats": {
-      "yieldEarned": "Rendement gagné",
-      "yieldApy": "APY du rendement"
-    },
     "errors": {
       "savePicture": "Impossible d'enregistrer la photo de profil.",
       "uploadImage": "Impossible de téléverser l'image.",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "Impossible de se déconnecter",
       "description": "Veuillez réessayer."
+    },
+    "stats": {
+      "available": "Disponible",
+      "inSavings": "En épargne"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "Options"
+  },
+  "technical": {
+    "wallet": {
+      "label": "Portefeuille Monad · non dépositaire",
+      "notProvisioned": "Non provisionné"
+    }
+  },
+  "advanced": {
+    "title": "Avancé",
+    "description": "Des options supplémentaires pour ceux qui veulent voir comment fonctionne MoolaHub.",
+    "technicalLabel": "Détails techniques",
+    "technicalDescription": "Affiche les noms de réseau, les adresses de compte, les identifiants de transaction et les liens vers les registres publics. Vous n'en avez jamais besoin pour utiliser MoolaHub.",
+    "savedNote": "Ce choix est enregistré sur cet appareil."
   }
 }

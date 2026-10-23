@@ -59,9 +59,37 @@
     "copy": "Copy",
     "copied": "Copy don",
     "working": "E dey work…",
-    "withdrawUsdc": "Withdraw USDC",
     "sending": "E dey send…",
-    "recipientPlaceholder": "Recipient Monad address (0x…)",
-    "invite": "Invite"
+    "invite": "Invite",
+    "invalidAmount": "Enter valid amount."
+  },
+  "technical": {
+    "send": {
+      "submit": "Withdraw USDC",
+      "recipientPlaceholder": "Recipient Monad address (0x…)"
+    },
+    "title": "Technical details",
+    "address": "Account address",
+    "network": "Network"
+  },
+  "errors": {
+    "generic": "Something no work well. Abeg try again.",
+    "server": "Something spoil for our side. Your money never move. Abeg try again after one minute.",
+    "network": "We no fit reach MoolaHub. Check your connection and try again.",
+    "tooMany": "You don try too many times. Abeg wait small and try again.",
+    "cancelled": "You don cancel am. Nothing comot.",
+    "notEnough": "The money wey dey available no reach. Add money or choose smaller amount.",
+    "partner": "We no fit reach our payment partner. Your money never move. Try again after one minute.",
+    "processing": "E dey process. E fit take few minutes. We go let you know.",
+    "didNotGoThrough": "E no go through. Nothing comot from your balance."
+  },
+  "states": {
+    "loadError": "We no fit load am. Check your connection and try again.",
+    "balanceStale": "Na your last balance wey we know we dey show. We go update am soon."
+  },
+  "legal": {
+    "balanceFooter": "Na USDC we take hold am · No be bank deposit · No insurance",
+    "addMoney": "Na USDC we take hold your balance. USDC na US-dollar digital money wey Circle dey issue. MoolaHub no be bank. Your balance no be bank deposit, FDIC no insure am, and no government dey back am.",
+    "transfersOut": "Once you send am go outside account, you no fit reverse am."
   }
 }

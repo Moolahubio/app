@@ -59,9 +59,37 @@
     "copy": "复制",
     "copied": "已复制",
     "working": "处理中…",
-    "withdrawUsdc": "提取 USDC",
     "sending": "发送中…",
-    "recipientPlaceholder": "收款人 Monad 地址 (0x…)",
-    "invite": "邀请"
+    "invite": "邀请",
+    "invalidAmount": "请输入有效金额。"
+  },
+  "technical": {
+    "send": {
+      "submit": "提取 USDC",
+      "recipientPlaceholder": "收款人 Monad 地址 (0x…)"
+    },
+    "title": "技术详情",
+    "address": "账户地址",
+    "network": "网络"
+  },
+  "errors": {
+    "generic": "出了点问题，请重试。",
+    "server": "我们这边出了点问题。你的资金没有变动。请一分钟后重试。",
+    "network": "无法连接 MoolaHub。请检查网络连接后重试。",
+    "tooMany": "尝试次数过多，请稍候再试。",
+    "cancelled": "已取消，未扣除任何款项。",
+    "notEnough": "可用余额不足。请充值或选择更小的金额。",
+    "partner": "无法连接我们的支付合作方。你的资金没有变动。请一分钟后重试。",
+    "processing": "处理中，可能需要几分钟。完成后我们会通知你。",
+    "didNotGoThrough": "操作未成功，余额未被扣除。"
+  },
+  "states": {
+    "loadError": "无法加载。请检查网络连接后重试。",
+    "balanceStale": "当前显示的是最近一次已知余额，稍后会更新。"
+  },
+  "legal": {
+    "balanceFooter": "以 USDC 持有 · 非银行存款 · 无保险保障",
+    "addMoney": "你的余额以 USDC 持有，USDC 是由 Circle 发行的美元数字货币。MoolaHub 不是银行。你的余额不是银行存款，不受 FDIC 保险保障，也没有政府担保。",
+    "transfersOut": "向外部账户的转出无法撤销。"
   }
 }

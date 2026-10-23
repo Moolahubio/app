@@ -12,8 +12,8 @@
       "detail": "Jina, jina la mtumiaji, tarehe ya kuzaliwa"
     },
     "wallets": {
-      "label": "Pochi",
-      "detail": "Salio na anwani kwenye Monad"
+      "label": "Salio",
+      "detail": "Ongeza pesa na uone kinachopatikana"
     },
     "security": {
       "label": "Usalama",
@@ -28,8 +28,12 @@
       "detail": "Chagua kinachokufikia"
     },
     "transactions": {
-      "label": "Miamala na faida",
-      "detail": "Leja na mapato"
+      "label": "Miamala",
+      "detail": "Kila kilichohamishwa"
+    },
+    "advanced": {
+      "label": "Ya hali ya juu",
+      "detail": "Maelezo ya kiufundi"
     }
   },
   "profile": {
@@ -37,14 +41,6 @@
     "uploadingPicture": "Inapakia picha…",
     "saveName": "Hifadhi jina",
     "editName": "Hariri jina",
-    "wallet": {
-      "label": "Pochi ya Monad · isiyoshikiliwa",
-      "notProvisioned": "Haijaandaliwa"
-    },
-    "stats": {
-      "yieldEarned": "Faida iliyopatikana",
-      "yieldApy": "APY ya faida"
-    },
     "errors": {
       "savePicture": "Imeshindwa kuhifadhi picha ya wasifu.",
       "uploadImage": "Imeshindwa kupakia picha.",
@@ -54,6 +50,10 @@
     "signOutError": {
       "title": "Imeshindwa kutoka",
       "description": "Tafadhali jaribu tena."
+    },
+    "stats": {
+      "available": "Inayopatikana",
+      "inSavings": "Katika akiba"
     }
   },
   "information": {
@@ -233,5 +233,18 @@
   },
   "segmented": {
     "optionsLabel": "Chaguo"
+  },
+  "technical": {
+    "wallet": {
+      "label": "Pochi ya Monad · isiyoshikiliwa",
+      "notProvisioned": "Haijaandaliwa"
+    }
+  },
+  "advanced": {
+    "title": "Ya hali ya juu",
+    "description": "Chaguo za ziada kwa wanaotaka kuona jinsi MoolaHub inavyofanya kazi.",
+    "technicalLabel": "Maelezo ya kiufundi",
+    "technicalDescription": "Onyesha majina ya mitandao, anwani za akaunti, vitambulisho vya miamala na viungo vya rekodi za umma. Huhitaji hili kamwe ili kutumia MoolaHub.",
+    "savedNote": "Chaguo hili limehifadhiwa kwenye kifaa hiki."
   }
 }

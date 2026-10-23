@@ -26,7 +26,7 @@ import {
   useEndStreakVacation,
   useGetDashboardSummary,
 } from "@workspace/api-client-react";
-import { apiErrorMessage, formatDate } from "@/lib/utils";
+import { toUserError, formatDate } from "@/lib/utils";
 
 const VACATION_DAYS = 14;
 
@@ -56,7 +56,8 @@ export default function StreaksPage() {
     ? t("hero.captionActive", { count: heroCount, period: periodNoun(data.frequency) })
     : t("hero.captionEmpty", { period: periodNoun(data.frequency) });
 
-  const savedAmount = summary ? summary.goalTotalCents + summary.circlePotCents : null;
+  // Only the user's own goal savings: a circle's pot includes other members' money.
+  const savedAmount = summary ? summary.goalTotalCents : null;
   const vacation = data.vacation;
 
   return (
@@ -197,7 +198,7 @@ export default function StreaksPage() {
           />
         </div>
         {setReminders.error && (
-          <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(setReminders.error)}</p>
+          <p className="mt-3 text-sm text-rose-600">{toUserError(setReminders.error)}</p>
         )}
       </Card>
 
@@ -242,7 +243,7 @@ export default function StreaksPage() {
                   : t("vacation.startDays", { count: VACATION_DAYS })}
             </Button>
             {startVacation.error && (
-              <p className="mt-3 text-sm text-rose-600">{apiErrorMessage(startVacation.error)}</p>
+              <p className="mt-3 text-sm text-rose-600">{toUserError(startVacation.error)}</p>
             )}
           </div>
         )}

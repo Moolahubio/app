@@ -6,11 +6,8 @@
     "totalBalance": "Solde total",
     "available": "Disponible",
     "inSavings": "En épargne",
-    "apy": "+{{apy}} % APY",
     "addMoney": "Ajouter de l'argent",
-    "withdraw": "Retirer",
-    "growthLabel": "Croissance · 6 mois",
-    "earned": "{{amount}} gagnés"
+    "withdraw": "Retirer"
   },
   "reminders": {
     "title": "À venir",
@@ -31,12 +28,12 @@
       "monthly": "Épargné ce mois-ci, bien joué"
     },
     "keepAlive": {
-      "daily": "Un dépôt suffit pour garder votre série quotidienne",
-      "weekly": "Un dépôt suffit pour garder votre série hebdomadaire",
-      "biweekly": "Un dépôt suffit pour garder votre série bimensuelle",
-      "monthly": "Un dépôt suffit pour garder votre série mensuelle"
+      "daily": "Une seule épargne suffit pour garder votre série quotidienne",
+      "weekly": "Une seule épargne suffit pour garder votre série hebdomadaire",
+      "biweekly": "Une seule épargne suffit pour garder votre série bimensuelle",
+      "monthly": "Une seule épargne suffit pour garder votre série mensuelle"
     },
-    "firstFlame": "Faites un dépôt pour allumer votre première flamme"
+    "firstFlame": "Épargnez une fois pour allumer votre première flamme"
   },
   "savings": {
     "title": "Épargne personnelle",
@@ -57,8 +54,8 @@
   },
   "learn": {
     "title": "Continuez à apprendre",
-    "lessonTitle": "La blockchain, expliquée simplement",
-    "lessonMeta": "5 min · Débutant",
+    "lessonTitle": "Des objectifs d'épargne qui tiennent vraiment",
+    "lessonMeta": "6 min · Débutant",
     "startLesson": "Commencer la leçon"
   },
   "transactions": {

@@ -1704,6 +1704,7 @@ components:
         [
           code,
           link,
+          rewardsEnabled,
           tier,
           activeReferrals,
           totalReferred,
@@ -1718,6 +1719,9 @@ components:
           type: string
         link:
           type: string
+        rewardsEnabled:
+          type: boolean
+          description: False while currency referral rewards are off (REFERRAL_REWARDS_ENABLED); the app then shows only the invite link.
         tier:
           $ref: "#/components/schemas/ReferralTierInfo"
         activeReferrals:
@@ -2314,7 +2318,7 @@ components:
     # ---- Dashboard ----
     DashboardSummary:
       type: object
-      required: [availableCents, totalCents, goalTotalCents, circlePotCents, recentActivity, activeGoals, activeCircles, lessonsCompleted, totalLessons, yieldApy]
+      required: [availableCents, totalCents, goalTotalCents, circlePotCents, recentActivity, activeGoals, activeCircles, lessonsCompleted, totalLessons]
       properties:
         availableCents:
           type: integer
@@ -2330,8 +2334,6 @@ components:
           description: True when an on-chain balance read failed, so displayed figures may be understated.
         circlePotCents:
           type: integer
-        yieldApy:
-          type: number
         recentActivity:
           type: array
           items:

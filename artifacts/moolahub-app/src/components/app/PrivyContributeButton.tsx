@@ -7,7 +7,7 @@ import { Button } from "@/components/ui";
 import { ERC20_ABI, CIRCLE_ABI } from "@/lib/onchain/abis";
 import { centsToUnits } from "@/lib/onchain/ids";
 import { useEnsureWalletGas, useConfirmContribution } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError, isUserCancellation } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -156,10 +156,8 @@ export function PrivyContributeButton({
       pendingTx.current = null;
       onSuccess();
     } catch (e) {
-      setError(
-        apiErrorMessage(e) ??
-          (e instanceof Error ? e.message : t("privy.failed")),
-      );
+      // Closing the confirm prompt isn't an error: nothing moved.
+      if (!isUserCancellation(e)) setError(toUserError(e, t("privy.failed")));
     } finally {
       setPending(false);
     }

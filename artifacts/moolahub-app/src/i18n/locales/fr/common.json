@@ -59,9 +59,37 @@
     "copy": "Copier",
     "copied": "Copié",
     "working": "Traitement…",
-    "withdrawUsdc": "Retirer des USDC",
     "sending": "Envoi…",
-    "recipientPlaceholder": "Adresse Monad du destinataire (0x…)",
-    "invite": "Inviter"
+    "invite": "Inviter",
+    "invalidAmount": "Saisissez un montant valide."
+  },
+  "technical": {
+    "send": {
+      "submit": "Retirer des USDC",
+      "recipientPlaceholder": "Adresse Monad du destinataire (0x…)"
+    },
+    "title": "Détails techniques",
+    "address": "Adresse du compte",
+    "network": "Réseau"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "server": "Un problème est survenu de notre côté. Votre argent n'a pas bougé. Réessayez dans une minute.",
+    "network": "Impossible de joindre MoolaHub. Vérifiez votre connexion et réessayez.",
+    "tooMany": "Trop de tentatives. Patientez un instant puis réessayez.",
+    "cancelled": "Annulé. Rien n'a été prélevé.",
+    "notEnough": "Votre solde disponible ne suffit pas. Ajoutez de l'argent ou choisissez un montant plus petit.",
+    "partner": "Impossible de joindre notre partenaire de paiement. Votre argent n'a pas bougé. Réessayez dans une minute.",
+    "processing": "En cours. Cela peut prendre quelques minutes. Nous vous préviendrons.",
+    "didNotGoThrough": "L'opération n'a pas abouti. Rien n'a quitté votre solde."
+  },
+  "states": {
+    "loadError": "Impossible de charger ce contenu. Vérifiez votre connexion et réessayez.",
+    "balanceStale": "Affichage de votre dernier solde connu. Il sera bientôt mis à jour."
+  },
+  "legal": {
+    "balanceFooter": "Détenu en USDC · Pas un dépôt bancaire · Non assuré",
+    "addMoney": "Votre solde est détenu en USDC, une monnaie numérique en dollars américains émise par Circle. MoolaHub n'est pas une banque. Votre solde n'est pas un dépôt bancaire et n'est ni assuré par la FDIC ni garanti par un gouvernement.",
+    "transfersOut": "Les envois vers des comptes externes sont irréversibles."
   }
 }

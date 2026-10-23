@@ -12,7 +12,7 @@ import {
 } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useQueryClient } from "@tanstack/react-query";
-import { avatarSrc, apiErrorMessage } from "@/lib/utils";
+import { avatarSrc, toUserError } from "@/lib/utils";
 
 function Field({
   label,
@@ -71,7 +71,7 @@ export default function ProfileInformationPage() {
         await updateProfile.mutateAsync({ data: { avatarUrl: res.objectPath } });
         await invalidate();
       } catch (err) {
-        setError(apiErrorMessage(err) ?? t("information.errors.savePicture"));
+        setError(toUserError(err, t("information.errors.savePicture")));
       }
     },
     onError: () => setError(t("information.errors.uploadImage")),
@@ -110,7 +110,7 @@ export default function ProfileInformationPage() {
       await invalidate();
       setSaved(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("information.errors.update"));
+      setError(toUserError(err, t("information.errors.update")));
     }
   };
 

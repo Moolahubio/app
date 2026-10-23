@@ -37,7 +37,8 @@ import {
   getGetWalletQueryKey,
   getGetDashboardSummaryQueryKey,
 } from "@workspace/api-client-react";
-import { formatMoney, apiErrorMessage } from "@/lib/utils";
+import { formatMoney, toUserError } from "@/lib/utils";
+import { parseAmountToCents, centsToAmountInput } from "@/lib/amount";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
 import { toast } from "@/hooks/use-toast";
 
@@ -93,7 +94,7 @@ export default function ReferEarnPage() {
   if (isError && !overview) {
     return (
       <div className="flex flex-col items-center gap-3 p-8 text-center">
-        <p className="text-sm text-muted-foreground">{apiErrorMessage(error) ?? t("states.error")}</p>
+        <p className="text-sm text-muted-foreground">{toUserError(error, t("states.error"))}</p>
         <Button variant="secondary" size="sm" onClick={() => refetch()}>
           {t("states.retry")}
         </Button>
@@ -107,6 +108,10 @@ export default function ReferEarnPage() {
 
   const o = overview;
   const w = o.withdrawal;
+  // Currency rewards are off unless the server flag is on (spec decision 22):
+  // then this page is only a reward-free invite link.
+  const rewards = o.rewardsEnabled;
+  const hasEarlierRewards = o.availableCents > 0 || o.lifetimeCents > 0;
   const ratePct = o.tier.rateBps / 100;
   const nextAt = o.tier.nextTierAtActive ?? null;
   const nextKey = o.tier.nextTierKey ?? null;
@@ -163,7 +168,7 @@ export default function ReferEarnPage() {
         },
         onError: (err) => {
           setConfirmingCode(false);
-          setCodeError(apiErrorMessage(err) ?? t("states.error"));
+          setCodeError(toUserError(err, t("states.error")));
         },
       },
     );
@@ -171,8 +176,8 @@ export default function ReferEarnPage() {
 
   const handleWithdraw = async () => {
     setFormError(null);
-    const cents = Math.round(parseFloat(amount) * 100);
-    if (!amount || Number.isNaN(cents) || cents <= 0) {
+    const cents = parseAmountToCents(amount);
+    if (cents === null || cents <= 0) {
       setFormError(t("withdraw.errors.amount"));
       return;
     }
@@ -233,9 +238,20 @@ export default function ReferEarnPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <BackLink href="/profile" label={t("common:actions.back")} />
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader
+        title={rewards ? t("title") : t("invite.title")}
+        description={rewards ? t("description") : t("invite.description")}
+      />
+
+      {!rewards && hasEarlierRewards && (
+        <Card className="flex items-start gap-3 border-amber-500/20 bg-amber-50/60 p-5 dark:bg-amber-500/10">
+          <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <p className="text-sm text-muted-foreground">{t("paused.note")}</p>
+        </Card>
+      )}
 
       {/* hero — tier, rate, lifetime */}
+      {rewards && (
       <Card className="relative isolate overflow-hidden border-0 bg-ink-950 p-6 text-white lg:p-8">
         <div className="absolute inset-0 -z-10 bg-grid-dark [background-size:32px_32px] [mask-image:radial-gradient(70%_80%_at_90%_0%,black,transparent)]" />
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -266,6 +282,7 @@ export default function ReferEarnPage() {
           </p>
         </div>
       </Card>
+      )}
 
       {/* invite link + code */}
       <Card className="p-6">
@@ -395,6 +412,8 @@ export default function ReferEarnPage() {
         </div>
       </Card>
 
+      {rewards && (
+      <>
       {/* stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Card className="p-4">
@@ -559,10 +578,7 @@ export default function ReferEarnPage() {
                 $
               </span>
               <input
-                type="number"
                 inputMode="decimal"
-                min={w.minCents / 100}
-                step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={t("withdraw.amountPlaceholder")}
@@ -571,7 +587,7 @@ export default function ReferEarnPage() {
             </div>
             <button
               type="button"
-              onClick={() => setAmount(String(maxWithdrawable / 100))}
+              onClick={() => setAmount(centsToAmountInput(maxWithdrawable))}
               disabled={maxWithdrawable < w.minCents}
               className="shrink-0 rounded-xl border border-border px-3 py-2.5 text-xs font-semibold text-foreground transition-colors hover:border-jade-500/40 disabled:opacity-50"
             >
@@ -617,7 +633,7 @@ export default function ReferEarnPage() {
           )}
           {withdraw.isError && !formError && (
             <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-              {apiErrorMessage(withdraw.error)}
+              {toUserError(withdraw.error)}
             </p>
           )}
         </div>
@@ -698,6 +714,8 @@ export default function ReferEarnPage() {
           {t("limits.note", { min: formatMoney(w.minCents), max: formatMoney(w.maxMonthlyCents) })}
         </p>
       </Card>
+      </>
+      )}
     </div>
   );
 }

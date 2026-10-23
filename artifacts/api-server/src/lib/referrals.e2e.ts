@@ -12,6 +12,9 @@
  *  - overview projection (earnings, active count, privacy: no referee balances)
  *  - withdrawal limits (min per withdrawal, $1,000 monthly cap) + offline
  *    ledger settlement (referral -> wallet)
+ *  - the REFERRAL_REWARDS_ENABLED flag: off by default (no accrual, a fee seen
+ *    while off is never paid retroactively, withdrawals refused), then on for
+ *    the rest of the engine checks
  *
  * chain.ts snapshots USDC_CONTRACT_ADDRESS at import and email.ts snapshots
  * RESEND_API_KEY at import, so clear them BEFORE importing for deterministic
@@ -23,6 +26,8 @@ import { randomUUID } from "node:crypto";
 delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
+// Rewards default to OFF; the flag is read per call, so the test flips it below.
+delete process.env.REFERRAL_REWARDS_ENABLED;
 
 const {
   db,
@@ -43,6 +48,7 @@ const {
   accrueReferralEarnings,
   getReferralOverview,
   withdrawReferralEarnings,
+  referralRewardsEnabled,
   tierForActiveCount,
   MIN_WITHDRAW_CENTS,
   MAX_MONTHLY_WITHDRAW_CENTS,
@@ -142,6 +148,42 @@ async function main() {
 
     // ---- make the referee an active saver ----
     await recordSave(referee, `save-${randomUUID()}`, new Date("2026-02-02T12:00:00Z"));
+
+    // ---- rewards OFF (the default): nothing accrues, withdrawals refused ----
+    assert.equal(referralRewardsEnabled(), false, "currency rewards are off by default");
+    const offFeeTxn = await confirmedFee({
+      amountCents: 100_000,
+      userId: referee,
+      fromKey: acct.external,
+      toKey: acct.fees,
+    });
+    assert.equal(await accrueReferralEarnings(), 0, "no earnings book while rewards are off");
+    assert.equal(await accountBalance(acct.referral(referrer)), 0, "no commission credited while off");
+    const offRow = (
+      await db
+        .select()
+        .from(referralEarningsTable)
+        .where(eq(referralEarningsTable.sourceTransactionId, offFeeTxn))
+    )[0];
+    assert.ok(offRow && offRow.status === "skipped" && offRow.commissionCents === 0, "fee seen while off is closed out as skipped");
+    await assert.rejects(
+      () => withdrawReferralEarnings(referrer, MIN_WITHDRAW_CENTS),
+      /paused/i,
+      "withdrawals are refused while rewards are off",
+    );
+    const offOv = await getReferralOverview(referrer);
+    assert.equal(offOv.rewardsEnabled, false, "overview tells the app rewards are off");
+    assert.equal(offOv.code, code, "the invite code still works while rewards are off");
+
+    // ---- rewards ON for the rest of the engine checks ----
+    process.env.REFERRAL_REWARDS_ENABLED = "true";
+    assert.equal(referralRewardsEnabled(), true, "flag is read per call");
+    await accrueReferralEarnings();
+    assert.equal(
+      await accountBalance(acct.referral(referrer)),
+      0,
+      "turning rewards back on never pays out a fee from the off period",
+    );
 
     // ---- accrual: goal-fee path (fee carries the referee's userId) ----
     const feeCents = 200_000; // $2,000 fee
@@ -257,6 +299,7 @@ async function main() {
     // ---- overview projection ----
     const ov = await getReferralOverview(referrer);
     assert.equal(ov.code, code, "overview returns the stable code");
+    assert.equal(ov.rewardsEnabled, true, "overview reports rewards on");
     assert.ok(ov.link.includes(`ref=${code}`), "overview link carries the code");
     assert.equal(ov.activeReferrals, 1, "one active referral");
     assert.equal(ov.totalReferred, 1, "one total referral");

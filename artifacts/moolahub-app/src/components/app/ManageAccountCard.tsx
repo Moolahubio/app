@@ -17,7 +17,7 @@ import {
   getGetMeQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 import { useStepUpGate } from "@/components/app/StepUpDialog";
 
 export function ManageAccountCard() {
@@ -50,7 +50,7 @@ export function ManageAccountCard() {
       setShowDeactivate(false);
       finishSignedOut();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("manageAccount.deactivate.error"));
+      setError(toUserError(err, t("manageAccount.deactivate.error")));
     }
   };
 
@@ -63,7 +63,7 @@ export function ManageAccountCard() {
       setShowDelete(false);
       finishSignedOut();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("manageAccount.delete.error"));
+      setError(toUserError(err, t("manageAccount.delete.error")));
     }
   };
 

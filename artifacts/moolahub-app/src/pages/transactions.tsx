@@ -1,10 +1,11 @@
 import { ArrowDownLeft, ArrowUpRight, Sparkles, Target, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Card, Badge, IconChip } from "@/components/ui";
-import { PageHeader, TxTag, Money } from "@/components/app/bits";
+import { PageHeader, TxTag, TxStatus, Money, LoadError } from "@/components/app/bits";
 import { useListActivity, useGetDashboardSummary } from "@workspace/api-client-react";
 import type { ActivityItem } from "@workspace/api-client-react";
 import { formatDate } from "@/lib/utils";
+import { useTechnicalDetails } from "@/hooks/use-technical-details";
 
 const activityIcon: Record<string, typeof ArrowDownLeft> = {
   deposit: ArrowDownLeft,
@@ -31,13 +32,27 @@ function groupByDay(items: ActivityItem[]) {
 
 export default function TransactionsPage() {
   const { t } = useTranslation("transactions");
-  const { data: activity, isLoading: isActivityLoading } = useListActivity({ limit: 100 });
+  const [technical] = useTechnicalDetails();
+  const {
+    data: activity,
+    isLoading: isActivityLoading,
+    isError: isActivityError,
+    refetch: refetchActivity,
+  } = useListActivity({ limit: 100 });
   const { data: summary } = useGetDashboardSummary();
 
   const grouped = groupByDay(activity ?? []);
   const reminder = summary?.upcomingReminder;
 
   if (isActivityLoading) return <div className="p-8 text-center text-muted-foreground">{t("loading")}</div>;
+  // A failed load must not read as "No transactions yet."
+  if (isActivityError && !activity) {
+    return (
+      <Card className="mx-auto max-w-5xl">
+        <LoadError onRetry={() => void refetchActivity()} />
+      </Card>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -97,14 +112,10 @@ export default function TransactionsPage() {
                           {item.description}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                          {item.txHash ? (
+                          {technical && item.txHash ? (
                             <TxTag hash={item.txHash} confirmed={item.onchainStatus !== "failed"} />
                           ) : (
-                            <span className="font-mono text-[11px] text-muted-foreground">
-                              {item.onchainStatus === "pending" || item.onchainStatus === "queued"
-                                ? t("onchain.settling")
-                                : t("onchain.offchain")}
-                            </span>
+                            <TxStatus status={item.onchainStatus} />
                           )}
                         </div>
                       </div>

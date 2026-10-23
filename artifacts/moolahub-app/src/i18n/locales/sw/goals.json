@@ -2,7 +2,7 @@
   "list": {
     "loading": "Inapakia akiba yako binafsi…",
     "title": "Akiba yako binafsi",
-    "description": "Weka lengo na tarehe, nasi tutafuatilia maendeleo yako. Kila lengo ni kifuko ndani ya pochi yako moja, si akaunti tofauti.",
+    "description": "Weka lengo na tarehe, nasi tutafuatilia maendeleo yako. Kila lengo ni kifuko ndani ya salio lako, si akaunti tofauti.",
     "newGoal": "Lengo jipya",
     "createGoal": "Tengeneza lengo"
   },
@@ -30,7 +30,7 @@
       "placeholder": "mf. Mfuko wa dharura"
     },
     "target": {
-      "label": "Kiasi lengwa (USDC)"
+      "label": "Kiasi lengwa"
     },
     "deadline": {
       "label": "Tarehe lengwa"
@@ -71,20 +71,19 @@
     "loading": "Inapakia lengo…",
     "notFound": "Hatukuweza kupata lengo hilo.",
     "savedLabel": "imewekwa",
-    "savedOfTarget": "<0></0> kati ya <1></1>",
-    "onChain": "Kwenye mnyororo"
+    "savedOfTarget": "<0></0> kati ya <1></1>"
   },
   "deposit": {
-    "title": "Ongeza pesa",
+    "title": "Hamishia kwenye lengo",
     "description": "Hamisha fedha kutoka salio lako lililopo hadi mgao huu.",
-    "descriptionOnchain": "Hamisha fedha kutoka salio lako lililopo hadi hazina ya lengo hili kwenye mnyororo. Amana ni bure.",
-    "addFunds": "Ongeza fedha",
+    "descriptionOnchain": "Hamisha pesa kutoka salio lako linalopatikana kwenda kwenye lengo hili. Hakuna ada.",
+    "addFunds": "Hamishia kwenye lengo",
     "success": "Fedha zimeongezwa kwenye lengo"
   },
   "withdraw": {
-    "title": "Toa",
-    "feeNote": "Ada ya kutoa ya {{fee}}% hukatwa kwenye mnyororo. Utapokea kiasi baada ya kutoa ada.",
-    "submit": "Toa hadi salio lililopo",
+    "title": "Rudisha kwenye salio",
+    "feeNote": "Ada ya {{fee}}% inatozwa unapohamisha pesa kutoka kwenye lengo hili. Unapokea kiasi baada ya ada.",
+    "submit": "Rudisha kwenye salio",
     "released": "{{amount}} imetolewa hadi salio lililopo",
     "releasedWithFee": "{{amount}} imetolewa (baada ya ada ya {{fee}})"
   },
@@ -110,10 +109,6 @@
       "monthly": "Endelea kila mwezi. Takriban <0>miezi {{count}}</0> ya michango imebaki ili kufikia lengo lako."
     }
   },
-  "vault": {
-    "title": "Hazina kwenye mnyororo",
-    "description": "Fedha unazotenga huwekwa kwenye hazina hii kwenye Monad. Ada ya itifaki ya {{fee}}% hukatwa kwa kila utoaji."
-  },
   "activity": {
     "title": "Shughuli",
     "types": {
@@ -122,9 +117,9 @@
     },
     "status": {
       "none": "Hakuna",
-      "pending": "Inasubiri",
-      "confirmed": "Imethibitishwa",
-      "failed": "Imeshindwa"
+      "pending": "Inashughulikiwa…",
+      "confirmed": "Imekamilika",
+      "failed": "Haikufanikiwa"
     }
   },
   "delete": {
@@ -137,25 +132,32 @@
   },
   "toast": {
     "streakTitle": "Mfululizo umedumishwa 🔥",
-    "streakDescription": "Vizuri, amana hiyo inahesabika kwenye mfululizo wako wa kuweka akiba."
+    "streakDescription": "Vizuri, hilo linahesabika kwenye mfululizo wako wa kuweka akiba."
   },
   "privy": {
-    "loadingWallet": "Inapakia pochi yako…",
+    "loadingWallet": "Tunaandaa…",
     "connect": {
       "deposit": {
-        "prompt": "Pochi yako inajitunza yenyewe. Iunganishe ili usaini amana mwenyewe.",
-        "button": "Unganisha pochi ili kuweka amana"
+        "prompt": "Thibitisha ni wewe ili kuhamisha pesa kwenye lengo hili.",
+        "button": "Endelea"
       },
       "withdrawal": {
-        "prompt": "Pochi yako inajitunza yenyewe. Iunganishe ili usaini utoaji mwenyewe.",
-        "button": "Unganisha pochi ili kutoa"
+        "prompt": "Thibitisha ni wewe ili kuhamisha pesa kutoka kwenye lengo hili.",
+        "button": "Endelea"
       }
     },
     "errors": {
-      "unavailable": "Kuweka akiba ya malengo kwenye mnyororo hakupatikani kwenye toleo hili.",
+      "unavailable": "Kuhamisha pesa kwenye malengo hakupatikani kwa sasa.",
       "invalidAmount": "Weka kiasi sahihi.",
-      "depositFailed": "Amana imeshindikana. Tafadhali jaribu tena.",
-      "withdrawalFailed": "Utoaji umeshindikana. Tafadhali jaribu tena."
+      "depositFailed": "Haikufanikiwa. Tafadhali jaribu tena.",
+      "withdrawalFailed": "Haikufanikiwa. Tafadhali jaribu tena."
+    }
+  },
+  "technical": {
+    "badge": "Kwenye mnyororo",
+    "vault": {
+      "title": "Hazina kwenye mnyororo",
+      "description": "Fedha unazotenga huwekwa kwenye hazina hii kwenye Monad. Ada ya itifaki ya {{fee}}% hukatwa kwa kila utoaji."
     }
   }
 }

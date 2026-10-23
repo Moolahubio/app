@@ -43,7 +43,7 @@ export async function issueReauthCode(userId: string, email: string, name: strin
 
   await sendEmail({
     to: email,
-    subject: "Confirm it's you — MoolaHub security code",
+    subject: "Confirm it's you: MoolaHub security code",
     html: brandedEmail({
       heading: "Confirm it's you",
       body: `Hi ${name}, someone is trying to add a new sign-in method to your MoolaHub account. Your confirmation code is ${code}. It expires in 15 minutes. If this wasn't you, do not share this code, and consider signing out of any devices you don't recognize.`,

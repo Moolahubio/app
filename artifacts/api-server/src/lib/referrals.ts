@@ -65,6 +65,26 @@ export const REFERRAL_TIERS: ReferralTier[] = [
 export const MIN_WITHDRAW_CENTS = 10_000; // $100
 export const MAX_MONTHLY_WITHDRAW_CENTS = 100_000; // $1,000
 
+/**
+ * Currency referral rewards are OFF unless REFERRAL_REWARDS_ENABLED=true (spec
+ * decision 22; App Store 3.1.5(v) bars currency rewards for referrals). While
+ * off:
+ *  - no commission accrues: the sweep marks each newly confirmed fee 'skipped',
+ *    so turning rewards back on later never pays out retroactively;
+ *  - commission withdrawals are refused with a clear message;
+ *  - the overview reports `rewardsEnabled: false`, so the app shows only a
+ *    reward-free invite link.
+ * Codes, attributions, earned rows and referral balances are left untouched.
+ * Read per call (not at import) so ops can flip it without a code change.
+ */
+export function referralRewardsEnabled(): boolean {
+  const v = process.env.REFERRAL_REWARDS_ENABLED?.trim().toLowerCase();
+  return v === "true" || v === "1";
+}
+
+export const REWARDS_PAUSED_MSG =
+  "Invite rewards are paused, so earnings can't be withdrawn right now. Your earnings stay on your account.";
+
 const ACCRUAL_INTERVAL_MS = 20_000;
 const ACCRUAL_BATCH = 500;
 
@@ -425,6 +445,22 @@ export async function accrueReferralEarnings(limit = ACCRUAL_BATCH): Promise<num
     .orderBy(transactionsTable.createdAt)
     .limit(limit);
 
+  // Rewards off: close out each fee with a zero 'skipped' marker instead of
+  // accruing, so nothing is earned now or retroactively once re-enabled.
+  if (!referralRewardsEnabled()) {
+    for (const c of candidates) {
+      try {
+        await db
+          .insert(referralEarningsTable)
+          .values({ sourceTransactionId: c.id, feeCents: 0, rateBps: 0, commissionCents: 0, status: "skipped" })
+          .onConflictDoNothing();
+      } catch (e) {
+        logger.error({ err: e, txnId: c.id }, "[referrals] skip marker failed for fee txn");
+      }
+    }
+    return 0;
+  }
+
   let booked = 0;
   for (const c of candidates) {
     try {
@@ -525,6 +561,8 @@ export type ReferralRefereeView = {
 export type ReferralOverview = {
   code: string;
   link: string;
+  /** False while currency rewards are off: the app shows only the invite link. */
+  rewardsEnabled: boolean;
   tier: {
     key: ReferralTier["key"];
     rateBps: number;
@@ -638,6 +676,7 @@ export async function getReferralOverview(userId: string): Promise<ReferralOverv
   return {
     code,
     link: referralLink(code),
+    rewardsEnabled: referralRewardsEnabled(),
     tier: {
       key: tier.key,
       rateBps: tier.rateBps,
@@ -674,6 +713,7 @@ export async function withdrawReferralEarnings(
   userId: string,
   amountCents: number,
 ): Promise<{ amountCents: number }> {
+  if (!referralRewardsEnabled()) throw new AppError(REWARDS_PAUSED_MSG, 403);
   if (!Number.isInteger(amountCents) || amountCents <= 0) {
     throw new AppError("Enter a valid amount.");
   }
@@ -721,7 +761,7 @@ export async function withdrawReferralEarnings(
     const toKey = settle ? acct.external : acct.wallet(userId);
     const txn = await transfer({
       type: "referral_withdrawal",
-      description: settle ? "Referral earnings withdrawal" : "Referral earnings moved to wallet",
+      description: "Referral earnings moved to your balance",
       userId,
       fromKey: acct.referral(userId),
       toKey,
@@ -756,7 +796,7 @@ export async function withdrawReferralEarnings(
     {
       type: "withdrawal",
       title: "Referral earnings withdrawal",
-      body: `${formatMoney(amountCents)} of referral earnings is on its way to your wallet.`,
+      body: `${formatMoney(amountCents)} of referral earnings is on its way to your balance.`,
       link: "/referrals",
     },
     { email: true },

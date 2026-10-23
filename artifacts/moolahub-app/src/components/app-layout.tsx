@@ -34,7 +34,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { label: t("nav.transactions"), href: "/transactions", icon: ArrowLeftRight },
   ];
 
-  const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary({
+  const { data: summary, isLoading: isSummaryLoading, isError: isSummaryError } = useGetDashboardSummary({
     query: { enabled: isAuthenticated, queryKey: getGetDashboardSummaryQueryKey() }
   });
   const { data: notifData } = useListNotifications({
@@ -118,7 +118,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 {t("labels.balance")}
               </span>
               <span dir="ltr" className="text-sm font-bold tabular-nums text-foreground">
-                {isSummaryLoading ? "…" : formatMoney(summary?.totalCents ?? 0)}
+                {/* A failed load shows "—", never a misleading $0.00. */}
+                {isSummaryLoading ? "…" : summary ? formatMoney(summary.totalCents) : isSummaryError ? "—" : "…"}
               </span>
             </Link>
 

@@ -19,7 +19,7 @@
   "tiers": {
     "everything": {
       "label": "Tout",
-      "description": "Toutes les notifications : activité des cercles, étapes des objectifs, dépôts, rappels et conseils."
+      "description": "Toutes les notifications : activité des cercles, étapes des objectifs, argent ajouté, rappels et conseils."
     },
     "essential": {
       "label": "Essentiel",
@@ -37,7 +37,7 @@
   "categories": {
     "money": {
       "label": "Argent et transactions",
-      "description": "Dépôts, retraits, versements et rappels de contributions."
+      "description": "Argent ajouté et envoyé, versements et rappels de paiement."
     },
     "social": {
       "label": "Épargne de groupe et social",

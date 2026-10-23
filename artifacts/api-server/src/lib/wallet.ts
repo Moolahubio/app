@@ -47,7 +47,7 @@ export async function createPrivyWalletForUser(userId: string, embeddedAddress: 
   const [existing] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   if (existing) return existing;
   if (!isValidAddress(embeddedAddress)) {
-    throw new AppError("Your Privy wallet address looks invalid. Please try again.");
+    throw new AppError("We couldn't finish setting up your account. Please try again.");
   }
   const address = getAddress(embeddedAddress);
   const [wallet] = await db
@@ -85,7 +85,7 @@ export async function getWalletForUser(userId: string) {
 export async function requireWalletForUser(userId: string) {
   const wallet = await getWalletForUser(userId);
   if (!wallet) {
-    throw new AppError("Set up your wallet first to move money.");
+    throw new AppError("Finish setting up your account on the Balance page to move money.");
   }
   return wallet;
 }

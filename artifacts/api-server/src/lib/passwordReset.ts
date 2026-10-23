@@ -55,7 +55,7 @@ export async function issuePasswordResetCode(
     subject: "Reset your MoolaHub password",
     html: brandedEmail({
       heading: "Reset your password",
-      body: `Hi ${name}, your MoolaHub password reset code is ${code}. It expires in 15 minutes. If you didn't request this, you can safely ignore this email — your password won't change.`,
+      body: `Hi ${name}, your MoolaHub password reset code is ${code}. It expires in 15 minutes. If you didn't request this, you can safely ignore this email. Your password won't change.`,
     }),
     text: `Your MoolaHub password reset code is ${code}. It expires in 15 minutes.`,
   });

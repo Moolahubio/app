@@ -1,10 +1,11 @@
 import { Link } from "wouter";
 import { Plus, Users, ArrowRight, ShieldCheck, Inbox } from "lucide-react";
 import { Card, Button, Badge, ProgressBar, Avatar, Eyebrow, Skeleton } from "@/components/ui";
-import { PageHeader, Money } from "@/components/app/bits";
+import { PageHeader, Money, LoadError } from "@/components/app/bits";
 import { ActionButton } from "@/components/app/forms";
 import { useListCircles, useListInvites, useAcceptInvite, useDeclineInvite, useCreateCircle, getListCirclesQueryKey, getListInvitesQueryKey } from "@workspace/api-client-react";
-import { formatMoney } from "@/lib/utils";
+import { formatMoney, toUserError } from "@/lib/utils";
+import { parseAmountToCents } from "@/lib/amount";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ const statusTone = {
 
 export default function CirclesPage() {
   const { t } = useTranslation("circles");
-  const { data: circles, isLoading: circlesLoading } = useListCircles();
+  const { data: circles, isLoading: circlesLoading, isError: circlesError, refetch: refetchCircles } = useListCircles();
   const { data: invites, isLoading: invitesLoading } = useListInvites();
   
   const queryClient = useQueryClient();
@@ -43,36 +44,46 @@ export default function CirclesPage() {
   const [emails, setEmails] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const FEE_RATE = 0.02; // 2% added on top of each member's base contribution
+  // 2% added on top of each member's base contribution, in integer basis points
+  // so the preview matches the server's `base + round(base * bps / 10000)`.
+  const FEE_BPS = 200;
   const emailCount = emails.split(",").map((e) => e.trim()).filter(Boolean).length;
+
+  // Amounts are parsed from the typed string into integer cents (no float
+  // math); anything that isn't a plain amount with at most 2 decimals is null.
+  const targetCents = parseAmountToCents(targetPayout);
+  const contributionCents = parseAmountToCents(contribution);
 
   // Rotation (target-payout): owner sets the payout each member receives and the
   // group size; everyone pays an equal base + 2% fee so the recipient nets the target.
-  const targetNum = parseFloat(targetPayout) || 0;
   const groupNum = Math.max(0, parseInt(groupSize, 10) || 0);
-  const baseCents = type === "rotation" && groupNum >= 1 ? Math.round((targetNum * 100) / groupNum) : 0;
-  const perPersonCents = baseCents + Math.round(baseCents * FEE_RATE);
+  const baseCents = type === "rotation" && groupNum >= 1 ? Math.round((targetCents ?? 0) / groupNum) : 0;
+  const perPersonCents = baseCents + Math.round((baseCents * FEE_BPS) / 10_000);
   const rotationFeeCents = perPersonCents - baseCents;
   const rotationReceiveCents = baseCents * groupNum;
 
   // Accumulation: fixed contribution; get your own savings back at the end.
-  const contributionAmount = parseFloat(contribution) || 0;
   const roundsNum = Math.max(0, parseInt(numRounds, 10) || 0);
 
   const maxInvites = type === "rotation" ? Math.max(0, groupNum - 1) : 19;
-  const payPerRoundCents = type === "rotation" ? perPersonCents : Math.round(contributionAmount * 100);
-  const receiveCents = type === "rotation" ? rotationReceiveCents : Math.round(contributionAmount * 100) * roundsNum;
-  const rotationInvalid = type === "rotation" && (targetNum <= 0 || groupNum < 2);
+  const payPerRoundCents = type === "rotation" ? perPersonCents : (contributionCents ?? 0);
+  const receiveCents = type === "rotation" ? rotationReceiveCents : (contributionCents ?? 0) * roundsNum;
+  const rotationInvalid = type === "rotation" && (!targetCents || targetCents <= 0 || groupNum < 2);
+  const accumulationInvalid = type === "accumulation" && (!contributionCents || contributionCents <= 0);
+  const amountInvalid =
+    (type === "rotation" && targetPayout.trim() !== "" && (targetCents === null || targetCents <= 0)) ||
+    (type === "accumulation" && contribution.trim() !== "" && (contributionCents === null || contributionCents <= 0));
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (rotationInvalid || accumulationInvalid) return;
     const memberEmails = emails.split(",").map((s) => s.trim()).filter(Boolean);
     const data =
       type === "rotation"
         ? {
             name,
             type,
-            targetPayoutCents: Math.round(targetNum * 100),
+            targetPayoutCents: targetCents ?? 0,
             groupSize: groupNum,
             frequency,
             memberEmails,
@@ -81,7 +92,7 @@ export default function CirclesPage() {
         : {
             name,
             type,
-            contributionCents: Math.round(contributionAmount * 100),
+            contributionCents: contributionCents ?? 0,
             numRounds: roundsNum,
             frequency,
             memberEmails,
@@ -108,6 +119,13 @@ export default function CirclesPage() {
 
   if (circlesLoading || invitesLoading) {
     return <div className="p-8 text-center text-muted-foreground">{t("list.loading")}</div>;
+  }
+  if (circlesError && !circles) {
+    return (
+      <Card className="mx-auto max-w-6xl">
+        <LoadError onRetry={() => void refetchCircles()} />
+      </Card>
+    );
   }
 
   const visible = circles?.filter((c) => c.status !== "completed") ?? [];
@@ -178,14 +196,17 @@ export default function CirclesPage() {
                   <>
                     <div className="space-y-2">
                       <Label>{t("create.targetPayout.label")}</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        value={targetPayout}
-                        onChange={(e) => setTargetPayout(e.target.value)}
-                        required
-                        placeholder="20000"
-                      />
+                      <div dir="ltr" className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-sm text-muted-foreground">$</span>
+                        <Input
+                          inputMode="decimal"
+                          value={targetPayout}
+                          onChange={(e) => setTargetPayout(e.target.value)}
+                          required
+                          placeholder="20000"
+                          className="ps-7"
+                        />
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {t("create.targetPayout.hint")}
                       </p>
@@ -207,7 +228,17 @@ export default function CirclesPage() {
                   <>
                     <div className="space-y-2">
                       <Label>{t("create.contribution.label")}</Label>
-                      <Input type="number" value={contribution} onChange={e => setContribution(e.target.value)} required placeholder="100" />
+                      <div dir="ltr" className="relative">
+                        <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-sm text-muted-foreground">$</span>
+                        <Input
+                          inputMode="decimal"
+                          value={contribution}
+                          onChange={e => setContribution(e.target.value)}
+                          required
+                          placeholder="100"
+                          className="ps-7"
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>{t("create.numRounds.label")}</Label>
@@ -283,10 +314,16 @@ export default function CirclesPage() {
                   value={imageUrl}
                   onChange={setImageUrl}
                 />
+                {amountInvalid && (
+                  <p className="text-xs text-destructive">{t("common:forms.invalidAmount")}</p>
+                )}
+                {createMutation.error && (
+                  <p className="text-sm text-destructive" role="alert">{toUserError(createMutation.error)}</p>
+                )}
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createMutation.isPending || emailCount > maxInvites || rotationInvalid}
+                  disabled={createMutation.isPending || emailCount > maxInvites || rotationInvalid || accumulationInvalid}
                 >
                   {createMutation.isPending ? t("create.submitting") : t("create.submit")}
                 </Button>

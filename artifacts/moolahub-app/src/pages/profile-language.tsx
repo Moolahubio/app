@@ -3,7 +3,7 @@ import { Check, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PageHeader, BackLink } from "@/components/app/bits";
 import { useLanguageSetting } from "@/hooks/use-language-setting";
-import { apiErrorMessage, cn } from "@/lib/utils";
+import { toUserError, cn } from "@/lib/utils";
 import type { LanguageCode } from "@/i18n/languages";
 
 export default function ProfileLanguagePage() {
@@ -21,7 +21,7 @@ export default function ProfileLanguagePage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("language.error"));
+      setError(toUserError(err, t("language.error")));
     }
   };
 

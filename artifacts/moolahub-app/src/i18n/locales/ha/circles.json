@@ -2,11 +2,11 @@
   "list": {
     "loading": "Ana loda tanadin ƙungiyarka…",
     "title": "Tanadin ƙungiyarka",
-    "description": "Tanadi mai juyawa tare da mutanen da ka amince da su. Kowane zagaye ana riƙe shi da kwangilar on-chain, ba mutum ba.",
+    "description": "Tanadi mai juyawa tare da mutanen da ka amince da su. Kowace da'ira tana nuna dokokinta, kuɗin caji da tsarin biya kafin ka shiga.",
     "emptyHint": "Gayyaci abokai ko dangi ka kuma saita gudummawarka"
   },
   "info": {
-    "susu": "<b>Yadda Susu ke aiki:</b> kowa yana ba da kuɗi ƙayyadadde kowane zagaye. A cikin da'irar <em>juyawa</em>, memba ɗaya yana karɓar dukan tulu kowane zagaye har sai kowa ya sami damarsa. A cikin da'irar <em>tarawa</em>, kowa yana tanadi cikin tulu ɗaya na gama-gari sannan ya karɓi tanadinsa a ƙarshe. Komai ana iya tabbatar da shi a kan Monad."
+    "susu": "<b>Yadda Susu ke aiki:</b> kowa yana biyan kuɗi ƙayyadadde kowane zagaye. A cikin da'irar <em>juyawa</em>, memba ɗaya yana karɓar tulun kowane zagaye har sai kowa ya sami damarsa. A cikin da'irar <em>tarawa</em>, kowa yana tanadi cikin tulu ɗaya na gama-gari sannan ya karɓi tanadinsa a ƙarshe."
   },
   "frequency": {
     "weekly": "Kowane mako",
@@ -35,7 +35,7 @@
       "label": "Nau'in da'ira",
       "rotation": {
         "title": "Juyawa",
-        "description": "Ku yi ta juyawa. Kowa yana biya kowane zagaye, kuma memba ɗaya yana karɓar dukan tulu har sai kowa ya sami damarsa."
+        "description": "Ku yi ta juyawa. Kowa yana biya kowane zagaye, kuma memba ɗaya yana karɓar tulun har sai kowa ya sami damarsa."
       },
       "accumulation": {
         "title": "Tarawa",
@@ -43,14 +43,14 @@
       }
     },
     "targetPayout": {
-      "label": "Adadin biyan da ake nufi ga kowane mutum (USDC)",
+      "label": "Adadin biyan da ake nufi ga kowane mutum",
       "hint": "Abin da kowane memba ke karɓa lokacin da ya kai damarsa."
     },
     "groupSize": {
       "label": "Adadin mutane (haɗe da kai)"
     },
     "contribution": {
-      "label": "Gudummawa kowane zagaye (USDC)"
+      "label": "Gudummawa kowane zagaye"
     },
     "numRounds": {
       "label": "Adadin zagaye"
@@ -96,11 +96,10 @@
   "detail": {
     "loading": "Ana loda da'ira…",
     "notFound": "Ba mu sami wannan da'irar ba.",
-    "onChain": "On-chain",
     "formingSuffix": "ana kafawa",
     "submitting": "Ana aikawa…",
-    "contribute": "Ba da gudummawa {{amount}}",
-    "contributedThisRound": "An ba da gudummawa a wannan zagaye",
+    "contribute": "Biya {{amount}}",
+    "contributedThisRound": "An biya a wannan zagaye",
     "notStarted": "Wannan da'irar ba ta fara ba tukuna",
     "stats": {
       "rounds": "Zagaye",
@@ -126,8 +125,8 @@
     "schedule": {
       "membersTitle": "Membobi",
       "payoutTitle": "Jadawalin biya",
-      "descAccumulation": "Kowa yana tanadi cikin tulu ɗaya na gama-gari. Bayan zagaye {{count}}, kowane memba yana karɓar tanadinsa, wanda aka kulle a on-chain.",
-      "descRotation": "An kulle juyawar a on-chain, don haka kowa ya san wa zai karɓi tulu, da kuma yaushe.",
+      "descAccumulation": "Kowa yana tanadi cikin tulu ɗaya na gama-gari. Bayan zagaye {{count}}, kowane memba yana karɓar tanadinsa.",
+      "descRotation": "Ana tsara jerin biya lokacin da da'ira ta fara, don kowa ya san wanda zai karɓi tulun, da kuma lokacin.",
       "you": "(kai)",
       "savingsReturned": "An mayar da tanadi",
       "saving": "Ana tanadi",
@@ -139,10 +138,6 @@
       "title": "Ci gaban zagaye",
       "roundsOf": "{{current}} daga zagaye {{total}}"
     },
-    "escrow": {
-      "title": "Ajiya ta on-chain",
-      "description": "Gudummawa suna zama cikin wannan ajiyar Susu a kan Monad. Ana ɗaukar cajin yarjejeniya na {{fee}}% daga kowace biya."
-    },
     "history": {
       "title": "Gudummawarka",
       "round": "Zagaye {{round}}"
@@ -153,11 +148,18 @@
     }
   },
   "privy": {
-    "loadingWallet": "Ana loda walat ɗinka…",
-    "selfCustody": "Walat ɗinka na kanka ne. Haɗa shi don ka rattaba hannu kan gudummawar da kanka.",
-    "connect": "Haɗa walat don ba da gudummawa",
-    "notAvailable": "Gudummawar on-chain ba ta samuwa a wannan tsarin.",
-    "failed": "Gudummawa ta gaza. Da fatan za a sake gwadawa.",
+    "loadingWallet": "Ana shiryawa…",
+    "selfCustody": "Tabbatar cewa kai ne don biya.",
+    "connect": "Ci gaba",
+    "notAvailable": "Biya ba ya samuwa a yanzu. Da fatan a sake gwadawa daga baya.",
+    "failed": "Bai yi nasara ba. Da fatan a sake gwadawa.",
     "submitting": "Ana aikawa…"
+  },
+  "technical": {
+    "badge": "On-chain",
+    "escrow": {
+      "title": "Ajiya ta on-chain",
+      "description": "Gudummawa suna zama cikin wannan ajiyar Susu a kan Monad. Ana ɗaukar cajin yarjejeniya na {{fee}}% daga kowace biya."
+    }
   }
 }

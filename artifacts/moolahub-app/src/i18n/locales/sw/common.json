@@ -59,9 +59,37 @@
     "copy": "Nakili",
     "copied": "Imenakiliwa",
     "working": "Inashughulikia…",
-    "withdrawUsdc": "Toa USDC",
     "sending": "Inatuma…",
-    "recipientPlaceholder": "Anwani ya Monad ya mpokeaji (0x…)",
-    "invite": "Alika"
+    "invite": "Alika",
+    "invalidAmount": "Weka kiasi sahihi."
+  },
+  "technical": {
+    "send": {
+      "submit": "Toa USDC",
+      "recipientPlaceholder": "Anwani ya Monad ya mpokeaji (0x…)"
+    },
+    "title": "Maelezo ya kiufundi",
+    "address": "Anwani ya akaunti",
+    "network": "Mtandao"
+  },
+  "errors": {
+    "generic": "Kuna hitilafu imetokea. Tafadhali jaribu tena.",
+    "server": "Kuna hitilafu upande wetu. Pesa yako haijahamishwa. Tafadhali jaribu tena baada ya dakika moja.",
+    "network": "Hatukuweza kufikia MoolaHub. Angalia muunganisho wako na ujaribu tena.",
+    "tooMany": "Majaribio mengi mno. Tafadhali subiri kidogo kisha ujaribu tena.",
+    "cancelled": "Imeghairiwa. Hakuna kilichochukuliwa.",
+    "notEnough": "Huna salio la kutosha kwa hilo. Ongeza pesa au chagua kiasi kidogo zaidi.",
+    "partner": "Hatukuweza kufikia mshirika wetu wa malipo. Pesa yako haijahamishwa. Jaribu tena baada ya dakika moja.",
+    "processing": "Inashughulikiwa. Hii inaweza kuchukua dakika chache. Tutakujulisha.",
+    "didNotGoThrough": "Haikufanikiwa. Hakuna kilichotoka kwenye salio lako."
+  },
+  "states": {
+    "loadError": "Hatukuweza kupakia hii. Angalia muunganisho wako na ujaribu tena.",
+    "balanceStale": "Tunaonyesha salio lako la mwisho tunalolijua. Tutalisasisha hivi karibuni."
+  },
+  "legal": {
+    "balanceFooter": "Inashikiliwa kama USDC · Si amana ya benki · Haina bima",
+    "addMoney": "Salio lako linashikiliwa kama USDC, sarafu ya kidijitali ya dola ya Marekani inayotolewa na Circle. MoolaHub si benki. Salio lako si amana ya benki na halina bima ya FDIC wala dhamana ya serikali.",
+    "transfersOut": "Utumaji kwenda akaunti za nje hauwezi kurejeshwa."
   }
 }

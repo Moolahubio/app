@@ -30,6 +30,7 @@ import ProfileSecurity from "@/pages/profile-security";
 import ProfileNotifications from "@/pages/profile-notifications";
 import ProfileStreak from "@/pages/profile-streak";
 import ProfileLanguage from "@/pages/profile-language";
+import ProfileAdvanced from "@/pages/profile-advanced";
 import Streaks from "@/pages/streaks";
 import ReferEarn from "@/pages/refer-earn";
 
@@ -99,6 +100,9 @@ function Router() {
       </Route>
       <Route path="/profile/language">
         <ProtectedRoute component={ProfileLanguage} />
+      </Route>
+      <Route path="/profile/advanced">
+        <ProtectedRoute component={ProfileAdvanced} />
       </Route>
       <Route path="/profile">
         <ProtectedRoute component={Profile} />

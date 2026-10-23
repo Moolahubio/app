@@ -9,7 +9,7 @@ import {
   useResendVerificationCode,
   getGetMeQueryKey,
 } from "@workspace/api-client-react";
-import { apiErrorMessage } from "@/lib/utils";
+import { toUserError } from "@/lib/utils";
 
 export function VerifyEmailStep({
   email,
@@ -47,7 +47,7 @@ export function VerifyEmailStep({
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       setLocation("/");
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("verify.codeError"));
+      setError(toUserError(err, t("verify.codeError")));
     }
   };
 
@@ -58,7 +58,7 @@ export function VerifyEmailStep({
       await resendCode.mutateAsync({ data: { email } });
       setResent(true);
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("resend.error"));
+      setError(toUserError(err, t("resend.error")));
     }
   };
 

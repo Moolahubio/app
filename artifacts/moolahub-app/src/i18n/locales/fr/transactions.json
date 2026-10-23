@@ -2,7 +2,7 @@
   "loading": "Chargement des transactions…",
   "header": {
     "title": "Votre argent, tout est consigné",
-    "description": "Chaque dépôt, contribution et versement. Chacun est lié à sa preuve sur Monad."
+    "description": "Tout ce que vous avez ajouté, versé, déplacé et reçu, au même endroit."
   },
   "reminders": {
     "title": "Rappels à venir",
@@ -12,17 +12,21 @@
     "title": "Historique des transactions",
     "empty": "Aucune transaction pour le moment."
   },
-  "onchain": {
-    "settling": "règlement sur la chaîne…",
-    "offchain": "hors chaîne"
-  },
   "types": {
-    "deposit": "Dépôt",
+    "deposit": "Argent ajouté",
     "payout": "Versement",
-    "yield": "Rendement",
-    "contribution": "Contribution",
-    "goal_allocate": "Affectation",
-    "goal_release": "Libération",
-    "withdrawal": "Retrait"
+    "yield": "Gains",
+    "contribution": "Versement",
+    "goal_allocate": "Placé dans un objectif",
+    "goal_release": "Remis dans le solde",
+    "withdrawal": "Retrait",
+    "fee": "Frais",
+    "referral_earning": "Récompense de parrainage",
+    "referral_withdrawal": "Récompense de parrainage transférée"
+  },
+  "status": {
+    "processing": "En cours…",
+    "done": "Terminé",
+    "failed": "Non abouti"
   }
 }

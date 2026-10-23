@@ -19,7 +19,7 @@
   "tiers": {
     "everything": {
       "label": "Everything",
-      "description": "All notifications: circle activity, goal milestones, deposits, reminders, and tips."
+      "description": "All notifications: circle activity, goal milestones, money added, reminders, and tips."
     },
     "essential": {
       "label": "Essential",
@@ -37,7 +37,7 @@
   "categories": {
     "money": {
       "label": "Money & transactions",
-      "description": "Deposits, withdrawals, payouts, and contribution reminders."
+      "description": "Money added and sent, payouts, and payment reminders."
     },
     "social": {
       "label": "Group savings & social",

@@ -2,7 +2,7 @@
   "list": {
     "loading": "Loading your personal savings…",
     "title": "Your personal savings",
-    "description": "Set a target and a date, and we'll track your progress. Each goal is a pot within your one wallet, not a separate account.",
+    "description": "Set a target and a date, and we'll track your progress. Each goal is a pot inside your balance, not a separate account.",
     "newGoal": "New goal",
     "createGoal": "Create a goal"
   },
@@ -30,7 +30,7 @@
       "placeholder": "e.g. Emergency fund"
     },
     "target": {
-      "label": "Target amount (USDC)"
+      "label": "Target amount"
     },
     "deadline": {
       "label": "Target date"
@@ -71,20 +71,19 @@
     "loading": "Loading goal…",
     "notFound": "We couldn't find that goal.",
     "savedLabel": "saved",
-    "savedOfTarget": "<0></0> of <1></1>",
-    "onChain": "On-chain"
+    "savedOfTarget": "<0></0> of <1></1>"
   },
   "deposit": {
-    "title": "Add money",
+    "title": "Move to goal",
     "description": "Move funds from your available balance into this allocation.",
-    "descriptionOnchain": "Move funds from your available balance into this goal's on-chain vault. Deposits are free.",
-    "addFunds": "Add funds",
+    "descriptionOnchain": "Move money from your available balance into this goal. No fee.",
+    "addFunds": "Move to goal",
     "success": "Funds added to goal"
   },
   "withdraw": {
-    "title": "Withdraw",
-    "feeNote": "A {{fee}}% withdrawal fee is taken on-chain. You receive the amount net of the fee.",
-    "submit": "Withdraw to available",
+    "title": "Move to balance",
+    "feeNote": "A {{fee}}% fee applies when you move money out of this goal. You get the amount after the fee.",
+    "submit": "Move to balance",
     "released": "{{amount}} released to available",
     "releasedWithFee": "{{amount}} released (after a {{fee}} fee)"
   },
@@ -110,10 +109,6 @@
       "monthly": "Keep going monthly. About <0>{{count}} months</0> of contributions left to reach your target."
     }
   },
-  "vault": {
-    "title": "On-chain vault",
-    "description": "Funds you allocate are deposited into this vault on Monad. A {{fee}}% protocol fee is taken on each withdrawal."
-  },
   "activity": {
     "title": "Activity",
     "types": {
@@ -122,9 +117,9 @@
     },
     "status": {
       "none": "None",
-      "pending": "Pending",
-      "confirmed": "Confirmed",
-      "failed": "Failed"
+      "pending": "Processing…",
+      "confirmed": "Done",
+      "failed": "Didn't go through"
     }
   },
   "delete": {
@@ -137,25 +132,32 @@
   },
   "toast": {
     "streakTitle": "Streak kept alive 🔥",
-    "streakDescription": "Nice, that deposit counts toward your savings streak."
+    "streakDescription": "Nice, that counts toward your savings streak."
   },
   "privy": {
-    "loadingWallet": "Loading your wallet…",
+    "loadingWallet": "Getting things ready…",
     "connect": {
       "deposit": {
-        "prompt": "Your wallet is self-custodial. Connect it to sign the deposit yourself.",
-        "button": "Connect wallet to deposit"
+        "prompt": "Confirm it's you to move money to this goal.",
+        "button": "Continue"
       },
       "withdrawal": {
-        "prompt": "Your wallet is self-custodial. Connect it to sign the withdrawal yourself.",
-        "button": "Connect wallet to withdraw"
+        "prompt": "Confirm it's you to move money out of this goal.",
+        "button": "Continue"
       }
     },
     "errors": {
-      "unavailable": "On-chain goal savings isn't available on this deployment.",
+      "unavailable": "Moving money to goals isn't available right now.",
       "invalidAmount": "Enter a valid amount.",
-      "depositFailed": "Deposit failed. Please try again.",
-      "withdrawalFailed": "Withdrawal failed. Please try again."
+      "depositFailed": "That didn't go through. Please try again.",
+      "withdrawalFailed": "That didn't go through. Please try again."
+    }
+  },
+  "technical": {
+    "badge": "On-chain",
+    "vault": {
+      "title": "On-chain vault",
+      "description": "Funds you allocate are deposited into this vault on Monad. A {{fee}}% protocol fee is taken on each withdrawal."
     }
   }
 }

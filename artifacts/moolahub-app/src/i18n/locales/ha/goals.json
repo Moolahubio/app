@@ -2,7 +2,7 @@
   "list": {
     "loading": "Ana loda tanadin ku na kanku…",
     "title": "Tanadin ku na kanku",
-    "description": "Saita manufa da kwanan wata, mu kuma za mu bibiyi ci gaban ku. Kowace manufa tulu ce a cikin walat ɗin ku ɗaya, ba wani asusu daban ba.",
+    "description": "Saita manufa da kwanan wata, mu kuma za mu bibiyi ci gaban ku. Kowace manufa tulu ce a cikin ma'aunin ku, ba wani asusu daban ba.",
     "newGoal": "Sabuwar manufa",
     "createGoal": "Ƙirƙiri manufa"
   },
@@ -30,7 +30,7 @@
       "placeholder": "misali Kuɗin gaggawa"
     },
     "target": {
-      "label": "Adadin da ake nufi (USDC)"
+      "label": "Adadin da ake nufi"
     },
     "deadline": {
       "label": "Kwanan wata da ake nufi"
@@ -71,20 +71,19 @@
     "loading": "Ana loda manufa…",
     "notFound": "Ba mu sami wannan manufar ba.",
     "savedLabel": "an ajiye",
-    "savedOfTarget": "<0></0> daga cikin <1></1>",
-    "onChain": "A kan sarkar"
+    "savedOfTarget": "<0></0> daga cikin <1></1>"
   },
   "deposit": {
-    "title": "Ƙara kuɗi",
+    "title": "Matsa zuwa manufa",
     "description": "Matsar da kuɗi daga ma'aunin ku da ke akwai zuwa wannan rabo.",
-    "descriptionOnchain": "Matsar da kuɗi daga ma'aunin ku da ke akwai zuwa ma'ajin wannan manufa da ke kan sarkar. Ajiya kyauta ce.",
-    "addFunds": "Ƙara kuɗi",
+    "descriptionOnchain": "Matsar da kuɗi daga ma'aunin ka da ake da shi zuwa wannan manufa. Babu kuɗin caji.",
+    "addFunds": "Matsa zuwa manufa",
     "success": "An ƙara kuɗi ga manufar"
   },
   "withdraw": {
-    "title": "Cire kuɗi",
-    "feeNote": "Ana ɗaukar kuɗin cirewa na {{fee}}% a kan sarkar. Kana samun adadin bayan an cire kuɗin.",
-    "submit": "Cire zuwa akwai",
+    "title": "Mayar zuwa ma'auni",
+    "feeNote": "Ana cajin kashi {{fee}}% idan ka fitar da kuɗi daga wannan manufa. Za ka karɓi adadin bayan an cire caji.",
+    "submit": "Mayar zuwa ma'auni",
     "released": "An saki {{amount}} zuwa akwai",
     "releasedWithFee": "An saki {{amount}} (bayan kuɗin {{fee}})"
   },
@@ -110,10 +109,6 @@
       "monthly": "Ci gaba wata-wata. Kimanin <0>watanni {{count}}</0> na gudummawa suka rage don cimma manufar ka."
     }
   },
-  "vault": {
-    "title": "Ma'ajin kan sarkar",
-    "description": "Kuɗin da ka ware ana ajiye su a cikin wannan ma'aji a kan Monad. Ana ɗaukar kuɗin ladar yarjejeniya na {{fee}}% a kowane cirewa."
-  },
   "activity": {
     "title": "Ayyuka",
     "types": {
@@ -122,9 +117,9 @@
     },
     "status": {
       "none": "Babu",
-      "pending": "Ana jira",
-      "confirmed": "An tabbatar",
-      "failed": "Ya kasa"
+      "pending": "Ana aiwatarwa…",
+      "confirmed": "An gama",
+      "failed": "Bai yi nasara ba"
     }
   },
   "delete": {
@@ -137,25 +132,32 @@
   },
   "toast": {
     "streakTitle": "An ci gaba da jerin 🔥",
-    "streakDescription": "Kyau, wannan ajiya tana ƙidaya ga jerin tanadin ka."
+    "streakDescription": "Kyau, wannan yana ƙidaya ga jerin tanadin ka."
   },
   "privy": {
-    "loadingWallet": "Ana loda walat ɗin ku…",
+    "loadingWallet": "Ana shiryawa…",
     "connect": {
       "deposit": {
-        "prompt": "Walat ɗin ku na kanku ne. Haɗa shi don ka rattaba hannu kan ajiyar da kanka.",
-        "button": "Haɗa walat don ajiya"
+        "prompt": "Tabbatar cewa kai ne don matsar da kuɗi zuwa wannan manufa.",
+        "button": "Ci gaba"
       },
       "withdrawal": {
-        "prompt": "Walat ɗin ku na kanku ne. Haɗa shi don ka rattaba hannu kan cirewar da kanka.",
-        "button": "Haɗa walat don cirewa"
+        "prompt": "Tabbatar cewa kai ne don fitar da kuɗi daga wannan manufa.",
+        "button": "Ci gaba"
       }
     },
     "errors": {
-      "unavailable": "Tanadin manufa a kan sarkar ba ya samuwa a wannan tsari.",
+      "unavailable": "Matsar da kuɗi zuwa manufofi ba ya samuwa a yanzu.",
       "invalidAmount": "Shigar da adadi mai inganci.",
-      "depositFailed": "Ajiya ta kasa. Da fatan za a sake gwadawa.",
-      "withdrawalFailed": "Cirewa ta kasa. Da fatan za a sake gwadawa."
+      "depositFailed": "Bai yi nasara ba. Da fatan a sake gwadawa.",
+      "withdrawalFailed": "Bai yi nasara ba. Da fatan a sake gwadawa."
+    }
+  },
+  "technical": {
+    "badge": "A kan sarkar",
+    "vault": {
+      "title": "Ma'ajin kan sarkar",
+      "description": "Kuɗin da ka ware ana ajiye su a cikin wannan ma'aji a kan Monad. Ana ɗaukar kuɗin ladar yarjejeniya na {{fee}}% a kowane cirewa."
     }
   }
 }

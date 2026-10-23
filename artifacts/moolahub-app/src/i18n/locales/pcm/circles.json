@@ -2,11 +2,11 @@
   "list": {
     "loading": "Dey load your group savings…",
     "title": "Your group savings",
-    "description": "Rotating savings with people wey you trust. Every round dey hold by on-chain contract, no be person.",
+    "description": "Rotating savings with people wey you trust. Every circle dey show im rules, fee and payout order before you join.",
     "emptyHint": "Invite friends or family and set your contribution"
   },
   "info": {
-    "susu": "<b>How Susu dey work:</b> everybody dey put fixed amount every round. For <em>rotation</em> circle, one member dey collect the whole pot every round until everybody don get turn. For <em>accumulation</em> circle, everybody dey save inside one shared pot and collect im own savings for the end. Everything dey verifiable for Monad."
+    "susu": "<b>How Susu dey work:</b> everybody dey pay fixed amount every round. For <em>rotation</em> circle, one member dey collect the pot every round until everybody don get turn. For <em>accumulation</em> circle, everybody dey save inside one shared pot and collect im own savings for the end."
   },
   "frequency": {
     "weekly": "Every week",
@@ -35,7 +35,7 @@
       "label": "Circle type",
       "rotation": {
         "title": "Rotation",
-        "description": "Take turns. Everybody dey pay every round, and one member dey collect the whole pot until all don get turn."
+        "description": "Take turns. Everybody dey pay every round, and one member dey collect the pot until all don get turn."
       },
       "accumulation": {
         "title": "Accumulation",
@@ -43,14 +43,14 @@
       }
     },
     "targetPayout": {
-      "label": "Target payout per person (USDC)",
+      "label": "Target payout per person",
       "hint": "Wetin each member go collect when e be im turn."
     },
     "groupSize": {
       "label": "Number of people (you sef included)"
     },
     "contribution": {
-      "label": "Contribution per round (USDC)"
+      "label": "Contribution per round"
     },
     "numRounds": {
       "label": "Number of rounds"
@@ -96,11 +96,10 @@
   "detail": {
     "loading": "Dey load circle…",
     "notFound": "We no fit find that circle.",
-    "onChain": "On-chain",
     "formingSuffix": "dey form",
     "submitting": "Dey submit…",
-    "contribute": "Contribute {{amount}}",
-    "contributedThisRound": "You don contribute this round",
+    "contribute": "Pay in {{amount}}",
+    "contributedThisRound": "You don pay for this round",
     "notStarted": "This circle never start",
     "stats": {
       "rounds": "Rounds",
@@ -126,8 +125,8 @@
     "schedule": {
       "membersTitle": "Members",
       "payoutTitle": "Payout schedule",
-      "descAccumulation": "Everybody dey save inside one shared pot. After {{count}} rounds, each member go collect im own savings, locked on-chain.",
-      "descRotation": "The rotation lock on-chain, so everybody know who go collect the pot, and when.",
+      "descAccumulation": "Everybody dey save inside one shared pot. After {{count}} rounds, each member go collect im own savings back.",
+      "descRotation": "Dem dey set the payout order when circle start, so everybody go know who go collect the pot, and when.",
       "you": "(you)",
       "savingsReturned": "Savings don return",
       "saving": "Dey save",
@@ -139,10 +138,6 @@
       "title": "Round progress",
       "roundsOf": "{{current}} of {{total}} rounds"
     },
-    "escrow": {
-      "title": "On-chain escrow",
-      "description": "Contributions dey settle inside this Susu escrow for Monad. Dem dey take {{fee}}% protocol fee from every payout."
-    },
     "history": {
       "title": "Your contributions",
       "round": "Round {{round}}"
@@ -153,11 +148,18 @@
     }
   },
   "privy": {
-    "loadingWallet": "Dey load your wallet…",
-    "selfCustody": "Your wallet na self-custody. Connect am make you sign the contribution yourself.",
-    "connect": "Connect wallet to contribute",
-    "notAvailable": "On-chain contributions no dey available for this deployment.",
-    "failed": "Contribution fail. Abeg try again.",
+    "loadingWallet": "We dey prepare…",
+    "selfCustody": "Confirm say na you make you pay in.",
+    "connect": "Continue",
+    "notAvailable": "Paying in no dey available now. Abeg try again later.",
+    "failed": "E no go through. Abeg try again.",
     "submitting": "Dey submit…"
+  },
+  "technical": {
+    "badge": "On-chain",
+    "escrow": {
+      "title": "On-chain escrow",
+      "description": "Contributions dey settle inside this Susu escrow for Monad. Dem dey take {{fee}}% protocol fee from every payout."
+    }
   }
 }

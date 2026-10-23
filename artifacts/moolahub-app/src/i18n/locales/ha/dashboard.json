@@ -6,11 +6,8 @@
     "totalBalance": "Jimillar ma'auni",
     "available": "Akwai",
     "inSavings": "A cikin tanadi",
-    "apy": "+{{apy}}% APY",
     "addMoney": "Ƙara kuɗi",
-    "withdraw": "Cire kuɗi",
-    "growthLabel": "Ci gaba · watanni 6",
-    "earned": "an samu {{amount}}"
+    "withdraw": "Cire kuɗi"
   },
   "reminders": {
     "title": "Na gaba",
@@ -31,12 +28,12 @@
       "monthly": "Ka yi tanadi wannan watan, madalla"
     },
     "keepAlive": {
-      "daily": "Ajiya ɗaya na kiyaye jerin ka na yau da kullum",
-      "weekly": "Ajiya ɗaya na kiyaye jerin ka na mako-mako",
-      "biweekly": "Ajiya ɗaya na kiyaye jerin ka na mako biyu",
-      "monthly": "Ajiya ɗaya na kiyaye jerin ka na wata-wata"
+      "daily": "Tanadi ɗaya na kiyaye jerin ka na yau da kullum",
+      "weekly": "Tanadi ɗaya na kiyaye jerin ka na mako-mako",
+      "biweekly": "Tanadi ɗaya na kiyaye jerin ka na mako biyu",
+      "monthly": "Tanadi ɗaya na kiyaye jerin ka na wata-wata"
     },
-    "firstFlame": "Yi ajiya don kunna harshen wutar ka na farko"
+    "firstFlame": "Yi tanadi sau ɗaya don kunna harshen wutar ka na farko"
   },
   "savings": {
     "title": "Tanadin kanka",
@@ -57,8 +54,8 @@
   },
   "learn": {
     "title": "Ci gaba da koyo",
-    "lessonTitle": "Blockchain, an bayyana a sauƙaƙe",
-    "lessonMeta": "minti 5 · Mafari",
+    "lessonTitle": "Manufofin tanadi da ke dorewa da gaske",
+    "lessonMeta": "minti 6 · Mafari",
     "startLesson": "Fara darasi"
   },
   "transactions": {

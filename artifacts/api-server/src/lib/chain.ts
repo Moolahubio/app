@@ -1126,7 +1126,7 @@ export async function escrowContribute(params: {
   // `contribute()` and risking it silently applying to whatever round is
   // current on-chain.
   if (params.round == null) {
-    return { status: "skipped", reason: "missing round — cannot safely verify contribution idempotency" };
+    return { status: "skipped", reason: "missing round: cannot safely verify contribution idempotency" };
   }
   try {
     const pk = (params.fromPrivateKey.startsWith("0x")

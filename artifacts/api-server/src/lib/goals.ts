@@ -9,7 +9,7 @@ import {
 } from "@workspace/db";
 import { acct, transfer, accountBalance } from "./ledger";
 import { notify } from "./notifications";
-import { formatMoney } from "./money";
+import { formatMoney, parseBps } from "./money";
 import {
   goalVaultEnabled,
   goalVaultContract,
@@ -34,8 +34,11 @@ import { logger } from "./logger";
 // Platform fee on every goal withdrawal, mirroring the on-chain GoalVault's
 // feeBps (2%). Deposits are free; every withdrawal (including the auto-withdraw
 // on delete) charges the fee. On-chain settlement is required for all goal
-// movement, so the fee always applies.
-const FEE_BPS = Number(process.env.GOAL_FEE_BPS) || 200;
+// movement, so the fee always applies. An explicit GOAL_FEE_BPS=0 charges 0;
+// only an unset value falls back to 2%.
+const FEE_BPS = parseBps(process.env.GOAL_FEE_BPS, 200, (raw) =>
+  logger.warn({ raw }, "[goals] invalid GOAL_FEE_BPS; using the 200 bps default"),
+);
 
 function feeCentsOf(grossCents: number): number {
   return Math.floor((grossCents * FEE_BPS) / 10_000);
@@ -200,7 +203,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
   // non-custodial), so refuse Privy-custody wallets before booking anything.
   const wallet = await requireServerCustody(
     userId,
-    "Goal savings isn't available for non-custodial wallets yet.",
+    "Personal savings aren't available for your account yet.",
   );
   // Gate on the spendable wallet balance: real on-chain (confirmed minus
   // in-flight outflows) when the vault is configured, else the ledger balance.
@@ -230,7 +233,7 @@ export async function allocateToGoal(userId: string, goalId: string, amountCents
     const t = await transfer({
       tx,
       type: "goal_allocate",
-      description: `Allocation → ${goal.name}`,
+      description: `Moved to ${goal.name}`,
       userId,
       fromKey: acct.wallet(userId),
       toKey: acct.goal(goalId),
@@ -289,13 +292,13 @@ export async function confirmClientGoalDeposit(
 ): Promise<{ alreadyRecorded: boolean }> {
   if (amountCents <= 0) throw new AppError("Enter a valid amount.");
   if (!goalVaultEnabled() || !goalVaultContract()) {
-    throw new AppError("On-chain goal savings isn't configured.");
+    throw new AppError("Moving money to goals isn't available right now. Please try again later.");
   }
   const wallet = await requireWalletForUser(userId);
   if (wallet.custody !== "privy") {
     // Server-custody wallets deposit via the server-signed allocateToGoal path;
     // only non-custodial wallets confirm a client-signed deposit here.
-    throw new AppError("This wallet doesn't use client-signed goal deposits.");
+    throw new AppError("That isn't available for your account right now.");
   }
 
   // Pre-check ownership + active status for a friendly failure; the row-locked
@@ -319,7 +322,7 @@ export async function confirmClientGoalDeposit(
       { userId, goalId, txHash, reason: verified.reason },
       "client goal deposit receipt verification failed",
     );
-    throw new AppError("We couldn't verify that deposit on-chain. Please try again.");
+    throw new AppError("We couldn't confirm that move yet. Please try again in a minute.");
   }
 
   let result: { txnId: string; goalName: string };
@@ -336,7 +339,7 @@ export async function confirmClientGoalDeposit(
       const t = await transfer({
         tx,
         type: "goal_allocate",
-        description: `Allocation → ${goal.name}`,
+        description: `Moved to ${goal.name}`,
         userId,
         fromKey: acct.wallet(userId),
         toKey: acct.goal(goalId),
@@ -409,7 +412,7 @@ async function releaseFromGoalCore(
   // non-custodial), so refuse Privy-custody wallets before booking anything.
   const wallet = await requireServerCustody(
     userId,
-    "Goal savings isn't available for non-custodial wallets yet.",
+    "Personal savings aren't available for your account yet.",
   );
   // Gate on the spendable savings balance: real on-chain vault balance (confirmed
   // minus in-flight withdrawals) when configured, else the goal's ledger balance.
@@ -426,7 +429,7 @@ async function releaseFromGoalCore(
     const netTxn = await transfer({
       tx,
       type: "goal_release",
-      description: `Released from ${goal.name}`,
+      description: `Moved from ${goal.name}`,
       userId,
       fromKey: acct.goal(goalId),
       toKey: acct.wallet(userId),
@@ -440,7 +443,7 @@ async function releaseFromGoalCore(
       const feeTxn = await transfer({
         tx,
         type: "fee",
-        description: `Withdrawal fee · ${goal.name}`,
+        description: `Fee · ${goal.name}`,
         userId,
         fromKey: acct.goal(goalId),
         toKey: acct.fees,
@@ -471,7 +474,7 @@ async function releaseFromGoalCore(
   if (notifyUser) {
     await notify(userId, {
       type: "goal",
-      title: `Withdrawn from ${goal.name}`,
+      title: `Moved from ${goal.name}`,
       body:
         feeCents > 0
           ? `${formatMoney(netCents)} returned to your available balance (after a ${formatMoney(feeCents)} fee).`
@@ -503,11 +506,11 @@ export async function confirmClientGoalRelease(
 ): Promise<ReleaseResult & { alreadyRecorded: boolean }> {
   if (grossCents <= 0) throw new AppError("Enter a valid amount.");
   if (!goalVaultEnabled() || !goalVaultContract()) {
-    throw new AppError("On-chain goal savings isn't configured.");
+    throw new AppError("Moving money to goals isn't available right now. Please try again later.");
   }
   const wallet = await requireWalletForUser(userId);
   if (wallet.custody !== "privy") {
-    throw new AppError("This wallet doesn't use client-signed goal withdrawals.");
+    throw new AppError("That isn't available for your account right now.");
   }
   const [goal] = await db
     .select({ name: goalsTable.name })
@@ -526,7 +529,7 @@ export async function confirmClientGoalRelease(
       { userId, goalId, txHash, reason: verified.reason },
       "client goal withdraw receipt verification failed",
     );
-    throw new AppError("We couldn't verify that withdrawal on-chain. Please try again.");
+    throw new AppError("We couldn't confirm that move yet. Please try again in a minute.");
   }
   const feeCents = verified.feeCents;
   const netCents = grossCents - feeCents;
@@ -536,7 +539,7 @@ export async function confirmClientGoalRelease(
       await transfer({
         tx,
         type: "goal_release",
-        description: `Released from ${goal.name}`,
+        description: `Moved from ${goal.name}`,
         userId,
         fromKey: acct.goal(goalId),
         toKey: acct.wallet(userId),
@@ -547,7 +550,7 @@ export async function confirmClientGoalRelease(
         await transfer({
           tx,
           type: "fee",
-          description: `Withdrawal fee · ${goal.name}`,
+          description: `Fee · ${goal.name}`,
           userId,
           fromKey: acct.goal(goalId),
           toKey: acct.fees,
@@ -567,7 +570,7 @@ export async function confirmClientGoalRelease(
 
   await notify(userId, {
     type: "goal",
-    title: `Withdrawn from ${goal.name}`,
+    title: `Moved from ${goal.name}`,
     body:
       feeCents > 0
         ? `${formatMoney(netCents)} returned to your available balance (after a ${formatMoney(feeCents)} fee).`
@@ -642,7 +645,7 @@ export async function deleteGoal(userId: string, goalId: string): Promise<Delete
     // to close while a balance remains — this throws inside the try, reverting the
     // soft-delete — so the user withdraws the full balance client-side first.
     if (wallet?.custody === "privy" && balanceCents > 0) {
-      throw new AppError("Withdraw your full goal balance first, then delete this goal.");
+      throw new AppError("Move your full goal balance back to your balance first, then delete this goal.");
     }
     let released: ReleaseResult = { grossCents: 0, netCents: 0, feeCents: 0 };
     if (balanceCents > 0) {

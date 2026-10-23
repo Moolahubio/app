@@ -2,11 +2,11 @@
   "list": {
     "loading": "Inapakia akiba yenu ya kikundi…",
     "title": "Akiba yenu ya kikundi",
-    "description": "Akiba ya mzunguko na watu unaowaamini. Kila raundi inashikiliwa na mkataba wa on-chain, si mtu.",
+    "description": "Akiba ya mzunguko na watu unaowaamini. Kila duara linaonyesha sheria zake, ada na mpangilio wa malipo kabla hujajiunga.",
     "emptyHint": "Alika marafiki au familia na uweke mchango wako"
   },
   "info": {
-    "susu": "<b>Jinsi Susu inavyofanya kazi:</b> kila mtu huchangia kiasi kisichobadilika kila raundi. Katika duara la <em>mzunguko</em>, mwanachama mmoja hupokea mfuko wote kila raundi hadi kila mtu apate zamu yake. Katika duara la <em>mkusanyiko</em>, kila mtu huweka akiba katika mfuko mmoja wa pamoja na kupata akiba yake mwenyewe mwishoni. Kila kitu kinaweza kuthibitishwa kwenye Monad."
+    "susu": "<b>Jinsi Susu inavyofanya kazi:</b> kila mtu hulipa kiasi kisichobadilika kila raundi. Katika duara la <em>mzunguko</em>, mwanachama mmoja hupokea mfuko kila raundi hadi kila mtu apate zamu yake. Katika duara la <em>mkusanyiko</em>, kila mtu huweka akiba katika mfuko mmoja wa pamoja na kupata akiba yake mwenyewe mwishoni."
   },
   "frequency": {
     "weekly": "Kila wiki",
@@ -35,7 +35,7 @@
       "label": "Aina ya duara",
       "rotation": {
         "title": "Mzunguko",
-        "description": "Kwa zamu. Kila mtu hulipa kila raundi, na mwanachama mmoja hupokea mfuko wote hadi wote wapate zamu zao."
+        "description": "Kwa zamu. Kila mtu hulipa kila raundi, na mwanachama mmoja hupokea mfuko hadi wote wapate zamu zao."
       },
       "accumulation": {
         "title": "Mkusanyiko",
@@ -43,14 +43,14 @@
       }
     },
     "targetPayout": {
-      "label": "Malipo lengwa kwa kila mtu (USDC)",
+      "label": "Malipo lengwa kwa kila mtu",
       "hint": "Kile kila mwanachama anachopokea inapofika zamu yake."
     },
     "groupSize": {
       "label": "Idadi ya watu (ukiwemo wewe)"
     },
     "contribution": {
-      "label": "Mchango kwa kila raundi (USDC)"
+      "label": "Mchango kwa kila raundi"
     },
     "numRounds": {
       "label": "Idadi ya raundi"
@@ -96,11 +96,10 @@
   "detail": {
     "loading": "Inapakia duara…",
     "notFound": "Hatukuweza kupata duara hilo.",
-    "onChain": "On-chain",
     "formingSuffix": "inaundwa",
     "submitting": "Inatuma…",
-    "contribute": "Changia {{amount}}",
-    "contributedThisRound": "Umechangia raundi hii",
+    "contribute": "Lipa {{amount}}",
+    "contributedThisRound": "Umelipa raundi hii",
     "notStarted": "Duara hili bado halijaanza",
     "stats": {
       "rounds": "Raundi",
@@ -126,8 +125,8 @@
     "schedule": {
       "membersTitle": "Wanachama",
       "payoutTitle": "Ratiba ya malipo",
-      "descAccumulation": "Kila mtu huweka akiba katika mfuko mmoja wa pamoja. Baada ya raundi {{count}}, kila mwanachama hupata akiba yake mwenyewe, iliyofungwa on-chain.",
-      "descRotation": "Mzunguko umefungwa on-chain, hivyo kila mtu anajua nani anapokea mfuko, na lini.",
+      "descAccumulation": "Kila mtu huweka akiba katika mfuko mmoja wa pamoja. Baada ya raundi {{count}}, kila mwanachama hupata akiba yake mwenyewe.",
+      "descRotation": "Mpangilio wa malipo huwekwa duara linapoanza, ili kila mtu ajue nani anapokea mfuko, na lini.",
       "you": "(wewe)",
       "savingsReturned": "Akiba imerejeshwa",
       "saving": "Inaweka akiba",
@@ -139,10 +138,6 @@
       "title": "Maendeleo ya raundi",
       "roundsOf": "{{current}} kati ya raundi {{total}}"
     },
-    "escrow": {
-      "title": "Escrow ya on-chain",
-      "description": "Michango hukaa katika escrow hii ya Susu kwenye Monad. Ada ya protokali ya {{fee}}% hutozwa kutoka kila malipo."
-    },
     "history": {
       "title": "Michango yako",
       "round": "Raundi {{round}}"
@@ -153,11 +148,18 @@
     }
   },
   "privy": {
-    "loadingWallet": "Inapakia pochi yako…",
-    "selfCustody": "Pochi yako inajitunza yenyewe. Iunganishe ili usaini mchango mwenyewe.",
-    "connect": "Unganisha pochi ili kuchangia",
-    "notAvailable": "Michango ya on-chain haipatikani kwenye usambazaji huu.",
-    "failed": "Mchango umeshindikana. Tafadhali jaribu tena.",
+    "loadingWallet": "Tunaandaa…",
+    "selfCustody": "Thibitisha ni wewe ili kulipa.",
+    "connect": "Endelea",
+    "notAvailable": "Kulipa hakupatikani kwa sasa. Tafadhali jaribu tena baadaye.",
+    "failed": "Haikufanikiwa. Tafadhali jaribu tena.",
     "submitting": "Inatuma…"
+  },
+  "technical": {
+    "badge": "On-chain",
+    "escrow": {
+      "title": "Escrow ya on-chain",
+      "description": "Michango hukaa katika escrow hii ya Susu kwenye Monad. Ada ya protokali ya {{fee}}% hutozwa kutoka kila malipo."
+    }
   }
 }

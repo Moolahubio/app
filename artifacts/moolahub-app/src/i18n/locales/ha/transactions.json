@@ -2,7 +2,7 @@
   "loading": "Ana loda ma'amaloli…",
   "header": {
     "title": "Kuɗinka, an rubuta komai",
-    "description": "Kowane ajiya, gudummawa, da biya. Kowanne yana da hujjarsa a kan Monad."
+    "description": "Duk abin da ka ƙara, ka biya, ka matsar da ka karɓa, a wuri ɗaya."
   },
   "reminders": {
     "title": "Tunatarwa masu zuwa",
@@ -12,17 +12,21 @@
     "title": "Tarihin ma'amaloli",
     "empty": "Babu ma'amala tukuna."
   },
-  "onchain": {
-    "settling": "ana daidaitawa a kan sarkar…",
-    "offchain": "wajen sarkar"
-  },
   "types": {
-    "deposit": "Ajiya",
+    "deposit": "An ƙara kuɗi",
     "payout": "Biya",
-    "yield": "Riba",
-    "contribution": "Gudummawa",
-    "goal_allocate": "Rabo",
-    "goal_release": "Sakewa",
-    "withdrawal": "Cirewa"
+    "yield": "Abin da aka samu",
+    "contribution": "Biya",
+    "goal_allocate": "An matsa zuwa manufa",
+    "goal_release": "An mayar zuwa ma'auni",
+    "withdrawal": "Cire kuɗi",
+    "fee": "Kuɗin caji",
+    "referral_earning": "Ladan gayyata",
+    "referral_withdrawal": "An matsar da ladan gayyata"
+  },
+  "status": {
+    "processing": "Ana aiwatarwa…",
+    "done": "An gama",
+    "failed": "Bai yi nasara ba"
   }
 }

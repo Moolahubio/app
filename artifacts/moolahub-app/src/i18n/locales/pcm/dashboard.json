@@ -6,11 +6,8 @@
     "totalBalance": "Total balance",
     "available": "Wey ready",
     "inSavings": "For savings",
-    "apy": "+{{apy}}% APY",
     "addMoney": "Add money",
-    "withdraw": "Comot money",
-    "growthLabel": "Growth · 6 months",
-    "earned": "{{amount}} wey you don earn"
+    "withdraw": "Cash out"
   },
   "reminders": {
     "title": "Wetin dey next",
@@ -31,12 +28,12 @@
       "monthly": "You save dis month, well done"
     },
     "keepAlive": {
-      "daily": "One deposit go keep your daily streak alive",
-      "weekly": "One deposit go keep your weekly streak alive",
-      "biweekly": "One deposit go keep your biweekly streak alive",
-      "monthly": "One deposit go keep your monthly streak alive"
+      "daily": "One save go keep your daily streak alive",
+      "weekly": "One save go keep your weekly streak alive",
+      "biweekly": "One save go keep your biweekly streak alive",
+      "monthly": "One save go keep your monthly streak alive"
     },
-    "firstFlame": "Make one deposit to light your first flame"
+    "firstFlame": "Save once make you light your first flame"
   },
   "savings": {
     "title": "Your own savings",
@@ -57,8 +54,8 @@
   },
   "learn": {
     "title": "Keep learning",
-    "lessonTitle": "Blockchain, wey dem explain simple",
-    "lessonMeta": "5 min · Beginner",
+    "lessonTitle": "Savings goals wey go really stick",
+    "lessonMeta": "6 min · Beginner",
     "startLesson": "Start lesson"
   },
   "transactions": {

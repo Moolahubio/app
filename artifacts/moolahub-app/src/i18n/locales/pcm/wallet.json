@@ -1,72 +1,88 @@
 {
-  "eyebrow": "Wallet",
+  "eyebrow": "Balance",
   "states": {
-    "loadingWallet": "Dey load your wallet…"
+    "loadingWallet": "We dey load your balance…"
   },
   "setup": {
-    "title": "Set up your wallet",
-    "description": "Continue with Privy make you create your {{network}} wallet. Privy dey let you sign up with email or connect web3 wallet wey you get already. Any way wey e be, you go fit deposit, save, and withdraw USDC.",
+    "title": "Turn on money features",
     "settingUp": "Dey set up…",
-    "continueWithPrivy": "Continue with Privy",
-    "error": "We no fit set up your wallet. Abeg try again.",
-    "securityNote": "Your wallet dey settle money for Monad, and every movement dey record for the ledger. Sensitive things like withdrawal need fresh confirmation.",
-    "unavailableTitle": "Wallet setup no dey available",
-    "unavailableDescription": "Wallet provisioning never dey set up for this deployment yet. Abeg check back later."
+    "error": "We no fit finish setting up your account. Abeg try again.",
+    "unavailableTitle": "Money features never ready yet",
+    "unavailableDescription": "Adding money never turn on for here yet. Abeg check back later.",
+    "description": "One more step and you fit add money, save for your goals and pay into circles.",
+    "securityNote": "We dey record every movement for your activity. Sensitive actions need fresh confirmation."
   },
   "intro": {
-    "getReadyTitle": "Ready your wallet",
-    "getReadyDescription": "MoolaHub dey run on USDC over Monad. Set up your wallet make you fit deposit, save, and withdraw.",
-    "manageTitle": "Deposit & withdraw USDC",
-    "manageDescription": "MoolaHub dey run on USDC over Monad. Add USDC to your wallet, or send am go any Monad wallet address."
+    "getReadyTitle": "Set up your balance",
+    "getReadyDescription": "Finish one quick step make you start to add money and save.",
+    "manageTitle": "Your balance",
+    "manageDescription": "Add money and see wetin ready to save."
   },
   "balance": {
     "available": "Money wey dey available",
     "allocatedToSavings": "wey dem keep for savings"
   },
-  "receive": {
-    "title": "Receive",
-    "subtitle": "Add USDC",
-    "depositAddressLabel": "Your USDC deposit address",
-    "sendOnly": "Send only <0>USDC on {{network}}</0> go this address.",
-    "instructions": "Send USDC go your address for up from any Monad wallet.",
-    "instructionsSync": "Send USDC go your address for up from any Monad wallet, then check for am:",
-    "checkForDeposits": "Check for deposits",
-    "checking": "Dey check…",
-    "creditedDeposits": "Dem credit {{count}} deposits wey be {{amount}} altogether",
-    "noNewDeposits": "No new deposit dey",
-    "faucet": {
-      "title": "Testnet faucet",
-      "description": "Collect test USDC make you try things before you use real money.",
-      "submit": "Receive test USDC",
-      "success": "You don receive test USDC"
-    }
-  },
   "withdraw": {
-    "title": "Withdraw",
-    "subtitle": "Send USDC go any Monad address",
-    "unavailable": "On-chain withdrawal no dey available for this deployment right now.",
-    "success": "Withdrawal don work"
+    "title": "Cash out",
+    "notYet": "Cash out never ready yet. We go tell you when e ready."
   },
   "footer": {
-    "settle": "Money dey settle go your own Monad wallet address, and every movement dey record for the ledger with on-chain reference.",
-    "selfCustody": "Your wallet na self-custody. You dey approve every withdrawal by signing am yourself.",
     "stepUp": "Withdrawal and goal payout need fresh confirmation (password, 2FA, or code wey dem email) before anything go move.",
-    "builtOnMonad": "Built on Monad"
+    "activity": "We dey record every movement for your activity."
   },
   "banner": {
-    "title": "Connect your wallet for this session",
-    "description": "Connect once now and you go fit deposit, save, and withdraw without connecting again until you sign out.",
-    "connect": "Connect wallet"
+    "title": "Confirm say na you make you fit move money",
+    "description": "Confirm once now and you fit add money, save and pay into circles without stopping again until you sign out.",
+    "connect": "Continue"
   },
-  "privyWithdraw": {
-    "connectPrompt": "Your wallet na self-custody. Connect am make you sign the withdrawal yourself.",
-    "connectButton": "Connect wallet to withdraw",
-    "success": "Withdrawal don comot",
-    "errors": {
-      "unavailable": "On-chain withdrawal no dey available for this deployment.",
-      "invalidAddress": "Enter correct Monad address (e dey start with 0x).",
-      "invalidAmount": "Enter correct amount.",
-      "failed": "Withdrawal fail. Abeg try again."
+  "technical": {
+    "setup": {
+      "description": "Continue with Privy make you create your {{network}} wallet. Privy dey let you sign up with email or connect web3 wallet wey you get already. Any way wey e be, you go fit deposit, save, and withdraw USDC.",
+      "securityNote": "Your wallet dey settle money for Monad, and every movement dey record for the ledger. Sensitive things like withdrawal need fresh confirmation.",
+      "continueWithPrivy": "Continue with Privy"
+    },
+    "intro": {
+      "description": "MoolaHub dey run on USDC over Monad. Add USDC to your wallet, or send am go any Monad wallet address."
+    },
+    "receive": {
+      "title": "Receive",
+      "subtitle": "Add USDC",
+      "addressLabel": "Your USDC deposit address",
+      "sendOnly": "Send only <0>USDC on {{network}}</0> go this address.",
+      "instructions": "Send USDC go your address for up from any Monad wallet.",
+      "instructionsSync": "Send USDC go your address for up from any Monad wallet, then check for am:",
+      "check": "Check for deposits",
+      "checking": "Dey check…",
+      "credited": "Dem credit {{count}} deposits wey be {{amount}} altogether",
+      "noneFound": "No new deposit dey"
+    },
+    "send": {
+      "subtitle": "Send USDC go any Monad address",
+      "unavailable": "On-chain withdrawal no dey available for this deployment right now.",
+      "success": "Withdrawal don work"
+    },
+    "footer": {
+      "settle": "Money dey settle go your own Monad wallet address, and every movement dey record for the ledger with on-chain reference.",
+      "selfCustody": "Your wallet na self-custody. You dey approve every withdrawal by signing am yourself.",
+      "builtOn": "Built on Monad"
+    },
+    "privyWithdraw": {
+      "connectPrompt": "Your wallet na self-custody. Connect am make you sign the withdrawal yourself.",
+      "connectButton": "Connect wallet to withdraw",
+      "success": "Withdrawal don comot",
+      "errors": {
+        "unavailable": "On-chain withdrawal no dey available for this deployment.",
+        "invalidAddress": "Enter correct Monad address (e dey start with 0x).",
+        "invalidAmount": "Enter correct amount.",
+        "failed": "Withdrawal fail. Abeg try again."
+      }
     }
+  },
+  "addMoney": {
+    "title": "Add money",
+    "testDescription": "Na test version of MoolaHub be this. Add test dollars make you try save before real money start.",
+    "testSubmit": "Add test money",
+    "testSuccess": "Test money don land",
+    "notYet": "Adding money never ready yet. We go tell you when e ready."
   }
 }

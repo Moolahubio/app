@@ -6,11 +6,8 @@
     "totalBalance": "Total balance",
     "available": "Available",
     "inSavings": "In savings",
-    "apy": "+{{apy}}% APY",
     "addMoney": "Add money",
-    "withdraw": "Withdraw",
-    "growthLabel": "Growth · 6 months",
-    "earned": "{{amount}} earned"
+    "withdraw": "Cash out"
   },
   "reminders": {
     "title": "Up next",
@@ -31,12 +28,12 @@
       "monthly": "Saved this month, nicely done"
     },
     "keepAlive": {
-      "daily": "One deposit keeps your daily streak alive",
-      "weekly": "One deposit keeps your weekly streak alive",
-      "biweekly": "One deposit keeps your biweekly streak alive",
-      "monthly": "One deposit keeps your monthly streak alive"
+      "daily": "One save keeps your daily streak alive",
+      "weekly": "One save keeps your weekly streak alive",
+      "biweekly": "One save keeps your biweekly streak alive",
+      "monthly": "One save keeps your monthly streak alive"
     },
-    "firstFlame": "Make a deposit to light your first flame"
+    "firstFlame": "Save once to light your first flame"
   },
   "savings": {
     "title": "Personal savings",
@@ -57,8 +54,8 @@
   },
   "learn": {
     "title": "Keep learning",
-    "lessonTitle": "Blockchain, explained simply",
-    "lessonMeta": "5 min · Beginner",
+    "lessonTitle": "Savings goals that actually stick",
+    "lessonMeta": "6 min · Beginner",
     "startLesson": "Start lesson"
   },
   "transactions": {

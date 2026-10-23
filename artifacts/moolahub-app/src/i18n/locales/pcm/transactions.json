@@ -2,7 +2,7 @@
   "loading": "Dey load transactions…",
   "header": {
     "title": "Your money, everything dey for record",
-    "description": "Every deposit, contribution, and payout. Each one dey linked to im proof for Monad."
+    "description": "Everything wey you don add, pay in, move and collect, for one place."
   },
   "reminders": {
     "title": "Reminders wey dey come",
@@ -12,17 +12,21 @@
     "title": "Transaction history",
     "empty": "No transaction dey yet."
   },
-  "onchain": {
-    "settling": "dey settle for chain…",
-    "offchain": "off-chain"
-  },
   "types": {
-    "deposit": "Deposit",
+    "deposit": "Money added",
     "payout": "Payout",
-    "yield": "Yield",
-    "contribution": "Contribution",
-    "goal_allocate": "Allocation",
-    "goal_release": "Release",
-    "withdrawal": "Withdrawal"
+    "yield": "Earnings",
+    "contribution": "Pay in",
+    "goal_allocate": "Move go goal",
+    "goal_release": "Move go balance",
+    "withdrawal": "Cash out",
+    "fee": "Fee",
+    "referral_earning": "Invite reward",
+    "referral_withdrawal": "Invite reward don move"
+  },
+  "status": {
+    "processing": "E dey process…",
+    "done": "E don do",
+    "failed": "E no go through"
   }
 }

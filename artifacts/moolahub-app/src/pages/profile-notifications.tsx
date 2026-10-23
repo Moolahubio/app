@@ -10,7 +10,7 @@ import {
   type NotificationCategories,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { apiErrorMessage, cn } from "@/lib/utils";
+import { toUserError, cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 
 type Tier = "everything" | "essential" | "minimal" | "custom";
@@ -74,7 +74,7 @@ export default function ProfileNotificationsPage() {
       await invalidate();
       flash();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("settings.saveError"));
+      setError(toUserError(err, t("settings.saveError")));
     }
   };
 
@@ -90,7 +90,7 @@ export default function ProfileNotificationsPage() {
       await invalidate();
       flash();
     } catch (err) {
-      setError(apiErrorMessage(err) ?? t("settings.saveError"));
+      setError(toUserError(err, t("settings.saveError")));
     }
   };
 

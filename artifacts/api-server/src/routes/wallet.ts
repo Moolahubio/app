@@ -57,7 +57,7 @@ router.post("/wallet/deposit", requireJsonAndAllowedOrigin, requireAuth, async (
   // outright on mainnet / when disabled so it can't be used to conjure
   // spendable funds in production.
   if (!faucetEnabled()) {
-    res.status(403).json({ error: "The test faucet is not available." });
+    res.status(403).json({ error: "Test money isn't available right now." });
     return;
   }
   const parsed = DepositFaucetBody.safeParse(req.body);
@@ -141,20 +141,20 @@ router.post("/wallet/withdraw/submitted", requireJsonAndAllowedOrigin, requireAu
 router.post("/wallet/ensure-gas", requireAllowedOrigin, requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;
   if (!onchainEnabled()) {
-    res.status(400).json({ error: "On-chain isn't enabled on this deployment." });
+    res.status(400).json({ error: "That isn't available right now." });
     return;
   }
   const wallet = await getWalletForUser(user.id);
   if (!wallet) {
-    res.status(400).json({ error: "Set up your wallet first." });
+    res.status(400).json({ error: "Finish setting up your account first." });
     return;
   }
   if (wallet.custody !== "privy") {
-    res.status(400).json({ error: "This wallet doesn't need a manual gas top-up." });
+    res.status(400).json({ error: "That isn't needed for your account." });
     return;
   }
   if (!allowGasTopup(user.id)) {
-    res.status(429).json({ error: "Gas top-up limit reached for today. Please try again later." });
+    res.status(429).json({ error: "That isn't available again today. Please try again later." });
     return;
   }
 
@@ -176,7 +176,7 @@ router.post("/wallet/sync", requireAllowedOrigin, requireAuth, async (req, res):
   // fabricated tokens as real spendable balance. Operators may explicitly opt
   // in on a testnet with a genuine non-mintable token via ENABLE_DEPOSIT_SYNC.
   if (!depositSyncEnabled()) {
-    res.status(403).json({ error: "Deposit sync is not available on this network." });
+    res.status(403).json({ error: "Checking for incoming money isn't available right now." });
     return;
   }
   const user = (req as AuthRequest).user;

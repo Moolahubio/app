@@ -1,15 +1,16 @@
 import { Link, useRoute } from "wouter";
 import { Plus, Repeat, Calendar, ArrowRight, Info } from "lucide-react";
 import { Card, Button, Badge, ProgressBar } from "@/components/ui";
-import { PageHeader, Money } from "@/components/app/bits";
+import { PageHeader, Money, LoadError } from "@/components/app/bits";
 import { useListGoals, useGetWallet, useCreateGoal, getListGoalsQueryKey } from "@workspace/api-client-react";
-import { pct, formatDate } from "@/lib/utils";
+import { pct, formatDate, toUserError } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageUploadField } from "@/components/app/ImageUploadField";
 import { avatarSrc } from "@/lib/utils";
+import { parseAmountToCents } from "@/lib/amount";
 import {
   asFrequency,
   buildGoalPlan,
@@ -23,7 +24,7 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export default function GoalsPage() {
   const { t } = useTranslation("goals");
-  const { data: goals, isLoading: goalsLoading } = useListGoals();
+  const { data: goals, isLoading: goalsLoading, isError: goalsError, refetch: refetchGoals } = useListGoals();
   const { data: wallet, isLoading: walletLoading } = useGetWallet();
   const queryClient = useQueryClient();
   const createMutation = useCreateGoal();
@@ -36,21 +37,25 @@ export default function GoalsPage() {
   const [frequency, setFrequency] = useState<Frequency>("weekly");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
+  // String-based parse: "19.99" is exactly 1999¢ (no float drift); invalid → null.
+  const targetCents = parseAmountToCents(target);
+  const targetInvalid = target.trim() !== "" && (targetCents === null || targetCents <= 0);
+
   const previewPlan = useMemo(() => {
-    const targetCents = Math.floor(parseFloat(target) * 100);
-    if (!Number.isFinite(targetCents) || targetCents <= 0 || !deadline) return null;
+    if (targetCents === null || targetCents <= 0 || !deadline) return null;
     const deadlineDate = new Date(deadline);
     if (Number.isNaN(deadlineDate.getTime()) || deadlineDate <= new Date()) return null;
     return buildGoalPlan(targetCents, new Date(), deadlineDate, frequency);
-  }, [target, deadline, frequency]);
+  }, [targetCents, deadline, frequency]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
+    if (targetCents === null || targetCents <= 0) return;
     createMutation.mutate(
       { 
         data: { 
           name, 
-          targetCents: Math.floor(parseFloat(target) * 100), 
+          targetCents, 
           deadline: new Date(deadline).toISOString(),
           frequency,
           imageUrl: imageUrl ?? undefined,
@@ -72,6 +77,14 @@ export default function GoalsPage() {
 
   if (goalsLoading || walletLoading) {
     return <div className="p-8 text-center text-muted-foreground">{t("list.loading")}</div>;
+  }
+  // A failed load must not read as "$0 saved" with an empty list.
+  if (goalsError && !goals) {
+    return (
+      <Card className="mx-auto max-w-6xl">
+        <LoadError onRetry={() => void refetchGoals()} />
+      </Card>
+    );
   }
 
   const goalsList = goals ?? [];
@@ -102,7 +115,21 @@ export default function GoalsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>{t("create.target.label")}</Label>
-                  <Input type="number" value={target} onChange={e => setTarget(e.target.value)} required placeholder="1000" />
+                  <div dir="ltr" className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-sm text-muted-foreground">$</span>
+                    <Input
+                      inputMode="decimal"
+                      value={target}
+                      onChange={e => setTarget(e.target.value)}
+                      required
+                      placeholder="1000"
+                      className="ps-7"
+                      aria-invalid={targetInvalid || undefined}
+                    />
+                  </div>
+                  {targetInvalid && (
+                    <p className="text-xs text-destructive">{t("common:forms.invalidAmount")}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>{t("create.deadline.label")}</Label>
@@ -150,7 +177,10 @@ export default function GoalsPage() {
                   value={imageUrl}
                   onChange={setImageUrl}
                 />
-                <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+                {createMutation.error && (
+                  <p className="text-sm text-destructive" role="alert">{toUserError(createMutation.error)}</p>
+                )}
+                <Button type="submit" className="w-full" disabled={createMutation.isPending || targetInvalid}>
                   {createMutation.isPending ? t("create.submitting") : t("create.submit")}
                 </Button>
               </form>
@@ -262,6 +292,7 @@ export default function GoalsPage() {
         </button>
       </div>
 
+      {wallet && (
       <Card className="flex items-start gap-3 border-sky-500/15 bg-sky-50/50 p-5 dark:bg-sky-500/15">
         <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-400" />
         <p className="text-sm text-muted-foreground">
@@ -270,12 +301,13 @@ export default function GoalsPage() {
             i18nKey="info.unallocated"
             components={[
               <span className="font-semibold text-foreground">
-                <Money cents={wallet?.availableCents ?? 0} />
+                <Money cents={wallet.availableCents} />
               </span>,
             ]}
           />
         </p>
       </Card>
+      )}
     </div>
   );
 }
