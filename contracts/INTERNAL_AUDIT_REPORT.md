@@ -168,7 +168,7 @@ An engineer then fixed each confirmed finding and turned its PoC into a regressi
 - **Relief after a pause or outage (4):** A1 R1-08, A-R2-10, A-R2-12, B-R2-04 (Low).
   - After a USDC pause or a sequencer outage that spans the end of a rotating grace period, the first block can record strikes. A long pause can also stall the circle.
   - Mitigations: the Guardian's `extendDeadline` (it works while USDC is paused) and pre-signed L1 `OptimismPortal` deposits. Accumulation circles have a cure gate.
-- **Spec semantics awaiting sign-off (4):** A1 R1-27/28/29 and audit 2 R1-21. They cover the cover rules, the units of the D4 penalty, extensions and the exit-forfeit cliff.
+- **Spec semantics awaiting sign-off (4):** A1 R1-27/28/29 and audit 2 R1-21. They cover the cover rules, the units of the D4 penalty, extensions and the exit-forfeit cliff. The invariant 6 part of A1 R1-27 (per-dollar fairness promised only for a non-decreasing share price) was signed off on 2026-10-23.
 - **Accumulation liveness (4):**
   - A1 R1-18: the Active cancel between maturity and finalize is uncapped.
   - A1 R1-22: superseded by `forceExit`.

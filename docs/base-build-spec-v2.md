@@ -490,7 +490,7 @@ The ledger mirrors only confirmed events (at Base's `safe` head) and never posts
 3. Σ toAssets(bucket) ≤ NAV.
 4. **No admin path:** fuzzing with owner, guardian, operator, treasury and attacker actors, USDC leaves only to members. The treasury receives only settlement fees, residual and donations.
 5. **Rotating:** with no defaults, each member nets −fee. At σ = 100%, no pattern of defaults costs an honest member anything.
-6. **Accumulation:** Σ bonus ≤ `forfeitSnap`; a delinquent member gets at most their principal; a compliant member gets at least as much per dollar as a delinquent one; the fee is charged only on earnings.
+6. **Accumulation:** Σ bonus ≤ `forfeitSnap`; a delinquent member gets at most their principal; for a non-decreasing share price, a compliant member gets at least as much per dollar as a delinquent one; the fee is charged only on earnings. If the share price falls mid-schedule, each member bears the loss pro rata to what it held in the pool at that moment, so a member who held less then can end with more per dollar. *(Amended 2026-10-23 with founder sign-off; `contracts/IMPLEMENTATION_NOTES.md` step 4, deviation 3.)*
 7. From every state, a permissionless, time-gated path leads to a claim.
 8. Every function uses at most 5M gas at n = 50.
 
