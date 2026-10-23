@@ -247,4 +247,62 @@ contract MHAccumulationInvariantTest is AccumulationFixture {
     function _toAssets(uint256 shares, uint256 nav, uint256 total) internal pure returns (uint256) {
         return Math.mulDiv(shares, nav + 1, total + 1e6);
     }
+
+    // ================================================================ Regressions (replayed counterexamples)
+
+    /// @dev PR #36 CI (10,000 × 200) counterexample: the shrunk sequence call by call, then the end-of-run checks
+    ///      as the campaign runs them. 4 members, 5 rounds, member 3 skips rounds 2 and 5; the
+    ///      Guardian's `forceExit` (step 6) pays a 1.92% force-deallocation penalty that lowers the circle's share
+    ///      price mid-schedule. Each member bears it pro rata to its exposure (spec §4.5), so member 3, which held
+    ///      less before the fall and bought more after it, ends with more pool shares per dollar. Invariant 6
+    ///      claims per-dollar fairness only for a non-decreasing price (IMPLEMENTATION_NOTES step 4, deviation 3);
+    ///      the handler did not mark this fall, and `_checkPerDollar` failed ("compliant per dollar >= delinquent
+    ///      per dollar": 2025115120760226818770000 < 2025854155637354572600000).
+    function test_replay_pr36_forceExitPenaltyLowersSharePrice() public {
+        _replay(abi.encodeCall(AccumulationHandler.advance, (519343290081960929839387)));
+        _replay(
+            abi.encodeCall(AccumulationHandler.advance, (14374565857871484625521209882910173306611545474068))
+        );
+        _replay(
+            abi.encodeCall(
+                AccumulationHandler.payReliable,
+                (1136510775474845902050685514007540168531300002637520829246406098)
+            )
+        );
+        _replay(
+            abi.encodeCall(
+                AccumulationHandler.deployIdle,
+                (633269538831246341442658599225360337595558645438685438458919560809)
+            )
+        );
+        _replay(abi.encodeCall(AccumulationHandler.donateShares, (12796)));
+        uint256 navBefore = handler.circle().nav();
+        _replay(
+            abi.encodeCall(
+                AccumulationHandler.forceExit,
+                (1, 2362450178560002612735932329742868472891335079666595030055508858117144938225)
+            )
+        );
+        assertLt(handler.circle().nav(), navBefore, "the forceExit penalty lowered the circle's NAV");
+        _replay(
+            abi.encodeCall(
+                AccumulationHandler.advance, (778728842303265217725419288224013269226540299942222329949302)
+            )
+        );
+        _replay(abi.encodeCall(AccumulationHandler.advance, (275183293043940463211886020)));
+        _replay(
+            abi.encodeCall(AccumulationHandler.advance, (17432916670459796410386115229499060352090880518787))
+        );
+        _replay(abi.encodeCall(AccumulationHandler.payReliable, (264480746646084638039469285)));
+        afterInvariant();
+        assertTrue(handler.ghostLossSeen(), "a share price that fell is outside the per-dollar claim");
+    }
+
+    /// @dev One handler call as the campaign makes it, then every per-call invariant. The campaign's senders are
+    ///      not replayed: the handler never reads `msg.sender` (each circle call is pranked as its own actor).
+    function _replay(bytes memory call) internal {
+        (bool ok,) = address(handler).call(call);
+        assertTrue(ok, "handler call reverted");
+        _check();
+    }
 }

@@ -260,6 +260,64 @@ contract MHAccumulationScenariosTest is AccumulationFixture {
         circle.sweepResidual();
     }
 
+    /// @dev PR #36 (the CI invariant counterexample as a scenario): the Guardian's `forceExit` pays a 2% force-
+    ///      deallocation penalty mid-schedule, whose value accrues to the vault's other holders, so the circle's
+    ///      share price falls. Each member bears the loss pro rata to the principal it had in the pool at that
+    ///      moment, the losses add up to exactly the circle's NAV loss, and no fee is charged (no earnings). D,
+    ///      which skipped round 2 and so held less when the price fell, ends with more per dollar than A: the
+    ///      per-dollar claim of invariant 6 is for a non-decreasing price (step 4, deviation 3), as in the spec's
+    ///      own 1%-loss example (no forfeit, no fee).
+    function test_PR36_forceExitPenaltyMidSchedule_lossProRataToExposure() public {
+        address outsider = makeAddr("outsider"); // another depositor of the vault
+        usdc.mint(outsider, 1_000e6);
+        vm.startPrank(outsider);
+        usdc.approve(address(morpho), 1_000e6);
+        morpho.deposit(1_000e6, outsider);
+        vm.stopPrank();
+
+        _start(4, 5, 35, address(morpho), false);
+        _openRound(1);
+        _payAll(1, _everyone());
+        _openRound(2);
+        _payAll(2, _allBut(D));
+        _deploy();
+        uint256 navBefore = circle.nav();
+        assertEq(navBefore, 7 * C, "every USDC in the vault, at par");
+        morpho.mockSetForceDeallocatePenalty(address(liqAdapter), 0.02e18);
+        vm.prank(guardian);
+        circle.forceExit(address(liqAdapter), "", navBefore);
+        uint256 loss = navBefore - circle.nav();
+        assertGt(loss, 0, "the penalty lowered the share price");
+        for (uint256 r = 3; r <= 5; ++r) {
+            _openRound(r);
+            _payAll(r, r == 5 ? _allBut(D) : _everyone());
+        }
+        _mature();
+        circle.finalize();
+        assertEq(circle.forfeitSnap(), 0, "D is below its principal: nothing capped");
+        _settleAll();
+        assertEq(uint8(circle.status()), uint8(CircleStatus.Closed));
+
+        uint256 sumLoss;
+        for (uint256 i; i < 4; ++i) {
+            IMHAccumulationCircle.MemberState memory st = circle.memberState(people[i]);
+            uint256 exposure = i == D ? C : 2 * C; // principal in the pool when the penalty hit
+            assertLe(st.cashOut, st.principal, "a loss");
+            assertApproxEqAbs(
+                st.principal - st.cashOut, exposure * loss / navBefore, 1, "pro rata to exposure"
+            );
+            sumLoss += st.principal - st.cashOut;
+        }
+        assertEq(sumLoss, loss, "the members bear exactly the circle's loss");
+        assertEq(usdc.balanceOf(treasury), 0, "no fee without earnings");
+        // Per dollar: A (5 rounds paid) < D (3 rounds paid).
+        assertLt(
+            circle.memberState(people[0]).cashOut * 3,
+            circle.memberState(people[D]).cashOut * 5,
+            "A < D per $"
+        );
+    }
+
     /// @dev R8: no try/catch and no low-level `_pay`, so a call given too little gas reverts as a whole. Sweeps the
     ///      gas limit up to the first success and checks that every failure left no partial state.
     function test_R8_outOfGasIsAtomic() public {

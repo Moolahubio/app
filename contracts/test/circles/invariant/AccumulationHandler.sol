@@ -72,8 +72,9 @@ contract AccumulationHandler is Test {
     uint256 public ghostBonusSum;
     uint256 public ghostMaxGas;
     bytes4 public ghostMaxGasSelector;
-    /// @dev Set once NAV can have fallen (a vault loss or a preview discount): per-dollar fairness between
-    ///      compliant and delinquent members is only claimed for non-decreasing share prices.
+    /// @dev Set once NAV can have fallen (a vault loss, a preview discount, or a Guardian `forceExit` whose penalty
+    ///      lowered the circle's NAV): per-dollar fairness between compliant and delinquent members is only claimed
+    ///      for non-decreasing share prices.
     bool public ghostLossSeen;
     /// @dev First violated per-call property, empty if none.
     string public ghostViolation;
@@ -346,8 +347,15 @@ contract AccumulationHandler is Test {
         if (!ok) return;
         if (actor != guardian) _violate("forceExit by someone other than the Guardian");
         if (!circle.yieldOff()) _violate("forceExit left yield on");
+        uint256 navAfter = circle.nav();
         // The circle pays at most the vault's 2% penalty on `assets` (rounding aside).
-        if (circle.nav() + assets / 50 + 2 < navBefore) _violate("forceExit cost more than the 2% penalty");
+        if (navAfter + assets / 50 + 2 < navBefore) _violate("forceExit cost more than the 2% penalty");
+        // PR #36: the penalty is a loss the circle bears (its value accrues to the vault's other holders), so, like
+        // `vaultLoss`, a share price that fell takes the run out of the per-dollar comparison (invariant 6 holds
+        // for a non-decreasing price, IMPLEMENTATION_NOTES step 4 deviation 3). Keyed on the NAV falling at all,
+        // so a 1-2 unit rounding drop from the vault's virtual-share offset (even with the circle as the vault's
+        // only holder) also turns the comparison off: a deliberately conservative trigger.
+        if (navAfter < navBefore) ghostLossSeen = true;
     }
 
     /// @dev An allocator moves the idle USDC freed by a force deallocation back into a market (instant).

@@ -223,7 +223,7 @@ Slither 0.11.6 on `src/circles` (this run, `--config-file slither.config.json --
 - **Invariants at 2,000 runs × depth 150 (300,000 calls each):**
   - accumulation passes with 0 reverts (656 s);
   - rotating passes with 1,085 handler-level reverts (486 s);
-  - **the CI profile (10,000 × 200) last ran at build step 4, before any audit fix.**
+  - **the CI profile (10,000 × 200) last ran at build step 4, before any audit fix.** Addendum (2026-10-23): it ran again on PR #36 and found a handler oracle gap (test-only fix, no contract change); see IMPLEMENTATION_NOTES "PR #36 CI fix".
 - **Invariant oracles:**
   - exact identities for the USDC and vault-share balances;
   - a ghost ledger per member;
