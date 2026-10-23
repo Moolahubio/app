@@ -10,6 +10,24 @@ globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
+// Sentry's plugin uploads source maps, creates the release and adds build-time
+// instrumentation. It is only loaded when SENTRY_AUTH_TOKEN is set (CI or the
+// deploy build); a plain build stays exactly as before. dist/ is never served,
+// so the linked maps stay next to the bundle for --enable-source-maps.
+const sentryPlugins = process.env.SENTRY_AUTH_TOKEN
+  ? [
+      (await import("@sentry/node/esbuild")).sentryEsbuildPlugin({
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT_API,
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        release: { name: process.env.SENTRY_RELEASE || undefined },
+        telemetry: false,
+        // Kill switch if build-time instrumentation ever misbehaves.
+        buildTimeInstrumentation: process.env.SENTRY_BUILD_INSTRUMENTATION !== "false",
+      }),
+    ]
+  : [];
+
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
@@ -104,7 +122,9 @@ async function buildAll() {
     sourcemap: "linked",
     plugins: [
       // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
+      esbuildPluginPino({ transports: ["pino-pretty"] }),
+      // Must stay last.
+      ...sentryPlugins,
     ],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {

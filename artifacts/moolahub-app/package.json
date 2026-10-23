@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
-    "build": "vite build --config vite.config.ts",
+    "build": "vite build --config vite.config.ts && pnpm run check:no-sourcemaps",
+    "check:no-sourcemaps": "! find dist/public -name '*.map' | grep .",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -41,6 +42,7 @@
     "@replit/vite-plugin-cartographer": "catalog:",
     "@replit/vite-plugin-dev-banner": "catalog:",
     "@replit/vite-plugin-runtime-error-modal": "catalog:",
+    "@sentry/bundler-plugins": "11.5.0",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
@@ -79,6 +81,7 @@
   },
   "dependencies": {
     "@privy-io/react-auth": "^3.28.0",
+    "@sentry/react": "11.5.0",
     "@simplewebauthn/browser": "^13.3.0",
     "@uppy/aws-s3": "^5.1.0",
     "@uppy/core": "^5.2.0",
