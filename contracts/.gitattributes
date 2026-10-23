@@ -1,0 +1,4 @@
+# Solidity sources are hashed into the solc metadata (the CBOR hash at the end of every initcode), so a CRLF
+# checkout would change every initcode hash in the ceremony manifest. Keep them LF everywhere.
+*.sol text eol=lf
+*.json text eol=lf

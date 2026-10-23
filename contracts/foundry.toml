@@ -8,23 +8,47 @@ solc = "0.8.28"
 optimizer = true
 optimizer_runs = 200
 evm_version = "cancun"
-remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
+# Reproducible bytecode (spec §5: every signer rebuilds the manifest). Remappings are part of the solc metadata, and
+# so of the CBOR hash at the end of every initcode: auto-detection would add whatever `lib/*/lib/*` folders a
+# checkout happens to have (e.g. OZ's own submodules) and change every initcode hash. Only these two are allowed.
+auto_detect_remappings = false
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "forge-std/=lib/forge-std/src/",
+]
+# Scripts write the ceremony files (manifest, Safe batches) under deployments/ only.
 fs_permissions = [{ access = "read-write", path = "./deployments" }]
+
+# Local default: invariant suites (test/circles/invariant) run a reduced 32 runs x depth 100 so `forge test` stays
+# quick; handler reverts never fail a run (the handlers call the circles with low-level calls).
+[profile.default.invariant]
+runs = 32
+depth = 100
+fail_on_revert = false
+
+# CI profile (FOUNDRY_PROFILE=ci): the spec §4.7 depth, at least 10,000 invariant runs at depth 200 (about an hour
+# per invariant suite on one core) and 1,000 fuzz runs.
+[profile.ci.fuzz]
+runs = 1000
+
+[profile.ci.invariant]
+runs = 10000
+depth = 200
+fail_on_revert = false
 
 [fmt]
 line_length = 110
 tab_width = 4
 bracket_spacing = true
 
-# Deploy targets. Monad Testnet (chainId 10143) is the migration target; Base
-# Sepolia is kept for rollback. Etherscan v2 is multichain — the verifier URL is
-# identical for both; only `chain` differs.
-#   Monad: set MONAD_TESTNET_RPC_URL + MONADSCAN_API_KEY
-#   Base:  set BASE_SEPOLIA_RPC_URL  + BASESCAN_API_KEY
+# Deploy targets: Base mainnet (8453) and Base Sepolia (84532, rehearsal only). Nothing here holds a key:
+# deployment goes through the Gov Safe (spec §5), never a raw deployer key.
+# Etherscan v2 is multichain: one API key and one URL, only `chain` differs. Verify on Sourcify first.
+#   BASE_RPC_URL, BASE_SEPOLIA_RPC_URL, ETHERSCAN_API_KEY
 [rpc_endpoints]
-monad_testnet = "${MONAD_TESTNET_RPC_URL}"
+base = "${BASE_RPC_URL}"
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
 
 [etherscan]
-monad_testnet = { key = "${MONADSCAN_API_KEY}", chain = 10143, url = "https://api.etherscan.io/v2/api" }
-base_sepolia = { key = "${BASESCAN_API_KEY}", chain = 84532, url = "https://api.etherscan.io/v2/api" }
+base = { key = "${ETHERSCAN_API_KEY}", chain = 8453, url = "https://api.etherscan.io/v2/api" }
+base_sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 84532, url = "https://api.etherscan.io/v2/api" }

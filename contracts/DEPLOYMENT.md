@@ -1,5 +1,7 @@
 # MoolaHub Contracts — Base Sepolia Deployment Runbook
 
+> **Retired (2026-10-22, build spec v3 decision 11 / C1).** The contracts, tests and deploy scripts described below were deleted. The replacement circle contracts live in `src/circles/` (see `IMPLEMENTATION_NOTES.md`); deployment is now the Gov Safe ceremony in [`README.md`](README.md#deployment-ceremony-spec-5) (`script/BuildBaseBatch.s.sol`, `script/VerifyBase.s.sol`). Do not follow the legacy instructions below.
+
 A step-by-step guide for **you** to deploy the contracts to Base Sepolia and be their **owner**. No one else needs your keys. Budget ~30 minutes the first time.
 
 > **Testnet only.** Use a throwaway deployer key funded with test ETH. Never put a key that holds real money in a `.env` file. For mainnet later, the owner must be a multisig (see §10).
