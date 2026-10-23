@@ -36,6 +36,7 @@ delete process.env.RESEND_API_KEY;
 
 const { db, pool, usersTable, goalsTable, transactionsTable, ledgerAccountsTable, postingsTable } =
   await import("@workspace/db");
+const { purgeTestData } = await import("@workspace/db/testing");
 const { eq, and, inArray } = await import("drizzle-orm");
 const { createWalletForUser } = await import("./wallet");
 const { acct, transfer, accountBalance } = await import("./ledger");
@@ -259,33 +260,10 @@ async function concurrentStress(uid: string, iterations = 25): Promise<void> {
 
 async function cleanup(): Promise<void> {
   try {
-    const keys = [
-      ...(userId ? [acct.wallet(userId)] : []),
-      ...goalIds.map((g) => acct.goal(g)),
-    ];
-    if (keys.length) {
-      const accts = await db
-        .select({ id: ledgerAccountsTable.id })
-        .from(ledgerAccountsTable)
-        .where(inArray(ledgerAccountsTable.key, keys));
-      const acctIds = accts.map((a) => a.id);
-      if (acctIds.length) {
-        const txnRows = await db
-          .selectDistinct({ id: postingsTable.transactionId })
-          .from(postingsTable)
-          .where(inArray(postingsTable.accountId, acctIds));
-        const txnIds = txnRows.map((r) => r.id);
-        if (txnIds.length) {
-          await db.delete(transactionsTable).where(inArray(transactionsTable.id, txnIds));
-        }
-      }
-    }
-    if (goalIds.length) {
-      await db.delete(goalsTable).where(inArray(goalsTable.id, goalIds));
-    }
-    if (userId) {
-      await db.delete(usersTable).where(eq(usersTable.id, userId));
-    }
+    // Postings are append-only and no longer cascade away, so purge explicitly:
+    // every transaction that touched the test accounts (both sides, including
+    // the shared `external` account), then the circles/goals and users.
+    await purgeTestData({ userIds: userId ? [userId] : [], goalIds });
   } catch (e) {
     console.error("[cleanup] failed:", e);
   }

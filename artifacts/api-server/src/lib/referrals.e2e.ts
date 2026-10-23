@@ -32,6 +32,7 @@ const {
   referralEarningsTable,
   referralWithdrawalsTable,
 } = await import("@workspace/db");
+const { purgeTestData } = await import("@workspace/db/testing");
 const { eq, and } = await import("drizzle-orm");
 const { acct, transfer, accountBalance } = await import("./ledger");
 const { onchainEnabled } = await import("./chain");
@@ -332,15 +333,11 @@ async function main() {
       "✅ referrals.e2e passed: codes, attribution, tiers, idempotent accrual (goal + circle), skipped markers, overview privacy, withdrawal min/cap + offline settlement",
     );
   } finally {
-    // Delete the circle first (its creator FK has no cascade); this also
-    // set-nulls the pool ledger account. Then deleting the users cascades all
-    // referral_* rows and streaks.
-    if (createdCircleId) {
-      await db.delete(circlesTable).where(eq(circlesTable.id, createdCircleId));
-    }
-    for (const id of created) {
-      await db.delete(usersTable).where(eq(usersTable.id, id));
-    }
+    // Postings are append-only and no longer cascade away, so purge explicitly:
+    // every ledger transaction of these users and the circle (fees, payouts,
+    // commissions, withdrawals) with all its postings, then the circle and the
+    // users, whose deletion cascades the referral_* rows and streaks.
+    await purgeTestData({ userIds: created, circleIds: createdCircleId ? [createdCircleId] : [] });
   }
 }
 

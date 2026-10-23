@@ -27,6 +27,7 @@ delete process.env.RESEND_API_KEY;
 
 const { db, pool, usersTable, circlesTable, circleMembersTable, transactionsTable, ledgerAccountsTable, postingsTable, onchainTransfersTable } =
   await import("@workspace/db");
+const { purgeTestData } = await import("@workspace/db/testing");
 const { eq, and, inArray, or } = await import("drizzle-orm");
 const { createWalletForUser, getWalletForUser } = await import("./wallet");
 const { acct, transfer } = await import("./ledger");
@@ -89,31 +90,10 @@ async function settleCircle(cId: string, budgetMs = 90_000): Promise<void> {
 
 async function cleanup() {
   try {
-    const keys = [
-      ...users.map((u) => acct.wallet(u.id)),
-      ...(circleId ? [acct.pool(circleId)] : []),
-    ];
-    if (keys.length) {
-      const accts = await db
-        .select({ id: ledgerAccountsTable.id })
-        .from(ledgerAccountsTable)
-        .where(inArray(ledgerAccountsTable.key, keys));
-      const acctIds = accts.map((a) => a.id);
-      if (acctIds.length) {
-        const txnRows = await db
-          .selectDistinct({ id: postingsTable.transactionId })
-          .from(postingsTable)
-          .where(inArray(postingsTable.accountId, acctIds));
-        const txnIds = txnRows.map((r) => r.id);
-        if (txnIds.length) {
-          await db.delete(transactionsTable).where(inArray(transactionsTable.id, txnIds));
-        }
-      }
-    }
-    if (circleId) await db.delete(circlesTable).where(eq(circlesTable.id, circleId));
-    if (users.length) {
-      await db.delete(usersTable).where(inArray(usersTable.id, users.map((u) => u.id)));
-    }
+    // Postings are append-only and no longer cascade away, so purge explicitly:
+    // every transaction that touched the test accounts (both sides, including
+    // the shared `external` account), then the circles/goals and users.
+    await purgeTestData({ userIds: users.map((u) => u.id), circleIds: circleId ? [circleId] : [] });
   } catch (e) {
     console.error("[cleanup] failed:", e);
   }

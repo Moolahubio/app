@@ -46,6 +46,9 @@ export const onchainTransfersTable = pgTable(
   },
   (t) => ({
     statusIdx: index("onchain_transfers_status_idx").on(t.status),
+    transactionIdx: index("onchain_transfers_transaction_id_idx").on(t.transactionId),
+    contributionIdx: index("onchain_transfers_contribution_id_idx").on(t.contributionId),
+    sourceUserIdx: index("onchain_transfers_source_user_id_idx").on(t.sourceUserId),
   }),
 );
 

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, integer, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -13,7 +13,7 @@ export const passkeysTable = pgTable("passkeys", {
   deviceName: text("device_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
-});
+}, (t) => [index("passkeys_user_id_idx").on(t.userId)]);
 
 export const insertPasskeySchema = createInsertSchema(passkeysTable).omit({ id: true, createdAt: true });
 export type InsertPasskey = z.infer<typeof insertPasskeySchema>;
@@ -30,7 +30,7 @@ export const webauthnChallengesTable = pgTable("webauthn_challenges", {
   type: text("type").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("webauthn_challenges_user_id_idx").on(t.userId)]);
 
 export const insertWebauthnChallengeSchema = createInsertSchema(webauthnChallengesTable).omit({ id: true, createdAt: true });
 export type InsertWebauthnChallenge = z.infer<typeof insertWebauthnChallengeSchema>;
