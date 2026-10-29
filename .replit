@@ -89,22 +89,12 @@ externalPort = 3000
 [userenv]
 
 [userenv.shared]
-USDC_CONTRACT_ADDRESS = "0xFc054f1d2429A632Dab801d67F484efdd84FC4D9"
+# Kept until P2 deletes the server-custody code (docs/privy-account-layer.md §4):
+# without it, "Continue with Privy" falls back to a server-held wallet key.
+ENABLE_PRIVY_CUSTODY = "true"
 NEXT_PUBLIC_ONRAMP = "false"
 EMAIL_FROM = "MoolaHub <noreply@moolahub.io>"
 APP_URL = "https://app.moolahub.io"
-CIRCLE_FACTORY_ADDRESS = "0x1A618c3175640f997171e0c61011851963cCb649"
-GOAL_VAULT_ADDRESS = "0x8E749C2a367AC645FB8f5d2af053f02DeBE1a85f"
-TREASURY_ADDRESS = "0x4b420De2F07eC1DF45Db86d1ba6c45A973730042"
-REPUTATION_ADDRESS = "0x0a448d53912Aa692080176D93c722AFBBc66605B"
-ESCROW_IMPL_ADDRESS = "0x00b3654521158f1aC4D9a10FA5CD6ad9F00E30Bc"
-ACCUMULATION_FACTORY_ADDRESS = "0x912ff3e64F8431bb4361629a9d66385183F07198"
-FEE_RECIPIENT_ADDRESS = "0xfaf60899819825b0cca37e053449cb1d59b3270a"
-ENABLE_TEST_FAUCET = "true"
-CHAIN_RPC_URL = "https://testnet-rpc.monad.xyz"
-MONAD_TESTNET_RPC_URL = "https://testnet-rpc.monad.xyz"
-CHAIN_NETWORK = "testnet"
-ENABLE_PRIVY_CUSTODY = "true"
 
 [userenv.development]
 

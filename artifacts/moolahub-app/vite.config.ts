@@ -37,6 +37,9 @@ export default defineConfig({
   define: {
     "import.meta.env.VITE_PRIVY_APP_ID": JSON.stringify(
       (() => {
+        // The name in .env.example wins; the other two are today's Replit names.
+        const vite = process.env.VITE_PRIVY_APP_ID;
+        if (vite) return vite;
         const pub = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
         if (pub && pub.length >= 10) return pub;
         return process.env.PRIVY_APP_ID ?? "";
