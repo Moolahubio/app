@@ -10,6 +10,7 @@ import { logger } from "./lib/logger";
 import { isAllowedOrigin } from "./lib/origins";
 import { captureServerError } from "./lib/observability";
 import { AppError } from "./lib/errors";
+import { requestLogFields } from "./lib/requestLog";
 
 const app: Express = express();
 
@@ -23,7 +24,7 @@ app.use(
     logger,
     serializers: {
       req(req) {
-        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
+        return requestLogFields(req, process.env.NODE_ENV === "production");
       },
       res(res) {
         return { statusCode: res.statusCode };
@@ -54,10 +55,32 @@ app.use(cookieParser());
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
+/**
+ * Per-IP request budget for a limiter. Local development may raise it through
+ * the named env var (a native dev build re-checks /auth/me on every launch and a
+ * QA session easily spends 20 auth calls in 15 minutes). In production the
+ * override is ignored and the hard default always applies.
+ */
+function limiterMax(envVar: string, fallback: number): number {
+  if (process.env.NODE_ENV === "production") return fallback;
+  const n = Number(process.env[envVar]);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+}
+
 // Rate limiting (per IP). Auth endpoints get a much tighter budget to blunt
 // credential stuffing / brute force.
-const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: limiterMax("DEV_API_RATE_LIMIT_MAX", 300),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: limiterMax("DEV_AUTH_RATE_LIMIT_MAX", 20),
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 app.use("/api/auth", authLimiter);
 app.use("/api", apiLimiter);
 

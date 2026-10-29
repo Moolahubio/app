@@ -7,7 +7,9 @@ import { LESSONS } from "../lib/lessons-data";
 import { userActivity } from "../lib/ledger";
 import { userOnchainBalanceSummary } from "../lib/onchainBalances";
 import { listGoals } from "../lib/goals";
-import { listCirclesForUser } from "../lib/circles";
+import { listCirclesForUser, currentRoundContributions } from "../lib/circles";
+import { dashboardGoalJson } from "../lib/goalJson";
+import { homeCircles, pickUpcomingPayIn } from "../lib/dashboardView";
 
 const router: IRouter = Router();
 
@@ -29,20 +31,9 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
   const activeGoals = goals
     .filter((g) => g.status === "active")
     .slice(0, 3)
-    .map((g) => ({
-      id: g.id,
-      name: g.name,
-      emoji: g.emoji,
-      color: g.color,
-      targetCents: g.targetCents,
-      savedCents: g.savedCents,
-      deadline: g.deadline.toISOString(),
-      frequency: g.frequency,
-      autoSaveCents: g.autoSaveCents ?? null,
-      createdAt: g.createdAt.toISOString(),
-    }));
+    .map(dashboardGoalJson);
 
-  const activeCircles = circles.slice(0, 3).map((c) => ({
+  const activeCircles = homeCircles(circles).map((c) => ({
     id: c.id,
     name: c.name,
     status: c.status,
@@ -52,6 +43,7 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
     payoutCents: c.payoutCents,
     potCents: c.potCents,
     memberCount: c.memberCount,
+    targetMembers: c.targetMembers,
     myPayoutRound: c.myPayoutRound,
     currentRound: c.currentRound,
     totalRounds: c.totalRounds,
@@ -79,6 +71,11 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
       }
     : undefined;
 
+  // The caller's next pay-in still due, with no date (a round advances when
+  // everyone has paid). null means nothing is owed, never "could not tell".
+  const rows = await currentRoundContributions(circles);
+  const upcomingPayIn = pickUpcomingPayIn(user.id, circles, rows);
+
   res.json(
     GetDashboardSummaryResponse.parse({
       availableCents: bal.availableCents,
@@ -93,6 +90,7 @@ router.get("/dashboard/summary", requireAuth, async (req, res): Promise<void> =>
       lessonsCompleted: completedLessons.length,
       totalLessons: LESSONS.length,
       upcomingReminder,
+      upcomingPayIn,
     }),
   );
 });

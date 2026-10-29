@@ -33,4 +33,6 @@ export interface LoginResult {
   hasPassword?: boolean | null;
   /** @nullable */
   privyLinked?: boolean | null;
+  /** Native clients only. Present when the request carried the header `X-Client: ios` (case-insensitive) and a session was established. Store it securely (Keychain) and send it back as the `x-session-token` header. Never returned to browsers, which use the httpOnly session cookie instead. */
+  sessionToken?: string;
 }

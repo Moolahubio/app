@@ -1,7 +1,7 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { and, eq, lt, sql } from "drizzle-orm";
 import { db, passwordResetCodesTable } from "@workspace/db";
-import { sendEmail, brandedEmail } from "./email";
+import { sendEmail, brandedEmail, logDevEmailCode } from "./email";
 
 /**
  * One-time, 6-digit password reset codes. Mirrors the email verification code
@@ -49,6 +49,9 @@ export async function issuePasswordResetCode(
     codeHash: hashCode(code),
     expiresAt: new Date(Date.now() + CODE_TTL_MS),
   });
+
+  // Local dev only (no email provider + DEV_LOG_EMAIL_CODES=true; never in production).
+  logDevEmailCode("password reset", email, code);
 
   await sendEmail({
     to: email,

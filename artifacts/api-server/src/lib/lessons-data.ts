@@ -19,30 +19,30 @@ export const LESSONS: LessonDef[] = [
   {
     slug: "what-is-a-susu",
     title: "What is a Susu?",
-    summary: "Learn how rotating savings groups have helped communities across Africa and the diaspora build wealth for generations.",
+    summary: "How rotating savings groups work, and why communities across Africa and the diaspora have used them for generations.",
     minutes: 5,
     level: "beginner",
     category: "circles",
     emoji: "🤝",
     body: [
       {
-        heading: "The Power of Collective Saving",
-        text: "A Susu (also called Esusu, Tontine, or Chit Fund depending on the culture) is a rotating savings and credit association. A group of trusted people each contribute a fixed amount at regular intervals, and each period one member receives that round's pot."
+        heading: "The power of saving as a group",
+        text: "A Susu (also called Esusu, tontine or chit fund, depending on the culture) is a rotating savings and credit association. A group of trusted people each pay in a fixed amount at regular intervals, and each period one member receives that round's pot."
       },
       {
-        heading: "How It Works",
-        text: "Imagine 10 friends each contribute $100 every month. Each month, one person receives that month's pot of $1,000, less any fee the circle charges. After 10 months, everyone has paid in and had their turn. The value is in receiving a lump sum you could not have saved alone in one month. On MoolaHub, each circle shows its fee and payout before you join."
+        heading: "How it works",
+        text: "Imagine 10 friends each pay in $100 every month. Each month, one person receives that month's pot. After 10 months, everyone has paid in and had their turn. The value is in receiving a lump sum you could not have saved alone in one month. Some groups charge a small fee, added to each pay-in or taken from the pot. On MoolaHub, an invitation shows how much you pay in each round and how often. Once you join, the group's page shows the payout each round and, once the group starts, the payout order."
       },
       {
-        heading: "Why It Works",
-        text: "The social accountability of the group keeps everyone disciplined. You save not just for yourself, but for your circle. This peer accountability has made Susus more effective than many formal savings products for communities that value collective responsibility."
+        heading: "Why it works",
+        text: "Knowing that others are counting on you helps everyone keep paying in. You save not just for yourself, but for your group. For many communities, that shared commitment is what makes a Susu work."
       }
     ],
     takeaways: [
       "A Susu is a rotating savings group where members take turns receiving the pot",
-      "Lump sums are powerful for major purchases, emergencies, and investment",
+      "A lump sum can cover a big purchase or an emergency",
       "Social accountability helps members stay disciplined about saving",
-      "Every MoolaHub circle shows its rules, fee and payout order up front"
+      "On MoolaHub, members see the payout each round and, once the group starts, the payout order"
     ]
   },
   {
@@ -77,59 +77,59 @@ export const LESSONS: LessonDef[] = [
   {
     slug: "setting-savings-goals",
     title: "Savings goals that actually stick",
-    summary: "The science and art of setting savings goals that you actually achieve, and how a simple routine makes it easier.",
+    summary: "How to set savings goals you can reach, and how a simple routine makes them easier.",
     minutes: 6,
     level: "beginner",
     category: "personal-finance",
     emoji: "🎯",
     body: [
       {
-        heading: "Why Goals Beat Vague Intentions",
-        text: "Research shows that people who write down specific goals with deadlines are 42% more likely to achieve them. The key is moving from 'I want to save more' to 'I will save $3,000 for a laptop by December 31st.'"
+        heading: "Why goals beat vague intentions",
+        text: "A specific goal with a deadline tells you how much to set aside and lets you check your progress along the way. The key is moving from 'I want to save more' to 'I will save $3,000 for a laptop by December 31.'"
       },
       {
-        heading: "The SMART Framework for Savings",
-        text: "Set Specific goals (what exactly are you saving for?), Measurable targets (how much?), Achievable amounts (realistic given your income), Relevant to your life, and Time-bound with a clear deadline. 'Emergency fund of $2,000 by March' beats 'save for emergencies' every time."
+        heading: "The SMART framework for savings",
+        text: "Set Specific goals (what exactly are you saving for?), Measurable targets (how much?), Achievable amounts (realistic given your income), Relevant to your life, and Time-bound with a clear deadline. 'Emergency fund of $2,000 by March' is easier to act on than 'save for emergencies'."
       },
       {
-        heading: "Make It a Routine",
-        text: "The most powerful savings tool is a routine. When money moves to a goal right after you get paid, you adapt your spending to what's left. Each MoolaHub goal comes with a contribution plan that suggests a small amount for each day, week or month, and your savings streak nudges you before a period closes. You still move the money yourself, so you stay in control."
+        heading: "Make it a routine",
+        text: "A routine is one of the most useful savings tools. When money moves to a goal right after you get paid, you adapt your spending to what's left. Each MoolaHub goal comes with a plan that suggests an amount for each day, week or month, starting small and growing gradually, and your savings streak counts how many days, weeks or months in a row you've saved. You still move the money yourself, so you stay in control."
       }
     ],
     takeaways: [
-      "Specific goals with deadlines are dramatically more effective than vague intentions",
+      "Specific goals with deadlines are easier to act on than vague intentions",
       "Use the SMART framework: Specific, Measurable, Achievable, Relevant, Time-bound",
       "A fixed routine, right after payday, turns saving into a habit",
-      "Multiple focused goals (emergency, holiday, investment) beat one big abstract goal"
+      "A few focused goals (emergency, holiday, school fees) are easier to track than one big goal"
     ]
   },
   {
     slug: "building-an-emergency-fund",
     title: "Building an emergency fund",
-    summary: "Your emergency fund is the foundation of financial resilience. Here's exactly how to build one, even on a tight budget.",
+    summary: "An emergency fund keeps one surprise from undoing the rest of your plans. Here's how to build one, even on a tight budget.",
     minutes: 7,
     level: "beginner",
     category: "personal-finance",
     emoji: "🛡️",
     body: [
       {
-        heading: "Why the Emergency Fund Comes First",
-        text: "Without an emergency fund, any unexpected expense — a car repair, medical bill, or job loss — forces you into debt. An emergency fund breaks this cycle. It is the single highest-ROI financial move most people can make, because it protects every other financial goal."
+        heading: "Why the emergency fund comes first",
+        text: "Without an emergency fund, an unexpected expense, such as a car repair, a medical bill or a lost job, can push you into debt. An emergency fund breaks that cycle and keeps your other goals on track."
       },
       {
-        heading: "How Much Do You Need?",
-        text: "The standard advice is 3–6 months of essential expenses (rent, food, utilities, minimum debt payments). If you have variable income, aim for 6–12 months. Start with a $500–$1,000 mini emergency fund to handle small crises, then build from there."
+        heading: "How much do you need?",
+        text: "A common guideline is 3–6 months of essential expenses (rent, food, utilities, minimum debt payments). If your income changes from month to month, aim higher, such as 6–12 months. Start with a smaller first target, such as $500–$1,000, to handle small surprises, then build from there."
       },
       {
-        heading: "Where to Keep It",
-        text: "Your emergency fund should be liquid (instantly accessible), separate from spending money (so you're not tempted), and stable (not in stocks). A savings goal on MoolaHub keeps it earmarked and separate. Once you have it, resist the urge to 'invest' it — its job is insurance, not growth."
+        heading: "Where to keep it",
+        text: "Keep your emergency fund where you can get to it, apart from your spending money (so you're not tempted) and out of stocks. Once you have it, resist the urge to invest it. Its job is to cover the unexpected, not to grow."
       }
     ],
     takeaways: [
-      "An emergency fund is the foundation — build it before investing or aggressive saving",
+      "Build your emergency fund first, before investing or other big goals",
       "Target 3–6 months of essential expenses (not total income)",
       "Start with a $500–$1,000 mini-fund and build from there",
-      "Keep it liquid and separate from your spending money"
+      "Keep it where you can get to it, apart from your spending money"
     ]
   },
   {
@@ -172,7 +172,7 @@ export const LESSONS: LessonDef[] = [
     body: [
       {
         heading: "The Cost of Traditional Remittances",
-        text: "The global average cost of sending $200 internationally is 6.5% — meaning $13 disappears before it reaches family. In some corridors (e.g. US to sub-Saharan Africa), fees can reach 8–10%. The World Bank estimates this costs migrants $40+ billion per year globally."
+        text: "Sending money abroad through traditional services often costs several percent of the amount in fees, so part of it never reaches family. Costs vary a lot from one country pair to another, so compare before you send."
       },
       {
         heading: "Crypto Rails: A Different Path",
@@ -184,9 +184,9 @@ export const LESSONS: LessonDef[] = [
       }
     ],
     takeaways: [
-      "Traditional remittances cost 6–10% in fees — billions wasted annually",
+      "Traditional remittance fees can take a noticeable share of what you send",
       "Digital-dollar transfers can cost pennies regardless of amount",
-      "Recipient needs local conversion options — infrastructure is growing",
+      "The recipient needs a way to convert to local currency, and options are still growing",
       "Crypto remittances are a major use case driving blockchain adoption in Africa"
     ]
   }

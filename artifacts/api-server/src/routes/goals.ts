@@ -34,52 +34,10 @@ import {
   deleteGoal,
   confirmClientGoalDeposit,
   confirmClientGoalRelease,
-  type GoalHistoryItem,
 } from "../lib/goals";
+import { goalToJson } from "../lib/goalJson";
 
 const router: IRouter = Router();
-
-type GoalRow = {
-  id: string;
-  name: string;
-  emoji: string;
-  color: string;
-  imageUrl: string | null;
-  targetCents: number;
-  savedCents: number;
-  deadline: Date;
-  frequency: string;
-  autoSaveCents: number | null;
-  createdAt: Date;
-  onchain?: boolean;
-  vaultAddress?: string | null;
-  explorerUrl?: string | null;
-  network?: string;
-  feeBps?: number;
-  history?: GoalHistoryItem[];
-};
-
-function goalToJson(g: GoalRow) {
-  return {
-    id: g.id,
-    name: g.name,
-    emoji: g.emoji,
-    color: g.color,
-    imageUrl: g.imageUrl ?? null,
-    targetCents: g.targetCents,
-    savedCents: g.savedCents,
-    deadline: g.deadline.toISOString(),
-    frequency: g.frequency,
-    autoSaveCents: g.autoSaveCents ?? null,
-    createdAt: g.createdAt.toISOString(),
-    onchain: g.onchain ?? false,
-    vaultAddress: g.vaultAddress ?? null,
-    explorerUrl: g.explorerUrl ?? null,
-    network: g.network ?? null,
-    feeBps: g.feeBps ?? 0,
-    history: g.history ?? [],
-  };
-}
 
 router.get("/goals", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;

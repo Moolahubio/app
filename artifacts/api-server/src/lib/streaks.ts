@@ -1,4 +1,4 @@
-import { and, eq, isNull, lte, gt, ne, count } from "drizzle-orm";
+import { and, eq, isNull, lte, gt, gte, ne, count, desc } from "drizzle-orm";
 import {
   db,
   streaksTable,
@@ -40,6 +40,7 @@ const ACCOUNT = "account";
 const VALID_FREQ: readonly Frequency[] = ["daily", "weekly", "monthly"] as const;
 
 const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
 const MAX_FREEZES = 4;
 const ROLL_GUARD = 1200;
 
@@ -121,13 +122,18 @@ function tzOffsetMs(at: Date, tz: string): number {
   }
 }
 
-/** The UTC instant whose local (tz) wall-clock is exactly y-m-d 00:00:00. */
+/**
+ * The UTC instant whose local (tz) wall-clock is exactly y-m-d 00:00:00. When a
+ * DST jump skips local midnight, the first instant of that local date: the day
+ * starts right after the jump.
+ */
 function zonedMidnightUTC(y: number, m: number, d: number, tz: string): Date {
   const guess = Date.UTC(y, m - 1, d, 0, 0, 0);
   const off1 = tzOffsetMs(new Date(guess), tz);
   let inst = guess - off1;
   const off2 = tzOffsetMs(new Date(inst), tz);
   if (off2 !== off1) inst = guess - off2;
+  if (tzParts(new Date(inst), tz).d !== d) inst = Math.max(guess - off1, guess - off2);
   return new Date(inst);
 }
 
@@ -152,6 +158,28 @@ function nextPeriodStart(start: Date, freq: Frequency, tz: string): Date {
   const step = freq === "daily" ? 1 : 7;
   const nxt = new Date(Date.UTC(y, m - 1, d) + step * DAY_MS);
   return zonedMidnightUTC(nxt.getUTCFullYear(), nxt.getUTCMonth() + 1, nxt.getUTCDate(), tz);
+}
+
+/**
+ * End of the period beginning at `start`: the next period start, guarded so no
+ * period is ever zero-length (logged, never thrown).
+ */
+function periodEndFor(start: Date, freq: Frequency, tz: string): Date {
+  const end = nextPeriodStart(start, freq, tz);
+  if (end.getTime() > start.getTime()) return end;
+  logger.warn({ start, freq, tz }, "[streaks] period end is not after its start");
+  return nextPeriodStart(new Date(start.getTime() + 12 * HOUR_MS), freq, tz);
+}
+
+/**
+ * Local midnight `n` months after the local date of `at` in tz, the day clamped
+ * to the last of the target month.
+ */
+function localMonthsLater(at: Date, n: number, tz: string): Date {
+  const { y, m, d } = tzParts(at, tz);
+  const t = new Date(Date.UTC(y, m - 1 + n, 1));
+  const last = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate();
+  return zonedMidnightUTC(t.getUTCFullYear(), t.getUTCMonth() + 1, Math.min(d, last), tz);
 }
 
 function addMonths(d: Date, n: number): Date {
@@ -273,9 +301,13 @@ async function rollForward(
       outcome = "missed";
       s.status = "broken";
     } else {
+      // The 3-month cooldown runs on the local calendar, not on instants or UTC
+      // dates: the local day the period ends against the local date of the
+      // last use, three months on.
       const canFreeze =
         freeze.balance > 0 &&
-        (!freeze.lastUsedAt || pEnd.getTime() >= addMonths(freeze.lastUsedAt, 3).getTime());
+        (!freeze.lastUsedAt ||
+          periodStartFor(pEnd, "daily", tz).getTime() >= localMonthsLater(freeze.lastUsedAt, 3, tz).getTime());
       if (canFreeze) {
         freeze.balance -= 1;
         freeze.usedTotal += 1;
@@ -302,14 +334,20 @@ async function rollForward(
       })
       .onConflictDoNothing({ target: [streakPeriodsTable.streakId, streakPeriodsTable.periodStart] });
 
+    const next = nextPeriodStart(pEnd, freq, tz);
+    if (next.getTime() <= pEnd.getTime()) {
+      // Never walk a zero-length period: stop and re-anchor below.
+      logger.warn({ streakId: s.id, periodEnd: pEnd, tz }, "[streaks] next period does not advance; walk stopped");
+      break;
+    }
     satisfied = false;
     pStart = pEnd;
-    pEnd = nextPeriodStart(pEnd, freq, tz);
+    pEnd = next;
   }
 
   // Re-anchor the current period to the calendar period containing `now`.
   const curStart = periodStartFor(now, freq, tz);
-  const curEnd = nextPeriodStart(curStart, freq, tz);
+  const curEnd = periodEndFor(curStart, freq, tz);
   s.currentPeriodStart = curStart;
   s.currentPeriodEnd = curEnd;
   s.currentPeriodSatisfied = false;
@@ -331,22 +369,45 @@ async function awardBadges(
   const vacMs = vacationOverlapMs(s.startedAt, now, user);
   const effectiveNow = new Date(now.getTime() - vacMs);
   const milestones = Math.floor(monthsBetween(s.startedAt, effectiveNow) / 3);
-  for (let q = 1; q <= milestones; q++) {
+  // Start after the badges this run already holds: after a time zone change a
+  // milestone near a quarter boundary maps to another quarter, and recomputing
+  // it would award a second badge for one milestone.
+  const held = await tx
+    .select({ year: streakBadgesTable.year, quarterIndex: streakBadgesTable.quarterIndex })
+    .from(streakBadgesTable)
+    .where(and(eq(streakBadgesTable.userId, s.userId), gte(streakBadgesTable.earnedAt, s.startedAt)))
+    .orderBy(streakBadgesTable.year, streakBadgesTable.quarterIndex);
+  const last = held[held.length - 1];
+  let latest = last ? last.year * 4 + last.quarterIndex - 1 : -1;
+  for (let q = held.length + 1; q <= milestones; q++) {
     const at = addMonths(s.startedAt, q * 3);
-    const year = localYear(at, tz);
-    const quarterIndex = localQuarter(at, tz);
-    await tx
-      .insert(streakBadgesTable)
-      .values({
-        userId: s.userId,
-        badgeKey: badgeKeyFor(year, quarterIndex),
-        year,
-        quarterIndex,
-        sourceCommitmentId: s.commitmentId,
-      })
-      .onConflictDoNothing({
-        target: [streakBadgesTable.userId, streakBadgesTable.year, streakBadgesTable.quarterIndex],
-      });
+    // Its quarter in the current zone; after a westward change the run can
+    // already hold it, and then it takes the quarter after the run's latest.
+    let label = localYear(at, tz) * 4 + localQuarter(at, tz) - 1;
+    if (label <= latest) label = latest + 1;
+    // A quarter an earlier run's badge holds (the key is per user) is taken:
+    // the next one is used, so the milestone still gets one of this run's
+    // badges and a repeat read adds nothing.
+    for (;;) {
+      const year = Math.floor(label / 4);
+      const quarterIndex = (label % 4) + 1;
+      const inserted = await tx
+        .insert(streakBadgesTable)
+        .values({
+          userId: s.userId,
+          badgeKey: badgeKeyFor(year, quarterIndex),
+          year,
+          quarterIndex,
+          sourceCommitmentId: s.commitmentId,
+        })
+        .onConflictDoNothing({
+          target: [streakBadgesTable.userId, streakBadgesTable.year, streakBadgesTable.quarterIndex],
+        })
+        .returning({ id: streakBadgesTable.id });
+      if (inserted.length > 0) break;
+      label += 1;
+    }
+    latest = label;
   }
 }
 
@@ -403,7 +464,10 @@ export async function recordSave(
           vacationEnd: usersTable.vacationEnd,
         })
         .from(usersTable)
-        .where(eq(usersTable.id, userId));
+        .where(eq(usersTable.id, userId))
+        // Waits for a time zone change in progress (setUserTimezone), so the
+        // save uses the committed zone.
+        .for("share");
       const freq = normFreq(user?.streakFrequency);
       const tz = user?.timezone || "UTC";
       const vac = { vacationStart: user?.vacationStart ?? null, vacationEnd: user?.vacationEnd ?? null };
@@ -422,7 +486,7 @@ export async function recordSave(
 
       if (!existing) {
         const start = periodStartFor(at, freq, tz);
-        const end = nextPeriodStart(start, freq, tz);
+        const end = periodEndFor(start, freq, tz);
         await tx
           .insert(streaksTable)
           .values({
@@ -455,9 +519,21 @@ export async function recordSave(
 
       // Apply the save to the now-current period.
       if (s.status === "broken" || s.currentCount === 0) {
-        // Revive: a fresh streak starts here, re-anchored to this save.
-        const start = periodStartFor(at, freq, tz);
-        const end = nextPeriodStart(start, freq, tz);
+        // Revive: a fresh streak starts here, re-anchored to this save. After a
+        // zone change the local period can begin inside the last period logged;
+        // then it starts where that one ended, so logged periods never overlap.
+        // A save stamped before that end (it waited while a settle logged the
+        // period) revives the period holding the end, never a logged one.
+        const [lastLogged] = await tx
+          .select({ periodEnd: streakPeriodsTable.periodEnd })
+          .from(streakPeriodsTable)
+          .where(eq(streakPeriodsTable.streakId, s.id))
+          .orderBy(desc(streakPeriodsTable.periodEnd))
+          .limit(1);
+        const loggedEnd = lastLogged?.periodEnd.getTime() ?? 0;
+        let start = periodStartFor(new Date(Math.max(at.getTime(), loggedEnd)), freq, tz);
+        const end = periodEndFor(start, freq, tz);
+        if (start.getTime() < loggedEnd && loggedEnd < end.getTime()) start = new Date(loggedEnd);
         s.startedAt = at;
         s.currentPeriodStart = start;
         s.currentPeriodEnd = end;
@@ -481,6 +557,30 @@ export async function recordSave(
   }
 }
 
+/**
+ * Grant one freeze when due (1 per 3 months, cap 4/year, balance cap 4). Mutates
+ * `f` and returns what changed; the caller persists it unless "none". Call under
+ * the freeze row lock (ensureFreezeRow).
+ */
+function grantFreezeIfDue(f: StreakFreeze, tz: string, now: Date): "granted" | "yearReset" | "none" {
+  const year = localYear(now, tz);
+  if (f.grantYear !== year) {
+    f.grantYear = year;
+    f.grantsThisYear = 0;
+  }
+  const due = !f.lastGrantedAt || now.getTime() >= addMonths(f.lastGrantedAt, 3).getTime();
+  if (due && f.grantsThisYear < MAX_FREEZES && f.balance < MAX_FREEZES) {
+    f.balance += 1;
+    f.grantsThisYear += 1;
+    f.grantedTotal += 1;
+    f.lastGrantedAt = now;
+    return "granted";
+  }
+  // Persist the year reset even when no grant is due.
+  if (f.grantYear === year && f.grantsThisYear === 0) return "yearReset";
+  return "none";
+}
+
 /** Grant freezes (1 per 3 months, cap 4/year, balance cap 4) to active savers. */
 async function grantFreezes(now: Date): Promise<void> {
   const users = await db
@@ -494,23 +594,7 @@ async function grantFreezes(now: Date): Promise<void> {
     try {
       await db.transaction(async (tx) => {
         const f = await ensureFreezeRow(tx, u.id);
-        const tz = u.timezone || "UTC";
-        const year = localYear(now, tz);
-        if (f.grantYear !== year) {
-          f.grantYear = year;
-          f.grantsThisYear = 0;
-        }
-        const due = !f.lastGrantedAt || now.getTime() >= addMonths(f.lastGrantedAt, 3).getTime();
-        if (due && f.grantsThisYear < MAX_FREEZES && f.balance < MAX_FREEZES) {
-          f.balance += 1;
-          f.grantsThisYear += 1;
-          f.grantedTotal += 1;
-          f.lastGrantedAt = now;
-          await persistFreeze(tx, f);
-        } else if (f.grantYear === year && f.grantsThisYear === 0) {
-          // Persist the year reset even when no grant is due.
-          await persistFreeze(tx, f);
-        }
+        if (grantFreezeIfDue(f, u.timezone || "UTC", now) !== "none") await persistFreeze(tx, f);
       });
     } catch (e) {
       logger.error({ err: e, userId: u.id }, "[streaks] grantFreezes failed");
@@ -559,13 +643,104 @@ async function sendReminders(now: Date): Promise<void> {
         body: `Your ${unitNoun(freq)} streak window closes ${when}. A small save to any goal or circle keeps your flame alive. No rush.`,
         link: "/streaks",
       });
+      // Only for the window it was computed for: a zone change committed since
+      // moved the end and cleared the mark, so the new window gets its own.
       await db
         .update(streaksTable)
         .set({ reminderSentPeriodStart: s.currentPeriodStart })
-        .where(eq(streaksTable.id, s.id));
+        .where(
+          and(
+            eq(streaksTable.id, s.id),
+            eq(streaksTable.currentPeriodStart, s.currentPeriodStart),
+            eq(streaksTable.currentPeriodEnd, s.currentPeriodEnd),
+          ),
+        );
     } catch (e) {
       logger.error({ err: e, streakId: s.id }, "[streaks] reminder failed");
     }
+  }
+}
+
+type SettleUser = Pick<User, "timezone" | "streakFrequency" | "vacationStart" | "vacationEnd">;
+
+/**
+ * Settle a locked streak whose period has closed: grant a due freeze first (when
+ * asked, and only for a streak that isn't broken, as grantFreezes does), then
+ * roll the closed periods forward, award badges and persist. Call with the
+ * streak row locked, then the freeze row (ensureFreezeRow).
+ */
+async function settleLocked(
+  tx: Tx,
+  s: Streak,
+  user: SettleUser,
+  freeze: StreakFreeze,
+  now: Date,
+  opts: { grantFreeze: boolean },
+): Promise<{ freezeChanged: boolean }> {
+  const tz = user.timezone || "UTC";
+  const granted = opts.grantFreeze && s.status !== "broken" && grantFreezeIfDue(freeze, tz, now) !== "none";
+  const { freezeChanged: used } = await rollForward(tx, s, user, freeze, normFreq(user.streakFrequency), tz, now);
+  await awardBadges(tx, s, user, now);
+  await persistStreak(tx, s);
+  const freezeChanged = granted || used;
+  if (freezeChanged) await persistFreeze(tx, freeze);
+  return { freezeChanged };
+}
+
+/**
+ * Settle one streak if its period has closed, in one transaction. The row lock
+ * plus the re-check under it make this idempotent: a concurrent caller waits,
+ * then sees the new period end and returns.
+ */
+async function settleDueStreak(streakId: string, now: Date, opts: { grantFreeze: boolean }): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [locked] = await tx
+      .select()
+      .from(streaksTable)
+      .where(eq(streaksTable.id, streakId))
+      .for("update");
+    if (!locked || locked.archivedAt) return;
+    if (locked.currentPeriodEnd.getTime() > now.getTime()) return;
+
+    const [user] = await tx
+      .select({
+        timezone: usersTable.timezone,
+        streakFrequency: usersTable.streakFrequency,
+        vacationStart: usersTable.vacationStart,
+        vacationEnd: usersTable.vacationEnd,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, locked.userId));
+    const u = user ?? { timezone: "UTC", streakFrequency: "weekly", vacationStart: null, vacationEnd: null };
+    const freeze = await ensureFreezeRow(tx, locked.userId);
+    await settleLocked(tx, { ...locked }, u, freeze, now, opts);
+  });
+}
+
+/**
+ * Settle the account streak before it is read or changed, so a period that has
+ * closed is never reported as open (the job runs only every 6 hours). Writes
+ * nothing when no period has closed. Never throws: on any failure (a lock wait
+ * included) the caller reads the stored row, as before.
+ */
+async function settleAccountStreak(userId: string, now: Date): Promise<void> {
+  try {
+    const [s] = await db
+      .select({ id: streaksTable.id, currentPeriodEnd: streaksTable.currentPeriodEnd })
+      .from(streaksTable)
+      .where(
+        and(
+          eq(streaksTable.userId, userId),
+          eq(streaksTable.commitmentType, ACCOUNT),
+          eq(streaksTable.commitmentId, userId),
+          isNull(streaksTable.archivedAt),
+        ),
+      );
+    if (s && s.currentPeriodEnd.getTime() <= now.getTime()) {
+      await settleDueStreak(s.id, now, { grantFreeze: true });
+    }
+  } catch (err) {
+    logger.warn({ err, userId }, "[streaks] settle before read failed");
   }
 }
 
@@ -580,35 +755,8 @@ export async function evaluateStreaks(now: Date = new Date()): Promise<void> {
 
   for (const row of due) {
     try {
-      await db.transaction(async (tx) => {
-        const [locked] = await tx
-          .select()
-          .from(streaksTable)
-          .where(eq(streaksTable.id, row.id))
-          .for("update");
-        if (!locked || locked.archivedAt) return;
-        if (locked.currentPeriodEnd.getTime() > now.getTime()) return;
-
-        const [user] = await tx
-          .select({
-            timezone: usersTable.timezone,
-            streakFrequency: usersTable.streakFrequency,
-            vacationStart: usersTable.vacationStart,
-            vacationEnd: usersTable.vacationEnd,
-          })
-          .from(usersTable)
-          .where(eq(usersTable.id, locked.userId));
-        const u = user ?? { timezone: "UTC", streakFrequency: "weekly", vacationStart: null, vacationEnd: null };
-        const tz = u.timezone || "UTC";
-        const freq = normFreq(u.streakFrequency);
-        const freeze = await ensureFreezeRow(tx, locked.userId);
-
-        const s: Streak = { ...locked };
-        const { freezeChanged } = await rollForward(tx, s, u, freeze, freq, tz, now);
-        await awardBadges(tx, s, u, now);
-        await persistStreak(tx, s);
-        if (freezeChanged) await persistFreeze(tx, freeze);
-      });
+      // grantFreezes has just run.
+      await settleDueStreak(row.id, now, { grantFreeze: false });
     } catch (e) {
       logger.error({ err: e, streakId: row.id }, "[streaks] evaluate failed");
     }
@@ -709,6 +857,8 @@ export type StreakOverview = {
   badgeProgress: StreakBadgeProgress;
   reminderOptIn: boolean;
   vacation: { active: boolean; start: string | null; end: string | null; usedThisYear: boolean };
+  /** The zone currentPeriodEnd and the badge quarters are computed in. */
+  timezone: string;
 };
 
 /**
@@ -737,7 +887,10 @@ function computeBadgeProgress(
   return { earnedQuarters, nextTier: tierForOrder(earnedQuarters + 1), pct, daysToNext };
 }
 
-export async function getStreakOverview(userId: string): Promise<StreakOverview> {
+export async function getStreakOverview(userId: string, now: Date = new Date()): Promise<StreakOverview> {
+  // Values are current when the response is built, not up to 6 hours behind.
+  await settleAccountStreak(userId, now);
+
   const [user] = await db
     .select({
       timezone: usersTable.timezone,
@@ -764,7 +917,6 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
     );
 
   const tz = user?.timezone || "UTC";
-  const now = new Date();
   const freq = normFreq(user?.streakFrequency);
   const vac = { vacationStart: user?.vacationStart ?? null, vacationEnd: user?.vacationEnd ?? null };
 
@@ -847,6 +999,7 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
       end: user?.vacationEnd?.toISOString() ?? null,
       usedThisYear: user?.vacationYearUsed === localYear(now, tz),
     },
+    timezone: tz,
   };
 }
 
@@ -855,34 +1008,42 @@ export async function getStreakOverview(userId: string): Promise<StreakOverview>
  * unchanged). Re-anchors the streak to a fresh window of the new cadence while
  * keeping the current count — switching cadence never punishes existing progress.
  */
-export async function setStreakFrequency(userId: string, frequency: string): Promise<StreakOverview> {
+export async function setStreakFrequency(
+  userId: string,
+  frequency: string,
+  now: Date = new Date(),
+): Promise<StreakOverview> {
   if (!VALID_FREQ.includes(frequency as Frequency)) {
     throw new AppError("Choose a daily, weekly, or monthly streak.");
   }
   const next = frequency as Frequency;
-  const now = new Date();
-  const [user] = await db
-    .select({
-      timezone: usersTable.timezone,
-      streakFrequency: usersTable.streakFrequency,
-      streakFrequencyLastChanged: usersTable.streakFrequencyLastChanged,
-    })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId));
-  const tz = user?.timezone || "UTC";
-  const current = normFreq(user?.streakFrequency);
-  if (next === current) {
-    // No-op — don't consume the annual change allowance.
-    return getStreakOverview(userId);
-  }
-  if (
-    user?.streakFrequencyLastChanged &&
-    localYear(user.streakFrequencyLastChanged, tz) === localYear(now, tz)
-  ) {
-    throw new AppError("You can change your streak frequency once per calendar year.");
-  }
+  // Log a period that has already closed before re-anchoring to the new cadence.
+  await settleAccountStreak(userId, now);
 
   await db.transaction(async (tx) => {
+    // The lock setUserTimezone takes first, so a zone change in progress commits
+    // before the zone, the cadence and the yearly check are read. Lock order:
+    // users, then streak.
+    const [user] = await tx
+      .select({
+        timezone: usersTable.timezone,
+        streakFrequency: usersTable.streakFrequency,
+        streakFrequencyLastChanged: usersTable.streakFrequencyLastChanged,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .for("no key update");
+    const tz = user?.timezone || "UTC";
+    const current = normFreq(user?.streakFrequency);
+    // No-op — don't consume the annual change allowance.
+    if (next === current) return;
+    if (
+      user?.streakFrequencyLastChanged &&
+      localYear(user.streakFrequencyLastChanged, tz) === localYear(now, tz)
+    ) {
+      throw new AppError("You can change your streak frequency once per calendar year.");
+    }
+
     await tx
       .update(usersTable)
       .set({ streakFrequency: next, streakFrequencyLastChanged: now })
@@ -900,7 +1061,7 @@ export async function setStreakFrequency(userId: string, frequency: string): Pro
       .for("update");
     if (s) {
       const start = periodStartFor(now, next, tz);
-      const end = nextPeriodStart(start, next, tz);
+      const end = periodEndFor(start, next, tz);
       await tx
         .update(streaksTable)
         .set({
@@ -915,7 +1076,179 @@ export async function setStreakFrequency(userId: string, frequency: string): Pro
     }
   });
 
-  return getStreakOverview(userId);
+  return getStreakOverview(userId, now);
+}
+
+/**
+ * The open period's home end: the end it had in the zone it opened in. While it
+ * is still the old zone's own period (always so at the first change in a
+ * period) that is its current end. Otherwise it is derived from the start (a
+ * day, a week, or the days of the start's UTC month), unless the period is too
+ * short to have opened at its start: then its current end. No home end is
+ * stored, so after two or more changes in one period it is an estimate:
+ *  - A: the home zone has a DST change inside the period, which the derivation
+ *    misses (an hour; two for Antarctica/Troll).
+ *  - B: the own-period test matches a later zone that shares the period's
+ *    start but ends it at another hour (off by that difference).
+ *  - C: a revive trimmed to start where the last logged period ended (R7) is
+ *    derived as if it opened at its start, off by the trim, when the trim
+ *    leaves at least half a period less three hours: in practice only daily
+ *    periods (a trim under 15 hours) end up elsewhere. A shorter one uses its
+ *    current end: exact at the first change after the revive.
+ * So a period not saved yet can end up to an hour more than the largest DST
+ * shift in the chain before its true home end, and with Troll a round trip can
+ * add a whole period. A saved day can fall on the other side of a 12-hour tie:
+ * a day later (merged with the next local day) or a day earlier (closed at
+ * once as kept).
+ */
+function homeEnd(s: Streak, freq: Frequency, oldTz: string): number {
+  const start = s.currentPeriodStart.getTime();
+  const end = s.currentPeriodEnd.getTime();
+  if (
+    periodStartFor(s.currentPeriodStart, freq, oldTz).getTime() === start &&
+    nextPeriodStart(s.currentPeriodStart, freq, oldTz).getTime() === end
+  ) {
+    return end;
+  }
+  let derived: number;
+  if (freq === "daily") derived = start + DAY_MS;
+  else if (freq === "weekly") derived = start + 7 * DAY_MS;
+  else {
+    const mid = new Date(start + 14 * HOUR_MS);
+    derived = start + new Date(Date.UTC(mid.getUTCFullYear(), mid.getUTCMonth() + 1, 0)).getUTCDate() * DAY_MS;
+  }
+  // A period that opened at its start keeps at least half a period, less two
+  // and a half hours of DST shifts, after any change: its end is the boundary
+  // nearest its home end, or later. A shorter one opened later (C).
+  if (end - start < (derived - start) / 2 - 3 * HOUR_MS) return end;
+  return derived;
+}
+
+/**
+ * Where the open period ends after a change from `oldTz` to `tz` (lead ruling
+ * B-SAFE-1, revised, with the round 3 amendments and the round 4 fixes). Every
+ * candidate is a period start in the new zone, measured from the home end,
+ * never from the current end, so the result does not depend on the path: a
+ * chain of changes ends where one change from the home zone at the time of the
+ * last change would (apart from the cases in homeEnd).
+ *  - Saved: the boundary nearest the home end (a tie goes to the later one). It
+ *    may have passed already; the caller then closes the period.
+ *  - Not saved yet: the first boundary at or after one hour before the home
+ *    end, or, if that has passed, the first boundary after `now`.
+ * Never at or before the period's start (a guard): then the first boundary
+ * after the start. An end that has passed is never before the start of the new
+ * zone's period holding `now`, so the close logs only the kept period and never
+ * walks a whole new-zone period as not saved.
+ */
+function endAfterZoneChange(s: Streak, freq: Frequency, oldTz: string, tz: string, now: Date): Date {
+  const home = homeEnd(s, freq, oldTz);
+  let end: Date;
+  if (s.currentPeriodSatisfied) {
+    const before = periodStartFor(new Date(home), freq, tz);
+    const after = periodEndFor(before, freq, tz);
+    end = home - before.getTime() < after.getTime() - home ? before : after;
+  } else {
+    const floor = home - HOUR_MS;
+    const boundary = periodStartFor(new Date(floor), freq, tz);
+    end = boundary.getTime() < floor ? periodEndFor(boundary, freq, tz) : boundary;
+    if (end.getTime() <= now.getTime()) end = periodEndFor(periodStartFor(now, freq, tz), freq, tz);
+  }
+  if (end.getTime() <= s.currentPeriodStart.getTime()) {
+    end = periodEndFor(periodStartFor(s.currentPeriodStart, freq, tz), freq, tz);
+  }
+  if (end.getTime() <= now.getTime()) end = new Date(Math.max(end.getTime(), periodStartFor(now, freq, tz).getTime()));
+  return end;
+}
+
+/**
+ * Store the user's IANA time zone (already validated) and move the open streak
+ * period onto it, in one transaction. A period that has closed is settled in the
+ * old zone first. Then only the open period's end moves, to a period start in
+ * the new zone (endAfterZoneChange), measured from its home end (homeEnd): the
+ * end it had in the zone it opened in. A saved period ends at the boundary
+ * nearest its home end; a period not saved yet at the first one at or after an
+ * hour before its home end. A save already made in it is kept. Lead ruling
+ * B-SAFE-1 (revised, with the round 3 amendments and the round 4 fixes), in
+ * order of priority, with "home end" meaning homeEnd's value (its cases A to C
+ * say where that differs from the true one):
+ *  - G1: the change alone never uses a freeze or breaks a streak. It never
+ *    closes a period not saved yet, and that period never ends more than an
+ *    hour before its home end (a DST shift, or a zone an hour east ending at
+ *    its own midnight), however many changes it goes through. A saved period
+ *    the change closes is logged as one saved row (G2).
+ *  - G2: a saved period ends at the boundary nearest its home end, so it is not
+ *    merged with the next local period and the person's next local save counts
+ *    as a new step. When that boundary has already passed, the period is closed
+ *    now as kept, through the settle, up to the start of the new zone's period
+ *    holding `now`, which opens. The count does not change: the save already
+ *    counted. The closed row then also holds any whole new-zone periods between
+ *    that boundary and `now`, which an earlier stretch gave the period while it
+ *    was not saved yet. A break in progress is logged as the settle logs it.
+ *    The close does not look at when the save was made: a save between that
+ *    boundary and the change stays with the closed period, so a save just
+ *    after it in the same local period can count again (an accepted
+ *    trade-off).
+ *  - G3: the start never moves, and the end is always after it, so no local
+ *    period is counted twice apart from G2's trade-off. A period not saved yet
+ *    ends at the first boundary at or after an hour before its home end, so
+ *    less than one new-zone period after that. When that boundary has already
+ *    passed (a change in the period's last hour, or after its home end
+ *    following an earlier stretch), it ends at the first boundary after `now`.
+ *    G1 outranks G3, so the open period can then hold two whole new-zone
+ *    periods; it ends at most one new-zone period after the change.
+ * A later end clears the reminder mark, so the closing reminder can go out
+ * again. The same zone again is a no-op. Lock order: users (FOR NO KEY UPDATE:
+ * recordSave's FOR SHARE and setStreakFrequency's lock wait for it, but the
+ * foreign-key check of a settle's freeze or badge insert does not), then
+ * streak, then freeze.
+ */
+export async function setUserTimezone(userId: string, tz: string, now: Date = new Date()): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [user] = await tx
+      .select({
+        timezone: usersTable.timezone,
+        streakFrequency: usersTable.streakFrequency,
+        vacationStart: usersTable.vacationStart,
+        vacationEnd: usersTable.vacationEnd,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .for("no key update");
+    if (!user || (user.timezone || "UTC") === tz) return;
+
+    const [s] = await tx
+      .select()
+      .from(streaksTable)
+      .where(
+        and(
+          eq(streaksTable.userId, userId),
+          eq(streaksTable.commitmentType, ACCOUNT),
+          eq(streaksTable.commitmentId, userId),
+          isNull(streaksTable.archivedAt),
+        ),
+      )
+      .for("update");
+    if (s) {
+      if (s.currentPeriodEnd.getTime() <= now.getTime()) {
+        const freeze = await ensureFreezeRow(tx, userId);
+        await settleLocked(tx, s, user, freeze, now, { grantFreeze: true });
+      }
+      const oldEnd = s.currentPeriodEnd.getTime();
+      s.currentPeriodEnd = endAfterZoneChange(s, normFreq(user.streakFrequency), user.timezone || "UTC", tz, now);
+      if (s.currentPeriodEnd.getTime() <= now.getTime()) {
+        // Saved, and its nearest new-zone boundary has passed: close it as kept.
+        const freeze = await ensureFreezeRow(tx, userId);
+        await settleLocked(tx, s, { ...user, timezone: tz }, freeze, now, { grantFreeze: true });
+      } else {
+        await persistStreak(tx, s);
+        if (s.currentPeriodEnd.getTime() > oldEnd) {
+          await tx.update(streaksTable).set({ reminderSentPeriodStart: null }).where(eq(streaksTable.id, s.id));
+        }
+      }
+    }
+
+    await tx.update(usersTable).set({ timezone: tz }).where(eq(usersTable.id, userId));
+  });
 }
 
 export async function setReminderOptIn(userId: string, optIn: boolean): Promise<{ optIn: boolean }> {
@@ -924,11 +1257,16 @@ export async function setReminderOptIn(userId: string, optIn: boolean): Promise<
 }
 
 /** Start the single annual vacation (<=30 days, once per calendar year). */
-export async function startVacation(userId: string, days: number): Promise<StreakOverview> {
+export async function startVacation(
+  userId: string,
+  days: number,
+  now: Date = new Date(),
+): Promise<StreakOverview> {
   if (!Number.isFinite(days) || days < 1 || days > 30) {
     throw new AppError("Vacation must be between 1 and 30 days");
   }
-  const now = new Date();
+  // Log a period that has already closed before the pause.
+  await settleAccountStreak(userId, now);
   const [user] = await db
     .select({ timezone: usersTable.timezone, vacationYearUsed: usersTable.vacationYearUsed })
     .from(usersTable)
@@ -954,12 +1292,13 @@ export async function startVacation(userId: string, days: number): Promise<Strea
         ne(streaksTable.status, "broken"),
       ),
     );
-  return getStreakOverview(userId);
+  return getStreakOverview(userId, now);
 }
 
 /** End the vacation early (forfeits the rest; the annual allowance stays spent). */
-export async function endVacation(userId: string): Promise<StreakOverview> {
-  const now = new Date();
+export async function endVacation(userId: string, now: Date = new Date()): Promise<StreakOverview> {
+  // Log periods that closed during the break while it still counts as one.
+  await settleAccountStreak(userId, now);
   await db
     .update(usersTable)
     .set({ vacationEnd: now })
@@ -974,5 +1313,5 @@ export async function endVacation(userId: string): Promise<StreakOverview> {
         eq(streaksTable.status, "paused"),
       ),
     );
-  return getStreakOverview(userId);
+  return getStreakOverview(userId, now);
 }

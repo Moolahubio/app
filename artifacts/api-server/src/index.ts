@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/node";
 import { endPool } from "@workspace/db";
 import app from "./app";
 import { logger } from "./lib/logger";
+import { devEmailCodeLoggingEnabled } from "./lib/email";
 import { startSettlementLoop } from "./lib/settlement";
 import { startStreakLoop } from "./lib/streaks";
 import { startReferralAccrualLoop } from "./lib/referrals";
@@ -23,17 +24,29 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const server = app.listen(port, (err) => {
+// Optional bind address (e.g. LISTEN_HOST=0.0.0.0 so a phone on the LAN can
+// reach a local dev server). Unset keeps Node's default: every interface. Not
+// named HOST, which shells commonly set to the machine name.
+const host = process.env["LISTEN_HOST"] || undefined;
+
+const onListening = (err?: Error) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
   }
 
-  logger.info({ port }, "Server listening");
+  logger.info({ port, host: host ?? "default" }, "Server listening");
+  // Surfaces the production warning for a stray DEV_LOG_EMAIL_CODES at boot,
+  // and tells a local developer where their sign-up codes will appear.
+  if (devEmailCodeLoggingEnabled()) {
+    logger.warn("[DEV ONLY] DEV_LOG_EMAIL_CODES=true: emailed codes are written to this log (no email provider)");
+  }
   void startSettlementLoop();
   void startStreakLoop();
   startReferralAccrualLoop();
-});
+};
+
+const server = host ? app.listen(port, host, onListening) : app.listen(port, onListening);
 
 const SHUTDOWN_GRACE_MS = 10_000;
 

@@ -1,7 +1,7 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { and, eq, lt, sql } from "drizzle-orm";
 import { db, emailVerificationCodesTable } from "@workspace/db";
-import { sendEmail, brandedEmail } from "./email";
+import { sendEmail, brandedEmail, logDevEmailCode } from "./email";
 
 /**
  * One-time, 6-digit email verification codes. The plaintext is emailed once;
@@ -48,6 +48,9 @@ export async function issueVerificationCode(
     codeHash: hashCode(code),
     expiresAt: new Date(Date.now() + CODE_TTL_MS),
   });
+
+  // Local dev only (no email provider + DEV_LOG_EMAIL_CODES=true; never in production).
+  logDevEmailCode("verification", email, code);
 
   await sendEmail({
     to: email,

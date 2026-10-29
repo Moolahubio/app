@@ -1,7 +1,7 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
 import { and, eq, lt, sql } from "drizzle-orm";
 import { db, reauthCodesTable } from "@workspace/db";
-import { sendEmail, brandedEmail } from "./email";
+import { sendEmail, brandedEmail, logDevEmailCode } from "./email";
 
 /**
  * One-time, 6-digit "step-up" reauthentication codes. These prove a signed-in
@@ -40,6 +40,9 @@ export async function issueReauthCode(userId: string, email: string, name: strin
     codeHash: hashCode(code),
     expiresAt: new Date(Date.now() + CODE_TTL_MS),
   });
+
+  // Local dev only (no email provider + DEV_LOG_EMAIL_CODES=true; never in production).
+  logDevEmailCode("confirmation", email, code);
 
   await sendEmail({
     to: email,

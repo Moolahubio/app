@@ -20,9 +20,9 @@
  *     plumbing, and no TS copy uses "interest", "savings account" or
  *     "deposit insurance" wording.
  *
- * Scope: only shipped UI copy. Test files (*.e2e.ts, *.test.ts) are skipped, and
- * the em-dash rule skips long-form lesson article bodies (lessons-data.ts), where
- * editorial em-dashes are fine — only its titles/summaries were curated by hand.
+ * Scope: only shipped UI copy. Test files (*.e2e.ts, *.test.ts) are skipped.
+ * Lesson text (lessons-data.ts) is no longer exempt from the em-dash rule: the
+ * lessons are shown verbatim in the apps, so every word of them is UI copy.
  *
  * Escape hatch: put `copy-lint-ok` in a comment on the same line for a
  * deliberate exception.
@@ -98,14 +98,13 @@ const flag = (file, lineNo, rule, text) =>
 for (const root of ROOTS) {
   for (const file of walk(root)) {
     const raw = readFileSync(file, "utf8");
-    const isLessons = /lessons-data\.ts$/.test(file);
     const lines = stripComments(raw).split("\n");
     lines.forEach((line, i) => {
       const lineNo = i + 1;
       if (/copy-lint-ok/.test(line)) return;
 
-      // 1. em-dash in UI copy (skip lesson article bodies + lone "—" placeholders)
-      if (!isLessons && line.includes("—")) {
+      // 1. em-dash in UI copy (skip lone "—" placeholders)
+      if (line.includes("—")) {
         const lone = /(["'>(]\s*)—(\s*["'<),])/.test(line) || line.trim() === "—";
         if (!lone) flag(file, lineNo, "em-dash", line);
       }

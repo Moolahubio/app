@@ -30,6 +30,7 @@ import {
   requireAuth,
   createSession,
   sessionTtlMs,
+  withNativeSessionToken,
   type AuthRequest,
 } from "../lib/auth";
 import { createWalletForUser, createPrivyWalletForUser, getWalletForUser } from "../lib/wallet";
@@ -98,8 +99,11 @@ function authUserFields(user: UserRow, walletAddress: string | null) {
 
 /**
  * Complete a primary-auth login: clear any deactivation, mint a session +
- * cookie, and return the LoginResult payload. Callers must already have
- * verified credentials (and any 2FA second factor).
+ * cookie, and return the LoginResult payload plus the minted session token.
+ * Callers must already have verified credentials (and any 2FA second factor).
+ * Callers send `body` through their response schema and then
+ * `withNativeSessionToken`, so only a native (`X-Client: ios`) response ever
+ * carries the token; the browser relies on the httpOnly cookie alone.
  *
  * No wallet is provisioned here. A wallet is created only when the user
  * explicitly opts in via the "Continue with Privy" flow (POST /auth/privy/link)
@@ -112,7 +116,7 @@ async function finishLogin(res: Response, user: UserRow, rememberMe: boolean) {
   const wallet = await getWalletForUser(user.id);
   const token = await createSession(user.id, rememberMe);
   res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
-  return { twoFactorRequired: false, ...authUserFields(user, wallet?.address ?? null) };
+  return { body: { twoFactorRequired: false, ...authUserFields(user, wallet?.address ?? null) }, token };
 }
 
 /** Case-insensitive username clash check, optionally excluding one user id. */
@@ -280,7 +284,8 @@ router.post("/auth/login", requireJsonAndAllowedOrigin, async (req, res): Promis
     return;
   }
 
-  res.json(LoginResponse.parse(await finishLogin(res, user, rememberMe)));
+  const login = await finishLogin(res, user, rememberMe);
+  res.json(withNativeSessionToken(req, LoginResponse.parse(login.body), login.token));
 });
 
 router.post("/auth/verify-email", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
@@ -321,7 +326,8 @@ router.post("/auth/verify-email", requireJsonAndAllowedOrigin, async (req, res):
     return;
   }
 
-  res.json(VerifyEmailResponse.parse(await finishLogin(res, updated, rememberMe)));
+  const login = await finishLogin(res, updated, rememberMe);
+  res.json(withNativeSessionToken(req, VerifyEmailResponse.parse(login.body), login.token));
 });
 
 router.post("/auth/resend-code", requireJsonAndAllowedOrigin, async (req, res): Promise<void> => {
@@ -618,7 +624,8 @@ router.post("/auth/privy", requireJsonAndAllowedOrigin, async (req, res): Promis
     return;
   }
 
-  res.json(PrivyAuthResponse.parse(await finishLogin(res, user, rememberMe)));
+  const login = await finishLogin(res, user, rememberMe);
+  res.json(withNativeSessionToken(req, PrivyAuthResponse.parse(login.body), login.token));
 });
 
 // Link a Privy identity to the *currently signed-in* account (optional wallet
@@ -737,7 +744,8 @@ router.post("/auth/2fa/login", requireJsonAndAllowedOrigin, async (req, res): Pr
       .where(eq(usersTable.id, user.id));
   }
 
-  res.json(TwoFactorLoginResponse.parse(await finishLogin(res, user, consumed.rememberMe)));
+  const login = await finishLogin(res, user, consumed.rememberMe);
+  res.json(withNativeSessionToken(req, TwoFactorLoginResponse.parse(login.body), login.token));
 });
 
 export default router;

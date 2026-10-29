@@ -188,6 +188,8 @@ export interface StreakOverview {
   badgeProgress: StreakBadgeProgress;
   reminderOptIn: boolean;
   vacation: StreakVacation;
+  /** The IANA time zone the streak's periods and badge quarters are computed in. */
+  timezone?: string;
 }
 
 export type StreakFrequencyInputFrequency = typeof StreakFrequencyInputFrequency[keyof typeof StreakFrequencyInputFrequency];
@@ -276,7 +278,17 @@ export interface LoginResult {
   hasPassword?: boolean | null;
   /** @nullable */
   privyLinked?: boolean | null;
+  /** Native clients only. Present when the request carried the header `X-Client: ios` (case-insensitive) and a session was established. Store it securely (Keychain) and send it back as the `x-session-token` header. Never returned to browsers, which use the httpOnly session cookie instead. */
+  sessionToken?: string;
 }
+
+/**
+ * The authenticated user after a completed 2FA login. Native clients (`X-Client: ios`) also receive `sessionToken`.
+ */
+export type TwoFactorLoginResult = AuthUser & {
+  /** Native clients only (`X-Client: ios`). Send it back as the `x-session-token` header. Never returned to browsers. */
+  sessionToken?: string;
+};
 
 export interface RegisterInput {
   /** Legal name (private). */
@@ -555,6 +567,19 @@ export interface Reminder {
   dueDate: string;
 }
 
+/**
+ * The caller's next group pay-in that is still due: a group they belong to that is active and whose current round they have not paid. It carries no date on purpose: a round advances when every member has paid, so there is no due date to send.
+ */
+export interface UpcomingPayIn {
+  circleId: string;
+  circleName: string;
+  /** What the caller pays in for this round (the group's contributionCents, any fee included). */
+  amountCents: number;
+  /** The group's current round, 1-based. */
+  round: number;
+  totalRounds: number;
+}
+
 export interface DashboardSummary {
   availableCents: number;
   totalCents: number;
@@ -570,6 +595,7 @@ export interface DashboardSummary {
   lessonsCompleted: number;
   totalLessons: number;
   upcomingReminder?: Reminder;
+  upcomingPayIn?: UpcomingPayIn | null;
 }
 
 export interface WalletInfo {
@@ -860,6 +886,8 @@ export interface UserProfile {
   createdAt: string;
   /** Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh"). */
   language?: string;
+  /** The IANA time zone streak periods use, exactly as last sent. "UTC" until a client sets it. */
+  timezone?: string;
 }
 
 export type ProfileUpdateLanguage = typeof ProfileUpdateLanguage[keyof typeof ProfileUpdateLanguage];
@@ -886,6 +914,12 @@ export interface ProfileUpdate {
   /** @nullable */
   avatarUrl?: string | null;
   language?: ProfileUpdateLanguage;
+  /**
+     * IANA time zone name from the device, for example "Africa/Accra". Streak days, weeks and months follow it. Send it on its own: an unknown zone fails the whole request with 400.
+     * @minLength 1
+     * @maxLength 64
+     */
+  timezone?: string;
 }
 
 export interface UploadUrlRequest {

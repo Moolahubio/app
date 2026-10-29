@@ -125,7 +125,8 @@ export const LoginPasskeyVerifyResponse = zod.object({
   "hasWallet": zod.boolean().nullish(),
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().nullish(),
-  "privyLinked": zod.boolean().nullish()
+  "privyLinked": zod.boolean().nullish(),
+  "sessionToken": zod.string().optional().describe('Native clients only. Present when the request carried the header `X-Client: ios` (case-insensitive) and a session was established. Store it securely (Keychain) and send it back as the `x-session-token` header. Never returned to browsers, which use the httpOnly session cookie instead.')
 }).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
 
 
@@ -185,7 +186,8 @@ export const PrivyAuthResponse = zod.object({
   "hasWallet": zod.boolean().nullish(),
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().nullish(),
-  "privyLinked": zod.boolean().nullish()
+  "privyLinked": zod.boolean().nullish(),
+  "sessionToken": zod.string().optional().describe('Native clients only. Present when the request carried the header `X-Client: ios` (case-insensitive) and a session was established. Store it securely (Keychain) and send it back as the `x-session-token` header. Never returned to browsers, which use the httpOnly session cookie instead.')
 }).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
 
 
@@ -209,7 +211,9 @@ export const TwoFactorLoginResponse = zod.object({
   "privyLinked": zod.boolean().optional().describe('Whether a Privy identity is linked to this account.'),
   "emailVerified": zod.boolean().optional(),
   "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
-})
+}).and(zod.object({
+  "sessionToken": zod.string().optional().describe('Native clients only (`X-Client: ios`). Send it back as the `x-session-token` header. Never returned to browsers.')
+})).describe('The authenticated user after a completed 2FA login. Native clients (`X-Client: ios`) also receive `sessionToken`.')
 
 
 /**
@@ -257,7 +261,8 @@ export const LoginResponse = zod.object({
   "hasWallet": zod.boolean().nullish(),
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().nullish(),
-  "privyLinked": zod.boolean().nullish()
+  "privyLinked": zod.boolean().nullish(),
+  "sessionToken": zod.string().optional().describe('Native clients only. Present when the request carried the header `X-Client: ios` (case-insensitive) and a session was established. Store it securely (Keychain) and send it back as the `x-session-token` header. Never returned to browsers, which use the httpOnly session cookie instead.')
 }).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
 
 
@@ -282,7 +287,8 @@ export const VerifyEmailResponse = zod.object({
   "hasWallet": zod.boolean().nullish(),
   "walletAddress": zod.string().nullish(),
   "hasPassword": zod.boolean().nullish(),
-  "privyLinked": zod.boolean().nullish()
+  "privyLinked": zod.boolean().nullish(),
+  "sessionToken": zod.string().optional().describe('Native clients only. Present when the request carried the header `X-Client: ios` (case-insensitive) and a session was established. Store it securely (Keychain) and send it back as the `x-session-token` header. Never returned to browsers, which use the httpOnly session cookie instead.')
 }).describe('Result of a primary-auth login. When the account has 2FA enabled, only `twoFactorRequired` + `challengeId` are returned and the caller must complete \/auth\/2fa\/login. When the account\'s email is unverified, `emailVerificationRequired` is true. Otherwise the authenticated user is returned.')
 
 
@@ -556,7 +562,14 @@ export const GetDashboardSummaryResponse = zod.object({
   "title": zod.string(),
   "amountCents": zod.number(),
   "dueDate": zod.string()
-}).optional()
+}).optional(),
+  "upcomingPayIn": zod.union([zod.object({
+  "circleId": zod.string(),
+  "circleName": zod.string(),
+  "amountCents": zod.number().describe('What the caller pays in for this round (the group\'s contributionCents, any fee included).'),
+  "round": zod.number().describe('The group\'s current round, 1-based.'),
+  "totalRounds": zod.number()
+}).describe('The caller\'s next group pay-in that is still due: a group they belong to that is active and whose current round they have not paid. It carries no date on purpose: a round advances when every member has paid, so there is no due date to send.'),zod.null()]).optional()
 })
 
 
@@ -1260,20 +1273,26 @@ export const GetProfileResponse = zod.object({
   "hasPassword": zod.boolean().optional(),
   "privyLinked": zod.boolean().optional(),
   "createdAt": zod.string(),
-  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").'),
+  "timezone": zod.string().optional().describe('The IANA time zone streak periods use, exactly as last sent. \"UTC\" until a client sets it.')
 })
 
 
 /**
  * @summary Update user profile
  */
+export const updateProfileBodyTimezoneMax = 64;
+
+
+
 export const UpdateProfileBody = zod.object({
   "name": zod.string().optional(),
   "username": zod.string().nullish(),
   "dateOfBirth": zod.string().nullish(),
   "nationality": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "language": zod.enum(['en', 'ar', 'fr', 'sw', 'pcm', 'ha', 'zh']).optional()
+  "language": zod.enum(['en', 'ar', 'fr', 'sw', 'pcm', 'ha', 'zh']).optional(),
+  "timezone": zod.string().min(1).max(updateProfileBodyTimezoneMax).optional().describe('IANA time zone name from the device, for example \"Africa\/Accra\". Streak days, weeks and months follow it. Send it on its own: an unknown zone fails the whole request with 400.')
 })
 
 export const UpdateProfileResponse = zod.object({
@@ -1290,7 +1309,8 @@ export const UpdateProfileResponse = zod.object({
   "hasPassword": zod.boolean().optional(),
   "privyLinked": zod.boolean().optional(),
   "createdAt": zod.string(),
-  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").')
+  "language": zod.string().optional().describe('Preferred UI language code (e.g. \"en\", \"ar\", \"fr\", \"sw\", \"pcm\", \"ha\", \"zh\").'),
+  "timezone": zod.string().optional().describe('The IANA time zone streak periods use, exactly as last sent. \"UTC\" until a client sets it.')
 })
 
 
@@ -1385,7 +1405,8 @@ export const GetStreaksResponse = zod.object({
   "start": zod.string().nullable(),
   "end": zod.string().nullable(),
   "usedThisYear": zod.boolean()
-})
+}),
+  "timezone": zod.string().optional().describe('The IANA time zone the streak\'s periods and badge quarters are computed in.')
 })
 
 
@@ -1458,7 +1479,8 @@ export const SetStreakFrequencyResponse = zod.object({
   "start": zod.string().nullable(),
   "end": zod.string().nullable(),
   "usedThisYear": zod.boolean()
-})
+}),
+  "timezone": zod.string().optional().describe('The IANA time zone the streak\'s periods and badge quarters are computed in.')
 })
 
 
@@ -1523,7 +1545,8 @@ export const StartStreakVacationResponse = zod.object({
   "start": zod.string().nullable(),
   "end": zod.string().nullable(),
   "usedThisYear": zod.boolean()
-})
+}),
+  "timezone": zod.string().optional().describe('The IANA time zone the streak\'s periods and badge quarters are computed in.')
 })
 
 
@@ -1580,7 +1603,8 @@ export const EndStreakVacationResponse = zod.object({
   "start": zod.string().nullable(),
   "end": zod.string().nullable(),
   "usedThisYear": zod.boolean()
-})
+}),
+  "timezone": zod.string().optional().describe('The IANA time zone the streak\'s periods and badge quarters are computed in.')
 })
 
 

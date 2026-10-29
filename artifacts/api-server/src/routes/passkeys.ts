@@ -23,7 +23,7 @@ import {
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
 import { isoBase64URL } from "@simplewebauthn/server/helpers";
-import { requireAuth, createSession, sessionTtlMs, type AuthRequest } from "../lib/auth";
+import { requireAuth, createSession, sessionTtlMs, withNativeSessionToken, type AuthRequest } from "../lib/auth";
 import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { createTwoFactorChallenge } from "../lib/twofactor";
 import { verifyStepUp } from "../lib/stepUp";
@@ -304,15 +304,19 @@ router.post("/passkeys/login/verify", async (req, res): Promise<void> => {
   res.cookie(COOKIE, token, { ...cookieOpts, maxAge: sessionTtlMs(rememberMe) });
 
   res.json(
-    LoginPasskeyVerifyResponse.parse({
-      twoFactorRequired: false,
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      avatarUrl: user.avatarUrl ?? null,
-      hasWallet: !!wallet,
-      walletAddress: wallet?.address ?? null,
-    }),
+    withNativeSessionToken(
+      req,
+      LoginPasskeyVerifyResponse.parse({
+        twoFactorRequired: false,
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl ?? null,
+        hasWallet: !!wallet,
+        walletAddress: wallet?.address ?? null,
+      }),
+      token,
+    ),
   );
 });
 

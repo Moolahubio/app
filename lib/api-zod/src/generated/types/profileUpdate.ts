@@ -18,4 +18,10 @@ export interface ProfileUpdate {
   /** @nullable */
   avatarUrl?: string | null;
   language?: ProfileUpdateLanguage;
+  /**
+     * IANA time zone name from the device, for example "Africa/Accra". Streak days, weeks and months follow it. Send it on its own: an unknown zone fails the whole request with 400.
+     * @minLength 1
+     * @maxLength 64
+     */
+  timezone?: string;
 }

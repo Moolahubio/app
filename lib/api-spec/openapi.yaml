@@ -276,7 +276,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthUser"
+                $ref: "#/components/schemas/TwoFactorLoginResult"
         "400":
           description: Invalid or expired code
           content:
@@ -1926,6 +1926,9 @@ components:
           type: boolean
         vacation:
           $ref: "#/components/schemas/StreakVacation"
+        timezone:
+          type: string
+          description: The IANA time zone the streak's periods and badge quarters are computed in.
 
     StreakFrequencyInput:
       type: object
@@ -2037,6 +2040,28 @@ components:
           type: ["boolean", "null"]
         privyLinked:
           type: ["boolean", "null"]
+        sessionToken:
+          type: string
+          description: >-
+            Native clients only. Present when the request carried the header
+            `X-Client: ios` (case-insensitive) and a session was established.
+            Store it securely (Keychain) and send it back as the
+            `x-session-token` header. Never returned to browsers, which use the
+            httpOnly session cookie instead.
+
+    TwoFactorLoginResult:
+      description: >-
+        The authenticated user after a completed 2FA login. Native clients
+        (`X-Client: ios`) also receive `sessionToken`.
+      allOf:
+        - $ref: "#/components/schemas/AuthUser"
+        - type: object
+          properties:
+            sessionToken:
+              type: string
+              description: >-
+                Native clients only (`X-Client: ios`). Send it back as the
+                `x-session-token` header. Never returned to browsers.
 
     RegisterInput:
       type: object
@@ -2352,6 +2377,10 @@ components:
           type: integer
         upcomingReminder:
           $ref: "#/components/schemas/Reminder"
+        upcomingPayIn:
+          oneOf:
+            - $ref: "#/components/schemas/UpcomingPayIn"
+            - type: "null"
 
     Reminder:
       type: object
@@ -2363,6 +2392,27 @@ components:
           type: integer
         dueDate:
           type: string
+
+    UpcomingPayIn:
+      type: object
+      description: >-
+        The caller's next group pay-in that is still due: a group they belong to that is active
+        and whose current round they have not paid. It carries no date on purpose: a round
+        advances when every member has paid, so there is no due date to send.
+      required: [circleId, circleName, amountCents, round, totalRounds]
+      properties:
+        circleId:
+          type: string
+        circleName:
+          type: string
+        amountCents:
+          type: integer
+          description: What the caller pays in for this round (the group's contributionCents, any fee included).
+        round:
+          type: integer
+          description: The group's current round, 1-based.
+        totalRounds:
+          type: integer
 
     # ---- Wallet ----
     WalletInfo:
@@ -2962,6 +3012,9 @@ components:
         language:
           type: string
           description: Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh").
+        timezone:
+          type: string
+          description: The IANA time zone streak periods use, exactly as last sent. "UTC" until a client sets it.
 
     ProfileUpdate:
       type: object
@@ -2979,6 +3032,13 @@ components:
         language:
           type: string
           enum: [en, ar, fr, sw, pcm, ha, zh]
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: >-
+            IANA time zone name from the device, for example "Africa/Accra". Streak days, weeks and
+            months follow it. Send it on its own: an unknown zone fails the whole request with 400.
 
     # ---- Storage ----
     UploadUrlRequest:

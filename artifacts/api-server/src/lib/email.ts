@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logger } from "./logger";
 
 /**
  * Transactional email via Resend. Activates when RESEND_API_KEY is set;
@@ -16,6 +17,56 @@ function resend(): Resend | null {
 
 export function emailEnabled(): boolean {
   return Boolean(API_KEY);
+}
+
+/** Which emailed one-time code a dev log line carries. */
+export type DevEmailCodeKind = "verification" | "password reset" | "confirmation";
+
+let warnedDevCodesInProduction = false;
+
+/**
+ * LOCAL DEVELOPMENT ONLY: whether emailed one-time codes are also written to the
+ * server log, so a developer (or the iOS dev build against a local backend) can
+ * finish sign-up, password reset and step-up flows without a real inbox. Every
+ * condition must hold:
+ *  - DEV_LOG_EMAIL_CODES=true (explicit opt-in);
+ *  - NODE_ENV is not "production" (there the flag is ignored, with a warning);
+ *  - no email provider is configured (RESEND_API_KEY unset), so a code is never
+ *    logged for an email that was really sent.
+ * Read on every call (not at import) so a misconfigured environment can't stick.
+ */
+export function devEmailCodeLoggingEnabled(): boolean {
+  if (process.env.DEV_LOG_EMAIL_CODES !== "true") return false;
+  if (process.env.NODE_ENV === "production") {
+    if (!warnedDevCodesInProduction) {
+      warnedDevCodesInProduction = true;
+      logger.warn("DEV_LOG_EMAIL_CODES is ignored in production: email codes are never logged");
+    }
+    return false;
+  }
+  return !emailEnabled();
+}
+
+/** Mask an address for logs: "ama.owusu@example.com" -> "a***@e***.com". */
+export function maskEmail(email: string): string {
+  const at = email.lastIndexOf("@");
+  if (at <= 0) return "***";
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf(".");
+  const host = dot > 0 ? domain.slice(0, dot) : domain;
+  const tld = dot > 0 ? domain.slice(dot) : "";
+  return `${email[0]}***@${host.slice(0, 1)}***${tld}`;
+}
+
+/**
+ * Write one clearly-labelled dev line with an emailed code, when (and only
+ * when) devEmailCodeLoggingEnabled() allows it. Returns whether it logged.
+ * Callers invoke it right where they email the plaintext code.
+ */
+export function logDevEmailCode(kind: DevEmailCodeKind, to: string, code: string): boolean {
+  if (!devEmailCodeLoggingEnabled()) return false;
+  logger.warn(`[DEV ONLY] ${kind} code for ${maskEmail(to)}: ${code} (no email sent; DEV_LOG_EMAIL_CODES=true)`);
+  return true;
 }
 
 export function appUrl(path = "/"): string {

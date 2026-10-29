@@ -6,6 +6,8 @@ import { requireAuth, type AuthRequest } from "../lib/auth";
 import { requireJsonAndAllowedOrigin } from "../lib/origins";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { isUniqueViolation } from "../lib/dbErrors";
+import { normalizeTimeZone } from "../lib/timezone";
+import { setUserTimezone } from "../lib/streaks";
 
 const router: IRouter = Router();
 
@@ -23,6 +25,7 @@ function profilePayload(u: typeof usersTable.$inferSelect, walletAddress: string
     walletAddress,
     createdAt: u.createdAt.toISOString(),
     language: u.language,
+    timezone: u.timezone,
   };
 }
 
@@ -39,6 +42,17 @@ router.patch("/profile", requireJsonAndAllowedOrigin, requireAuth, async (req, r
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request" });
     return;
+  }
+
+  // Checked before anything is written (the avatar claim below writes an ACL):
+  // an unknown zone fails the whole request.
+  let tz: string | null = null;
+  if (parsed.data.timezone !== undefined) {
+    tz = normalizeTimeZone(parsed.data.timezone);
+    if (!tz) {
+      res.status(400).json({ error: "That time zone isn't supported." });
+      return;
+    }
   }
 
   const updates: Partial<typeof usersTable.$inferInsert> = {};
@@ -108,11 +122,11 @@ router.patch("/profile", requireJsonAndAllowedOrigin, requireAuth, async (req, r
 
   let updated: typeof usersTable.$inferSelect;
   try {
-    [updated] = await db
-      .update(usersTable)
-      .set(updates)
-      .where(eq(usersTable.id, user.id))
-      .returning();
+    // An update with nothing to set throws, so a body with no profile field
+    // (`{}` or a time zone alone) reads the row instead.
+    [updated] = Object.keys(updates).length
+      ? await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id)).returning()
+      : await db.select().from(usersTable).where(eq(usersTable.id, user.id));
   } catch (err) {
     // DB-level CI unique index is the source of truth; the pre-check above is
     // just UX. A concurrent rename that wins the race lands here as a unique
@@ -122,6 +136,13 @@ router.patch("/profile", requireJsonAndAllowedOrigin, requireAuth, async (req, r
       return;
     }
     throw err;
+  }
+
+  // The zone goes last, once every other field is saved: it also moves the open
+  // streak period onto the new zone's boundaries.
+  if (tz) {
+    await setUserTimezone(user.id, tz);
+    [updated] = await db.select().from(usersTable).where(eq(usersTable.id, user.id));
   }
 
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id));

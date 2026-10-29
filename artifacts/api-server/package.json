@@ -7,7 +7,8 @@
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p scripts/tsconfig.json --noEmit",
+    "seed:ios-dev": "tsx ./scripts/seed-ios-dev.ts",
     "test:susu": "tsx src/lib/circles.e2e.ts",
     "test:susu-accumulation": "tsx src/lib/circles-accumulation.e2e.ts",
     "test:susu-http": "tsx src/lib/circles-http.e2e.ts",
@@ -25,9 +26,14 @@
     "test:reset-http": "tsx src/lib/password-reset-http.e2e.ts",
     "test:reset-throttle-http": "tsx src/lib/password-reset-throttle-http.e2e.ts",
     "test:stepup-http": "tsx src/lib/stepup-http.e2e.ts",
-    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http && pnpm run test:reset-http && pnpm run test:reset-throttle-http && pnpm run test:stepup-http",
+    "test:native-session-http": "tsx src/lib/native-session-http.e2e.ts",
+    "test:account-delete-http": "tsx src/lib/account-delete-http.e2e.ts",
+    "test:auth": "pnpm run test:twofactor && pnpm run test:twofactor-http && pnpm run test:auth-http && pnpm run test:reset-http && pnpm run test:reset-throttle-http && pnpm run test:stepup-http && pnpm run test:native-session-http && pnpm run test:account-delete-http",
     "test:sentry-scrub": "tsx src/lib/sentryScrub.test.ts",
-    "test:offline": "pnpm run test:circles && pnpm run test:goals-race && pnpm run test:streaks && pnpm run test:referrals && pnpm run test:auth"
+    "test:unit": "tsx --test src/lib/money.test.ts src/lib/goalJson.test.ts src/lib/circleFees.test.ts src/lib/dashboardView.test.ts src/lib/timezone.test.ts src/lib/lessons-data.test.ts src/lib/requestLog.test.ts",
+    "test:home-data-http": "tsx src/lib/home-data-http.e2e.ts",
+    "test:profile-timezone-http": "tsx src/lib/profile-timezone-http.e2e.ts",
+    "test:offline": "pnpm run test:unit && pnpm run test:circles && pnpm run test:goals-race && pnpm run test:streaks && pnpm run test:referrals && pnpm run test:auth && pnpm run test:home-data-http && pnpm run test:profile-timezone-http"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.19.0",

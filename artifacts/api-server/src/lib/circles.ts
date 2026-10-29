@@ -1,4 +1,4 @@
-import { eq, and, inArray, desc, asc, count } from "drizzle-orm";
+import { eq, and, or, inArray, desc, asc, count } from "drizzle-orm";
 import { AppError } from "./errors";
 import {
   db,
@@ -30,6 +30,7 @@ import { notify, notifyMany } from "./notifications";
 import { formatMoney, parseBps } from "./money";
 import { isUniqueViolation } from "./dbErrors";
 import { logger } from "./logger";
+import { circleFeeBps } from "./circleFees";
 
 const INTERVAL_DAYS: Record<string, number> = { weekly: 7, biweekly: 14, monthly: 30 };
 // An explicit 0 means no fee; only an unset value falls back to 2%.
@@ -218,7 +219,7 @@ export async function listCirclesForUser(userId: string) {
       potCents: c.contributionCents * memberCount,
       memberCount,
       targetMembers: c.targetMembers ?? null,
-      feeBps: c.targetMembers != null || (escrowEnabled() && c.contractAddress) ? FEE_BPS : 0,
+      feeBps: circleFeeBps(c, { escrowOn: escrowEnabled(), feeBps: FEE_BPS }),
       myPayoutRound: me?.payoutRound ?? 0,
       currentRound: c.currentRound,
       totalRounds: c.totalRounds,
@@ -228,6 +229,28 @@ export async function listCirclesForUser(userId: string) {
         : null,
     };
   });
+}
+
+/** Contribution rows for the current round of each active group in `circles` (one query). */
+export async function currentRoundContributions(
+  circles: { id: string; status: string; currentRound: number }[],
+): Promise<{ circleId: string; round: number; userId: string }[]> {
+  const active = circles.filter((c) => c.status === "active");
+  if (!active.length) return [];
+  return db
+    .select({
+      circleId: contributionsTable.circleId,
+      round: contributionsTable.round,
+      userId: contributionsTable.userId,
+    })
+    .from(contributionsTable)
+    .where(
+      or(
+        ...active.map((c) =>
+          and(eq(contributionsTable.circleId, c.id), eq(contributionsTable.round, c.currentRound)),
+        ),
+      ),
+    );
 }
 
 export async function getCircleDetail(userId: string, circleId: string) {
@@ -268,7 +291,7 @@ export async function getCircleDetail(userId: string, circleId: string) {
     contractAddress: c.contractAddress,
     // Target-payout circles always carry the fee (it's baked into the
     // contribution), even before any on-chain escrow exists.
-    feeBps: c.targetMembers != null || (escrowEnabled() && c.contractAddress) ? FEE_BPS : 0,
+    feeBps: circleFeeBps(c, { escrowOn: escrowEnabled(), feeBps: FEE_BPS }),
     explorerUrl: c.contractAddress ? explorerUrl() : null,
     myPayoutRound: me?.payoutRound ?? null,
     myContributionStatus: contributedThisRound ? "paid" : "due",

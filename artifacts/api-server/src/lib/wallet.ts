@@ -3,7 +3,16 @@ import { getAddress } from "viem";
 import { db, walletsTable } from "@workspace/db";
 import { AppError } from "./errors";
 import { encryptSecret, decryptSecret } from "./crypto";
-import { generateAccount, ensureGas, onchainEnabled, networkName, isValidAddress } from "./chain";
+import {
+  generateAccount,
+  ensureGas,
+  onchainEnabled,
+  networkName,
+  isValidAddress,
+  faucetEnabled,
+  privyCustodyEnabled,
+} from "./chain";
+import { isUniqueViolation } from "./dbErrors";
 import { logger } from "./logger";
 
 /**
@@ -74,6 +83,48 @@ export async function createPrivyWalletForUser(userId: string, embeddedAddress: 
 export async function getWalletForUser(userId: string) {
   const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, userId));
   return wallet ?? null;
+}
+
+/**
+ * LOCAL DEV / OFFLINE ONLY. Whether a user with no wallet may get one on demand
+ * so the ledger-only test faucet (POST /wallet/deposit) works for a freshly
+ * registered account. Outside this case wallets are only ever created by the
+ * explicit "Continue with Privy" link flow, unchanged. Every condition must hold:
+ *  - NODE_ENV is not "production";
+ *  - the test faucet is explicitly enabled (ENABLE_TEST_FAUCET=true);
+ *  - on-chain settlement is NOT configured (no platform key / USDC contract), so
+ *    nothing this wallet holds can ever settle, sign or reach a chain;
+ *  - Privy custody is off (with it on, every wallet must be the user's own
+ *    Privy embedded EOA, never a server-created one).
+ */
+export function devLedgerWalletAllowed(): boolean {
+  return (
+    process.env.NODE_ENV !== "production" &&
+    faucetEnabled() &&
+    !onchainEnabled() &&
+    !privyCustodyEnabled()
+  );
+}
+
+/**
+ * The user's wallet, provisioning a ledger-only dev wallet first when
+ * devLedgerWalletAllowed() (see there); otherwise exactly getWalletForUser.
+ * The dev wallet is the same row createWalletForUser has always made offline
+ * (what every offline e2e suite uses): a throwaway address whose generated key
+ * is encrypted at rest and, with on-chain disabled, never used to sign. Safe
+ * under concurrent first deposits: a lost insert race re-reads the winner.
+ */
+export async function getOrCreateDevLedgerWallet(userId: string) {
+  const existing = await getWalletForUser(userId);
+  if (existing || !devLedgerWalletAllowed()) return existing;
+  try {
+    const wallet = await createWalletForUser(userId);
+    logger.info({ userId }, "provisioned ledger-only dev wallet for the offline test faucet");
+    return wallet;
+  } catch (e) {
+    if (isUniqueViolation(e)) return getWalletForUser(userId);
+    throw e;
+  }
 }
 
 /**

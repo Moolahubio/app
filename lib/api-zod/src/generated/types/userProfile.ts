@@ -28,4 +28,6 @@ export interface UserProfile {
   createdAt: string;
   /** Preferred UI language code (e.g. "en", "ar", "fr", "sw", "pcm", "ha", "zh"). */
   language?: string;
+  /** The IANA time zone streak periods use, exactly as last sent. "UTC" until a client sets it. */
+  timezone?: string;
 }

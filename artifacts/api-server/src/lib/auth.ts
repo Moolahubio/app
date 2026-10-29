@@ -86,3 +86,29 @@ export async function createSession(userId: string, rememberMe = false): Promise
 }
 
 export type AuthRequest = Request & { user: typeof usersTable.$inferSelect };
+
+/**
+ * True when the caller identifies itself as the native iOS app with the
+ * `X-Client: ios` header (value compared case-insensitively). Native clients
+ * have no browser cookie jar to rely on, so they keep the session token in the
+ * Keychain and send it back as `x-session-token` (see getUserFromRequest).
+ */
+export function isNativeClient(req: Request): boolean {
+  const raw = req.headers["x-client"];
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === "string" && value.trim().toLowerCase() === "ios";
+}
+
+/**
+ * Attach the freshly minted session token to a login response body, ONLY for a
+ * native client (`X-Client: ios`). Browser responses are returned untouched (the
+ * very same object), so their JSON is byte-for-byte what it was before: the web
+ * app keeps relying solely on the httpOnly cookie and never sees the token.
+ */
+export function withNativeSessionToken<T extends object>(
+  req: Request,
+  body: T,
+  token: string,
+): T | (T & { sessionToken: string }) {
+  return isNativeClient(req) ? { ...body, sessionToken: token } : body;
+}

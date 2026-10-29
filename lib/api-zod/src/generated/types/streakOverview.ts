@@ -31,4 +31,6 @@ export interface StreakOverview {
   badgeProgress: StreakBadgeProgress;
   reminderOptIn: boolean;
   vacation: StreakVacation;
+  /** The IANA time zone the streak's periods and badge quarters are computed in. */
+  timezone?: string;
 }

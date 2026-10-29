@@ -12,7 +12,7 @@ import {
   verifyUsdcTransferReceipt,
 } from "./chain";
 import { enqueueOnchainTransfer, kickReconciler } from "./settlement";
-import { getWalletForUser, requireWalletForUser, requireServerCustody } from "./wallet";
+import { getWalletForUser, getOrCreateDevLedgerWallet, requireWalletForUser, requireServerCustody } from "./wallet";
 import { getUserCircleEscrowAddresses } from "./circles";
 import { walletSpendableCents } from "./onchainBalances";
 import { notify } from "./notifications";
@@ -48,7 +48,10 @@ function isUniqueViolation(e: unknown): boolean {
  * faucet is a pure ledger convenience and books the credit directly.
  */
 export async function faucetDeposit(userId: string, amountCents: number) {
-  const wallet = await getWalletForUser(userId);
+  // Offline local dev (no chain configured, faucet enabled, not production) may
+  // provision a ledger-only wallet on first use; everywhere else this is exactly
+  // getWalletForUser, so a walletless account is still refused below.
+  const wallet = await getOrCreateDevLedgerWallet(userId);
   if (!wallet) throw new AppError("Your account isn't set up to add money yet.");
   if (amountCents <= 0 || amountCents > 1_000_00) {
     throw new AppError("Enter an amount up to $1,000 of test money.");

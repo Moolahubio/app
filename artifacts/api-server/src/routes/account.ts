@@ -18,6 +18,37 @@ import { verifyStepUp } from "../lib/stepUp";
 const router: IRouter = Router();
 const COOKIE = "moolahub_session";
 
+/** Why the account can't be deleted yet (funds, then circles, then goals), or null. */
+async function deletionBlocker(userId: string): Promise<string | null> {
+  const balances = await userBalances(userId);
+  if (balances.totalCents > 0) {
+    return "Withdraw your funds and release any goals before deleting your account.";
+  }
+
+  const activeCircles = await db
+    .select({ id: circlesTable.id })
+    .from(circleMembersTable)
+    .innerJoin(circlesTable, eq(circleMembersTable.circleId, circlesTable.id))
+    .where(
+      and(
+        eq(circleMembersTable.userId, userId),
+        inArray(circlesTable.status, ["forming", "active"]),
+      ),
+    );
+  if (activeCircles.length) {
+    return "Leave or complete your active circles before deleting your account.";
+  }
+
+  const activeGoals = await db
+    .select({ id: goalsTable.id })
+    .from(goalsTable)
+    .where(and(eq(goalsTable.userId, userId), eq(goalsTable.status, "active")));
+  if (activeGoals.length) {
+    return "Release your active goals before deleting your account.";
+  }
+  return null;
+}
+
 // Deactivation is destructive enough (immediately signs the account out
 // everywhere) that a stolen session alone must not be sufficient — require
 // step-up proof of an existing factor (password, 2FA code, or emailed reauth
@@ -57,45 +88,25 @@ router.delete("/account", requireJsonAndAllowedOrigin, requireAuth, async (req, 
     return;
   }
 
+  // Refuse before asking for proof: step-up can use up a one-time code (a 2FA
+  // backup code or an emailed code), which a refused request must not spend.
+  const blocked = await deletionBlocker(user.id);
+  if (blocked) {
+    res.status(409).json({ error: blocked });
+    return;
+  }
+
   const stepUp = await verifyStepUp(user, parsed.data);
   if (!stepUp.ok) {
     res.status(stepUp.status).json({ error: stepUp.error });
     return;
   }
 
-  const balances = await userBalances(user.id);
-  if (balances.totalCents > 0) {
-    res.status(409).json({
-      error: "Withdraw your funds and release any goals before deleting your account.",
-    });
-    return;
-  }
-
-  const activeCircles = await db
-    .select({ id: circlesTable.id })
-    .from(circleMembersTable)
-    .innerJoin(circlesTable, eq(circleMembersTable.circleId, circlesTable.id))
-    .where(
-      and(
-        eq(circleMembersTable.userId, user.id),
-        inArray(circlesTable.status, ["forming", "active"]),
-      ),
-    );
-  if (activeCircles.length) {
-    res.status(409).json({
-      error: "Leave or complete your active circles before deleting your account.",
-    });
-    return;
-  }
-
-  const activeGoals = await db
-    .select({ id: goalsTable.id })
-    .from(goalsTable)
-    .where(and(eq(goalsTable.userId, user.id), eq(goalsTable.status, "active")));
-  if (activeGoals.length) {
-    res.status(409).json({
-      error: "Release your active goals before deleting your account.",
-    });
+  // And again after it: step-up takes a while (a password hash, a code round
+  // trip), and money or a group that arrived meanwhile must still block this.
+  const blockedNow = await deletionBlocker(user.id);
+  if (blockedNow) {
+    res.status(409).json({ error: blockedNow });
     return;
   }
 

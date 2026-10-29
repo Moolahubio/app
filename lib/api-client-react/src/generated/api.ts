@@ -81,6 +81,7 @@ import type {
   TwoFactorCodeInput,
   TwoFactorEnableInput,
   TwoFactorLoginInput,
+  TwoFactorLoginResult,
   TwoFactorSetup,
   TwoFactorStatus,
   UploadUrlRequest,
@@ -912,9 +913,9 @@ export const getTwoFactorLoginUrl = () => {
 /**
  * @summary Complete login by verifying a 2FA code (TOTP or backup code)
  */
-export const twoFactorLogin = async (twoFactorLoginInput: TwoFactorLoginInput, options?: RequestInit): Promise<AuthUser> => {
+export const twoFactorLogin = async (twoFactorLoginInput: TwoFactorLoginInput, options?: RequestInit): Promise<TwoFactorLoginResult> => {
 
-  return customFetch<AuthUser>(getTwoFactorLoginUrl(),
+  return customFetch<TwoFactorLoginResult>(getTwoFactorLoginUrl(),
   {
     ...options,
     method: 'POST',

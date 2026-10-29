@@ -9,6 +9,7 @@ import type { ActivityItem } from './activityItem';
 import type { CircleSummary } from './circleSummary';
 import type { Goal } from './goal';
 import type { Reminder } from './reminder';
+import type { UpcomingPayIn } from './upcomingPayIn';
 
 export interface DashboardSummary {
   availableCents: number;
@@ -25,4 +26,5 @@ export interface DashboardSummary {
   lessonsCompleted: number;
   totalLessons: number;
   upcomingReminder?: Reminder;
+  upcomingPayIn?: UpcomingPayIn | null;
 }
