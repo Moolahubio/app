@@ -51,5 +51,30 @@ Thumbs.db
 # Local reference screen recordings (too large for git; one is >100MB)
 attached_assets/ios-reference/
 
-# Local iOS dev backend secrets (scripts/dev-ios-backend.sh)
+# Secrets: never commit (docs/privy-account-layer.md §2). .dev/ holds the
+# local dev backends' env files (scripts/dev-ios-backend.sh). *.key also
+# ignores Keynote files; force-add one if it is ever needed.
+.env
+.env.*
+!.env.example
+*.env
+.envrc
 .dev/
+*.pem
+*.p8
+*.p12
+*.pfx
+*.key
+*.keystore
+*.jks
+*.mobileprovision
+id_rsa*
+id_ed25519*
+*service-account*.json
+# Every iOS build config except the examples and the committed Debug.xcconfig
+# (it only includes the gitignored Local.xcconfig), whatever the P6 bootstrap
+# names it.
+apps/ios/Config/*.xcconfig
+!apps/ios/Config/Env.example.xcconfig
+!apps/ios/Config/Local.example.xcconfig
+!apps/ios/Config/Debug.xcconfig
