@@ -72,7 +72,8 @@ export default function DashboardPage() {
     balanceUnavailable,
   } = summary;
 
-  const activeCircle = activeCircles.find((c) => c.status === "active") ?? activeCircles[0];
+  // activeCircles also lists forming groups; this card shows an active one only.
+  const activeCircle = activeCircles.find((c) => c.status === "active");
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

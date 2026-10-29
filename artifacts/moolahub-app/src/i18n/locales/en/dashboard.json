@@ -44,6 +44,7 @@
     "round": "Round {{current}} of {{total}} · {{frequency}}",
     "pot": "Pot",
     "members": "{{count}} members",
+    "members_one": "{{count}} member",
     "empty": "No active circles yet."
   },
   "frequency": {

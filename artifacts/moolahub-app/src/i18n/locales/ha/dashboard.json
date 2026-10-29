@@ -44,6 +44,7 @@
     "round": "Zagaye na {{current}} daga {{total}} · {{frequency}}",
     "pot": "Tulu",
     "members": "mambobi {{count}}",
+    "members_one": "memba {{count}}",
     "empty": "Babu da'ira mai aiki tukuna."
   },
   "frequency": {

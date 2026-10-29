@@ -44,6 +44,7 @@
     "round": "Raundi {{current}} kati ya {{total}} · {{frequency}}",
     "pot": "Mfuko",
     "members": "wanachama {{count}}",
+    "members_one": "mwanachama {{count}}",
     "empty": "Bado hakuna maduara yanayotumika."
   },
   "frequency": {

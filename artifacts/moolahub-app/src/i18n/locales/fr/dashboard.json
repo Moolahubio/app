@@ -44,6 +44,7 @@
     "round": "Tour {{current}} sur {{total}} · {{frequency}}",
     "pot": "Cagnotte",
     "members": "{{count}} membres",
+    "members_one": "{{count}} membre",
     "empty": "Aucun cercle actif pour l'instant."
   },
   "frequency": {
