@@ -23,6 +23,7 @@ import {
   DeleteCircleResponse,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireCirclesEnabled } from "../lib/circlesFlag";
 import { requireAllowedOrigin, requireJsonAndAllowedOrigin } from "../lib/origins";
 import { sendError } from "../lib/errors";
 import { ObjectStorageService } from "../lib/objectStorage";
@@ -42,6 +43,10 @@ import {
 } from "../lib/circles";
 
 const router: IRouter = Router();
+
+// Circle changes are refused (404) unless CIRCLES_ENABLED=true, except the
+// confirmation of a contribution already sent on chain (lib/circlesFlag.ts).
+router.use("/circles", requireCirclesEnabled);
 
 router.get("/circles", requireAuth, async (req, res): Promise<void> => {
   const user = (req as AuthRequest).user;

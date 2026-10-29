@@ -25,6 +25,8 @@ import type { AddressInfo } from "node:net";
 delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
+// Circle routes refuse changes unless the flag is on (lib/circlesFlag.ts).
+process.env.CIRCLES_ENABLED = "true";
 delete process.env.CIRCLE_FEE_BPS;
 delete process.env.FEE_BPS;
 process.env.ENABLE_TEST_FAUCET = "true";

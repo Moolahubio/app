@@ -45,6 +45,8 @@ import type { AddressInfo } from "node:net";
 delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
+// Circle routes refuse changes unless the flag is on (lib/circlesFlag.ts).
+process.env.CIRCLES_ENABLED = "true";
 // Explicitly enable the test faucet so this e2e test can fund wallets via
 // POST /api/wallet/deposit. The faucet now defaults to off on non-mainnet to
 // prevent synthetic balance creation in production-like deployments.
@@ -202,6 +204,57 @@ function recipientForRound(detail: CircleDetailDto, round: number, members: Test
   const user = members.find((u) => u.username === member.name);
   assert.ok(user, `recipient member ${member.name} should map to a known test user`);
   return user;
+}
+
+// --- Flow 0: with CIRCLES_ENABLED off, circle changes are refused ------------
+async function runFlagOff() {
+  const { creator } = await setupCircleMembers("E2E HTTP FLAG");
+  const invitee = await makeUser("E2E HTTP FLAG", "invitee");
+  const body = { name: `E2E HTTP Flag ${runId}`, contributionCents: CONTRIBUTION_CENTS, frequency: "monthly", memberEmails: [] };
+  const open = await api<CircleDetailDto>("POST", "/api/circles", { token: creator.token, body });
+  assert.equal(open.status, 201, "with the flag on, a circle can be created");
+  const circleId = open.body.id;
+  allCircleIds.push(circleId);
+  const inv = await api("POST", `/api/circles/${circleId}/invite`, { token: creator.token, body: { email: invitee.email } });
+  assert.equal(inv.status, 200, "with the flag on, an invite can be sent");
+  const invites = await api<Array<{ id: string }>>("GET", "/api/circles/invites", { token: invitee.token });
+  const inviteId = invites.body[0]?.id;
+  assert.ok(inviteId, "the invitee sees the invite");
+
+  for (const flag of [undefined, "false"]) {
+    if (flag === undefined) delete process.env.CIRCLES_ENABLED;
+    else process.env.CIRCLES_ENABLED = flag;
+    const label = `CIRCLES_ENABLED=${flag ?? "(unset)"}`;
+    const refused: Array<[string, string, string, unknown?]> = [
+      ["create", "POST", "/api/circles", { ...body, name: `${body.name} off` }],
+      ["invite", "POST", `/api/circles/${circleId}/invite`, { email: `${invitee.email}.x` }],
+      ["start", "POST", `/api/circles/${circleId}/start`],
+      ["contribute", "POST", `/api/circles/${circleId}/contribute`],
+      ["delete", "POST", `/api/circles/${circleId}/delete`],
+      ["decline", "POST", `/api/circles/invites/${inviteId}/decline`],
+    ];
+    for (const [what, method, path, reqBody] of refused) {
+      const r = await api(method, path, { token: creator.token, body: reqBody });
+      assert.equal(r.status, 404, `${label}: ${what} must be refused with 404 (got ${r.status})`);
+    }
+    const join = await api("POST", `/api/circles/invites/${inviteId}/accept`, { token: invitee.token });
+    assert.equal(join.status, 404, `${label}: joining must be refused with 404 (got ${join.status})`);
+    // Confirming a contribution already sent on chain still reaches the route,
+    // so money that moved reaches the ledger; this forming circle refuses it.
+    const confirm = await api("POST", `/api/circles/${circleId}/contribute/submitted`, {
+      token: creator.token,
+      body: { txHash: `0x${"ab".repeat(32)}` },
+    });
+    assert.notEqual(confirm.status, 404, `${label}: confirming a sent contribution reaches the route`);
+    assert.ok(confirm.status >= 400 && confirm.status < 500, `${label}: the forming circle refuses it (got ${confirm.status})`);
+    const list = await api<Array<{ id: string }>>("GET", "/api/circles", { token: creator.token });
+    assert.equal(list.status, 200, `${label}: reading circles still works`);
+    assert.deepEqual(list.body.map((c) => c.id), [circleId], `${label}: no circle was created`);
+    const detail = await getDetail(creator.token, circleId);
+    assert.equal(detail.status, "forming", `${label}: the circle was not started or deleted`);
+    assert.equal(detail.members.length, 1, `${label}: nobody joined`);
+  }
+  process.env.CIRCLES_ENABLED = "true";
 }
 
 // --- Flow 1: rotation circle, driven entirely over HTTP ----------------------
@@ -398,6 +451,7 @@ let failed = false;
 try {
   assert.equal(onchainEnabled(), false, "on-chain settlement must be disabled for this test");
   assert.equal(emailEnabled(), false, "email must be disabled for this test");
+  await runFlagOff();
   await runRotation();
   await runAccumulation();
   console.log(`\n✓ Susu circle HTTP e2e passed (rotation + accumulation) (runId=${runId})`);

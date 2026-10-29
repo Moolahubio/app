@@ -43,6 +43,8 @@ import type { AddressInfo } from "node:net";
 delete process.env.USDC_CONTRACT_ADDRESS;
 delete process.env.PLATFORM_PRIVATE_KEY;
 delete process.env.RESEND_API_KEY;
+// Circle routes refuse changes unless the flag is on (lib/circlesFlag.ts).
+process.env.CIRCLES_ENABLED = "true";
 // Explicitly enable the test faucet so this e2e test can fund wallets via
 // POST /api/wallet/deposit. The faucet now defaults to off on non-mainnet to
 // prevent synthetic balance creation in production-like deployments.

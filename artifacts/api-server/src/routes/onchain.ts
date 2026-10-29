@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { requireAuth } from "../lib/auth";
 import { networkName, explorerUrl, usdcContract, platformAddress } from "../lib/chain";
+import { circlesEnabled } from "../lib/circlesFlag";
 
 /**
  * Exposes the on-chain addresses the client needs to build user-signed
@@ -10,17 +11,20 @@ import { networkName, explorerUrl, usdcContract, platformAddress } from "../lib/
 const router: IRouter = Router();
 
 router.get("/onchain/config", requireAuth, (_req, res): void => {
+  // No circle contract addresses while circles are off (CIRCLES_ENABLED).
+  const circles = circlesEnabled();
   res.json({
     network: networkName(),
     explorerUrl: explorerUrl(),
     usdc: usdcContract(),
     goalVault: process.env.GOAL_VAULT_ADDRESS ?? null,
-    circleFactory: process.env.CIRCLE_FACTORY_ADDRESS ?? null,
-    accumulationFactory: process.env.ACCUMULATION_FACTORY_ADDRESS ?? null,
+    circleFactory: circles ? (process.env.CIRCLE_FACTORY_ADDRESS ?? null) : null,
+    accumulationFactory: circles ? (process.env.ACCUMULATION_FACTORY_ADDRESS ?? null) : null,
     // Accumulation contributions are a plain USDC transfer to the platform
     // account (there is no per-round escrow), so non-custodial clients need
-    // this address to build the transfer themselves.
-    platform: platformAddress(),
+    // this address to build the transfer themselves. Circles only, so it is
+    // left out while circles are off.
+    platform: circles ? platformAddress() : null,
   });
 });
 
