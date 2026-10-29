@@ -17,11 +17,11 @@
 | 1 | v1.0 scope | Cash goals and Add money. Earn only if the Earn gate (§9) passes. Cash out only if an off-ramp is contracted (B7), otherwise it's cut. No Moolahub contract in v1.0. Circles in v1.1, after the audit gate | recommended |
 | 2 | Wallet | Privy embedded **EOA**, user is sole owner, passkey MFA, Privy 7702 upgrade for gas sponsorship. Remove the ERC-4337 `SmartWalletsProvider` (`Web3Provider.tsx:3,44`). No Moolahub signer | recommended |
 | 3 | Money moves | The server **prepares** the request. The device **verifies** it against an allowlist built into the app and signs with Face ID. The server relays it (§2.1) | recommended |
-| 4 | Identity | Keep Moolahub auth. Privy login happens once per device, inside our UI. **Privy access tokens never leave the device**; the wallet is linked by a signed nonce. Reject Moolahub-issued JWT auth, because it would let Moolahub mint wallet access | founder call |
+| 4 | Identity | Privy is the account layer: sign in with Apple, Google, a Privy passkey or an email code with no password, all inside our UI. Moolahub's own passwords, TOTP and passkeys are retired. **Privy access tokens never leave the device**; at sign-in the wallet signs a single-use challenge (`docs/privy-account-layer.md` §3.4; F3, default (founder may change)), which replaces the wallet-link nonce. Reject Moolahub-issued JWT auth, because it would let Moolahub mint wallet access. *(Superseded 2026-10-29 by `docs/privy-account-layer.md` (founder decisions F1, F5, F8). Was: keep Moolahub auth, with Privy login once per device.)* | decided |
 | 5 | Vault | Privy fee wrapper over **Gauntlet USDC Prime**. Steakhouse only through a new wrapper and user re-confirmation | recommended |
 | 6 | Goal fee | Drop the 2% withdrawal fee (Base plan `:22`). Performance fee **0% at launch**. Up to 10% only after counsel (Advisers Act §205, local rules) and App Review clear it, with ≥7 days' notice on-chain. Management fee 0, abdicated | founder call |
 | 7 | Earn consent | One versioned consent per account, then `cash` or `earn` per goal, in cleared markets only | recommended |
-| 8 | Auto-save | Cash goals: a ledger schedule. Earn goals: a scheduled one-tap confirm, and in Phase 2 a deposit-only KMS signer. Privy's deposit automation is rejected because it sweeps the whole balance | recommended |
+| 8 | Auto-save | Cash goals: a ledger schedule. Earn goals: a scheduled one-tap confirm, and in Phase 2 a deposit-only KMS signer. Privy's deposit automation is rejected because it sweeps the whole balance. *(Phase 2 signer superseded 2026-10-29 by `docs/privy-account-layer.md` F4, default (founder may change): no Moolahub key on user wallets, so earn goals stay a one-tap confirm.)* | recommended |
 | 9 | Locks | Soft lock with a 24h cooling-off, re-confirmed after the hold | decided |
 | 10 | Earn confirmation | Polling by `reference_id`. Webhooks (Enterprise plan) only make it faster | recommended |
 | 11 | Circle contracts | `MHRotatingCircle`, `MHAccumulationCircle` (EIP-1167 clones), `MHCircleFactory`, `MHCircleRegistry`, `MHReputation` and `MHGuardianCanceller`, in `contracts/src/circles/`. Retire all of `contracts/src/` (including `adapters/*` and `interfaces/*`) and both deploy scripts | recommended |
@@ -44,7 +44,7 @@
 |---|---|---|
 | A compromised server can get Face ID to sign a swapped call, spender or destination. It can also get it to sign `permit`, EIP-3009 or Permit2 typed data (valid through ERC-1271 on 7702 wallets), or a 7702 authorization | Privy [gas setup](https://docs.privy.io/wallets/gas-and-asset-management/gas/setup) | Device verifier and user policy (§2.1) |
 | A Privy access token can be exchanged for a user signing key, and the API receives these tokens today | "with a valid access token for a user, Privy returns a user key" ([user keys](https://docs.privy.io/controls/authorization-keys/keys/create/user/overview)); `routes/auth.ts:549-563,626-640` | §2.2 |
-| Someone with only the user's email inbox can log in on a new device and take the wallet | Privy email-code login | Passkey MFA (§2.2) |
+| Someone with only the user's email inbox can log in on a new device and take the wallet | Privy email-code login | Passkey MFA (§2.2). *(Amended 2026-10-29: closed only once MFA is set up. Before that, inbox-only access is the risk accepted in `docs/privy-account-layer.md` F8 and §5; the consequences found after that answer, a key export before MFA among them (V34), wait for the founder.)* |
 | The Earn admin wallet holds every wrapper role. It is authorized by "your app secret alone", and Privy "cannot reassign" it | [Earn setup](https://docs.privy.io/wallets/actions/earn/setup) | Give it a key-quorum owner first (§3.4) |
 | Wrapper owner actions take effect immediately. An allocator can clear the liquidity adapter, forcing exits through `forceDeallocate` (penalty up to 2%) | Morpho `VaultV2.sol:273-297,589,770-771,789-797` | Small fixed penalty; allocator = Timelock (§3.4) |
 | A Guardian with `CANCELLER_ROLE` can cancel its own removal forever | OZ `TimelockController` administers itself | `MHGuardianCanceller` (§4.1) |
@@ -126,7 +126,7 @@ Before Face ID, the device decodes the request and refuses it unless all of thes
   - `approve` is for the exact amount and only to that clone;
   - a `transfer` destination comes from the provider SDK, from a provider-signed quote verified on the device, or was typed by the user;
   - value is 0.
-- **Signatures:** no `personal_sign`, typed data or 7702 authorization, with two exceptions: the wallet-link template (§2.2) and Privy's 7702 upgrade to the pinned delegate [VERIFY flow].
+- **Signatures:** no `personal_sign`, typed data or 7702 authorization, with two exceptions: the wallet-link template (§2.2) and Privy's 7702 upgrade to the pinned delegate [VERIFY flow]. *(Amended 2026-10-29 by `docs/privy-account-layer.md` §3.4 and §3.6, F3, default (founder may change): the sign-in and step-up templates replace the wallet-link template.)*
 - The confirm sheet shows the decoded values, never strings from the server.
 
 **Defence in depth:** a Privy policy owned by the user. Privy policies deny anything not allowed and are enforced inside the TEE ([policies](https://docs.privy.io/controls/policies/overview)).
@@ -134,27 +134,29 @@ Before Face ID, the device decodes the request and refuses it unless all of thes
   - `earn_deposit` and `earn_withdraw` for the pinned vault;
   - USDC `transfer` and `approve`;
   - calls to pinned contracts;
-  - `exportPrivateKey`, explicitly (otherwise key export is denied too).
+  - `exportPrivateKey`, explicitly (otherwise key export is denied too). *(2026-10-29: before MFA is set up, Privy's MFA does not guard export and our server cannot refuse it, because export runs on Privy's own page; a key taken then still works after MFA. See `docs/privy-account-layer.md` F8 follow-up and V34.)*
 - **Deny:** `eth_signTypedData_v4`.
 - **Constrain:** `personal_sign` and `eth_sign7702Authorization` [VERIFY that Privy policies can express this].
 
 ### 2.2 Identity, tokens and prompts
-- **Once per device:** a Privy email code (headless or Swift, inside our UI), then **passkey MFA**. Privy puts signing, export and recovery on a new device behind MFA, with a 15-minute window (Privy MFA docs, search result only). [VERIFY headless Swift MFA, and whether the Face ID confirm can count as the passkey assertion.]
+- **Sign-in:** Apple, Google, a Privy passkey, or a Privy email code with no password (headless or Swift, inside our UI). In production, passkeys are made for `app.moolahub.io`, which can never change; the AASA file is served at `https://app.moolahub.io/.well-known/apple-app-site-association` with no redirect. Dev and staging use `staging.moolahub.io`. **MFA** (a passkey, or an authenticator app where passkeys don't work) is set up before the first money move and before the other actions in `docs/privy-account-layer.md` F8's list (wallet export through our screens, adding or removing a sign-in method, an email change, lock and unlock). Until it exists, someone with only the user's inbox could open the account and see its details; the founder accepted this risk. Further consequences found after that answer (editing or deleting the account, and a key export before MFA that outlives it, V34) wait for the founder. Privy puts signing, export and recovery on a new device behind MFA, with a 15-minute window (Privy MFA docs, search result only). [VERIFY headless Swift MFA, and whether the Face ID confirm can count as the passkey assertion.] *(Superseded 2026-10-29 by `docs/privy-account-layer.md` (founder decisions F1, F5, F8). Was: once per device, a Privy email code, then passkey MFA.)*
 - **Tokens:**
   - Delete `/auth/privy`, `/auth/privy/link` (`routes/auth.ts:549-563,626-640`) and `verifyPrivyToken` (`lib/privy.ts:26-29`).
-  - **Linking:** the device signs `Moolahub wallet link · user:<uuid> · nonce:<128-bit, single-use, 5 min> · chain:8453 · origin:<RP host>`. The server recovers the address and reads the Privy user who owns it, using the app secret [VERIFY endpoint]. It checks the DID and email, and binds each DID to one user. Rebinding needs step-up and a 24h hold.
+  - **Linking:** the device signs `Moolahub wallet link · user:<uuid> · nonce:<128-bit, single-use, 5 min> · chain:8453 · origin:<RP host>`. The server recovers the address and reads the Privy user who owns it, using the app secret [VERIFY endpoint]. It checks the DID and email, and binds each DID to one user. Rebinding needs step-up and a 24h hold. *(Superseded 2026-10-29 by `docs/privy-account-layer.md` §3.4 and F3, default (founder may change): there is no earlier Moolahub account to link. At sign-in the wallet signs a single-use `Moolahub sign-in · purpose:signin` challenge, and the server finds or creates the user by Privy DID, one DID per user.)*
   - **CI check:** fails if api-server contains `user_jwts`, `authorization_context`, `authorizationContext` or `verifyAuthToken`.
   - Privy identity tokens may be sent to the server only if S0 proves they can't be used to get user keys.
 - **Every money move:** Face ID, with one idempotency key.
 - **Step-up:** cash out, a new destination (24h hold, enforced on the device and on the server), and breaking a lock.
 - **Withdraw then act:** one Face ID prompt signs two requests that share an expiry of at most 1h. The second is relayed only after the first succeeds [VERIFY].
-- **Web:** money moves on web only if S0 shows the React SDK can sign behind the same verifier. Otherwise web is read-only at launch.
+- **Web:** money moves on web only if S0 shows the React SDK can sign behind the same verifier. Otherwise web is read-only at launch. *(Amended 2026-10-29 by `docs/privy-account-layer.md` F10, default (founder may change): a web sign-in loads the Privy wallet in the browser, so read-only screens alone protect nothing. The web wallet loads only after hardening: a strict CSP, no inline or third-party scripts, the user-owned policy, and MFA on every signing once MFA is set up (F8). Before that, the web wallet signs without MFA, and our screens put no money in and pay no gas (see V34 for a key exported before MFA).)*
 - **Phase 2 signer:** a KMS key the user adds. It is limited to:
   - `earn_deposit` with `vault_id eq PRIVY_VAULT_ID`;
   - a per-request cap and an expiry;
   - a cumulative cap through [stateful policies](https://docs.privy.io/controls/policies/stateful-policies), plus server meters.
 
   It can never call `transfer`. The server reads the policy back before first use.
+
+  *(Superseded 2026-10-29 by `docs/privy-account-layer.md` F4, default (founder may change): no Moolahub key or signer is ever added to a user wallet, so there is no Phase 2 signer.)*
 
 ## 3. Personal savings on Privy Earn
 
@@ -597,7 +599,7 @@ The ledger mirrors only confirmed events (at Base's `safe` head) and never posts
 | Morpho impaired, or a harmful change pending | Chunked `emergencyExit` within the timelock window → `disallowVault`; pause earn deposits; prompt goal users |
 | Gov signer compromised | `swapOwner`; the Guardian cancels queued changes |
 | Guardian compromised | Gov schedules a rotation (48h, which the Guardian can't cancel). Meanwhile the harm is bounded: paused creation, refunded cancellations, deadline extensions |
-| Privy secret leaked | Rotate it. No user signing authority exists, and the admin wallet needs the quorum |
+| Privy secret leaked | Rotate it first, investigate second. It cannot sign for a user, and the admin wallet needs the quorum, but it is not harmless: the app secret alone can delete Privy users (wallets archived, recovery not guaranteed), unlink sign-in methods and freeze users. Keep the full secret on the worker only, give the API a read-only secret [VERIFY], require a stored user proof for every Privy delete, freeze or unfreeze, and alert on each one. *(Amended 2026-10-29 by `docs/privy-account-layer.md` §5. Was: "No user signing authority exists".)* |
 
 ## 6. RWA
 
@@ -674,7 +676,7 @@ Nothing dormant ships in the app binary.
    - `rest/v1/users` fails with the publishable key;
    - Security Advisor is clean;
    - the e2e suites pass on :6543.
-4. Start fresh. If you keep anything, keep only `users`, `passkeys`, `lesson_progress` and `streak_*`; that needs the same `APP_ENCRYPTION_KEY` and passkey RP host.
+4. Start fresh. If you keep anything, keep only `users`, `passkeys`, `lesson_progress` and `streak_*`; that needs the same `APP_ENCRYPTION_KEY` and passkey RP host. *(2026-10-29: `passkeys` is dropped and Privy holds passkeys, `docs/privy-account-layer.md` §3.2.)*
 5. Store an encrypted dump off Replit.
 6. Run one instance, watch for 24h, then allow autoscale.
 
@@ -748,7 +750,7 @@ Nothing dormant ships in the app binary.
 | A9 | Earn client, poller, webhook inbox, chain monitor, `checkEarnWrapper.ts` | S0, B3, A8 | Recovers via `reference_id`; duplicate webhooks are no-ops; the gate script fails on any §3.4 drift |
 | A10 | Market eligibility and `/v1/config` | Decision 23 | Ghana is tracker-only |
 | A11 | Circle backend and keeper | C3, C4 | A lifecycle on a Base fork reconciles exactly |
-| A12 | Auth hardening: delete the Privy-token routes, nonce linking, CI check; pin the passkey RP ID (`passkeys.ts:50-55`), block TOTP replay, cap attempts, N7 velocity limits, N8 payee hold | — | Each item has a passing test |
+| A12 | Auth hardening: delete the Privy-token routes, nonce linking, CI check; pin the passkey RP ID (`passkeys.ts:50-55`), block TOTP replay *(both moot from 2026-10-29: Privy holds passkeys and Moolahub TOTP is retired, F1 and F5)*, cap attempts, N7 velocity limits, N8 payee hold | — | Each item has a passing test |
 | A13 | Base USDC and share indexer; outside movements | A2 | Simulated sends and receives reconcile |
 | A14 | Add money (N13) | B7 | A $10 on-ramp posts once |
 | A15 | Cash out, with a device-verified destination | B7, A19 | A $10 off-ramp works; a tampered address is refused |
@@ -814,7 +816,7 @@ Secrets per environment: `MIGRATIONS_DATABASE_URL`, `SUPABASE_ACCESS_TOKEN`, the
 ## 10. Open founder calls and [VERIFY]
 
 **Founder calls**
-1. Identity model (decision 4).
+1. Identity model (decision 4). *Decided 2026-10-29: founder decisions F1, F5, F8 in `docs/privy-account-layer.md`.*
 2. Earn fee after counsel (decision 6).
 3. Circle fees (decision 13).
 4. Default σ, the Trusted tier, and the organiser's slot.

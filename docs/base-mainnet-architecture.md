@@ -125,15 +125,15 @@ All of the following were verified against the Privy docs on July 16, 2026. Anyt
 
 ### Onboarding flow (target: < 60 seconds to funded-ready)
 
-1. **Sign up** — email (+ optional passkey) via existing auth, or Privy social login. Existing email-verification, 2FA, passkey flows carry over unchanged.
-2. **Wallet creation** — on first login, backend calls Privy to create an **embedded wallet** for the user (`wallets` row stores `privy_wallet_id` + `address`; **no private key material ever touches Moolahub**). Silent — the user sees "Setting up your account…", never "wallet".
+1. **Sign up** — email (+ optional passkey) via existing auth, or Privy social login. Existing email-verification, 2FA, passkey flows carry over unchanged. *(Superseded 2026-10-29 by `docs/privy-account-layer.md` (founder decisions F1, F5, F8): Privy is the only sign-in, with Apple, Google, a Privy passkey (for `app.moolahub.io` in production, `staging.moolahub.io` in dev and staging), or an email code with no password. Moolahub's own passwords, email codes, TOTP 2FA and passkeys are retired. MFA (a passkey, or an authenticator app) is set up before the first money move and the other actions in F8's list. Until then, someone with only the inbox could open the account and see its details, the risk the founder accepted; the consequences found after that answer (a key export before MFA among them, V34) wait for the founder.)*
+2. **Wallet creation** — on first login, backend calls Privy to create an **embedded wallet** for the user (`wallets` row stores `privy_wallet_id` + `address`; **no private key material ever touches Moolahub**). Silent — the user sees "Setting up your account…", never "wallet". *(Superseded 2026-10-29 by `docs/privy-account-layer.md` §3.8: the app creates the wallet on the device right after Privy sign-in. The backend never creates wallets; it records `privy_wallet_id` and the address when it accepts the sign-in proof.)*
 3. **Profile** — name, avatar, savings intent (drives goal suggestions). Existing `complete-profile` page.
 4. **First action prompt** — "Add money" (onramp) or "Create a goal" (deposits can wait).
 
 ### Wallet model
 
 - One embedded wallet per user, upgraded to a smart account automatically by Privy's EIP-7702 gas sponsorship — this is transparent; no separate smart-wallet contract to manage.
-- **Non-custodial guarantee:** keys live in Privy's TEE, controlled by the user's auth. Moolahub's API credentials can *initiate* actions only within configured Privy **policies** (allowlist: `earn` actions on our `vault_id`, `transfer` of USDC, calls to allowlisted CircleVault addresses). Set an authorization key as wallet owner so Privy actions require a signature Moolahub holds — and document that policy config in the runbook. **[VERIFY]** final policy JSON against Privy policy language before launch.
+- **Non-custodial guarantee:** keys live in Privy's TEE, controlled by the user's auth. Moolahub's API credentials can *initiate* actions only within configured Privy **policies** (allowlist: `earn` actions on our `vault_id`, `transfer` of USDC, calls to allowlisted CircleVault addresses). Set an authorization key as wallet owner so Privy actions require a signature Moolahub holds — and document that policy config in the runbook. **[VERIFY]** final policy JSON against Privy policy language before launch. *(Superseded 2026-10-29 by `docs/base-build-spec-v2.md` decision 2 and `docs/privy-account-layer.md` F4, default (founder may change): the user is the sole owner, and no Moolahub key, authorization key or signer is ever set on a user wallet. Moolahub can only prepare and relay requests the user's device signed; the policy is owned by the user.)*
 - The old `WalletSetupCard` / `private_key_enc` flow is deleted. Migration for existing users: created wallets are new (previous chain was a testnet; no mainnet funds exist to migrate).
 
 ### Base Builder Code attribution (ERC-8021)
@@ -260,7 +260,7 @@ Earn withdraw (Morpho → wallet) → 2% fee posting + sponsored fee transfer to
 Only via settlement rules (§7) — that's the product's discipline promise. Cancelled circles refund fee-free.
 
 ### Withdraw from platform (cash out)
-`POST /wallet/withdrawals {amountCents, destination}`. Launch destination: external address (behind "Send to crypto wallet"; 2FA required, address allowlist with 24h add-delay). Pipeline: ensure `wallet_available` covers it (else prompt to withdraw from a goal first — explicit, never automatic) → Privy `transfer` action (sponsored) → webhook confirms → ledger posts `wallet_available → external_out`. Phase 2 plugs bank off-ramp into the same pipeline.
+`POST /wallet/withdrawals {amountCents, destination}`. Launch destination: external address (behind "Send to crypto wallet"; 2FA required, address allowlist with 24h add-delay). Pipeline: ensure `wallet_available` covers it (else prompt to withdraw from a goal first — explicit, never automatic) → Privy `transfer` action (sponsored) → webhook confirms → ledger posts `wallet_available → external_out`. Phase 2 plugs bank off-ramp into the same pipeline. *(Superseded 2026-10-29: Moolahub TOTP 2FA is retired; cash out, if it ships, needs the device step-up and the 24h hold on new destinations, `docs/privy-account-layer.md` §3.6.)*
 
 ### Fee summary
 
@@ -286,7 +286,7 @@ Only via settlement rules (§7) — that's the product's discipline promise. Can
 
 ## 10. Database schema (Drizzle deltas)
 
-Unchanged tables: `users`, `sessions`, `passkeys`, `two_factor_challenges`, `email_verification_codes`, `password_reset_codes`, `webauthn_challenges`, `notifications`, `lessons/lesson_progress`, `streak*`, `ledger_accounts`, `postings`, `transactions` (gains new `kind` values), `circle_invites`.
+Unchanged tables: `users`, `sessions`, `passkeys`, `two_factor_challenges`, `email_verification_codes`, `password_reset_codes`, `webauthn_challenges`, `notifications`, `lessons/lesson_progress`, `streak*`, `ledger_accounts`, `postings`, `transactions` (gains new `kind` values), `circle_invites`. *(Superseded 2026-10-29: `passkeys`, `two_factor_challenges`, `email_verification_codes`, `password_reset_codes` and `webauthn_challenges` are dropped, and `users` and `sessions` change, `docs/privy-account-layer.md` §3.2.)*
 
 ### `wallets` — rewritten (breaking)
 
@@ -393,19 +393,21 @@ yieldCents: integer("yield_cents"),           // yield portion (may be negative 
 
 ## 11. API surface
 
-Auth: Privy access token → existing middleware. All bodies zod-validated via `lib/api-zod`; OpenAPI in `lib/api-spec` → regenerate clients.
+Auth: Privy access token → existing middleware. All bodies zod-validated via `lib/api-zod`; OpenAPI in `lib/api-spec` → regenerate clients. *(Auth superseded 2026-10-29 by `docs/privy-account-layer.md` §3.4: the API never receives a Privy access or identity token and refuses one with 400. It issues its own short-lived session after checking a wallet signature over a single-use challenge.)*
 
 ### Unchanged
 `/auth/*`, `/account/*`, `/security/*`, `/passkeys/*`, `/profile/*`, `/notifications/*`, `/learn/*`, `/streaks/*` (in `dashboard`/`activity`), `/storage/*`, `/health`.
+
+*(Superseded 2026-10-29 by `docs/privy-account-layer.md` §3.4, §3.7 and §4: `/auth/*` is rewritten for Privy sign-in (challenge, session, refresh, logout, me, identity sync), `/security/*` and `/passkeys/*` are deleted, and `/account/*` changes for lock and deletion.)*
 
 ### Wallet & funding
 
 | Method & path | Purpose |
 |---|---|
 | `GET /wallet` | Balance summary: available, saved (Σ goal values), yield-to-date, pending. All from ledger + cached position. |
-| `POST /wallet/setup` | Idempotent Privy wallet creation at onboarding. |
+| `POST /wallet/setup` | Idempotent Privy wallet creation at onboarding. *(Superseded 2026-10-29 by `docs/privy-account-layer.md` §3.8: no server wallet setup; the app creates the wallet and `POST /auth/session` records it.)* |
 | `GET /wallet/deposit-address` | Address + QR (crypto deposit, hidden feature). |
-| `POST /wallet/withdrawals` | Cash out. `{amountCents, destination: {type:'address', address}, twoFactorCode}`. |
+| `POST /wallet/withdrawals` | Cash out. `{amountCents, destination: {type:'address', address}, twoFactorCode}`. *(`twoFactorCode` superseded 2026-10-29 by `docs/privy-account-layer.md` §3.6: Moolahub TOTP is retired; cash out, if it ships, needs the device step-up and the 24h hold on new destinations.)* |
 | `POST /funding/onramp-events` | Client-reported onramp result (`submitted`/`confirmed`) for reconciliation. |
 | `GET /funding/onramp-events/:id` | Poll credit status ("has my card money landed?"). |
 
@@ -462,7 +464,7 @@ Stack unchanged: Vite + React, Privy React SDK (`@privy-io/react-auth` ≥ 3.33.
 
 ```
 components/app/AddMoneySheet.tsx      — amount → useFiatOnramp → pending state
-components/app/CashOutSheet.tsx       — 2FA + address book → POST /wallet/withdrawals
+components/app/CashOutSheet.tsx       — 2FA + address book → POST /wallet/withdrawals   (superseded 2026-10-29: device step-up, no TOTP; docs/privy-account-layer.md §3.6)
 components/app/DepositSheet.tsx       — goal/circle deposit amount + confirm
 components/app/EarningsChip.tsx       — "+$2.14 earned" · live, animates on refresh
 components/app/PendingPill.tsx        — "Processing…" until webhook confirmation
@@ -1296,7 +1298,7 @@ import { and, eq, lte } from "drizzle-orm";
 import { logger } from "./logger";
 
 // Keeper key: gas-only operational key. Holds ETH for keeper txs, NEVER user funds.
-const account = privateKeyToAccount(process.env.KEEPER_PRIVATE_KEY as `0x${string}`);
+const account = privateKeyToAccount(process.env.KEEPER_PRIVATE_KEY as `0x${string}`); // superseded 2026-10-29: never from env; a cloud key vault from v1.1 (docs/privy-account-layer.md F4)
 const wallet = createWalletClient({ account, chain: CHAIN, transport: http(BASE_RPC_URL) });
 const publicClient = createPublicClient({ chain: CHAIN, transport: http(BASE_RPC_URL) });
 
@@ -1486,10 +1488,10 @@ export function useEarnSummary() {
 2. **Ledger is the source of truth**; chain is best-effort. Every request path that touches money: ledger posting first, chain second, confirmation via webhook/indexer, retry queue on failure. No user-facing 500s from RPC.
 3. **Privy policies as blast-radius control.** Wallet policies allowlist exactly: `earn` on `PRIVY_VAULT_ID`, `transfer` of USDC, and calls to registry-listed CircleVaults. A compromised API server cannot drain wallets to arbitrary addresses. **[VERIFY]** policy JSON.
 4. **Explicit address ceremony before deploy** (carried from `replit.md`): `OWNER/ops multisig`, `GUARDIAN`, `TREASURY`, keeper key — confirmed by a human, never defaulted to deployer. Deploy script hard-fails on missing values.
-5. **Key inventory:** Privy app secret (server env), Privy authorization key (wallet owner — HSM/secret manager), keeper EOA (gas only), ops multisig (registry owner), guardian key (cold). No user key material, ever.
+5. **Key inventory:** Privy app secret (server env), Privy authorization key (wallet owner — HSM/secret manager), keeper EOA (gas only), ops multisig (registry owner), guardian key (cold). No user key material, ever. *(Superseded 2026-10-29: no Privy authorization key and no keeper key in env; the keeper key lives in a cloud key vault from v1.1, `docs/privy-account-layer.md` F4 and §2.)*
 6. **Financial edge cases:** Morpho loss → `min(principal, redeemable)` + pro-rata socialization + UI disclosure; Morpho illiquidity → check `available_liquidity_usd` before large withdrawals, queue if short; USDC blacklist → pull-fallback `claimable`; webhook replay → idempotent handlers keyed on `privy_action_id`; onramp mismatch → indexer credits only what actually arrives on-chain.
 7. **Reconciliation:** hourly job asserts `Σ goal shares ≤ wallet shares` per user and ledger totals vs on-chain/position totals; drift beyond dust pages on-call. Monthly proof-of-funds snapshot: Σ ledger balances vs Σ (positions + CircleVault `memberValue`).
-8. **Rate/abuse controls:** existing login throttles; withdrawal 2FA + address allowlist with 24h delay; onramp per-user daily cap (provider caps apply too); circle creation capped per user/day.
+8. **Rate/abuse controls:** existing login throttles; withdrawal 2FA + address allowlist with 24h delay; onramp per-user daily cap (provider caps apply too); circle creation capped per user/day. *(Superseded 2026-10-29: withdrawal step-up is the device's, not TOTP, `docs/privy-account-layer.md` §3.6; login throttles move to the database, §3.13.)*
 9. **Compliance flags (not legal advice):** yield copy must say "variable, not guaranteed, generated by a third-party lending protocol" (Privy requires the disclosure); avoid "interest/savings account" framing; ROSCA rules vary by jurisdiction — counsel review before launch marketing.
 
 ---
@@ -1501,12 +1503,12 @@ export function useEarnSummary() {
 | `BASE_RPC_URL` | Paid RPC (Alchemy/QuickNode) | Never public endpoint in prod |
 | `USDC_ADDRESS` | `0x8335…2913` | Constant, in code |
 | `PRIVY_APP_ID` / `PRIVY_APP_SECRET` | Privy Dashboard | Server only |
-| `PRIVY_AUTHORIZATION_KEY` | Privy authorization key | If wallet owners configured **[VERIFY]** |
+| `PRIVY_AUTHORIZATION_KEY` | Privy authorization key | If wallet owners configured **[VERIFY]**. *Superseded 2026-10-29 by `docs/privy-account-layer.md` F4, default (founder may change): never set; no Moolahub key on user wallets.* |
 | `PRIVY_VAULT_ID` | Dashboard → Earn setup | The Morpho vault (fee-wrapper) id |
 | `MORPHO_VAULT_ADDRESS` | Must match `PRIVY_VAULT_ID`'s vault | Used by CircleVaults + registry |
 | `CIRCLE_FACTORY_ADDRESS` / `VAULT_REGISTRY_ADDRESS` | Deploy output | |
 | `TREASURY_ADDRESS` / `GUARDIAN_ADDRESS` / `OWNER_ADDRESS` | **Explicit human confirmation** | Never deployer default |
-| `KEEPER_PRIVATE_KEY` | Secret manager | Gas-only key |
+| `KEEPER_PRIVATE_KEY` | Secret manager | Gas-only key. *Superseded 2026-10-29 by `docs/privy-account-layer.md` F4 and §4, default (founder may change): never in env; from v1.1 the circle keeper key lives in a cloud key vault.* |
 | `BASE_BUILDER_CODE` / `VITE_BASE_BUILDER_CODE` | base.dev → Settings → Builder Codes | ERC-8021 attribution (server + client); non-secret |
 | `PRIVY_WEBHOOK_SECRET` | Dashboard webhook config | Signature verification |
 | *(deleted)* | `*_SEPOLIA_*`, faucet keys, `private_key_enc` KMS config | Remove from all environments |
@@ -1536,7 +1538,7 @@ export function useEarnSummary() {
 | # | Item | Owner | Blocks |
 |---|---|---|---|
 | 1 | Privy webhook signature scheme + Node SDK version | Eng | M3 |
-| 2 | Wallet-owner authorization keys: on or off at launch? (Security ↑, ops complexity ↑) | Jerry | M2 |
+| 2 | Wallet-owner authorization keys: on or off at launch? (Security ↑, ops complexity ↑) *(Answered 2026-10-29 by `docs/privy-account-layer.md` F4, default (founder may change): off; no Moolahub key on user wallets.)* | Jerry | M2 |
 | 3 | Circle `contribute()` pattern: client-side sponsored tx vs server-initiated action | Eng spike | M2 |
 | 4 | Vault choice: Gauntlet USDC Prime vs Steakhouse Prime Instant (compare APY history, liquidity, TVL in Dashboard) | Jerry | M0 |
 | 5 | Fee-wrapper yield share: 0% or up to 10% on top of 2% withdrawal fee | Jerry | M0 |

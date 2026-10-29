@@ -3,8 +3,8 @@
 Orientation for Claude Code working in this repo. Source of truth: https://github.com/Moolahubio/app
 
 ## Current initiative: launch on Base Mainnet with real yield
-- **Architecture / full spec:** `docs/base-mainnet-architecture.md` — Privy embedded wallets + app-sponsored gas, Privy Earn (Morpho) yield for goals, `MoolaHubCircleVault` for group savings, Stripe/MoonPay onramp, schema/API/UI change map, complete core code, security model, rollout milestones.
-- **Build prompt (execution order + gates):** `docs/replit-base-mainnet-build-prompt.md`.
+- **Full spec:** `docs/base-build-spec-v2.md` (build spec v3, final) and `docs/privy-account-layer.md` (Privy as the account layer: sign-in, sessions, MFA, gas sponsorship; founder decisions of 2026-10-29). `docs/base-mainnet-architecture.md` is the original Base plan, superseded wherever those two differ.
+- **Build prompt (execution order + gates):** `docs/replit-base-mainnet-build-prompt.md`. It was written against the original Base plan; the spec and `docs/privy-account-layer.md` win where they differ, and the account-layer build order is `docs/privy-account-layer.md` §6.
 - The previous **Monad migration is cancelled**; `docs/monad-*.md` are superseded and kept only until archived (build Milestone A moves them to `docs/archive/`).
 
 ## Non-negotiables
@@ -12,7 +12,7 @@ Orientation for Claude Code working in this repo. Source of truth: https://githu
 - **Non-custodial:** no admin/owner/guardian path to user principal, in any contract or service. No private key material in Moolahub's DB or env (Privy TEE holds keys).
 - **No mock data:** every displayed balance/yield/APY derives from the Privy position API or on-chain reads. Pending state over fabricated numbers, always.
 - Before any deploy, **confirm `OWNER_ADDRESS`, `GUARDIAN_ADDRESS`, `TREASURY_ADDRESS` explicitly** (per `replit.md`) — never default to the deployer.
-- Resolve the relevant `[VERIFY]` item (architecture §2/§18) before wiring any external API or address.
+- Resolve the relevant `[VERIFY]` item (`docs/privy-account-layer.md` §7 and the spec's `[VERIFY]` marks; architecture §2/§18 for the original plan) before wiring any external API or address.
 - Circles stay behind `CIRCLES_ENABLED=false` until the contract audit is signed off.
 
 ## Repo map
@@ -29,4 +29,4 @@ Orientation for Claude Code working in this repo. Source of truth: https://githu
 - Contracts: `cd contracts && forge test` (fork tests run against Base Mainnet + the real Morpho vault)
 
 ## Base quick facts
-Chain **8453** (`eip155:8453`) · gas app-sponsored via Privy (EIP-7702) · USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` (6 dp) · explorer `https://basescan.org` · yield = Morpho ERC-4626 vault via Privy Earn (`assets_in_vault − (total_deposited − total_withdrawn)`) · full verified-facts table in architecture §2.
+Chain **8453** (`eip155:8453`) · gas app-sponsored via Privy (EIP-7702) · USDC `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` (6 dp) · explorer `https://basescan.org` · yield = Morpho ERC-4626 vault via Privy Earn (`assets_in_vault − (total_deposited − total_withdrawn)`) · full verified-facts table in architecture §2 (Privy account-layer sources: `docs/privy-account-layer.md` Appendix B).

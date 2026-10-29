@@ -8,7 +8,7 @@ You are the lead engineer building **Moolahub**, a production consumer savings a
 
 ## 0. Read these files BEFORE writing any code
 
-1. `docs/base-mainnet-architecture.md` — **THE spec.** Every section number referenced below (§N) points into this file. When this prompt and that file disagree, the file wins.
+1. `docs/base-mainnet-architecture.md` — **THE spec.** Every section number referenced below (§N) points into this file. When this prompt and that file disagree, the file wins. *(Superseded 2026-10-29: `docs/base-build-spec-v2.md` and `docs/privy-account-layer.md` are the spec; they win over this file and the architecture doc wherever they differ.)*
 2. `CLAUDE.md` and `replit.md` — repo conventions and the address-confirmation rule.
 3. `AGENTS.md` — agent working rules for this repo.
 4. Existing code you will extend: `artifacts/api-server/src/lib/ledger.ts`, `lib/db/src/schema/*`, `artifacts/api-server/src/routes/*`, `artifacts/moolahub-app/src/pages/*`.
@@ -25,7 +25,7 @@ Users sign up, get an invisible non-custodial Privy embedded wallet, add money w
 4. **Zero testnet.** No Sepolia, no faucets, no testnet chain IDs, no "test mode" money. Grep for `sepolia|faucet|84532` must return zero hits outside `docs/archive/`.
 5. **Never deploy contracts or wire real addresses without explicit human confirmation** of `OWNER_ADDRESS`, `GUARDIAN_ADDRESS`, `TREASURY_ADDRESS`, keeper key (per `replit.md`). Never default these to a deployer. Stop and ask.
 6. **Do not invent Privy API shapes.** Use exactly the endpoints/fields in §2 of the spec. Anything marked `[VERIFY]` in the spec: stop, ask the human, or consult https://docs.privy.io — do not guess.
-7. **No secrets in code or client.** Server env only for `PRIVY_APP_SECRET`, `KEEPER_PRIVATE_KEY`, webhook secret. Client gets only `VITE_PRIVY_APP_ID` and `VITE_BASE_BUILDER_CODE`.
+7. **No secrets in code or client.** Server env only for `PRIVY_APP_SECRET`, `KEEPER_PRIVATE_KEY`, webhook secret. Client gets only `VITE_PRIVY_APP_ID` and `VITE_BASE_BUILDER_CODE`. *(Superseded 2026-10-29 by `docs/privy-account-layer.md` F4 and §2, default (founder may change): `KEEPER_PRIVATE_KEY` never goes in env; from v1.1 the circle keeper key lives in a cloud key vault. The webhook secret's one env name is `PRIVY_WEBHOOK_SECRET`.)*
 8. **Circles ship behind a feature flag** (`CIRCLES_ENABLED=false` default) until the human confirms the external audit is complete. Everything else can go live without circles.
 9. **Money math:** integer cents in the ledger; 6-dp raw USDC on the wire (`cents × 10^4`); 18-dp share units as numeric strings/bigints. Never floats for money. Round in the platform's favor only where the spec says so.
 10. **User-facing language:** "Add money", "Cash out", "Earnings", "Processing…", `@username`. Banned words in UI: wallet, gas, blockchain, transaction, USDC, address, hash. Earnings copy must include "variable, not guaranteed" disclosure.
@@ -64,7 +64,7 @@ Work strictly in this order. Do not start a milestone until the previous one's g
 ### Milestone A — Purge testnet + foundations
 - Delete: all Base Sepolia config, faucet/dev-funding code, `WalletSetupCard` key flows, `private_key_enc` handling, `routes/onchain.ts` testnet tooling.
 - Create `artifacts/api-server/src/lib/base.ts` exactly per spec §14.3 (fail at boot on missing env).
-- Archive `docs/monad-*.md` → `docs/archive/`; update `CLAUDE.md` to point to `docs/base-mainnet-architecture.md`.
+- Archive `docs/monad-*.md` → `docs/archive/`; update `CLAUDE.md` to point to `docs/base-mainnet-architecture.md`. *(Superseded 2026-10-29: CLAUDE.md already points to `docs/base-build-spec-v2.md` and `docs/privy-account-layer.md`; keep it that way.)*
 - **Gate:** `pnpm run typecheck` green; `grep -ri "sepolia\|faucet\|84532" --exclude-dir=docs` → zero hits.
 
 ### Milestone B — Schema (spec §10)
@@ -72,7 +72,7 @@ Work strictly in this order. Do not start a milestone until the previous one's g
 - **Gate:** `pnpm --filter @workspace/db run push` clean on a fresh DB; all existing e2e tests still pass.
 
 ### Milestone C — Wallets + onboarding (spec §4)
-- `POST /wallet/setup`: idempotent Privy embedded-wallet creation on first login; store `privy_wallet_id` + address. Silent UX ("Setting up your account…").
+- `POST /wallet/setup`: idempotent Privy embedded-wallet creation on first login; store `privy_wallet_id` + address. Silent UX ("Setting up your account…"). *(Superseded 2026-10-29 by `docs/privy-account-layer.md` §3.8: there is no server wallet setup. The app creates the wallet on the device right after Privy sign-in, and `POST /auth/session` stores `privy_wallet_id` and the address when it accepts the sign-in proof.)*
 - Root `PrivyProvider` in `main.tsx` with `dataSuffix` builder-code plugin (spec §14.9).
 - **Gate:** new user registers → wallet row exists with a real Privy wallet id; no key material anywhere; UI shows no crypto vocabulary.
 
@@ -85,7 +85,7 @@ Work strictly in this order. Do not start a milestone until the previous one's g
 ### Milestone E — Funding (spec §5, §14.8)
 - `AddMoneySheet` + `useOnramp` (report `expectedCents` + poll `GET /funding/onramp-events/:id`).
 - Onchain indexer: watch USDC `Transfer` logs to user wallets → credit ledger `external_in → wallet_available` → "Money arrived" notification. Onramp events expire after 24h uncredited.
-- Cash out: `POST /wallet/withdrawals` (2FA, address allowlist w/ 24h add-delay) → Privy transfer action → webhook confirm.
+- Cash out: `POST /wallet/withdrawals` (2FA, address allowlist w/ 24h add-delay) → Privy transfer action → webhook confirm. *(Superseded 2026-10-29 by `docs/privy-account-layer.md` §3.6 and `docs/base-build-spec-v2.md` §2.2: Moolahub TOTP 2FA is retired. Cash out, if it ships, needs the device step-up and the 24h hold on new destinations, and the device signs the transfer for the server to relay.)*
 - **Gate:** real card purchase lands and auto-credits; cash-out round-trips; killing the API server mid-flow loses nothing (inbox + retry queue recover).
 
 ### Milestone F — Circle contracts (spec §7, §14.1, §14.2) — code + tests only, NO mainnet deploy
@@ -114,12 +114,12 @@ Work strictly in this order. Do not start a milestone until the previous one's g
 BASE_RPC_URL=                # paid RPC endpoint
 PRIVY_APP_ID=                VITE_PRIVY_APP_ID=
 PRIVY_APP_SECRET=
-PRIVY_AUTHORIZATION_KEY=     # if wallet owners enabled [VERIFY]
+PRIVY_AUTHORIZATION_KEY=     # superseded 2026-10-29: never set, no Moolahub key on user wallets (docs/privy-account-layer.md F4)
 PRIVY_VAULT_ID=              MORPHO_VAULT_ADDRESS=      # must reference the same vault
 PRIVY_WEBHOOK_SECRET=
 CIRCLE_FACTORY_ADDRESS=      VAULT_REGISTRY_ADDRESS=    # after Milestone-E deploy approval
 TREASURY_ADDRESS=            GUARDIAN_ADDRESS=          OWNER_ADDRESS=   # human-confirmed, never deployer
-KEEPER_PRIVATE_KEY=          # gas-only key
+KEEPER_PRIVATE_KEY=          # superseded 2026-10-29: never in env, cloud key vault from v1.1 (docs/privy-account-layer.md F4)
 BASE_BUILDER_CODE=           VITE_BASE_BUILDER_CODE=
 CIRCLES_ENABLED=false
 DATABASE_URL=
@@ -129,4 +129,4 @@ DATABASE_URL=
 
 All milestone gates passed; five money flows (spec §3) proven with real money by the human: card → balance, balance → goal → yield → withdraw − 2%, circle contribute → settle (fork), cash out; reconciliation clean; no mock data anywhere (`grep -ri "mock\|fake\|dummy" src` in money paths → zero); no banned vocabulary in UI; circles flag OFF pending audit; `LAUNCH.md` lists every remaining human task.
 
-If anything in this prompt is ambiguous, the spec (`docs/base-mainnet-architecture.md`) resolves it. If the spec is ambiguous, **ask — never assume.**
+If anything in this prompt is ambiguous, the spec (`docs/base-mainnet-architecture.md`) resolves it. *(Superseded 2026-10-29: the spec is `docs/base-build-spec-v2.md` with `docs/privy-account-layer.md`.)* If the spec is ambiguous, **ask — never assume.**
