@@ -1,0 +1,42 @@
+[
+    {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "name": "Emergency fund",
+        "emoji": "\ud83d\udedf",
+        "color": "jade",
+        "targetCents": 300000,
+        "savedCents": 125000,
+        "balanceUnavailable": false,
+        "deadline": "2027-04-21T03:29:24.928Z",
+        "frequency": "monthly",
+        "autoSaveCents": 25000,
+        "createdAt": "2026-06-05T03:29:24.928Z",
+        "imageUrl": null,
+        "onchain": false,
+        "vaultAddress": null,
+        "explorerUrl": null,
+        "network": null,
+        "feeBps": 0,
+        "history": []
+    },
+    {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "name": "New laptop",
+        "emoji": "\ud83d\udcbb",
+        "color": "jade",
+        "targetCents": 120000,
+        "savedCents": 33000,
+        "balanceUnavailable": false,
+        "deadline": "2027-01-21T03:29:24.928Z",
+        "frequency": "monthly",
+        "autoSaveCents": 15000,
+        "createdAt": "2026-06-05T03:29:24.928Z",
+        "imageUrl": null,
+        "onchain": false,
+        "vaultAddress": null,
+        "explorerUrl": null,
+        "network": null,
+        "feeBps": 0,
+        "history": []
+    }
+]

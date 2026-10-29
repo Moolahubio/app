@@ -1,0 +1,35 @@
+{
+    "hero": {
+        "count": 1,
+        "status": "active",
+        "commitmentName": null,
+        "emoji": null
+    },
+    "frequency": "weekly",
+    "canChangeFrequency": true,
+    "nextChangeYear": null,
+    "currentPeriodEnd": "2026-10-26T00:00:00.000Z",
+    "currentPeriodSatisfied": true,
+    "atRisk": false,
+    "lifetimeBest": 1,
+    "totalPeriodsSaved": 1,
+    "commitments": [],
+    "freezes": {
+        "balance": 1,
+        "usedTotal": 0
+    },
+    "badges": [],
+    "badgeProgress": {
+        "earnedQuarters": 0,
+        "nextTier": "bronze",
+        "pct": 0.025020375779991947,
+        "daysToNext": 90
+    },
+    "reminderOptIn": false,
+    "vacation": {
+        "active": false,
+        "start": null,
+        "end": null,
+        "usedThisYear": false
+    }
+}

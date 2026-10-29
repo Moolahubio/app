@@ -1,0 +1,147 @@
+{
+    "availableCents": 145012,
+    "totalCents": 303012,
+    "goalTotalCents": 158000,
+    "pendingCents": 0,
+    "balanceUnavailable": false,
+    "circlePotCents": 18091720,
+    "recentActivity": [
+        {
+            "id": "00000000-0000-4000-8000-000000000003",
+            "type": "goal_release",
+            "description": "Moved from QA journey",
+            "amountCents": 200,
+            "txHash": null,
+            "onchainStatus": "none",
+            "createdAt": "2026-10-25T09:48:23.745Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000004",
+            "type": "goal_allocate",
+            "description": "Moved to QA journey",
+            "amountCents": -200,
+            "txHash": null,
+            "onchainStatus": "none",
+            "createdAt": "2026-10-25T09:46:06.479Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000005",
+            "type": "deposit",
+            "description": "Test money added",
+            "amountCents": 500,
+            "txHash": null,
+            "onchainStatus": "none",
+            "createdAt": "2026-10-25T09:45:04.309Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000006",
+            "type": "goal_release",
+            "description": "Moved from QA journey",
+            "amountCents": 200,
+            "txHash": null,
+            "onchainStatus": "none",
+            "createdAt": "2026-10-25T07:33:07.664Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000007",
+            "type": "goal_allocate",
+            "description": "Moved to QA journey",
+            "amountCents": -200,
+            "txHash": null,
+            "onchainStatus": "none",
+            "createdAt": "2026-10-25T07:30:51.158Z"
+        }
+    ],
+    "activeGoals": [
+        {
+            "id": "00000000-0000-4000-8000-000000000001",
+            "name": "Emergency fund",
+            "emoji": "\ud83d\udedf",
+            "color": "jade",
+            "targetCents": 300000,
+            "savedCents": 125000,
+            "balanceUnavailable": false,
+            "deadline": "2027-04-21T03:29:24.928Z",
+            "frequency": "monthly",
+            "autoSaveCents": 25000,
+            "createdAt": "2026-06-05T03:29:24.928Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000002",
+            "name": "New laptop",
+            "emoji": "\ud83d\udcbb",
+            "color": "jade",
+            "targetCents": 120000,
+            "savedCents": 33000,
+            "balanceUnavailable": false,
+            "deadline": "2027-01-21T03:29:24.928Z",
+            "frequency": "monthly",
+            "autoSaveCents": 15000,
+            "createdAt": "2026-06-05T03:29:24.928Z"
+        }
+    ],
+    "activeCircles": [
+        {
+            "id": "00000000-0000-4000-8000-000000000008",
+            "name": "QA Together 837206",
+            "status": "active",
+            "type": "accumulation",
+            "frequency": "weekly",
+            "contributionCents": 1000000,
+            "payoutCents": 2000000,
+            "potCents": 2000000,
+            "memberCount": 2,
+            "targetMembers": null,
+            "myPayoutRound": 1,
+            "currentRound": 1,
+            "totalRounds": 2,
+            "nextPayoutDate": "2026-10-24T10:26:44.335Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000009",
+            "name": "QA Turns 837206",
+            "status": "active",
+            "type": "rotation",
+            "frequency": "monthly",
+            "contributionCents": 2040,
+            "payoutCents": 4000,
+            "potCents": 4080,
+            "memberCount": 2,
+            "targetMembers": null,
+            "myPayoutRound": 1,
+            "currentRound": 1,
+            "totalRounds": 2,
+            "nextPayoutDate": "2026-10-24T10:24:09.242Z"
+        },
+        {
+            "id": "00000000-0000-4000-8000-000000000010",
+            "name": "QA Together 833098",
+            "status": "active",
+            "type": "accumulation",
+            "frequency": "weekly",
+            "contributionCents": 1000000,
+            "payoutCents": 2000000,
+            "potCents": 2000000,
+            "memberCount": 2,
+            "targetMembers": null,
+            "myPayoutRound": 1,
+            "currentRound": 1,
+            "totalRounds": 2,
+            "nextPayoutDate": "2026-10-24T09:20:20.145Z"
+        }
+    ],
+    "lessonsCompleted": 0,
+    "totalLessons": 6,
+    "upcomingReminder": {
+        "title": "QA Together 837206 contribution due",
+        "amountCents": 1000000,
+        "dueDate": "2026-10-24T10:26:44.335Z"
+    },
+    "upcomingPayIn": {
+        "circleId": "00000000-0000-4000-8000-000000000011",
+        "circleName": "Family susu",
+        "amountCents": 10000,
+        "round": 3,
+        "totalRounds": 4
+    }
+}

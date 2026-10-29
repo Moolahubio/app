@@ -1,0 +1,127 @@
+# XcodeGen spec for the MoolaHub iOS app. Regenerate after editing:
+#   cd apps/ios && xcodegen generate
+# The generated Moolahub.xcodeproj is committed; never hand-edit it.
+# All app code lives in Packages/MoolahubKit; this project is a thin shell.
+name: Moolahub
+
+options:
+  bundleIdPrefix: io.moolahub
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  groupSortPosition: top
+  minimumXcodeGenVersion: "2.46.0"
+  localPackagesGroup: Packages
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: 96X7N58MVV
+    CODE_SIGN_STYLE: Automatic
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEAD_CODE_STRIPPING: YES
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+    Release:
+      SWIFT_COMPILATION_MODE: wholemodule
+      VALIDATE_PRODUCT: YES
+
+packages:
+  MoolahubKit:
+    path: Packages/MoolahubKit
+
+targets:
+  Moolahub:
+    type: application
+    platform: iOS
+    sources:
+      - path: Moolahub
+      - path: Config
+        buildPhase: none
+        excludes:
+          - Local.xcconfig
+    dependencies:
+      - package: MoolahubKit
+        product: AppFeature
+    # Debug.xcconfig optionally includes the gitignored Local.xcconfig, which
+    # names this Mac (DEV_MAC_HOST) for iPhone dev builds.
+    configFiles:
+      Debug: Config/Debug.xcconfig
+    settings:
+      base:
+        PRODUCT_NAME: Moolahub
+        PRODUCT_BUNDLE_IDENTIFIER: io.moolahub.app.dev
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        # iPhone only (DESIGN.md "Applies to"); XcodeGen's application
+        # preset would otherwise set "1,2" on the target.
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+      configs:
+        # Debug allows plain HTTP to the local network only (dev backend);
+        # Release has no App Transport Security exceptions at all.
+        Debug:
+          INFOPLIST_FILE: Config/Info-Debug.plist
+        Release:
+          INFOPLIST_FILE: Config/Info.plist
+
+  MoolahubTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MoolahubTests
+    dependencies:
+      - target: Moolahub
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.moolahub.app.dev.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  MoolahubUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: MoolahubUITests
+    dependencies:
+      - target: Moolahub
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.moolahub.app.dev.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Moolahub:
+    build:
+      targets:
+        Moolahub: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - MoolahubTests
+        - MoolahubUITests
+        - package: MoolahubKit/DomainTests
+        - package: MoolahubKit/APIClientTests
+        - package: MoolahubKit/PersistenceTests
+        - package: MoolahubKit/AuthTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

@@ -1,0 +1,661 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B13C7DC9D560BF9FB75D273 /* HomeFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 401BF73BDBD180F950A8A9AC /* HomeFlowUITests.swift */; };
+		24709A6D19EA51418963B4E8 /* SavingsFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AA5A4BDCB9E37F6B3614320 /* SavingsFlowUITests.swift */; };
+		296BF52CE8E3606F1C0B5A47 /* LearnFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0751AD887D5DCB305924E795 /* LearnFlowUITests.swift */; };
+		3BF36EA3A41BB62F3B551BA2 /* MoolahubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C119D86479ACB0DD4299138 /* MoolahubApp.swift */; };
+		45243D6E5EB223CC06781E63 /* StreakFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91B31975A95CAD5C507C4392 /* StreakFlowUITests.swift */; };
+		5FA4495D31D1BC048322EA2A /* LaunchSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8E02272095DE63992BF1EEA /* LaunchSmokeTests.swift */; };
+		684B3B5C3264CA44CE3A8008 /* IntegrationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1A8BAD172843BF67EBF9A5 /* IntegrationUITests.swift */; };
+		794524B91C38C9C46A9E4340 /* UITestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84BC222274347CBD6C8B63F2 /* UITestSupport.swift */; };
+		79F15EF89902BE467810FBD7 /* CopyCheckTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2ABD3A0B4B45295AFA4362B8 /* CopyCheckTests.swift */; };
+		85A2E7E910F6034E235D52FD /* GroupsFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A92CEC44B66B30221CC44C /* GroupsFlowUITests.swift */; };
+		8D9A9896CC609351C6DDEC9F /* AppFeature in Frameworks */ = {isa = PBXBuildFile; productRef = CC408A3B06DB2C856901FDA6 /* AppFeature */; };
+		A15F64F3C8C53AB2E2AFFA1C /* QAExploratoryUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3002159DEFD8029A47969DFB /* QAExploratoryUITests.swift */; };
+		A53A4DCFCB8F9D3C28D1203E /* AppBundleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155289ED81B616CF8E4DC6CE /* AppBundleTests.swift */; };
+		B4D0171F3BCD9B83FB4681B6 /* AccountFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D8AEBC1FA84082C658345D /* AccountFlowUITests.swift */; };
+		D7D74FD0A60E78DC463055D8 /* AuthFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1398E2CCE9D4F9FB4E25AA44 /* AuthFlowUITests.swift */; };
+		E94ACB344BEF2EB7A00ED220 /* FoundationShotsUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C947C1A8A866A2F1F7AEA605 /* FoundationShotsUITests.swift */; };
+		F4BE7A76046E37DD372B7200 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE47D07F521E7B8F2FBF36FE /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0AB5D59B1BDFCA4AD0F16380 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 75708C4BC1E43D3B7250A545 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7E7D6B1F77C7082DA9A3086A;
+			remoteInfo = Moolahub;
+		};
+		FDB4179C3DEE9B59AE1A9DB5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 75708C4BC1E43D3B7250A545 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7E7D6B1F77C7082DA9A3086A;
+			remoteInfo = Moolahub;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0751AD887D5DCB305924E795 /* LearnFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnFlowUITests.swift; sourceTree = "<group>"; };
+		0C119D86479ACB0DD4299138 /* MoolahubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoolahubApp.swift; sourceTree = "<group>"; };
+		1398E2CCE9D4F9FB4E25AA44 /* AuthFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowUITests.swift; sourceTree = "<group>"; };
+		155289ED81B616CF8E4DC6CE /* AppBundleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBundleTests.swift; sourceTree = "<group>"; };
+		282E086F4E7BAE48EB8CD560 /* MoolahubUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MoolahubUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2ABD3A0B4B45295AFA4362B8 /* CopyCheckTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyCheckTests.swift; sourceTree = "<group>"; };
+		2B1A8BAD172843BF67EBF9A5 /* IntegrationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationUITests.swift; sourceTree = "<group>"; };
+		2B6F1D5BC9DB09607367C160 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3002159DEFD8029A47969DFB /* QAExploratoryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QAExploratoryUITests.swift; sourceTree = "<group>"; };
+		3AA5A4BDCB9E37F6B3614320 /* SavingsFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavingsFlowUITests.swift; sourceTree = "<group>"; };
+		401BF73BDBD180F950A8A9AC /* HomeFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeFlowUITests.swift; sourceTree = "<group>"; };
+		4484A597011E3E482BE64C83 /* Moolahub.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Moolahub.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D21A24677B8C839001AB9D8 /* MoolahubKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MoolahubKit; path = Packages/MoolahubKit; sourceTree = SOURCE_ROOT; };
+		5361102CCC04EE87AB3CDE6E /* Local.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.example.xcconfig; sourceTree = "<group>"; };
+		63AC6C2E3F85DEBE566FBD4B /* MoolahubTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MoolahubTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		84BC222274347CBD6C8B63F2 /* UITestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestSupport.swift; sourceTree = "<group>"; };
+		91B31975A95CAD5C507C4392 /* StreakFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakFlowUITests.swift; sourceTree = "<group>"; };
+		A1A92CEC44B66B30221CC44C /* GroupsFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupsFlowUITests.swift; sourceTree = "<group>"; };
+		B3B2EAE9FAB93DE670A5DC34 /* Info-Debug.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Info-Debug.plist"; sourceTree = "<group>"; };
+		C947C1A8A866A2F1F7AEA605 /* FoundationShotsUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationShotsUITests.swift; sourceTree = "<group>"; };
+		D8E02272095DE63992BF1EEA /* LaunchSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSmokeTests.swift; sourceTree = "<group>"; };
+		F4D8AEBC1FA84082C658345D /* AccountFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountFlowUITests.swift; sourceTree = "<group>"; };
+		F81BBC7EC7A6C3CC31D55466 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		FE47D07F521E7B8F2FBF36FE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E9233E8953DADACBDAFF9CDC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D9A9896CC609351C6DDEC9F /* AppFeature in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		17964B86CE6E6C20DF1D1512 /* MoolahubUITests */ = {
+			isa = PBXGroup;
+			children = (
+				F4D8AEBC1FA84082C658345D /* AccountFlowUITests.swift */,
+				1398E2CCE9D4F9FB4E25AA44 /* AuthFlowUITests.swift */,
+				C947C1A8A866A2F1F7AEA605 /* FoundationShotsUITests.swift */,
+				A1A92CEC44B66B30221CC44C /* GroupsFlowUITests.swift */,
+				401BF73BDBD180F950A8A9AC /* HomeFlowUITests.swift */,
+				2B1A8BAD172843BF67EBF9A5 /* IntegrationUITests.swift */,
+				D8E02272095DE63992BF1EEA /* LaunchSmokeTests.swift */,
+				0751AD887D5DCB305924E795 /* LearnFlowUITests.swift */,
+				3002159DEFD8029A47969DFB /* QAExploratoryUITests.swift */,
+				3AA5A4BDCB9E37F6B3614320 /* SavingsFlowUITests.swift */,
+				91B31975A95CAD5C507C4392 /* StreakFlowUITests.swift */,
+				84BC222274347CBD6C8B63F2 /* UITestSupport.swift */,
+			);
+			path = MoolahubUITests;
+			sourceTree = "<group>";
+		};
+		18A2847E3AB9107AB4CEAC8D /* Moolahub */ = {
+			isa = PBXGroup;
+			children = (
+				CB6040AA8AD93DB8715101FC /* App */,
+				6F44BA95B28B9807C6F68F5C /* Resources */,
+			);
+			path = Moolahub;
+			sourceTree = "<group>";
+		};
+		59C739B1BD47DBF2F23BB60F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4484A597011E3E482BE64C83 /* Moolahub.app */,
+				63AC6C2E3F85DEBE566FBD4B /* MoolahubTests.xctest */,
+				282E086F4E7BAE48EB8CD560 /* MoolahubUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6F44BA95B28B9807C6F68F5C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				FE47D07F521E7B8F2FBF36FE /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		893B9FF791098F18D7DDE60F /* MoolahubTests */ = {
+			isa = PBXGroup;
+			children = (
+				155289ED81B616CF8E4DC6CE /* AppBundleTests.swift */,
+				2ABD3A0B4B45295AFA4362B8 /* CopyCheckTests.swift */,
+			);
+			path = MoolahubTests;
+			sourceTree = "<group>";
+		};
+		CB6040AA8AD93DB8715101FC /* App */ = {
+			isa = PBXGroup;
+			children = (
+				0C119D86479ACB0DD4299138 /* MoolahubApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D61DB09EB8460D8F62A6B2ED = {
+			isa = PBXGroup;
+			children = (
+				F821E1FC3B26074ACF979054 /* Config */,
+				18A2847E3AB9107AB4CEAC8D /* Moolahub */,
+				893B9FF791098F18D7DDE60F /* MoolahubTests */,
+				17964B86CE6E6C20DF1D1512 /* MoolahubUITests */,
+				DA36E2D720701A5E006BEC63 /* Packages */,
+				59C739B1BD47DBF2F23BB60F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DA36E2D720701A5E006BEC63 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				4D21A24677B8C839001AB9D8 /* MoolahubKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		F821E1FC3B26074ACF979054 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				F81BBC7EC7A6C3CC31D55466 /* Debug.xcconfig */,
+				B3B2EAE9FAB93DE670A5DC34 /* Info-Debug.plist */,
+				2B6F1D5BC9DB09607367C160 /* Info.plist */,
+				5361102CCC04EE87AB3CDE6E /* Local.example.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0C3D620C9735D6B42E32AD39 /* MoolahubUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A300DB586EF32C2E9D98B075 /* Build configuration list for PBXNativeTarget "MoolahubUITests" */;
+			buildPhases = (
+				51D6C8B3737F03BCB5700B30 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8C61F7D93F3ED7E3BAF34EC1 /* PBXTargetDependency */,
+			);
+			name = MoolahubUITests;
+			packageProductDependencies = (
+			);
+			productName = MoolahubUITests;
+			productReference = 282E086F4E7BAE48EB8CD560 /* MoolahubUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		7E7D6B1F77C7082DA9A3086A /* Moolahub */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01AAE3A885C69E33B54EF414 /* Build configuration list for PBXNativeTarget "Moolahub" */;
+			buildPhases = (
+				5D2A2A9A7617B4AA9E1F477F /* Sources */,
+				557D71513D30F75E272C6B53 /* Resources */,
+				E9233E8953DADACBDAFF9CDC /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Moolahub;
+			packageProductDependencies = (
+				CC408A3B06DB2C856901FDA6 /* AppFeature */,
+			);
+			productName = Moolahub;
+			productReference = 4484A597011E3E482BE64C83 /* Moolahub.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DF048FF698843F5F1B53715A /* MoolahubTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 61F021CA7022AB27418C839A /* Build configuration list for PBXNativeTarget "MoolahubTests" */;
+			buildPhases = (
+				15BAF34D074417C6BDEB9ACA /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				12FD0EA9043F0E4D57CB2687 /* PBXTargetDependency */,
+			);
+			name = MoolahubTests;
+			packageProductDependencies = (
+			);
+			productName = MoolahubTests;
+			productReference = 63AC6C2E3F85DEBE566FBD4B /* MoolahubTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		75708C4BC1E43D3B7250A545 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					0C3D620C9735D6B42E32AD39 = {
+						DevelopmentTeam = 96X7N58MVV;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 7E7D6B1F77C7082DA9A3086A;
+					};
+					7E7D6B1F77C7082DA9A3086A = {
+						DevelopmentTeam = 96X7N58MVV;
+						ProvisioningStyle = Automatic;
+					};
+					DF048FF698843F5F1B53715A = {
+						DevelopmentTeam = 96X7N58MVV;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = E17F232C7BACB876E871E6D5 /* Build configuration list for PBXProject "Moolahub" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D61DB09EB8460D8F62A6B2ED;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0A0F8285980DD313AB0BA0D4 /* XCLocalSwiftPackageReference "Packages/MoolahubKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 59C739B1BD47DBF2F23BB60F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7E7D6B1F77C7082DA9A3086A /* Moolahub */,
+				DF048FF698843F5F1B53715A /* MoolahubTests */,
+				0C3D620C9735D6B42E32AD39 /* MoolahubUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		557D71513D30F75E272C6B53 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F4BE7A76046E37DD372B7200 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		15BAF34D074417C6BDEB9ACA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A53A4DCFCB8F9D3C28D1203E /* AppBundleTests.swift in Sources */,
+				79F15EF89902BE467810FBD7 /* CopyCheckTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		51D6C8B3737F03BCB5700B30 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4D0171F3BCD9B83FB4681B6 /* AccountFlowUITests.swift in Sources */,
+				D7D74FD0A60E78DC463055D8 /* AuthFlowUITests.swift in Sources */,
+				E94ACB344BEF2EB7A00ED220 /* FoundationShotsUITests.swift in Sources */,
+				85A2E7E910F6034E235D52FD /* GroupsFlowUITests.swift in Sources */,
+				0B13C7DC9D560BF9FB75D273 /* HomeFlowUITests.swift in Sources */,
+				684B3B5C3264CA44CE3A8008 /* IntegrationUITests.swift in Sources */,
+				5FA4495D31D1BC048322EA2A /* LaunchSmokeTests.swift in Sources */,
+				296BF52CE8E3606F1C0B5A47 /* LearnFlowUITests.swift in Sources */,
+				A15F64F3C8C53AB2E2AFFA1C /* QAExploratoryUITests.swift in Sources */,
+				24709A6D19EA51418963B4E8 /* SavingsFlowUITests.swift in Sources */,
+				45243D6E5EB223CC06781E63 /* StreakFlowUITests.swift in Sources */,
+				794524B91C38C9C46A9E4340 /* UITestSupport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5D2A2A9A7617B4AA9E1F477F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3BF36EA3A41BB62F3B551BA2 /* MoolahubApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		12FD0EA9043F0E4D57CB2687 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7E7D6B1F77C7082DA9A3086A /* Moolahub */;
+			targetProxy = 0AB5D59B1BDFCA4AD0F16380 /* PBXContainerItemProxy */;
+		};
+		8C61F7D93F3ED7E3BAF34EC1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7E7D6B1F77C7082DA9A3086A /* Moolahub */;
+			targetProxy = FDB4179C3DEE9B59AE1A9DB5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		09946707F840A28EF06BD8B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Config/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.moolahub.app.dev;
+				PRODUCT_NAME = Moolahub;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		2F92D2EE5F0D68D4FC682D53 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.moolahub.app.dev.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Moolahub.app/Moolahub";
+			};
+			name = Release;
+		};
+		35C12C27437C4152F6CB9A43 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = F81BBC7EC7A6C3CC31D55466 /* Debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "Config/Info-Debug.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.moolahub.app.dev;
+				PRODUCT_NAME = Moolahub;
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		3FCE8148E892D4EB0BBF16AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.moolahub.app.dev.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Moolahub.app/Moolahub";
+			};
+			name = Debug;
+		};
+		5ACA3C1AB2467264CF8DC93F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 96X7N58MVV;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		749995A1626A1D9AD75D551C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.moolahub.app.dev.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Moolahub;
+			};
+			name = Debug;
+		};
+		B25124CB1E0260C9A062CC38 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 96X7N58MVV;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B670A0EF543C1BCA9CE84123 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = io.moolahub.app.dev.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Moolahub;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		01AAE3A885C69E33B54EF414 /* Build configuration list for PBXNativeTarget "Moolahub" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				35C12C27437C4152F6CB9A43 /* Debug */,
+				09946707F840A28EF06BD8B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		61F021CA7022AB27418C839A /* Build configuration list for PBXNativeTarget "MoolahubTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3FCE8148E892D4EB0BBF16AE /* Debug */,
+				2F92D2EE5F0D68D4FC682D53 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A300DB586EF32C2E9D98B075 /* Build configuration list for PBXNativeTarget "MoolahubUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				749995A1626A1D9AD75D551C /* Debug */,
+				B670A0EF543C1BCA9CE84123 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E17F232C7BACB876E871E6D5 /* Build configuration list for PBXProject "Moolahub" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5ACA3C1AB2467264CF8DC93F /* Debug */,
+				B25124CB1E0260C9A062CC38 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		0A0F8285980DD313AB0BA0D4 /* XCLocalSwiftPackageReference "Packages/MoolahubKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MoolahubKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CC408A3B06DB2C856901FDA6 /* AppFeature */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = AppFeature;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 75708C4BC1E43D3B7250A545 /* Project object */;
+}

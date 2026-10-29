@@ -1,0 +1,4 @@
+// Copy to Local.xcconfig (gitignored) or let scripts/dev-ios-backend.sh write
+// it. The value is this Mac's local network name, as
+// `scutil --get LocalHostName` prints it, followed by ".local".
+DEV_MAC_HOST = your-mac.local

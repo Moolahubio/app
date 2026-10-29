@@ -1,0 +1,12 @@
+# This Mac's name for iPhone dev builds (Config/Debug.xcconfig includes it)
+Config/Local.xcconfig
+# The full design spec stays private (README.md, "Design source of truth")
+/DESIGN.md
+# Xcode per-user state
+xcuserdata/
+*.xcuserstate
+# SwiftPM / build output (pass -derivedDataPath outside the repo)
+.build/
+.swiftpm/
+DerivedData/
+build/

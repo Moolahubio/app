@@ -1,0 +1,30 @@
+{
+    "slug": "what-is-a-susu",
+    "title": "What is a Susu?",
+    "summary": "Learn how rotating savings groups have helped communities across Africa and the diaspora build wealth for generations.",
+    "minutes": 5,
+    "level": "beginner",
+    "category": "circles",
+    "emoji": "\ud83e\udd1d",
+    "completed": false,
+    "body": [
+        {
+            "heading": "The Power of Collective Saving",
+            "text": "A Susu (also called Esusu, Tontine, or Chit Fund depending on the culture) is a rotating savings and credit association. A group of trusted people each contribute a fixed amount at regular intervals, and each period one member receives that round's pot."
+        },
+        {
+            "heading": "How It Works",
+            "text": "Imagine 10 friends each contribute $100 every month. Each month, one person receives that month's pot of $1,000, less any fee the circle charges. After 10 months, everyone has paid in and had their turn. The value is in receiving a lump sum you could not have saved alone in one month. On MoolaHub, each circle shows its fee and payout before you join."
+        },
+        {
+            "heading": "Why It Works",
+            "text": "The social accountability of the group keeps everyone disciplined. You save not just for yourself, but for your circle. This peer accountability has made Susus more effective than many formal savings products for communities that value collective responsibility."
+        }
+    ],
+    "takeaways": [
+        "A Susu is a rotating savings group where members take turns receiving the pot",
+        "Lump sums are powerful for major purchases, emergencies, and investment",
+        "Social accountability helps members stay disciplined about saving",
+        "Every MoolaHub circle shows its rules, fee and payout order up front"
+    ]
+}

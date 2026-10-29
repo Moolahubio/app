@@ -1,0 +1,9 @@
+// Debug build settings for the app target (project.yml configFiles).
+//
+// Local.xcconfig is optional and gitignored: it names this Mac on the local
+// network so an iPhone dev build can reach the dev server, for example
+//   DEV_MAC_HOST = my-mac.local
+// scripts/dev-ios-backend.sh writes it; Local.example.xcconfig shows the format.
+// Without it the iPhone build starts on a placeholder address that you replace
+// in Developer settings.
+#include? "Local.xcconfig"

@@ -1,0 +1,62 @@
+[
+    {
+        "slug": "what-is-a-susu",
+        "title": "What is a Susu?",
+        "summary": "Learn how rotating savings groups have helped communities across Africa and the diaspora build wealth for generations.",
+        "minutes": 5,
+        "level": "beginner",
+        "category": "circles",
+        "emoji": "\ud83e\udd1d",
+        "completed": false
+    },
+    {
+        "slug": "understanding-usdc",
+        "title": "What is USDC?",
+        "summary": "USDC is a dollar-pegged digital currency built for speed and transparency. Learn why MoolaHub uses it for savings.",
+        "minutes": 4,
+        "level": "beginner",
+        "category": "crypto",
+        "emoji": "\ud83d\udcb5",
+        "completed": false
+    },
+    {
+        "slug": "setting-savings-goals",
+        "title": "Savings goals that actually stick",
+        "summary": "The science and art of setting savings goals that you actually achieve, and how a simple routine makes it easier.",
+        "minutes": 6,
+        "level": "beginner",
+        "category": "personal-finance",
+        "emoji": "\ud83c\udfaf",
+        "completed": false
+    },
+    {
+        "slug": "building-an-emergency-fund",
+        "title": "Building an emergency fund",
+        "summary": "Your emergency fund is the foundation of financial resilience. Here's exactly how to build one, even on a tight budget.",
+        "minutes": 7,
+        "level": "beginner",
+        "category": "personal-finance",
+        "emoji": "\ud83d\udee1\ufe0f",
+        "completed": false
+    },
+    {
+        "slug": "understanding-blockchain",
+        "title": "Blockchain, explained simply",
+        "summary": "What blockchain actually is, why it matters for savings, and how to think about it without the hype.",
+        "minutes": 5,
+        "level": "beginner",
+        "category": "crypto",
+        "emoji": "\u26d3\ufe0f",
+        "completed": false
+    },
+    {
+        "slug": "sending-money-internationally",
+        "title": "Sending money abroad",
+        "summary": "Compare remittance options and understand why crypto rails are changing the cost of sending money home.",
+        "minutes": 6,
+        "level": "intermediate",
+        "category": "remittance",
+        "emoji": "\ud83c\udf0d",
+        "completed": false
+    }
+]
