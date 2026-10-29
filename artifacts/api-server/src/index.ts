@@ -9,6 +9,14 @@ import { devEmailCodeLoggingEnabled } from "./lib/email";
 import { startSettlementLoop } from "./lib/settlement";
 import { startStreakLoop } from "./lib/streaks";
 import { startReferralAccrualLoop } from "./lib/referrals";
+import { assertRoleAddresses } from "./lib/roleAddresses";
+import { assertNoLegacyChainEnv } from "./lib/legacyChainEnv";
+import { platformAddress } from "./lib/chain";
+
+// Before the server takes a request: a Base environment carries no testnet
+// setting, and role addresses are well formed (CLAUDE.md).
+assertNoLegacyChainEnv(process.env);
+assertRoleAddresses(process.env, [platformAddress()]);
 
 const rawPort = process.env["PORT"];
 
