@@ -117,11 +117,12 @@ keywords = ["re_"]
 
 # This project's server secrets by name, with a value that is not a reference
 # or a placeholder (artifacts/api-server/.env.example). DATABASE_URL is left to
-# url-credentials.
+# url-credentials. The value must sit on the same line ([ \t], not \s), so an
+# empty NAME= never picks up the next line.
 [[rules]]
 id = "moolahub-secret-assignment"
 description = "A Moolahub server secret assigned a value"
-regex = '''\b(?:PRIVY_APP_SECRET(?:_READONLY)?|PRIVY_WEBHOOK_SECRET|APP_ENCRYPTION_KEY|OPERATOR_TOKEN|RESEND_API_KEY|APNS_KEY|SENTRY_AUTH_TOKEN|SESSION_SECRET|ETHERSCAN_API_KEY|[A-Z0-9_]*PRIVATE_KEY)\b["']?\s*[:=]\s*["'`]?([^\s"'`#,;]{8,})'''
+regex = '''\b(?:PRIVY_APP_SECRET(?:_READONLY)?|PRIVY_WEBHOOK_SECRET|APP_ENCRYPTION_KEY|OPERATOR_TOKEN|RESEND_API_KEY|APNS_KEY|SENTRY_AUTH_TOKEN|SESSION_SECRET|ETHERSCAN_API_KEY|[A-Z0-9_]*PRIVATE_KEY)\b["']?[ \t]*[:=][ \t]*["'`]?([^\s"'`#,;]{8,})'''
 secretGroup = 1
 entropy = 2.5
 keywords = [
@@ -152,13 +153,15 @@ regexes = ['''(?i)pass(?:word|wd)?\b''']
 
 # The demo password of the local iOS dev seed. It only ever exists in a laptop
 # database that scripts/dev-ios-backend.sh creates.
+# (gitleaks hands a line-target regex the line with the newline before it,
+# so every ^-anchored line regex here starts with ^\n?.)
 [[allowlists]]
 description = "Local-only DEMO_PASSWORD of the iOS dev seed"
 targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''(?:^|/)artifacts/api-server/scripts/seed-ios-dev\.ts$''']
-regexes = ['''^export const DEMO_PASSWORD = ''']
+regexes = ['''^\n?export const DEMO_PASSWORD = ''']
 
 # SHA-256 checksums of the bundled font files: the rows of the font table in
 # the iOS design doc, and nothing else in that file. gitleaks can hand a
@@ -188,7 +191,7 @@ targetRules = ["evm-private-key"]
 condition = "AND"
 regexTarget = "line"
 paths = ['''(?:^|/)contracts/INTERNAL_AUDIT_REPORT\.md$''']
-regexes = ['''^\| [\w. ()]+ \| [0-9,]+ \| `0x[0-9a-fA-F]{64}` \|$''']
+regexes = ['''^\n?\| [\w. ()]+ \| [0-9,]+ \| `0x[0-9a-fA-F]{64}` \|$''']
 
 # Fake values that the Sentry scrub test and the request log test plant to
 # prove none of them reaches Sentry or a log line. Each one is listed whole, so
