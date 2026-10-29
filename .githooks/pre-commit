@@ -1,0 +1,26 @@
+#!/bin/sh
+# Blocks a commit whose staged changes add a secret (docs/privy-account-layer.md
+# §2). Switched on by scripts/setup.sh (git config core.hooksPath .githooks).
+# gitleaks 8.25 or newer runs when it is installed (older ones cannot read the
+# [[allowlists]] tables in .gitleaks.toml); otherwise the dependency-free
+# fallback scanner does. Neither prints a secret's value. CI scans again either way.
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+if command -v gitleaks >/dev/null 2>&1; then
+  version="$(gitleaks version 2>/dev/null | sed -n 's/^v\{0,1\}\([0-9][0-9]*\)\.\([0-9][0-9]*\).*/\1 \2/p' | head -n 1)"
+  major="${version% *}"
+  minor="${version#* }"
+  if [ -n "$version" ] && { [ "$major" -gt 8 ] || { [ "$major" -eq 8 ] && [ "$minor" -ge 25 ]; }; }; then
+    exec gitleaks git --pre-commit --staged --redact --verbose --no-banner --config .gitleaks.toml .
+  fi
+  echo "pre-commit: gitleaks ${version:-of an unknown version} is older than 8.25, so the fallback scanner runs" >&2
+else
+  echo "pre-commit: gitleaks is not installed, so the fallback scanner runs (gitleaks is recommended: https://github.com/gitleaks/gitleaks)" >&2
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node is not installed either; the secret scan did not run. CI still scans this commit." >&2
+  exit 0
+fi
+exec node scripts/secret-scan.mjs --staged

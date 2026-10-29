@@ -1,0 +1,217 @@
+# gitleaks configuration (docs/privy-account-layer.md §2, "Keeping secrets out
+# of git"). CI runs a pinned gitleaks with this file on every push and pull
+# request and over the full history (.github/workflows/secret-scan.yml). The
+# pre-commit hook (.githooks/pre-commit) uses it when gitleaks is installed, and
+# the fallback scanner (scripts/secret-scan.mjs) reads the [[allowlists]] below,
+# so both scanners skip the same known test literals. The fallback has a rule
+# with the same id for each custom rule here, so targetRules means the same in
+# both.
+#
+# An allowlist entry is for a literal that is known to be fake. Keep each one
+# narrow (one path and one line shape, and only the rules it must silence) and
+# say why it is safe. A real secret is rotated first and investigated second;
+# it never gets an allowlist entry.
+#
+# The custom rules below have not yet run under gitleaks itself; the first CI
+# run is their test.
+
+title = "Moolahub"
+
+[extend]
+# gitleaks' built-in rules (AWS, GCP, Stripe, GitHub, Slack, JWT, Sentry,
+# private keys and the rest), plus the rules below. The built-in rules have
+# nothing for a bare 64-hex key, a password in a URL, an RPC URL's key or this
+# project's own secret names.
+useDefault = true
+
+# Privy app secrets created since the prefix was introduced match
+# privy_app_secret_[A-Za-z0-9]{16,}; older ones have no prefix
+# (https://docs.privy.io/security/implementation-guide/security-checklist).
+[[rules]]
+id = "privy-app-secret"
+description = "Privy app secret"
+regex = '''privy_app_secret_[A-Za-z0-9]{16,}'''
+keywords = ["privy_app_secret_"]
+
+# Privy authorization private keys: wallet-auth: since January 2025, wallet-api:
+# on some older keys (same source).
+[[rules]]
+id = "privy-authorization-key"
+description = "Privy authorization private key"
+regex = '''wallet-(?:auth|api):[A-Za-z0-9+/]{16,}={0,2}'''
+keywords = ["wallet-auth:", "wallet-api:"]
+
+# A P-256 private key body (PKCS#8, base64) without its PEM lines: an
+# unprefixed Privy authorization key (older ones may have no prefix, same
+# source) or an APNs .p8 key.
+[[rules]]
+id = "p256-private-key"
+description = "P-256 private key body (PKCS#8)"
+regex = '''MIG[HT]AgEAMBMGByqGSM49AgEGCCqGSM49AwEHB[A-Za-z0-9+/=]{20,}'''
+keywords = ["agegccqgsm49aweh"]
+
+# A bare 64-hex value: an EVM private key in JSON, Solidity, a script or a
+# note. Hashes look the same, so a value named as a hash on its own line is
+# skipped. The fallback scanner also reads the Markdown table header and an
+# expression left open on the line before; gitleaks cannot.
+[[rules]]
+id = "evm-private-key"
+description = "64-hex private key (EVM)"
+regex = '''(?:^|[^0-9A-Za-z])(?:0x)?([0-9a-fA-F]{64})(?:[^0-9A-Za-z]|$)'''
+secretGroup = 1
+entropy = 3.5
+  [[rules.allowlists]]
+  description = "Files made of hashes: lockfiles, deployment records, gas snapshots"
+  paths = [
+    '''(?:^|/)(?:pnpm-lock\.yaml|uv\.lock|package-lock\.json|Package\.resolved|\.gas-snapshot)$''',
+    '''(?:^|/)contracts/(?:deployments|snapshots|broadcast)/''',
+  ]
+  [[rules.allowlists]]
+  description = "A value named as a hash, checksum, salt, topic or storage slot on its own line"
+  regexTarget = "line"
+  regexes = [
+    '''(?i)(?:sha-?256|checksum|digest|integrity|hash|keccak|merkle|salt|topic|selector|slot)\w*["'\]]?\s*(?:[:=,(|]|=>)''',
+    '''\bbytes32\b''',
+    '''\b(?:keccak256|vm\.(?:store|load))\(''',
+  ]
+
+# A password in a URL (postgres://user:password@host). Local hosts, the compose
+# `db` service and placeholder passwords are skipped.
+[[rules]]
+id = "url-credentials"
+description = "Password in a URL"
+regex = '''[A-Za-z][A-Za-z0-9+.-]{1,20}://[^\s/:@'"`]{1,100}:([^\s/@'"`]{1,200})@[^\s/?#'"`]+'''
+secretGroup = 1
+keywords = ["://"]
+  [[rules.allowlists]]
+  description = "Local hosts and reserved test domains"
+  regexTarget = "match"
+  regexes = [
+    '''@(?:localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|db|[\w.-]+\.(?:local|localhost|test|example|invalid)|example\.(?:com|org))(?::\d+)?$''',
+  ]
+  [[rules.allowlists]]
+  description = "A password that is wholly a placeholder"
+  regexes = [
+    '''(?i)^(?:\$\{[^}]*\}|\$[A-Za-z_]\w*|<[^>]*>|\{[^}]*\}|\*+|password|pass|secret|postgres|user|x{3,}|changeme)$''',
+  ]
+
+# An RPC URL that carries the provider's key in its path.
+[[rules]]
+id = "rpc-url-key"
+description = "RPC provider key in a URL"
+regex = '''(?i)(?:alchemy\.com/v2|infura\.io/v3|quiknode\.pro|api\.developer\.coinbase\.com/rpc/v1/[a-z0-9-]+)/([A-Za-z0-9_-]{16,})'''
+secretGroup = 1
+keywords = ["alchemy.com/v2", "infura.io/v3", "quiknode.pro", "api.developer.coinbase.com/rpc"]
+  [[rules.allowlists]]
+  description = "Placeholders such as YOUR_API_KEY"
+  regexes = ['''(?i)your|api_?key|x{4}''']
+
+# Resend API keys start with re_ (format not verified against Resend's docs).
+[[rules]]
+id = "resend-api-key"
+description = "Resend API key"
+regex = '''\b(re_[A-Za-z0-9_]{20,})\b'''
+secretGroup = 1
+entropy = 4.0
+keywords = ["re_"]
+
+# This project's server secrets by name, with a value that is not a reference
+# or a placeholder (artifacts/api-server/.env.example). DATABASE_URL is left to
+# url-credentials.
+[[rules]]
+id = "moolahub-secret-assignment"
+description = "A Moolahub server secret assigned a value"
+regex = '''\b(?:PRIVY_APP_SECRET(?:_READONLY)?|PRIVY_WEBHOOK_SECRET|APP_ENCRYPTION_KEY|OPERATOR_TOKEN|RESEND_API_KEY|APNS_KEY|SENTRY_AUTH_TOKEN|SESSION_SECRET|ETHERSCAN_API_KEY|[A-Z0-9_]*PRIVATE_KEY)\b["']?\s*[:=]\s*["'`]?([^\s"'`#,;]{8,})'''
+secretGroup = 1
+entropy = 2.5
+keywords = [
+  "privy_app_secret", "privy_webhook_secret", "app_encryption_key", "operator_token", "resend_api_key",
+  "apns_key", "sentry_auth_token", "session_secret", "etherscan_api_key", "private_key",
+]
+  [[rules.allowlists]]
+  description = "References and placeholders: $VAR, ${{ secrets.X }}, <key>, process.env.X, a call, a bare word, 0xYOUR_KEY"
+  regexes = [
+    '''^(?:[$<{\[]|process\.|env\.|import\.|secrets\.|vars\.)''',
+    '''[<>{}$(]|\.\.\.''',
+    '''^[A-Za-z_.]+$''',
+    '''(?i)your|x{3,}|placeholder|changeme|example''',
+  ]
+
+# Fake passwords typed by the API e2e tests and the iOS unit and UI tests. Each
+# test creates its own throwaway user in a local or CI database.
+[[allowlists]]
+description = "Fake passwords in tests"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = [
+  '''(?:^|/)artifacts/api-server/src/lib/[^/]+\.(?:e2e|test)\.ts$''',
+  '''(?:^|/)apps/ios/(?:MoolahubTests|MoolahubUITests|Packages/MoolahubKit/Tests)/.+\.swift$''',
+]
+regexes = ['''(?i)pass(?:word|wd)?\b''']
+
+# The demo password of the local iOS dev seed. It only ever exists in a laptop
+# database that scripts/dev-ios-backend.sh creates.
+[[allowlists]]
+description = "Local-only DEMO_PASSWORD of the iOS dev seed"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''(?:^|/)artifacts/api-server/scripts/seed-ios-dev\.ts$''']
+regexes = ['''^export const DEMO_PASSWORD = ''']
+
+# SHA-256 checksums of the bundled font files: the rows of the font table in
+# the iOS design doc, and nothing else in that file. gitleaks can hand a
+# line-target regex the line with the newline before it, hence the \n?.
+[[allowlists]]
+description = "Font checksums in the iOS design doc"
+targetRules = ["evm-private-key", "generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''(?:^|/)apps/ios/docs/DESIGN-v1\.md$''']
+regexes = ['''^\n?\| `[A-Za-z0-9-]+\.ttf` \|.*\| `[0-9a-f]{64}` \|$''']
+
+# Solidity hash constants whose value sits on the line after the declaration
+# (bytes32 internal constant X_CODEHASH =, then 0x…;) or inside a call.
+[[allowlists]]
+description = "Solidity hash constants continued on their own line"
+targetRules = ["evm-private-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''(?:^|/)contracts/.+\.sol$''']
+regexes = ['''^\s*0x[0-9a-fA-F]{64}\s*[;,)]''']
+
+# The initcode hash table in the internal audit report (keccak256 of creation code).
+[[allowlists]]
+description = "Initcode hashes in the internal audit report"
+targetRules = ["evm-private-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''(?:^|/)contracts/INTERNAL_AUDIT_REPORT\.md$''']
+regexes = ['''^\| [\w. ()]+ \| [0-9,]+ \| `0x[0-9a-fA-F]{64}` \|$''']
+
+# Fake values that the Sentry scrub test and the request log test plant to
+# prove none of them reaches Sentry or a log line. Each one is listed whole, so
+# anything else pasted into either file is still caught. The tests build their
+# session tokens, JWTs, refresh tokens and Privy secrets and keys at runtime,
+# so only the fakes still written out somewhere public are here: the request
+# log test's operator token and unprefixed app secret, the Sentry test's RPC
+# key, and the session token (SHA-256 of "test") and JWT that commit 54da0cf
+# published in the Sentry test. The session token is split in two halves so
+# this file holds no 64-hex run of its own.
+[[allowlists]]
+description = "Planted fake secrets in the scrub and redaction tests"
+targetRules = ["generic-api-key", "jwt", "evm-private-key", "moolahub-secret-assignment"]
+condition = "AND"
+regexTarget = "secret"
+paths = [
+  '''(?:^|/)artifacts/api-server/src/lib/sentryScrub\.test\.ts$''',
+  '''(?:^|/)artifacts/api-server/src/lib/requestLog\.test\.ts$''',
+]
+regexes = [
+  '''^op_fake_operator_token_for_the_log_test_0000$''',
+  '''^FakeUnprefixedAppSecretForTheLogTest0000$''',
+  '''^Zx81kQp0LmN2bV7cX4sR9tY6uW3eA5dF$''',
+  '''^(?:0x)?9f86d081884c7d659a2feaa0c55ad015(?:a3bf4f1b2b0b822cd15d6c15b0f00a08)$''',
+  '''^eyJhbGciOiJFUzI1NiJ9\.eyJzdWIiOiJkaWQ6cHJpdnk6YWJjIn0\.c2lnbmF0dXJlLXZhbHVl$''',
+]
