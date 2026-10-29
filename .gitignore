@@ -50,3 +50,6 @@ Thumbs.db
 
 # Local reference screen recordings (too large for git; one is >100MB)
 attached_assets/ios-reference/
+
+# Local iOS dev backend secrets (scripts/dev-ios-backend.sh)
+.dev/
