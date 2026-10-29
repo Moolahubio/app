@@ -9,6 +9,7 @@
  * Offline, no database. Run: pnpm --filter @workspace/api-server test:sentry-scrub
  */
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import type { Request } from "express";
 
 delete process.env.SENTRY_DSN;
@@ -24,10 +25,16 @@ assert.equal(Sentry.getClient(), undefined, "no SENTRY_DSN means no Sentry clien
 captureServerError(new Error("ignored")); // a no-op, must not throw
 
 // ---- the secrets ----
+// The token, JWT and Privy key fakes are built at runtime, so they never sit
+// in this public source as credential-shaped literals.
+const b64url = (s: string) => Buffer.from(s).toString("base64url");
+const fakeJwt = (sub: string, sig: string) =>
+  [JSON.stringify({ alg: "ES256" }), JSON.stringify({ sub }), sig].map(b64url).join(".");
+
 const USER_ID = "3b241101-e2bb-4255-8caf-4136c566a962";
-const SESSION_TOKEN = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+const SESSION_TOKEN = createHash("sha256").update("test").digest("hex");
 const RPC_KEY = "Zx81kQp0LmN2bV7cX4sR9tY6uW3eA5dF";
-const PRIVY_JWT = "eyJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJkaWQ6cHJpdnk6YWJjIn0.c2lnbmF0dXJlLXZhbHVl";
+const PRIVY_JWT = fakeJwt("did:privy:abc", "signature-value");
 const PRIVY_SIGNATURE = "MEUCIQDx3bZpLr0H5a2f8W1kJ9yQp7nVt4sR6oG2mXc8eYdAiB3";
 const EMAIL = "ama.mensah@example.com";
 const ADDRESS = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
@@ -37,10 +44,24 @@ const AMOUNT_DISPLAY = "9,876,543.21";
 const AMOUNT_DOLLARS = "4,321.09";
 const AMOUNT_CENTS = "987654321";
 const OTP = "481516";
+const REFRESH_TOKEN = "rt_" + b64url("SentryFakeRefreshToken0000001");
+const PRIVY_ID_TOKEN = fakeJwt("did:privy:identity", "id-token-signature");
+const PRIVY_APP_SECRET = "privy_app_secret_" + "FakeSentryTestValue" + "0".repeat(9);
+const PRIVY_AUTH_KEY = "wallet-auth:" + b64url("FakeSentryAuthorizationKey00");
+const NONCE = "SentryFakeNonce42";
+const EMAIL_CODE = "735911";
+const BASIC_CREDENTIAL = Buffer.from(`cmfakeappid:${PRIVY_APP_SECRET}`).toString("base64");
+
+// The fakes must keep the real formats, or the test stops exercising the real masks.
+assert.match(SESSION_TOKEN, /^[0-9a-f]{64}$/);
+for (const t of [PRIVY_JWT, PRIVY_ID_TOKEN]) assert.match(t, /^eyJ[\w-]+\.eyJ[\w-]+\.[\w-]+$/);
+assert.match(PRIVY_APP_SECRET, /^privy_app_secret_[A-Za-z0-9]{16,}$/);
+assert.match(PRIVY_AUTH_KEY, /^wallet-auth:[A-Za-z0-9+/]{16,}={0,2}$/);
 
 const SECRETS: Record<string, string> = {
   SESSION_TOKEN, RPC_KEY, PRIVY_JWT, PRIVY_SIGNATURE, EMAIL, ADDRESS, TX_HASH, PASSWORD,
   AMOUNT_DISPLAY, AMOUNT_DOLLARS, AMOUNT_CENTS, OTP,
+  REFRESH_TOKEN, PRIVY_ID_TOKEN, PRIVY_APP_SECRET, PRIVY_AUTH_KEY, NONCE, EMAIL_CODE, BASIC_CREDENTIAL,
   ADDRESS_BODY: ADDRESS.slice(2), TX_HASH_BODY: TX_HASH.slice(2),
 };
 
@@ -68,16 +89,26 @@ Sentry.addEventProcessor((event) => {
       authorization: `Bearer ${PRIVY_JWT}`,
       "privy-authorization-signature": PRIVY_SIGNATURE,
       cookie: `moolahub_session=${SESSION_TOKEN}`,
+      "set-cookie": `moolahub_session=${SESSION_TOKEN}`,
+      "x-session-token": SESSION_TOKEN,
+      "privy-token": PRIVY_JWT,
+      "privy-id-token": PRIVY_ID_TOKEN,
     },
     cookies: { moolahub_session: SESSION_TOKEN },
-    data: { password: PASSWORD, amountCents: Number(AMOUNT_CENTS), destination: ADDRESS, otp: OTP },
+    data: {
+      password: PASSWORD, amountCents: Number(AMOUNT_CENTS), destination: ADDRESS, otp: OTP,
+      code: EMAIL_CODE, refreshToken: REFRESH_TOKEN, nonce: NONCE,
+    },
     query_string: `token=${SESSION_TOKEN}`,
   };
   event.user = { ...(event.user ?? {}), email: EMAIL, ip_address: "203.0.113.7", username: "ama" };
   event.extra = { password: PASSWORD, body: { amountCents: AMOUNT_CENTS } };
   event.contexts = {
     ...event.contexts,
-    privyRequest: { headers: { authorization: `Bearer ${PRIVY_JWT}` }, url: `https://api.privy.io/v1/wallets?x=${RPC_KEY}` },
+    privyRequest: {
+      headers: { authorization: `Basic ${BASIC_CREDENTIAL}`, "privy-id-token": PRIVY_ID_TOKEN },
+      url: `https://api.privy.io/v1/wallets?x=${RPC_KEY}`,
+    },
   };
   event.tags = { ...event.tags, email: EMAIL, session: SESSION_TOKEN };
   return event;
@@ -102,7 +133,7 @@ Sentry.addBreadcrumb({
     status_code: 500,
     "http.query": `apikey=${RPC_KEY}`,
     request_body: { to: ADDRESS, value: AMOUNT_CENTS },
-    headers: { authorization: `Bearer ${PRIVY_JWT}` },
+    headers: { authorization: `Bearer ${PRIVY_JWT}`, "x-session-token": SESSION_TOKEN },
   },
 });
 Sentry.addBreadcrumb({ category: "console", level: "error", message: `withdraw ${AMOUNT_DISPLAY} USDC to ${ADDRESS} for ${EMAIL}` });
@@ -115,6 +146,16 @@ captureServerError(
 
 // 2. A message with money and identity in it.
 Sentry.captureMessage(`refund of $${AMOUNT_DOLLARS} and ${AMOUNT_DISPLAY} USDC to ${ADDRESS} (${EMAIL}), session ${SESSION_TOKEN}, otp=${OTP}`);
+
+// 2b. A failed sign-in: the challenge message, a refresh token, an email code
+// and a Privy client error that quotes our app secret and an authorization key.
+Sentry.captureMessage(
+  `sign-in failed for "Moolahub sign-in · purpose:signin · nonce:${NONCE} · device:dev-1 · chain:8453", ` +
+    `refreshToken=${REFRESH_TOKEN} code: ${EMAIL_CODE} idToken=${PRIVY_ID_TOKEN}`,
+);
+captureServerError(new Error(`privy request failed: Basic ${BASIC_CREDENTIAL} ${PRIVY_APP_SECRET} ${PRIVY_AUTH_KEY}`), {
+  req: fakeReq,
+});
 
 // 3. The dead-letter event, with an address and a tx hash in its reason.
 captureDeadLetter({ id: USER_ID, kind: "withdrawal", attempts: 5 }, `transfer ${TX_HASH} to ${ADDRESS} reverted; amountCents=${AMOUNT_CENTS}`);
@@ -153,7 +194,11 @@ for (const [name, secret] of Object.entries(SECRETS)) {
   assert.ok(!wire.includes(secret), `${name} leaked into a Sentry envelope`);
   assert.ok(!wire.toLowerCase().includes(secret.toLowerCase()), `${name} leaked (case-folded)`);
 }
-for (const banned of ["203.0.113.7", "moolahub_session", "privy-authorization-signature", "db.statement", "db.query.text", "password", "\"cookies\"", "\"headers\"", "\"query_string\"", "\"extra\""]) {
+for (const banned of [
+  "203.0.113.7", "moolahub_session", "privy-authorization-signature", "x-session-token", "privy-token",
+  "privy-id-token", "set-cookie", "db.statement", "db.query.text", "password", "\"cookies\"", "\"headers\"",
+  "\"query_string\"", "\"extra\"",
+]) {
   assert.ok(!wire.includes(banned), `"${banned}" should never reach Sentry`);
 }
 
@@ -172,6 +217,11 @@ assert.equal(scrubString(`to ${ADDRESS}`), "to [hex]");
 assert.equal(scrubString(`user ${USER_ID}`), `user ${USER_ID}`, "UUIDs are not tokens");
 assert.equal(scrubString("idle_in_transaction_session_timeout"), "idle_in_transaction_session_timeout", "long words without digits survive");
 assert.equal(scrubString(`${AMOUNT_DISPLAY} USDC`), "[amount]");
+assert.equal(scrubString(`refreshToken=${REFRESH_TOKEN}`), "refreshToken=[Filtered]");
+assert.equal(scrubString(`x-session-token: ${SESSION_TOKEN}`), "x-session-token: [Filtered]");
+assert.equal(scrubString(`nonce:${NONCE} · chain:8453`), "nonce:[Filtered] · chain:8453");
+assert.equal(scrubString(`code: ${EMAIL_CODE}`), "code: [Filtered]");
+assert.equal(scrubString(`secret ${PRIVY_APP_SECRET} key ${PRIVY_AUTH_KEY}`), "secret [Filtered] key [Filtered]");
 
 console.log(`✅ sentryScrub.test passed: ${envelopes.length} envelopes, no secret, token, email, address or amount on the wire`);
 process.exit(0);

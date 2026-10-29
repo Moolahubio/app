@@ -7,14 +7,16 @@
  * tags, the user's UUID) and nothing a user typed or owns:
  *  - events keep only allowlisted fields, tags and contexts; `extra` is dropped;
  *  - a request keeps its method and a query-less URL. Headers (outgoing Privy
- *    `Authorization` and `privy-authorization-signature` included), cookies,
+ *    `Authorization` and `privy-authorization-signature`, incoming
+ *    `x-session-token`, `privy-token` and `privy-id-token` included), cookies,
  *    bodies and query strings never leave the process;
  *  - breadcrumbs and spans keep allowlisted data keys, so `db.statement`,
  *    query params and header attributes are dropped;
  *  - every string that survives is masked: 0x… hex (addresses, hashes, keys),
- *    emails, credentials, long token-like strings (session tokens, RPC keys in
- *    URL paths), money amounts and the `params:` dump drizzle appends to a
- *    failed query.
+ *    emails, credentials (Privy app secrets and authorization keys, and any
+ *    `refreshToken=`, `nonce:` or `code:` style pair, as in a sign-in challenge
+ *    message), long token-like strings (session tokens, RPC keys in URL paths),
+ *    money amounts and the `params:` dump drizzle appends to a failed query.
  */
 
 type Obj = Record<string, unknown>;
@@ -36,8 +38,12 @@ const SECRET_MASKS: Array<[RegExp, string]> = [
   [/0x[0-9a-f]{4,}/gi, "[hex]"],
   [/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]"],
   [/\b(bearer|basic)\s+[\w.~+/=-]+/gi, "$1 [token]"],
-  // key=value / key: value pairs whose value is a credential.
-  [/\b(pass(?:word)?|passwd|otp|totp|pin|token|secret|session|api_?key|signature|authorization|cookie)(\s*[=:]\s*)[^\s,;&"')]+/gi, "$1$2[Filtered]"],
+  // Privy app secrets and authorization keys (Privy's documented prefixes).
+  [/privy_app_secret_\w+/g, "[Filtered]"],
+  [/wallet-(?:auth|api):[\w+/=]+/g, "[Filtered]"],
+  // key=value / key: value pairs whose value is a credential. The key may be a
+  // compound (refreshToken, privy-id-token, x-session-token, emailCode).
+  [/\b([\w-]*?(?:pass(?:word)?|passwd|otp|totp|pin|token|secret|session|api_?key|signature|authorization|cookie|nonce|challenge|code))(\s*[=:]\s*)[^\s,;&"')]+/gi, "$1$2[Filtered]"],
   [/\beyJ[\w-]+\.[\w-]+\.[\w-]*/g, "[token]"],
 ];
 
@@ -75,7 +81,7 @@ function scrubName(name: string): string {
 }
 
 // Errs toward dropping: a false positive only loses a debugging detail.
-const SENSITIVE_KEY = /pass|secret|token|auth|cookie|session|signature|key|otp|code|email|phone|mnemonic|seed|private|address|amount|balance|cents|body|header|query|param|user|^ip$|[._]ip$/i;
+const SENSITIVE_KEY = /pass|secret|token|auth|cookie|session|signature|key|otp|code|nonce|challenge|privy|credential|email|phone|mnemonic|seed|private|address|amount|balance|cents|body|header|query|param|user|^ip$|[._]ip$/i;
 
 /**
  * Values under keys we chose to keep: strings masked, nested objects kept only

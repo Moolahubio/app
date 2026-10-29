@@ -6,11 +6,10 @@ import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import pinoHttp from "pino-http";
 import router from "./routes";
-import { logger } from "./lib/logger";
+import { httpLogSerializers, logger } from "./lib/logger";
 import { isAllowedOrigin } from "./lib/origins";
 import { captureServerError } from "./lib/observability";
 import { AppError } from "./lib/errors";
-import { requestLogFields } from "./lib/requestLog";
 
 const app: Express = express();
 
@@ -19,19 +18,7 @@ const app: Express = express();
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req) {
-        return requestLogFields(req, process.env.NODE_ENV === "production");
-      },
-      res(res) {
-        return { statusCode: res.statusCode };
-      },
-    },
-  }),
-);
+app.use(pinoHttp({ logger, serializers: httpLogSerializers }));
 
 // Security headers (CSP, HSTS, X-Content-Type-Options, frameguard, etc.).
 app.use(helmet());
